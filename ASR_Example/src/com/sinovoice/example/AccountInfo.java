@@ -9,7 +9,11 @@ import java.util.Map;
 
 import android.content.Context;
 import android.util.Log;
-
+/**
+ * 这是账户信息
+ * @author Tongbo
+ *
+ */
 public class AccountInfo {
 
     private static AccountInfo mInstance;
