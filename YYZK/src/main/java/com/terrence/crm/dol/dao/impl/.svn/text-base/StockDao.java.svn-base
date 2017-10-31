@@ -1,0 +1,42 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Stock;
+import com.terrence.crm.dol.dao.IStockDao;
+import com.terrence.crm.dol.query.StockQuery;
+
+@Repository
+public class StockDao extends BaseIbatisDao<Stock,java.lang.Long> implements IStockDao{
+	
+	public void saveOrUpdate(Stock entity) {
+		if(entity.getFitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Stock";
+	}
+	public Stock getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Stock)this.getSqlMapClientTemplate().queryForObject("Stock.getByProperty", map);		
+	}
+
+	@Override
+	public List<Stock> findlistpoorder(StockQuery stockQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Stock.findlist.in.poorder", stockQuery);
+	}
+
+	
+}

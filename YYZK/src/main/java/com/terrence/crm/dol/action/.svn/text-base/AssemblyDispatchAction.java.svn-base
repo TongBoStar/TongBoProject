@@ -1,0 +1,646 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyDispatch;
+import com.terrence.crm.dol.query.AssemblyDispatchQuery;
+import com.terrence.crm.dol.service.IAssemblyDispatchService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/assemblyDispatch")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "assemblyDispatch." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class AssemblyDispatchAction extends CrudActionSupport<AssemblyDispatch>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("assemblyDispatchService")
+	private IAssemblyDispatchService assemblyDispatchService;
+	
+	
+	private AssemblyDispatch entity;
+
+	private AssemblyDispatchQuery assemblyDispatchQuery;
+	
+	
+	private java.lang.Long assemblyDispatchId;
+	
+	/** 分页器 */
+	private Page<AssemblyDispatch> page = new Page<AssemblyDispatch>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<AssemblyDispatch> assemblyDispatchList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (assemblyDispatchId != null ) {
+			entity = assemblyDispatchService.getById(assemblyDispatchId);
+		} else {
+			entity = new AssemblyDispatch();
+		}
+	}
+	@Action("/assembly/deletetask")
+	public String deleteByid()throws Exception
+	{
+		try {
+			assemblyDispatchService.deleteById(assemblyDispatchId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			assemblyDispatchService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	public String listDisTask()throws Exception
+	{
+		if(assemblyDispatchQuery == null) {
+			assemblyDispatchQuery = new AssemblyDispatchQuery();
+		}
+		
+		try {
+			if(SpringSecurityUtils.getCurrentTeamid().intValue()!=0)
+			{
+			assemblyDispatchQuery.setTeamid(SpringSecurityUtils.getCurrentTeamid().longValue());
+			}
+			assemblyDispatchList = assemblyDispatchService.findList(assemblyDispatchQuery,"AssemblyDispatch.findList.Task");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/assembly/listMonthTask")
+	public String listMonthTask()throws Exception
+	{
+		try 
+		{
+			if(assemblyDispatchQuery == null) {
+				assemblyDispatchQuery = new AssemblyDispatchQuery();
+			}
+			assemblyDispatchList=assemblyDispatchService.findList(assemblyDispatchQuery,"AssemblyDispatch.month.findList");
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		
+		return JSON;
+	}
+	/**
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/assembly/calendar")
+	public String listCalendar()throws Exception
+	{
+		try {
+			if(assemblyDispatchQuery == null) {
+				assemblyDispatchQuery = new AssemblyDispatchQuery();
+			}
+			String month=assemblyDispatchQuery.getMonth(),year=assemblyDispatchQuery.getYear();
+			String workmonth=assemblyDispatchQuery.getWorkmonth();
+			if(workmonth==null)
+			{
+				workmonth=DateUtils.GetFormatDate("yyyyMM");
+				assemblyDispatchQuery.setWorkmonth(workmonth);
+			}
+			
+			String days[];
+			days=new String[42]; 
+			for(int i=0;i<42;i++) 
+			{ 
+			days[i]="";
+			} 
+			Calendar thismonth=Calendar.getInstance(); 
+			if(month!=null&&(!month.equals(""))) 
+			thismonth.set(Calendar.MONTH, Integer.parseInt(month)-1 ); 
+
+			if(year!=null&&(!year.equals(""))) 
+			thismonth.set(Calendar.YEAR, Integer.parseInt(year)); 
+
+			year=String.valueOf(thismonth.get(Calendar.YEAR)); 
+			month=String.valueOf(thismonth.get(Calendar.MONTH)+1); 
+			if(month.length()<2)
+				month="0"+month;
+			thismonth.setFirstDayOfWeek(Calendar.SUNDAY); 
+			thismonth.set(Calendar.DAY_OF_MONTH,1); 
+			int firstindex=thismonth.get(Calendar.DAY_OF_WEEK)-1; 
+			int maxindex=thismonth.getActualMaximum(Calendar.DAY_OF_MONTH); 
+			for(int i=0;i<maxindex;i++) 
+			{ 
+				days[firstindex+i]=String.valueOf(i+1); 
+			} 
+			assemblyDispatchList=new ArrayList<AssemblyDispatch>();
+			for(int j=0;j<6;j++) 
+			{
+				for(int i=j*7;i<(j+1)*7;i++)
+				{
+					AssemblyDispatch assembly=new AssemblyDispatch();
+					assembly.setDays(i);
+					assembly.setCalendarstatus(1);
+					if(!days[i].equals(""))
+					{
+						assembly.setWorkday(Integer.parseInt(days[i]));
+						assembly.setWorkdate(DateUtils.GetDate2(year+"-"+month+"-"+days[i], "yyyy-MM-dd"));
+						assembly.setWorkmonth(year+month);
+					}
+					else
+					{
+						assembly.setWorkday(-1);
+					}
+					assemblyDispatchList.add(assembly);
+					//System.out.println(i+"="+days[i]);
+				}
+			}
+			
+			/**
+			 * 查询被选物料以外其它物料月工作记录
+			 */
+			AssemblyDispatchQuery query=new AssemblyDispatchQuery();
+			query.setNonitemcode(this.assemblyDispatchQuery.getItemcode());
+			query.setWorkmonth(assemblyDispatchQuery.getWorkmonth());
+			List<AssemblyDispatch> assemblyDispatchList=assemblyDispatchService.findList(query);
+			for(AssemblyDispatch assembly:this.assemblyDispatchList)
+			{
+				for(AssemblyDispatch ass:assemblyDispatchList)
+				{
+					if(assembly.getWorkday().intValue()==ass.getWorkday().intValue())
+					{
+						assembly.setCalendarstatus(2);
+						break;
+					}
+				}
+			}
+			/**
+			 * 查询被选物料月工作记录
+			 */
+			
+			 assemblyDispatchList=assemblyDispatchService.findList(assemblyDispatchQuery, "AssemblyDispatch.findCalendar", 31);
+			 for(AssemblyDispatch assembly:this.assemblyDispatchList)
+				{
+					for(AssemblyDispatch ass:assemblyDispatchList)
+					{
+						if(assembly.getWorkday().intValue()==ass.getWorkday().intValue())
+						{
+							assembly.setCalendarstatus(3);
+							break;
+						}
+					}
+				}
+			 resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(assemblyDispatchQuery == null) {
+			assemblyDispatchQuery = new AssemblyDispatchQuery();
+		}
+		
+		try {
+			assemblyDispatchList = assemblyDispatchService.findList(assemblyDispatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("assemblyDispatchId");
+			page.setOrder(Page.DESC);
+		}
+		if(assemblyDispatchQuery == null) {
+			assemblyDispatchQuery = new AssemblyDispatchQuery();
+		}
+		
+		try {
+			page = assemblyDispatchService.findPage(page, assemblyDispatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			assemblyDispatchService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public void prepareSaveToDsipatch() throws Exception {
+		prepareModel();
+	}
+	@Action("/assembly/saveCalendar")
+	public String saveToDsipatch()throws Exception
+	{
+		try {
+			if(assemblyDispatchService.saveToDsipatch(entity)!=-1)
+			{
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				addActionMessage("操作成功");
+			}
+			else
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败,没有特征码";
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = assemblyDispatchService.getById(assemblyDispatchId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	@Action("/assembly/showtask")
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			assemblyDispatchList = assemblyDispatchService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public AssemblyDispatch getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public AssemblyDispatchQuery getAssemblyDispatchQuery() {
+		return assemblyDispatchQuery;
+	}
+
+	
+	public void setAssemblyDispatchQuery(AssemblyDispatchQuery assemblyDispatchQuery) {
+		this.assemblyDispatchQuery = assemblyDispatchQuery;
+	}
+
+	public void setAssemblyDispatchId(java.lang.Long assemblyDispatchId) {
+		this.assemblyDispatchId = assemblyDispatchId;
+	}
+	
+	
+	public java.lang.Long getAssemblyDispatchId() {
+		return this.assemblyDispatchId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<AssemblyDispatch> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<AssemblyDispatch> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<AssemblyDispatch> getAssemblyDispatchList() {
+		return assemblyDispatchList;
+	}
+	
+	public static void  main(String args[])
+	{
+		String month="03",year="2013";
+		String days[];
+		days=new String[42]; 
+		for(int i=0;i<42;i++) 
+		{ 
+		days[i]="";
+		} 
+		Calendar thismonth=Calendar.getInstance(); 
+		if(month!=null&&(!month.equals("null"))) 
+		thismonth.set(Calendar.MONTH, Integer.parseInt(month)-1 ); 
+
+		if(year!=null&&(!year.equals("null"))) 
+		thismonth.set(Calendar.YEAR, Integer.parseInt(year) ); 
+
+		year=String.valueOf(thismonth.get(Calendar.YEAR)); 
+		month=String.valueOf(thismonth.get(Calendar.MONTH)); 
+		thismonth.setFirstDayOfWeek(Calendar.SUNDAY); 
+		thismonth.set(Calendar.DAY_OF_MONTH,1); 
+		int firstindex=thismonth.get(Calendar.DAY_OF_WEEK)-1; 
+		//System.out.println("firstindex="+firstindex);
+		
+		int maxindex=thismonth.getActualMaximum(Calendar.DAY_OF_MONTH); 
+		//System.out.println("maxindex="+maxindex);
+		for(int i=0;i<maxindex;i++) 
+		{ 
+		days[firstindex+i]=String.valueOf(i+1); 
+		} 
+		for(int j=0;j<6;j++) 
+		{
+			for(int i=j*7;i<(j+1)*7;i++)
+			{
+				//System.out.println(i+"="+days[i]);
+			}
+		}
+	}
+}

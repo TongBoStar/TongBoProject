@@ -1,0 +1,58 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProItem;
+import com.terrence.crm.dol.dao.IProItemDao;
+import com.terrence.crm.dol.query.ProItemQuery;
+
+@Repository
+public class ProItemDao extends BaseIbatisDao<ProItem,java.lang.Long> implements IProItemDao{
+
+		
+	public void saveOrUpdate(ProItem entity) {
+		if(entity.getAid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ProItem";
+	}
+	public ProItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProItem)this.getSqlMapClientTemplate().queryForObject("ProItem.getByProperty", map);		
+	}
+
+	@Override
+	public void saveProItem() {
+		this.getSqlMapClientTemplate().insert("ProItem.saveProItem");
+	}
+
+	@Override
+	public List<ProItem> findListTop20(ProItemQuery query)
+			throws ServiceException {
+		return (List<ProItem>)this.getSqlMapClientTemplate().queryForList("ProItem.findListtop20", query);
+	}
+
+	@Override
+	public void updateProItem() {
+		this.getSqlMapClientTemplate().update("ProItem.updateProItem");
+	}
+
+}

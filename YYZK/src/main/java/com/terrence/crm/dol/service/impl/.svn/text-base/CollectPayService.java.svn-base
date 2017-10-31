@@ -1,0 +1,63 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ibatis.sqlmap.client.SqlMapClient;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.bean.CollectPay;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.dao.ICollectPayDao;
+import com.terrence.crm.dol.query.CollectPayQuery;
+import com.terrence.crm.dol.service.ICollectPayService;
+/**
+ * 应收款业务处理实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:36:39
+ */
+@Service
+@Transactional
+public class CollectPayService extends BaseService implements ICollectPayService {
+	@Autowired
+	private ICollectPayDao collectPayDao;
+
+	@Override
+	public Long save(CollectPay collectPay) {
+		return collectPayDao.save(collectPay);
+	}
+
+	@Override
+	public void update(CollectPay collectPay) {
+		collectPayDao.update(collectPay);
+	}
+
+	@Override
+	public void deleteProduct(Long id) {
+		collectPayDao.deleteById(id);
+	}
+
+	@Override
+	public CollectPay getById(Long id) {
+		return collectPayDao.getById(id);
+	}
+
+	@Override
+	public List<CollectPay> findList(CollectPayQuery collectPayQuery) {
+		return collectPayDao.findList(collectPayQuery);
+	}
+
+	@Override
+	public List<CollectPay> findListHistory(CollectPayQuery collectPayQuery) {
+		return collectPayDao.findList("CollectPay.findList.History",collectPayQuery);
+	}
+
+	@Override
+	public void saveBatch(List<CollectPay> collectPayList) throws SQLException {
+		collectPayDao.create(collectPayList);
+	}
+}

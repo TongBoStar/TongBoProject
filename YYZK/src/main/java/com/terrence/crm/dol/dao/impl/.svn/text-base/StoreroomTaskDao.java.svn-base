@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.StoreroomTask;
+import com.terrence.crm.dol.dao.IStoreroomTaskDao;
+@Repository
+public class StoreroomTaskDao extends BaseIbatisDao<StoreroomTask,java.lang.Long> implements IStoreroomTaskDao{
+	public String getIbatisSqlMapNamespace() {
+		return "StoreroomTask"; 
+	}
+	public void saveOrUpdate(StoreroomTask entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public StoreroomTask getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (StoreroomTask)this.getSqlMapClientTemplate().queryForObject("StoreroomTask.getByProperty", map);
+	}
+}

@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Positions">
+
+        
+	<resultMap id="RM.Positions" class="com.terrence.crm.dol.bean.Positions">
+        <result property="positionid" column="positionid"/>
+        <result property="parentid" column="parentid"/>
+        <result property="positionname" column="positionname"/>
+        <result property="type" column="type"/>
+        <result property="levels" column="levels"/>
+        <result property="number" column="number"/>
+        <result property="allnumber" column="allnumber"/>
+        	
+    </resultMap>
+	
+	<resultMap id="RM.Positions.BaseItemDetail" class="com.terrence.crm.dol.bean.Positions">
+        <result property="positionid" column="positionid"/>
+        <result property="positionname" column="positionname"/>
+        <result property="parentid" column="parentid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="baseitemid" column="baseitemid"/>
+        
+        <result property="itemcode" column="itemcode"/>
+        <result property="formatno" column="formatno"/>
+        <result property="inventoryBatchlist" column="itemcode" select="RM.Positions.getBatch"/>
+        <result property="label" column="label"/>
+        
+    </resultMap>
+    
+    <resultMap id="RM.Positions.BaseItemDetailNew" class="com.terrence.crm.dol.bean.Positions">
+        <result property="positionid" column="positionid"/>
+        <result property="positionname" column="positionname"/>
+        <result property="parentid" column="parentid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="baseitemid" column="baseitemid"/>
+        
+        <result property="itemcode" column="itemcode"/>
+        <result property="formatno" column="formatno"/>
+        <result property="inventoryBatchlist" column="itemcode" select="RM.Positions.getBatch"/>
+        <result property="label" column="label"/>
+    	<result property="finterid" column="finterid"/>
+    </resultMap>
+	
+	<resultMap id="RM.Positions.inventoryBatch" class="com.terrence.crm.dol.bean.InventoryBatch">
+        <result property="batchno" column="batchno"/>
+        <result property="fqty" column="fqty"/>
+    </resultMap>
+	  
+	
+	<resultMap id="RM.Positions.includeItem" class="com.terrence.crm.dol.bean.Positions">
+        <result property="positionid" column="positionid"/>
+        <result property="parentid" column="parentid"/>
+        <result property="positionname" column="positionname"/>
+        <result property="type" column="type"/>
+        <result property="levels" column="levels"/>
+        <result property="number" column="number"/>
+        <result property="allnumber" column="allnumber"/>
+        
+        <result property="itemname" column="itemname"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="label" column="label"/>
+        
+        
+        <result property="listBaseItem" column="positionid" select="Positions.findBaseItemlist"/>
+        
+    </resultMap>
+	  
+	 <resultMap id="RM.Positions.findBaseItemlist" class="com.terrence.crm.dol.bean.BaseItem">
+        <result property="itemname" column="itemname"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="inventoryBatchlist" column="itemcode" select="RM.Positions.getBatch"/>
+     </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Positions.columns">
+	    <![CDATA[
+        	t_positions.positionid ,
+        	t_positions.parentid ,
+        	t_positions.positionname ,
+        	t_positions.type ,
+        	t_positions.levels,
+        	t_positions.number, 
+			t_positions.allnumber	
+	    ]]>
+	</sql>
+	
+   <insert id="Positions.insert" >
+    
+        INSERT INTO
+        t_positions (
+        	parentid 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="positionname">positionname</isNotEmpty>
+        		<isNotEmpty prepend="," property="type">type</isNotEmpty>
+        		<isNotEmpty prepend="," property="levels">levels</isNotEmpty>
+        		<isNotEmpty prepend="," property="number">number</isNotEmpty>
+        		<isNotEmpty prepend="," property="allnumber">allnumber</isNotEmpty>
+        		
+        	</dynamic> 
+        ) VALUES (
+        	#parentid# 
+			<dynamic prepend="">
+        		<isNotEmpty prepend="," property="positionname">#positionname#</isNotEmpty>
+        		<isNotEmpty prepend="," property="type">#type#</isNotEmpty>
+        		<isNotEmpty prepend="," property="levels">#levels#</isNotEmpty>
+        		<isNotEmpty prepend="," property="number">#number#</isNotEmpty>
+        		<isNotEmpty prepend="," property="allnumber">#allnumber#</isNotEmpty>
+        	</dynamic>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="positionid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Positions.update" parameterClass="com.terrence.crm.dol.bean.Positions">         
+        UPDATE t_positions 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="positionname">
+	        	positionname = #positionname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="type">
+	        	type = #type# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="levels">
+	        	levels = #levels# 
+	        </isNotEmpty>
+       		<isNotEmpty prepend="," property="number">
+       			number=#number#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="allnumber">
+       			allnumber=#allnumber#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="label">
+       			label=#label#
+       		</isNotEmpty>
+       		
+	    </dynamic>
+        WHERE 
+	        positionid = #positionid# 
+    </update>
+    
+	<delete id="Positions.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_positions where
+       positionid = #positionid# 
+    ]]>
+    </delete>
+    
+    <delete id="Positions.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_positions 
+        WHERE
+       positionid in ($positionid$) 
+    ]]>
+    </delete>
+    
+    <select id="Positions.getById" resultMap="RM.Positions">
+	    select <include refid="Positions.columns"/>
+	    
+	        from t_positions 
+	        where 
+		        positionid = #positionid# 
+	    
+    </select>
+    
+	<select id="Positions.getByProperty" resultMap="RM.Positions">
+		select <include refid="Positions.columns"/> from t_positions where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Positions.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="positionid">
+	             t_positions.positionid = #positionid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_positions.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="positionname">
+	             t_positions.positionname = #positionname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="type">
+	             t_positions.type = #type#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_positions.levels = #levels#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="number">
+	             t_positions.number = #number#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="allnumber">
+	             t_positions.allnumber = #allnumber#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	
+	<sql id="Positions.findPage.positionName.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="positionid">
+	             t_positions.positionid = #positionid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_positions.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="positionname">
+	             t_positions.positionname = ('%$positionname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="type">
+	             t_positions.type = #type#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_positions.levels = #levels#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="number">
+	             t_positions.number = #number#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="allnumber">
+	             t_positions.allnumber = #allnumber#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Positions.findPage.and">
+			<isNotEmpty prepend="AND" property="positionid">
+	             t_positions.positionid = #positionid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_positions.parentid = #parentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="positionname">
+	             t_positions.positionname = #positionname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="type">
+	             t_positions.type = #type#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="levels">
+	             t_positions.levels = #levels#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="number">
+	             t_positions.number = #number#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="allnumber">
+	             t_positions.allnumber = #allnumber#
+	       </isNotEmpty>
+	       
+	</sql>
+	
+    <select id="Positions.Entity" resultMap="RM.Positions">
+    	SELECT 	<include refid="Positions.columns"/> FROM t_positions <include refid="Positions.findPage.where"/>
+    </select>
+
+    
+    
+    
+    <select id="Positions.findList" resultMap="RM.Positions">
+    	SELECT 
+    		<include refid="Positions.columns"/> 
+    	FROM 
+    		t_positions
+		<include refid="Positions.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Positions.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_positions
+    ]]>
+		<include refid="Positions.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Positions.findPage" resultMap="RM.Positions">
+    	select <include refid="Positions.columns"/>	    
+	        from t_positions 	   
+		<include refid="Positions.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Positions.findPage" resultMap="RM.Positions">
+    	select <include refid="Positions.columns"/>	    
+	        from t_positions where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       positionid 
+	   not in(select $notTop$ 
+       positionid 
+	   from t_positions <include refid="Positions.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Positions.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+    
+    <select id="Positions.Entity.BaseItemDetail" resultMap="RM.Positions.BaseItemDetail">
+    	SELECT 	
+    		t_positions.positionid,
+        	t_positions.positionname,
+        	t_positions.parentid,
+        	t_positions.label,
+        	
+        	t_base_item.baseitemid,
+        	t_base_item.itemname,
+        	t_base_item.itemcode,
+        	t_base_item.formatno
+        	  
+    	FROM t_positions left join t_base_item on  t_positions.positionid=t_base_item.positionid
+    	<include refid="Positions.findPage.where"/>
+    </select>
+
+    <select id="Positions.Entity.BaseItemDetailNew" resultMap="RM.Positions.BaseItemDetailNew">
+    	SELECT 	
+    		t_item_postion.finterid,
+    		t_positions.positionid,
+        	t_positions.positionname,
+        	t_positions.parentid,
+        	t_positions.label,
+        	
+        	t_base_item.baseitemid,
+        	t_base_item.itemname,
+        	t_base_item.itemcode,
+        	t_base_item.formatno
+        	  
+    	FROM t_item_postion 
+    		left join t_positions on t_item_postion.positionid=t_positions.positionid    
+    		left join t_base_item on  t_item_postion.baseitemid=t_base_item.baseitemid
+    	where
+    	 	t_item_postion.positionid=#positionid#
+
+    </select>
+
+
+
+    <select id="RM.Positions.getBatch" resultMap="RM.Positions.inventoryBatch">
+			select t_inventory_batch.batchno,
+			case dbno when 3 then fqty when 4 then fqty2 end fqty
+			from t_inventory_batch where 
+			t_inventory_batch.itemcode=#itemcode# and 
+			(case dbno when 3 then fqty when 4 then fqty2 end)>0
+    </select>
+
+    <select id="Positions.getlastEntity" resultMap="RM.Positions">
+    	SELECT top 1 <include refid="Positions.columns"/>
+    	 FROM t_positions 
+    	 <include refid="Positions.findPage.where"/>
+    	 order by number desc
+    </select>
+	
+	<select id="Positions.findList.includeItem" resultMap="RM.Positions.includeItem">
+    	SELECT 
+    		t_positions.positionid ,
+        	t_positions.parentid ,
+        	t_positions.positionname ,
+        	t_positions.type ,
+        	t_positions.levels,
+        	t_positions.number, 
+			t_positions.allnumber,	
+			t_positions.label,
+    		 t_base_item.itemname,
+        	t_base_item.itemcode
+    	FROM 
+    		t_positions
+    		left join t_base_item on 
+    		t_positions.positionid=t_base_item.positionid
+		<include refid="Positions.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+   
+   
+      <select id="Positions.find.positionName.list" resultMap="RM.Positions">
+    	SELECT <include refid="Positions.columns"/>
+    	 FROM t_positions 
+    	 <include refid="Positions.findPage.positionName.where"/>
+    	 order by number desc
+    </select>
+    
+    
+      <select id="Position.find.position.in.poorder" resultMap="RM.Positions"><!-- 订单列表仓库 -->
+    	SELECT <include refid="Positions.columns"/>
+    	 FROM t_positions 
+    	where ( levels = 0 or levels = 1) 
+    	<isNotEmpty prepend="AND" property="positionname">
+	             t_positions.positionname  like ('%$positionname$%')
+	       </isNotEmpty>
+    </select>
+
+
+      <select id="Positions.findBaseItemlist" resultMap="RM.Positions.findBaseItemlist">
+    	SELECT itemname,itemcode 
+    	 FROM t_item_postion left join t_base_item
+    	  	on t_item_postion.baseitemid=t_base_item.baseitemid
+    	  	where t_item_postion.positionid=#positionid#
+    </select>
+
+	
+</sqlMap>

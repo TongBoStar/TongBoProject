@@ -1,0 +1,153 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AdminOrggroup;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IAdminOrggroupDao;
+import com.terrence.crm.dol.query.AdminOrggroupQuery;
+import com.terrence.crm.dol.service.IAdminOrggroupService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+
+@Service
+@Transactional
+public class AdminOrggroupService extends BaseService implements IAdminOrggroupService {
+	protected static Logger logger = LoggerFactory.getLogger(AdminOrggroupService.class);
+	@Autowired
+	@Qualifier("adminOrggroupDao")
+	private IAdminOrggroupDao adminOrggroupDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AdminOrggroup";
+	}
+	@Transactional(readOnly=true)
+	public AdminOrggroup getById(java.lang.Long id) throws ServiceException
+	{
+		return adminOrggroupDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AdminOrggroup entity) throws ServiceException
+	{
+		adminOrggroupDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AdminOrggroup entity) throws ServiceException
+	{
+		Long adId = adminOrggroupDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AdminOrggroup entity) throws ServiceException
+	{
+		Integer returnValue =  adminOrggroupDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = adminOrggroupDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = adminOrggroupDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AdminOrggroupQuery query = new AdminOrggroupQuery();
+		try {
+			return adminOrggroupDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	
+	//保存客户分组信息
+	public Long saveAll(AdminOrggroupQuery adminOrggroupQuery)
+	throws ServiceException {
+	    Long  adminid  =  adminOrggroupQuery.getAdminId();
+		String list = adminOrggroupQuery.getIdlist();
+		if(!list.equals("")){
+			String lists[] =  list.split(",");
+			for(int i=0;i<lists.length;i++){
+				AdminOrggroup  entity = new AdminOrggroup();
+				entity.setAdminId(adminid);
+				int ii = Integer.parseInt(lists[i]);
+				Long iii = Long.valueOf(ii);
+				entity.setGroupid(iii);
+			boolean isUnuque=adminOrggroupDao.isUnique(entity);
+			if (!isUnuque) {
+				adminOrggroupDao.save(entity);
+				AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+						.getAuthentication().getPrincipal();
+				operationLogDao.save(ConfigTerrence.MODEL_USER_MANAGE,ConfigTerrence.OPT_ADD, "用户ID为"+adminid+"的用户选择客户组操作成功，操作人为"+admin.getAdmin().getAdminName());
+			}
+				
+			}
+		}
+		return adminOrggroupQuery.getGroupid();
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminOrggroup> findPage(Page<AdminOrggroup> page, AdminOrggroupQuery query) throws ServiceException
+	{
+		return adminOrggroupDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminOrggroup> findPage(Page<AdminOrggroup> page,String statement, AdminOrggroupQuery query) throws ServiceException
+	{
+		return adminOrggroupDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminOrggroup> findList(AdminOrggroupQuery query) throws ServiceException
+	{
+		return adminOrggroupDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminOrggroup> findList(AdminOrggroupQuery query,Integer pageSize) throws ServiceException
+	{
+		return adminOrggroupDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AdminOrggroup> findList(AdminOrggroupQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return adminOrggroupDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminOrggroup> findAllList() throws ServiceException
+	{
+		return adminOrggroupDao.findAllList();
+	}
+
+}

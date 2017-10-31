@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yybom">
+
+<resultMap id="RM.Yybom" class="com.terrence.crm.dol.bean.Yybom">
+	<result property="id" column="id"/>
+	<result property="pid" column="pid"/>
+	<result property="cid" column="cid"/>
+	<result property="fqty" column="fqty"/>
+	<result property="fmark" column="fmark"/>
+	<result property="createTime" column="createTime"/>
+	<result property="createUserId" column="createUserId"/>
+	<result property="pitemCode" column="pitemCode"/>
+	<result property="citemCode" column="citemCode"/>
+	<result property="funit" column="funit"/>
+	<result property="citemMode" column="citemMode"/>
+	<result property="citemName" column="citemName"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yybom.columns">
+	<![CDATA[
+		t_yybom.id ,
+		t_yybom.pid ,
+		t_yybom.cid ,
+		t_yybom.fqty ,
+		t_yybom.fmark ,
+		t_yybom.createTime ,
+		t_yybom.createUserId ,
+		t_yybom.pitemCode ,
+		t_yybom.citemCode 
+	]]>
+</sql>
+
+<insert id="Yybom.insert" >
+	<![CDATA[
+	INSERT INTO t_yybom (
+		pid,
+		cid,
+		fqty,
+		fmark,
+		createTime,
+		createUserId,
+		pitemCode,
+		citemCode
+	) VALUES (
+		#pid#,
+		#cid#,
+		#fqty#,
+		#fmark#,
+		#createTime#,
+		#createUserId#,
+		#pitemCode#,
+		#citemCode#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yybom.update" parameterClass="com.terrence.crm.dol.bean.Yybom"> 
+	UPDATE t_yybom 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="pid">
+			pid = #pid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="cid">
+			cid = #cid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fqty">
+			fqty = #fqty# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createUserId">
+			createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="pitemCode">
+			pitemCode = #pitemCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="citemCode">
+			citemCode = #citemCode# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yybom.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yybom.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="pid">
+			t_yybom.pid = #pid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="cid">
+			t_yybom.cid = #cid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fqty">
+			t_yybom.fqty = #fqty# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_yybom.fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_yybom.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createUserId">
+			t_yybom.createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="pitemCode">
+			t_yybom.pitemCode = #pitemCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="citemCode">
+			t_yybom.citemCode = #citemCode# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yybom.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yybom.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="pid">
+		t_yybom.pid = #pid# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="cid">
+		t_yybom.cid = #cid# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fqty">
+		t_yybom.fqty = #fqty# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_yybom.fmark = #fmark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_yybom.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createUserId">
+		t_yybom.createUserId = #createUserId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="pitemCode">
+		t_yybom.pitemCode = #pitemCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="citemCode">
+		t_yybom.citemCode = #citemCode# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yybom.getById" resultMap="RM.Yybom">
+	select <include refid="Yybom.columns"/>,t_yyitem.itemName citemName ,t_yyitem.itemMode citemMode,t_yyitem.funit funit from t_yybom 
+	left join t_yyitem on t_yybom.citemCode = t_yyitem.itemCode 
+	where t_yybom.id=#id#
+</select>
+
+<select id="Yybom.getByProperty" resultMap="RM.Yybom">
+	select <include refid="Yybom.columns"/>,t_yyitem.itemName citemName ,t_yyitem.itemMode citemMode,t_yyitem.funit funit from t_yybom 
+	left join t_yyitem on t_yybom.citemCode = t_yyitem.itemCode 
+	 where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yybom.delete">
+	<![CDATA[
+		DELETE FROM t_yybom WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yybom.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yybom WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yybom.findPage.count" resultClass="long">
+	select count(*) from t_yybom <include refid="Yybom.findPage.where"/>
+</select>
+
+<select id="Yybom.findPage" resultMap="RM.Yybom">
+	select <include refid="Yybom.columns"/>,t_yyitem.itemName citemName ,t_yyitem.itemMode citemMode,t_yyitem.funit funit from t_yybom 
+	left join t_yyitem on t_yybom.citemCode = t_yyitem.itemCode 
+	<include refid="Yybom.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yybom.findList" resultMap="RM.Yybom">
+	SELECT <include refid="Yybom.columns"/> ,t_yyitem.itemName citemName ,t_yyitem.itemMode citemMode,t_yyitem.funit funit from t_yybom 
+	left join t_yyitem on t_yybom.citemCode = t_yyitem.itemCode 
+	<include refid="Yybom.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Yybom.findList.bomlist" resultMap="RM.Yybom">
+	SELECT <include refid="Yybom.columns"/> ,t_yyitem.itemName citemName ,t_yyitem.itemMode citemMode,t_yyitem.funit funit from t_yybom 
+	left join t_yyitem on t_yybom.citemCode = t_yyitem.itemCode  WHERE FIND_IN_SET(pitemCode,queryBomInfo(#pitemCode#)) order by id desc
+</select>
+</sqlMap>

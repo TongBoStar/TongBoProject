@@ -1,0 +1,1057 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.bean.Pdbase;
+import com.terrence.crm.dol.bean.Performance;
+import com.terrence.crm.dol.bean.Plratio;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.Productpl;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IPdbaseDao;
+import com.terrence.crm.dol.dao.IPerformanceDao;
+import com.terrence.crm.dol.dao.IProductDao;
+import com.terrence.crm.dol.dao.IProvinceDao;
+import com.terrence.crm.dol.dao.ISysOrderDao;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.PdbaseQuery;
+import com.terrence.crm.dol.query.PerformanceQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.SysOrderQuery;
+import com.terrence.crm.dol.service.IPerformanceService;
+import com.terrence.crm.dol.utils.ConstantUtils;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.TREReturn;
+
+@Service
+@Transactional
+public class PerformanceService extends BaseService implements IPerformanceService {
+	protected static Logger logger = LoggerFactory.getLogger(PerformanceService.class);
+	@Autowired
+	@Qualifier("performanceDao")
+	private IPerformanceDao performanceDao;
+	
+	@Autowired
+	@Qualifier("provinceDao")
+	private IProvinceDao provinceDao;
+	@Autowired
+	@Qualifier("pdbaseDao")
+	private IPdbaseDao pdbaseDao;
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	@Autowired
+	@Qualifier("sysOrderDao")
+	private ISysOrderDao sysOrderDao;
+	
+	@Autowired
+	@Qualifier("productDao")
+	private IProductDao productDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Performance";
+	}
+	@Transactional(readOnly=true)
+	public Performance getById(java.lang.Long id) throws ServiceException
+	{
+		return performanceDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Performance entity) throws ServiceException
+	{
+		performanceDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Performance entity) throws ServiceException
+	{
+		Long adId = performanceDao.save(entity);
+		
+		return adId;
+	}
+	public TREReturn savePerformance(Performance entity) throws ServiceException
+	{
+		TREReturn ret=new TREReturn();
+		try {
+			Province province=provinceDao.getById(1l);
+			
+			/**查询销售员的销售经理，区域经理**/
+			AdminQuery query=new AdminQuery();
+			query.setIsstruct(1);
+			query.setIsdel(0);
+			query.setAdminId(entity.getSalesman());
+			List<Admin> listadmin=adminDao.findList(query);
+			List<Performance> performances=new ArrayList<Performance>();
+			
+			PerformanceQuery pquery=new PerformanceQuery();
+			pquery.setFyear(entity.getFyear());
+			pquery.setFquarter(entity.getFquarter());
+			List<Long> operators=new ArrayList<Long>();
+			for(Admin admin:listadmin)
+			{
+				operators.add(admin.getAdminId());
+			}
+			if(operators.size()>0)
+			{
+				pquery.setOperatorList(operators);
+				performanceDao.deleteWhere("Performance.deleteWhere", pquery);
+			}
+			for(Admin admin:listadmin)
+			{
+				SysOrderQuery orderQuery=new SysOrderQuery();
+				orderQuery.setFtype("A");
+				orderQuery.setFyear(entity.getFyear());
+				orderQuery.setFquarter(entity.getFquarter());
+				orderQuery.setBusinessUserId(admin.getAdminId());
+				orderQuery.setSysOrderStatus(ConstantUtils.SYSORDER_STATUS_VALID);
+				SysOrder sysOrder=sysOrderDao.getByEntity("SysOrder.Product.Sum", orderQuery);/**查询A类合计结算额**/
+				Performance formance1=null,formance3=null;/**销售经理**/
+				Performance formance2=null,formance4=null;/**区域经理**/
+				if(admin.getSalemid()!=null&&admin.getSalemid()>0)/**销售经理**/
+				{
+					formance1=new Performance();
+					formance3=new Performance();
+					formance1.setSalesman(admin.getSalemid());
+					formance1.setFyear(entity.getFyear());
+					formance1.setFquarter(entity.getFquarter());
+					formance1.setOperator(admin.getAdminId());
+					
+					formance3.setSalesman(admin.getSalemid());
+					formance3.setFyear(entity.getFyear());
+					formance3.setFquarter(entity.getFquarter());
+					formance3.setOperator(admin.getAdminId());
+				}
+				if(admin.getAmanagerid()!=null&&admin.getAmanagerid()>0)/**区域经理**/
+				{
+					formance2=new Performance();
+					formance4=new Performance();
+					formance2.setSalesman(admin.getAmanagerid());
+					formance2.setFyear(entity.getFyear());
+					formance2.setFquarter(entity.getFquarter());
+					formance2.setOperator(admin.getAdminId());
+					
+					formance4.setSalesman(admin.getAmanagerid());
+					formance4.setFyear(entity.getFyear());
+					formance4.setFquarter(entity.getFquarter());
+					formance4.setOperator(admin.getAdminId());
+				}
+				ret=parseOrder(entity, performances,  admin, sysOrder,"直签",formance1,formance2);
+				if(ret.getnCode().equals("0"))
+				{
+					return ret;
+				}
+				
+				ret=parseOrder(entity, performances,  admin, sysOrder,"经销商",formance3,formance4);
+				
+				if(ret.getnCode().equals("0"))
+				{
+					return ret;
+				}
+			}
+				if(null==performances||performances.size()==0)
+				{
+					ret.setnCode("0");
+					ret.setStrInfo("本季度无订单，或PL奖未设置.");
+					return ret;
+				}
+				for(Performance performance:performances)
+				{
+					performance.setBalanceprice(performance.getBlancea()+performance.getBlanceb()+performance.getBlancec()+performance.getBlanced()+performance.getBlancee());
+					performanceDao.save(performance);
+				}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			ret.setnCode("0");
+			ret.setStrInfo(e.getMessage());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			ret.setnCode("0");
+			ret.setStrInfo(e.getMessage());
+		}
+		return ret;
+	}
+	/**
+	 * @param entity
+	 * @param ret
+	 * @param performances
+	 * @param managers
+	 * @param admin
+	 * @param sysOrder
+	 */
+	private TREReturn parseOrder(Performance entity,List<Performance> performances, 
+			Admin admin, SysOrder sysOrder,String model,Performance formance1,Performance formance2) throws Exception{
+		TREReturn ret=new TREReturn();
+		Performance performance=new Performance();
+		performance.setSalesman(admin.getAdminId());
+		performance.setFyear(entity.getFyear());
+		performance.setFquarter(entity.getFquarter());
+		performance.setFmodel(model);
+		performance.setOperator(admin.getAdminId());
+		if(null!=formance1)
+		{
+			formance1.setFmodel(model);
+		}
+		if(null!=formance2)
+		{
+			formance2.setFmodel(model);
+		}
+		SysOrderQuery soquery=new SysOrderQuery();
+		soquery.setBusinessUserId(admin.getAdminId());
+		soquery.setFyear(entity.getFyear());
+		soquery.setFquarter(entity.getFquarter());
+		soquery.setIsbill(0);
+		soquery.setModel(model);
+		soquery.setSysOrderStatus(ConstantUtils.SYSORDER_STATUS_VALID);
+		List<SysOrder> sysorders=sysOrderDao.findList("SysOrder.Product.findList",soquery);//查询每个业务员的季度订单
+		
+		for(SysOrder order:sysorders)
+		{
+			Plratio plratio=order.getPlratio();//查询PL奖的年度奖励比例
+			if(null==plratio)
+			{
+				ret.setnCode("0");
+				ret.setStrInfo(admin.getAdminName()+"的PL奖未设置,请联系管理员.");
+				return ret;
+			}
+			List<Product> products=order.getProducts();
+			ProductQuery productQuery=new ProductQuery();
+			productQuery.setOrderCode(order.getOrderCode());
+			List<Product> listProduct=productDao.findList("Product.findSum.List", productQuery);/**单笔订单，产品类别分组合计**/
+			Map<String,Pdbase> pdbaseMap=new HashMap<String,Pdbase>();
+			for(Product product:listProduct)
+			{
+				PdbaseQuery pdbaseQuery=new PdbaseQuery();
+				pdbaseQuery.setAdminId(admin.getAdminId());
+				pdbaseQuery.setFyear(entity.getFyear());
+				if(product.getProductType().equals("A"))
+				{
+					pdbaseQuery.setFmoney(sysOrder.getFamount());
+				}
+				else
+				{
+					pdbaseQuery.setFmoney(product.getBalanceprice());
+				}
+				pdbaseQuery.setSalestypename(product.getProductType());
+				Pdbase pdbase=pdbaseDao.getByEntity("Pdbase.Entity", pdbaseQuery);
+				if(null==pdbase)
+				{
+					ret.setnCode("0");
+					ret.setStrInfo(admin.getAdminName()+"的"+product.getProductType()+"类产品,金额："+pdbaseQuery.getFmoney()+"的年度产品基数未设置,请联系管理员.");
+					return ret;
+				}
+				pdbaseMap.put(product.getProductType(), pdbase);
+			}
+			Set types=new HashSet();
+			for(Product product:products)/**订单内产品遍历**/
+			{
+				types.add(product.getProductType());
+				Double rate=0d;
+				Pdbase pdbase=null;
+				if(product.getProductType().equals("A"))
+				{
+					pdbase=pdbaseMap.get(product.getProductType());
+					performance.setBlancea(performance.getBlancea()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOutlaya(performance.getOutlaya()+product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*order.getOperatorrate());
+					if(null!=formance1)
+					{
+						formance1.setBlancea(formance1.getBlancea()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getRewards()*order.getDisCoefficient());
+						formance1.setOutlaya(formance1.getOutlaya()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getPoc()*order.getOperatorrate());
+					}
+					if(null!=formance2)
+					{
+						formance2.setBlancea(formance2.getBlancea()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+						formance2.setOutlaya(formance2.getOutlaya()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getPoc()*order.getOperatorrate());
+					}
+				}
+				else if(product.getProductType().equals("B"))
+				{
+					//单笔某类合计结算额*（折扣系数-基数系数）*签约超额奖对应奖励比例*个人比例
+					pdbase=pdbaseMap.get(product.getProductType());
+					if((product.getDiscountRate()/100)>pdbase.getFbase())
+					{
+						rate=(product.getDiscountRate()/100)-pdbase.getFbase();
+					}
+					performance.setBlanceb(performance.getBlanceb()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOverb(performance.getOverb()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOutlayb(performance.getOutlayb()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPratio()*order.getOperatorrate());
+					if(null!=formance1)
+					{
+						formance1.setBlanceb(formance1.getBlanceb()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getRewards()*order.getDisCoefficient());
+						formance1.setOutlayb(formance1.getOutlayb()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance1.setOverb(formance1.getOverb()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+					}
+					if(null!=formance2)
+					{
+						formance2.setBlanceb(formance2.getBlanceb()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getRewards()*order.getDisCoefficient());
+						formance2.setOutlayb(formance2.getOutlayb()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance2.setOverb(formance2.getOverb()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					}
+				}
+				else if(product.getProductType().equals("C"))
+				{
+					pdbase=pdbaseMap.get(product.getProductType());
+					if((product.getDiscountRate()/100)>pdbase.getFbase())
+					{
+						rate=(product.getDiscountRate()/100)-pdbase.getFbase();
+					}
+					performance.setBlancec(performance.getBlancec()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOverc(performance.getOverc()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOutlayc(performance.getOutlayc()+product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*order.getOperatorrate());
+					if(null!=formance1)
+					{
+						formance1.setBlancec(formance1.getBlancec()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getRewards()*order.getDisCoefficient());
+						formance1.setOutlayc(formance1.getOutlayc()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance1.setOverc(formance1.getOverc()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+					}
+					if(null!=formance2)
+					{
+						formance2.setBlancec(formance2.getBlancec()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+						formance2.setOutlayc(formance2.getOutlayc()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance2.setOverc(formance2.getOverc()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					}
+				}
+				else if(product.getProductType().equals("D"))
+				{
+					pdbase=pdbaseMap.get(product.getProductType());
+					/*if((product.getDiscountRate()/100)>pdbase.getFbase())
+					{
+						rate=(product.getDiscountRate()/100)-pdbase.getFbase();
+					}*/
+					performance.setPdcount(performance.getPdcount()+product.getProductCount());
+					performance.setBlanced(performance.getBlanced()+product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPratio()*order.getDisCoefficient());
+					//performance.setOverd(performance.getOverd()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOutlayd(performance.getOutlayd()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPratio()*order.getOperatorrate());
+					if(null!=formance1)
+					{
+						formance1.setBlanced(formance1.getBlanced()+product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlayd(formance1.getOutlayd()+product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmsalesratio()*order.getOperatorrate());
+						//formance1.setOverd(formance1.getOverd()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*pdbase.getPratio()*order.getDisCoefficient());
+					}
+					if(null!=formance2)
+					{
+						formance2.setBlanced(formance2.getBlanced()+product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+						formance2.setOutlayd(formance2.getOutlayd()+product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmanagerratio()*order.getOperatorrate());
+						//formance2.setOverd(formance2.getOverd()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*pdbase.getPratio()*order.getDisCoefficient());
+					}
+				}
+				else if(product.getProductType().equals("E"))
+				{
+					pdbase=pdbaseMap.get(product.getProductType());
+					if((product.getDiscountRate()/100)>pdbase.getFbase())
+					{
+						rate=(product.getDiscountRate()/100)-pdbase.getFbase();
+					}
+					performance.setBlancee(performance.getBlancee()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOvere(performance.getOvere()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*order.getDisCoefficient());
+					performance.setOutlaye(performance.getOutlaye()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPratio()*order.getOperatorrate());
+					if(null!=formance1)
+					{
+						formance1.setBlancee(formance1.getBlancee()+product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlaye(formance1.getOutlaye()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance1.setOvere(formance1.getOvere()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+					}
+					if(null!=formance2)
+					{
+						formance2.setBlancee(formance2.getBlancee()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getRewards()*order.getDisCoefficient());
+						formance2.setOutlaye(formance2.getOutlaye()+product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getPoc()*order.getOperatorrate());
+						formance2.setOvere(formance2.getOvere()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					}
+				}
+				//processBalance(performance, admin,entity.getFyear(),types,performances,pdbaseMap,model,order,formance1,formance2,product);/**计算季度内每笔订单结算额**/
+			}
+			order.setIsbill(1);/**标记为已记帐**/
+			/**销售员**/
+			if(order.getpL3000Unit()/order.getpL3000ListPrice()>plratio.getBratio())
+			{
+				performance.setPlbonus(performance.getPlbonus()+order.getpL3000Unit()*plratio.getPl3000()*order.getpL3000Count()*order.getDisCoefficient()*plratio.getSelfratio());
+				if(formance1!=null)
+				{
+					formance1.setPlbonus(formance1.getPlbonus()+order.getpL3000Unit()*plratio.getPl3000()*order.getpL3000Count()*order.getDisCoefficient()*plratio.getSalesmanagerratio());
+				}
+				if(formance2!=null)
+				{
+					formance2.setPlbonus(formance2.getPlbonus()+order.getpL3000Unit()*plratio.getPl3000()*order.getpL3000Count()*order.getDisCoefficient()*plratio.getRegionmanagerratio());
+				}
+			}
+			if(order.getsPL2000Unit()/order.getsPL2000ListPrice()>plratio.getBratio())
+			{
+				performance.setPlbonus(performance.getPlbonus()+order.getsPL2000Unit()*plratio.getPl2000()*order.getsPL2000Count()*order.getDisCoefficient()*plratio.getSelfratio());
+				if(formance1!=null)
+				{
+					formance1.setPlbonus(formance1.getPlbonus()+order.getsPL2000Unit()*plratio.getPl2000()*order.getsPL2000Count()*order.getDisCoefficient()*plratio.getSalesmanagerratio());
+				}
+				if(formance2!=null)
+				{
+					formance2.setPlbonus(formance2.getPlbonus()+order.getsPL2000Unit()*plratio.getPl2000()*order.getsPL2000Count()*order.getDisCoefficient()*plratio.getRegionmanagerratio());
+				}
+
+			}
+			if(order.getpL4200Unit()/order.getpL4200ListPrice()>plratio.getBratio())
+			{
+				performance.setPlbonus(performance.getPlbonus()+order.getpL4200Unit()*plratio.getPl4200()*order.getpL4200Count()*order.getDisCoefficient()*plratio.getSelfratio());
+				if(formance1!=null)
+				{
+					formance1.setPlbonus(formance1.getPlbonus()+order.getpL4200Unit()*plratio.getPl4200()*order.getpL4200Count()*order.getDisCoefficient()*plratio.getSalesmanagerratio());
+				}
+				if(formance2!=null)
+				{
+					formance2.setPlbonus(formance2.getPlbonus()+order.getpL4200Unit()*plratio.getPl4200()*order.getpL4200Count()*order.getDisCoefficient()*plratio.getRegionmanagerratio());
+				}
+
+			}
+			if(order.getsSV3500Unit()/order.getsSV3500ListPrice()>plratio.getBratio())
+			{
+				performance.setPlbonus(performance.getPlbonus()+order.getsSV3500Unit()*plratio.getSsv3500()*order.getsSV3500Count()*order.getDisCoefficient()*plratio.getSelfratio());
+				if(formance1!=null)
+				{
+					formance1.setPlbonus(formance1.getPlbonus()+order.getsSV3500Unit()*plratio.getSsv3500()*order.getsSV3500Count()*order.getDisCoefficient()*plratio.getSalesmanagerratio());
+				}
+				if(formance2!=null)
+				{
+					formance2.setPlbonus(formance2.getPlbonus()+order.getsSV3500Unit()*plratio.getSsv3500()*order.getsSV3500Count()*order.getDisCoefficient()*plratio.getRegionmanagerratio());
+				}
+
+			}
+			//sysOrderDao.update(order);
+		}
+		
+		/*ret=processBalance(performance, admin,entity.getFyear(),"A",managers);*//**计算季度内订单A类合计结算额**//*
+		if(ret.getnCode().equals("0"))
+		{
+			return ret;
+		}*/
+		if(sysorders.size()>0)
+		{
+			performances.add(performance);
+			if(null!=formance1&&formance1.getSalesman()!=null)
+			{
+				performances.add(formance1);
+			}
+			if(null!=formance2&&formance2.getSalesman()!=null)
+			{
+				performances.add(formance2);
+			}
+		}
+		return ret;
+	}
+	/**
+	 * 计划每笔订单的奖励 new
+	 * @param forderno
+	 * @param fdate
+	 * @return
+	 */
+	public TREReturn processBlance(String forderno,String fdate,Long salesid,List<Product> products){
+		TREReturn ret=new TREReturn();
+		try{
+			SysOrder sorder=sysOrderDao.getByProperty("ordercode", forderno);
+			SysOrderQuery orderQuery=new SysOrderQuery();
+			orderQuery.setBusinessUserId(salesid);
+			Double bzmount = 0D;
+			Double fbmount = 0D;
+			Double overmount = 0D;
+			Double bzwards = 0D;
+			Double fbwards = 0D;
+			Double lngwards = 0D;
+			List<Product> productList = sorder.getProducts();
+			Double allmount = sysOrderDao.getCountBySaleA("Sysorder.count.sale.A", orderQuery);
+			Double lngcount = sysOrderDao.getCountBySaleA("Sysorder.count.lng", orderQuery);
+			if(null!=productList&&productList.size()>0){
+				for(Product pro:productList){
+					if(pro.getProductType().equals("A")){
+						bzmount += pro.getTotalFee();
+					}else{
+						if(lngcount>25){
+							fbmount += pro.getTotalFee();
+						}else{
+							lngwards += 4;
+						}
+						if(pro.getDiscountRate().doubleValue()>60){//计算超额奖
+							if(pro.getListprice().doubleValue()<2000000){//0-2000000
+								overmount += pro.getListprice() * (pro.getDiscountRate() - 0.6) * 0.3;
+							}else if(2000000<=pro.getListprice()&&pro.getListprice()<5000000){//0-2000000
+								overmount +=  2000000* (pro.getDiscountRate() - 0.6) * 0.3 +(pro.getListprice()-2000000) * (pro.getDiscountRate() - 0.6) * 0.25;
+							}else{
+								overmount +=  2000000* (pro.getDiscountRate() - 0.6) * 0.3 +3000000 * (pro.getDiscountRate() - 0.6) * 0.25+(pro.getListprice()-5000000) * (pro.getDiscountRate() - 0.6) * 0.2;
+							}
+						}
+					}
+				}
+			}
+			if(bzmount.doubleValue()!=0){
+				if(allmount<5000000){
+					//A类产品的奖励比例为1%
+					bzwards = bzmount*0.01;
+				}else if(allmount-5000000>0&&(allmount-5000000)<=5000000){
+					//A类产品的奖励比例为2%
+					bzwards = bzmount*0.02;
+				}else{
+					//A类产品的奖励比例为3%
+					bzwards = bzmount*0.03;
+				}
+			}
+			if(fbmount-2000000<0){//200万元以内
+				fbwards = fbmount * 0.8;
+			}else if(fbmount-2000000>=0&&fbmount-2000000<3000000){//200-500
+				fbwards = 2000000*0.008+(fbmount-2000000) * 0.6;
+			}else{//500万以上
+				fbwards = 2000000*0.008+3000000 * 0.6+(fbmount-5000000) * 0.5;
+			}
+		}catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return ret;
+	}
+	/**
+	 * 计划每笔订单的奖励 old
+	 * @param forderno
+	 * @param fdate
+	 * @return
+	 */
+	public TREReturn processBlance1(String forderno,String fdate,Long salesid,List<Product> products)
+	{
+		TREReturn ret=new TREReturn();
+		try {
+			SysOrder sorder=sysOrderDao.getByProperty("ordercode", forderno);
+			SysOrderQuery orderQuery=new SysOrderQuery();
+			orderQuery.setFtype("A");
+			orderQuery.setContractTime(fdate);
+			orderQuery.setBusinessUserId(salesid);
+			orderQuery.setSysOrderStatus(ConstantUtils.SYSORDER_STATUS_VALID);
+			orderQuery.setFyear(String.valueOf(DateUtils.getYear(fdate)));
+			SysOrder sysOrder=sysOrderDao.getByEntity("SysOrder.Product.Sum", orderQuery);/**查询A类合计结算额**/
+			Pdbase pbase=null,pdbase=null;
+			
+			ProductQuery productQuery=new ProductQuery();
+			productQuery.setOrderCode(forderno);
+			List<Product> listProduct=productDao.findList("Product.findSum.List", productQuery);/**单笔订单，产品类别分组合计**/
+			Map<String,Pdbase> pdbaseMap=new HashMap<String,Pdbase>();
+			PdbaseQuery pdbQuery=new PdbaseQuery();
+			for(Product product:listProduct)
+			{
+				pdbQuery.setAdminId(salesid);
+				pdbQuery.setFyear(String.valueOf(DateUtils.getYear(fdate)));
+				if(product.getProductType().equals("A"))
+				{
+					pdbQuery.setFmoney(sysOrder.getFamount());
+				}
+				else
+				{
+					pdbQuery.setFmoney(product.getBalanceprice());
+				}
+				pdbQuery.setSalestypename(product.getProductType());
+				pbase=pdbaseDao.getByEntity("Pdbase.Entity", pdbQuery);
+				if(null==pbase)
+				{
+					ret.setnCode("-1");
+					ret.setStrInfo(product.getProductType()+"类产品,金额："+pdbQuery.getFmoney()+"的年度产品基数未设置,请联系管理员.");
+					return ret;
+				}
+				pbase.setContractamount(pdbQuery.getFmoney());/**临时存储某类合同额**/
+				pdbaseMap.put(product.getProductType(), pbase);
+			}
+			Admin admin=adminDao.getById(salesid);
+			Double rate=0d;
+			
+			for(Product product:products)
+			{
+				pdbase=pdbaseMap.get(product.getProductType());
+				Performance performance=new Performance();
+				performance.setSalesman(salesid);
+				performance.setProductcode(product.getProductCode());
+				performance.setOrdercode(forderno);
+				performance.setSalestype(product.getProductType());
+				performance.setForderdate(DateConvertUtils.parse(fdate, "yyyy-MM-dd"));
+				performance.setFyear(String.valueOf(DateUtils.getYear(fdate)));
+				performance.setFquarter(DateUtils.getQuarter(fdate));
+				performance.setProductId(product.getProductId());
+				performance.setContractamount(pdbase.getContractamount());
+				rate=0d;
+				pdbQuery.setSalestypename(product.getProductType());
+				if((product.getDiscountRate()/100)>pdbase.getFbase())
+				{
+					rate=(product.getDiscountRate()/100)-pdbase.getFbase();
+				}
+				if(product.getProductType().equalsIgnoreCase("A"))
+				{
+					performance.setBlancea(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setOutlaya(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*sorder.getOperatorrate());
+				}
+				else if(product.getProductType().equalsIgnoreCase("B"))
+				{
+					performance.setBlanceb(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setOutlayb(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*sorder.getOperatorrate());
+					performance.setOverb(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*sorder.getDisCoefficient());
+				}
+				else if(product.getProductType().equalsIgnoreCase("C"))
+				{
+					performance.setBlancec(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setOutlayc(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*sorder.getOperatorrate());
+					performance.setOverc(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*sorder.getDisCoefficient());
+				}
+				else if(product.getProductType().equalsIgnoreCase("D"))
+				{
+					//performance.setOverd(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setPdcount(product.getProductCount()+0d);
+					performance.setBlanced(product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setOutlayd(product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPratio()*sorder.getOperatorrate());
+
+				}
+				else if(product.getProductType().equalsIgnoreCase("E"))
+				{
+					performance.setBlancee(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPratio()*sorder.getDisCoefficient());
+					performance.setOutlaye(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPratio()*sorder.getOperatorrate());
+					performance.setOvere(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPratio()*sorder.getDisCoefficient());
+				}
+				performance.setBlancerate(pdbase.getRewards());
+				performance.setOverrate(pdbase.getOverratio1());
+				performance.setOutlayrate(pdbase.getPoc());
+				performance.setBalanceprice(product.getBalanceprice());
+				performance.setPratio(pdbase.getPratio());
+				//JSONObject pljson=JSONObject.fromObject(product.getpLProducts());
+				Double plbonus=0d;
+				if(null==pdbase.getBratio())
+				{
+					ret.setnCode("0");
+					ret.setStrInfo("PL奖基数未设置，清联系管理员");
+					return ret;
+				}
+				if(product.getDiscountRate()>pdbase.getBratio())/**折扣率大于PL折扣基数**/
+				{
+					//JSONArray jarray=JSONArray.fromObject(pljson.get("value"));
+					List<Productpl> pllist=product.getProductpllist();
+					for(Productpl pl:pllist)
+					{
+						if(null!=pl.getFprice())
+						{
+							plbonus=+pl.getFprice()*pl.getFnum()*pdbase.getPl4200()*sorder.getDisCoefficient();
+						}
+						if(null!=pl.getPl2000fprice())
+						{
+							plbonus=+pl.getPl2000fprice()*pl.getPl2000fnum()*pdbase.getPl2000()*sorder.getDisCoefficient();
+						}
+						if(null!=pl.getPl3000fprice())
+						{
+							plbonus=+pl.getPl3000fprice()*pl.getPl3000fnum()*pdbase.getPl3000()*sorder.getDisCoefficient();
+						}
+						if(null!=pl.getSsv3500fprice())
+						{
+							plbonus=+pl.getSsv3500fprice()*pl.getSsv3500fnum()*pdbase.getSsv3500()*sorder.getDisCoefficient();
+						}
+					}
+				}
+				performance.setPlbonus(plbonus*pdbase.getPratio());
+				performance.setOperator(salesid);
+				performance.setFmodel(sorder.getModel());
+				performanceDao.save(performance);
+				if(null!=admin.getSalemid()&&admin.getSalemid()>0)
+				{
+					Performance formance1=new Performance();
+					formance1.setSalesman(admin.getSalemid());
+					formance1.setOrdercode(forderno);
+					formance1.setProductcode(product.getProductCode());
+					formance1.setProductId(product.getProductId());
+					formance1.setSalestype(product.getProductType());
+					formance1.setForderdate(DateConvertUtils.parse(fdate, "yyyy-MM-dd"));
+					formance1.setContractamount(pdbase.getContractamount());
+					if(product.getProductType().equals("A"))
+					{
+						formance1.setBlancea(product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getRewards()*sorder.getDisCoefficient());
+						formance1.setOutlaya(product.getBalanceprice()*product.getProductCount()*pdbase.getPmsalesratio()*pdbase.getPoc()*sorder.getOperatorrate());
+					}
+					else if(product.getProductType().equalsIgnoreCase("B"))
+					{
+						performance.setBlanceb(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+						performance.setOutlayb(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmsalesratio()*sorder.getOperatorrate());
+						performance.setOverb(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+					}
+					else if(product.getProductType().equalsIgnoreCase("C"))
+					{
+						performance.setBlancec(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+						performance.setOutlayc(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmsalesratio()*sorder.getOperatorrate());
+						performance.setOverc(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+					}
+					else if(product.getProductType().equalsIgnoreCase("D"))
+					{
+						performance.setPdcount(product.getProductCount()+0d);
+						performance.setBlanced(product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+						performance.setOutlayd(product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmsalesratio()*sorder.getOperatorrate());
+					}
+					else if(product.getProductType().equalsIgnoreCase("E"))
+					{
+						performance.setBlancee(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+						performance.setOutlaye(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmsalesratio()*sorder.getOperatorrate());
+						performance.setOvere(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*sorder.getDisCoefficient());
+					}
+					formance1.setBlancerate(pdbase.getRewards());
+					formance1.setOverrate(pdbase.getOverratio1());
+					formance1.setOutlayrate(pdbase.getPoc());
+					formance1.setBalanceprice(product.getBalanceprice());
+					formance1.setPratio(pdbase.getPmsalesratio());
+					formance1.setPlbonus(plbonus*pdbase.getPmsalesratio());
+					formance1.setOperator(salesid);
+					formance1.setFmodel(sorder.getModel());
+					formance1.setFquarter(DateUtils.getQuarter(fdate));
+					performanceDao.save(formance1);
+				}
+				if(null!=admin.getAmanagerid()&&admin.getAmanagerid()>0)
+				{
+					Performance formance2=new Performance();
+					formance2.setSalesman(admin.getAmanagerid());
+					formance2.setOrdercode(forderno);
+					formance2.setProductcode(product.getProductCode());
+					formance2.setProductId(product.getProductId());
+					formance2.setSalestype(product.getProductType());
+					formance2.setForderdate(DateConvertUtils.parse(fdate, "yyyy-MM-dd"));
+					formance2.setContractamount(pdbase.getContractamount());
+					if(product.getProductType().equals("A"))
+					{
+						formance2.setBlancea(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+						formance2.setOutlaya(product.getBalanceprice()*product.getProductCount()*pdbase.getPmanagerratio()*pdbase.getPoc()*sorder.getOperatorrate());
+					}
+					else if(product.getProductType().equalsIgnoreCase("B"))
+					{
+						performance.setBlanceb(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+						performance.setOutlayb(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmanagerratio()*sorder.getOperatorrate());
+						performance.setOverb(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+					}
+					else if(product.getProductType().equalsIgnoreCase("C"))
+					{
+						performance.setBlancec(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+						performance.setOutlayc(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmanagerratio()*sorder.getOperatorrate());
+						performance.setOverc(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+					}
+					else if(product.getProductType().equalsIgnoreCase("D"))
+					{
+						performance.setPdcount(product.getProductCount()+0d);
+						performance.setBlanced(product.getProductCount()*(pdbase.getPrebonus()+pdbase.getFullbonus())*pdbase.getRewards()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+						performance.setOutlayd(product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmanagerratio()*sorder.getOperatorrate());
+					}
+					else if(product.getProductType().equalsIgnoreCase("E"))
+					{
+						performance.setBlancee(product.getBalanceprice()*product.getProductCount()*pdbase.getRewards()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+						performance.setOutlaye(product.getBalanceprice()*product.getProductCount()*pdbase.getPoc()*pdbase.getPmanagerratio()*sorder.getOperatorrate());
+						performance.setOvere(product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*sorder.getDisCoefficient());
+					}
+					formance2.setBlancerate(pdbase.getRewards());
+					formance2.setOverrate(pdbase.getOverratio1());
+					formance2.setOutlayrate(pdbase.getPoc());
+					formance2.setBalanceprice(product.getBalanceprice());
+					formance2.setPratio(pdbase.getPmanagerratio());
+					formance2.setPlbonus(plbonus*pdbase.getPmanagerratio());
+					formance2.setOperator(salesid);
+					formance2.setFmodel(sorder.getModel());
+					formance2.setFquarter(DateUtils.getQuarter(fdate));
+					performanceDao.save(formance2);
+				}
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			ret.setnCode("-1");
+			ret.setStrInfo(e.getMessage());
+		} catch (JSONException e) {
+			e.printStackTrace();
+			ret.setnCode("-1");
+			ret.setStrInfo(e.getMessage());
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+			ret.setnCode("-1");
+			ret.setStrInfo(e.getMessage());
+		}
+		return ret;
+	}
+	
+	/**
+	 * 处理结算额，业务费
+	 * @param performance
+	 * @param admin
+	 * @param fyear
+	 * @return
+	 */
+	/*private void processBalance(Performance performance, Admin admin,String fyear,Set types,List<Performance> managers,Map<String,Pdbase> pdbaseMap,String model,SysOrder order,Performance formance1,Performance formance2,Product product) {
+		String type="";
+		for(Iterator it=types.iterator();it.hasNext();)
+		{
+			type=it.next().toString();
+			Pdbase pdbase=pdbaseMap.get(type);
+			if(null!=formance1)*//**销售经理**//*
+			{
+					formance1.setSalesman(admin.getSalemid());
+					formance1.setBlancea(performance.getBlancea()*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+					formance1.setFyear(fyear);
+					formance1.setFquarter(performance.getFquarter());
+					formance1.setFmodel(model);
+					if(type.equals("B"))
+					{
+						formance1.setBlanceb(performance.getBlanceb()*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOverb(performance.getOverb()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlayb(performance.getOutlayb()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmsalesratio()*order.getOperatorrate());
+					}
+					else if(type.equals("C"))
+					{
+						formance1.setBlancec(performance.getBlancec()*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOverc(performance.getOverc()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlayc(performance.getOutlayc()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmsalesratio()*order.getOperatorrate());
+
+					}
+					else if(type.equals("D"))*//**多于25台不予奖励未处理**//*
+					{
+						formance1.setBlanced((pdbase.getPrebonus()+pdbase.getFullbonus())*performance.getPdcount()*order.getDisCoefficient());
+						formance1.setOverd(performance.getOverd()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlayd(performance.getOutlayd()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmsalesratio()*order.getOperatorrate());
+
+					}
+					else if(type.equals("E"))
+					{
+						formance1.setBlancee(performance.getBlancee()*pdbase.getRewards()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOvere(performance.getOvere()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmsalesratio()*order.getDisCoefficient());
+						formance1.setOutlaye(performance.getOutlaye()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmsalesratio()*order.getOperatorrate());
+
+					}
+					else if(type.equals("A"))
+					{
+						
+					}
+			}
+			if(null!=formance2)*//**区域经理**//*
+			{
+				formance2.setSalesman(admin.getAmanagerid());
+				formance2.setBlancea(performance.getBlancea()*pdbase.getRewards()*pdbase.getPmanagerratio());
+				formance2.setFyear(fyear);
+				formance2.setFquarter(performance.getFquarter());
+				formance2.setFmodel(model);
+				if(type.equals("B"))
+				{
+					formance2.setBlanceb(performance.getBlanceb()*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOverb(performance.getOverb()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOutlayb(performance.getOutlayb()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmanagerratio()*order.getOperatorrate());
+
+				}
+				else if(type.equals("C"))
+				{
+					formance2.setBlancec(performance.getBlancec()*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOverc(performance.getOverc()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOutlayc(performance.getOutlayc()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmanagerratio()*order.getOperatorrate());
+
+				}
+				else if(type.equals("D"))*//**多于25台不予奖励未处理**//*
+				{
+					formance2.setBlanced((pdbase.getPrebonus()+pdbase.getFullbonus())*performance.getPdcount());
+					formance2.setOverd(performance.getOverd()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOutlayd(performance.getOutlayd()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmanagerratio()*order.getOperatorrate());
+
+				}
+				else if(type.equals("E"))
+				{
+					formance2.setBlancee(performance.getBlancee()*pdbase.getRewards()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOvere(performance.getOvere()+product.getBalanceprice()*(rate)*product.getProductCount()*pdbase.getOverratio1()*pdbase.getPmanagerratio()*order.getDisCoefficient());
+					formance2.setOutlaye(performance.getOutlaye()+product.getBalanceprice()*pdbase.getPoc()*product.getProductCount()*pdbase.getPmanagerratio()*order.getOperatorrate());
+
+				}
+				else if(type.equals("A"))
+				{
+					
+				}
+			}
+		}
+		
+	}
+	*/
+	/*private TREReturn processBalance(Performance performance, Admin admin,String fyear,String type,List<Performance> managers) {
+	TREReturn ret=new TREReturn();
+	PdbaseQuery basequery=new PdbaseQuery();
+	basequery.setFyear(fyear);
+	basequery.setAdminId(admin.getAdminId());
+	basequery.setSalestypename(type);
+	basequery.setFmoney(performance.getBlancea());
+	Pdbase pdbase=pdbaseDao.getByEntity("Pdbase.Entity", basequery);
+	if(null==pdbase)
+	{
+		ret.setnCode("0");
+		ret.setStrInfo(admin.getAdminName()+"的"+type+"类产品年度基数未设置，请联系管理员.");
+		return ret;
+	}
+	*//**查询设置比例**//*
+	PdbaseQuery pdbaseQuery=new PdbaseQuery();
+	pdbaseQuery.setAdminId(admin.getAdminId());
+	pdbaseQuery.setFyear(fyear);
+	pdbaseQuery.setSalestypename(basequery.getSalestypename());
+	pdbaseQuery.setFmoney(performance.getBlancea());
+	pdbase=pdbaseDao.findEntity(pdbaseQuery);
+	pdbase.getPoc();
+	performance.setBlancea(performance.getBlancea()*pdbase.getRewards()*pdbase.getPratio());
+	if(admin.getSalemid()!=null&&admin.getSalemid()>0)*//**销售经理**//*
+	{
+		Performance formance=new Performance();
+		formance.setBlancea(performance.getBlancea()*pdbase.getRewards()*pdbase.getPmsalesratio());
+		formance.setFyear(fyear);
+		formance.setFquarter(performance.getFquarter());
+		managers.add(formance);
+	}
+	if(admin.getAmanagerid()!=null&&admin.getAmanagerid()>0)*//**区域经理**//*
+	{
+		Performance formance=new Performance();
+		formance.setBlancea(performance.getBlancea()*pdbase.getRewards()*pdbase.getPmanagerratio());
+		formance.setFyear(fyear);
+		formance.setFquarter(performance.getFquarter());
+		managers.add(formance);
+	}
+	return ret;
+}*/
+	public void setAmount(Performance performance)
+	{
+		
+	}
+	public Integer update(Performance entity) throws ServiceException
+	{
+		Integer returnValue =  performanceDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = performanceDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = performanceDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PerformanceQuery query = new PerformanceQuery();
+		try {
+			return performanceDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Performance> findPage(Page<Performance> page, PerformanceQuery query) throws ServiceException
+	{
+		return performanceDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Performance> findPage(Page<Performance> page,String statement, PerformanceQuery query) throws ServiceException
+	{
+		return performanceDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Performance> findList(PerformanceQuery query) throws ServiceException
+	{
+		return performanceDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Performance> findList(PerformanceQuery query,Integer pageSize) throws ServiceException
+	{
+		return performanceDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Performance> findList(PerformanceQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return performanceDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Performance> findAllList() throws ServiceException
+	{
+		return performanceDao.findAllList();
+	}
+
+	@Override
+	public List<Performance> findperData(PerformanceQuery performanceQuery)  throws ServiceException{
+		
+		Admin renAd = adminDao.getById(performanceQuery.getSalesman());
+		List<Admin> listad = new ArrayList<Admin>(); 
+		if(renAd.getTeamseq()!=null && (renAd.getAmanagerid().longValue()==performanceQuery.getSalesman().longValue())){
+			AdminQuery aq = new AdminQuery();
+			aq.setTeamseq(renAd.getTeamseq());
+			listad = adminDao.findListAdmin(aq);
+		}
+		
+		 List<Performance> listper = new ArrayList<Performance>();
+		if(listad.size()>0){
+			for(int tt=0;tt<listad.size();tt++){
+				performanceQuery.setSalesman(listad.get(tt).getAdminId());
+				Performance permance = performanceDao.findperData(performanceQuery);
+				
+				
+				if(permance !=null){
+					listper.add(permance);
+				}
+			}
+		}else{
+			Performance permance = performanceDao.findperData(performanceQuery);
+			if(permance !=null){
+				listper.add(permance);
+			}
+		}
+		
+		
+		return listper;
+	}
+	@Override
+	public List<Performance> findBonus(PerformanceQuery performanceQuery)
+			throws ServiceException {
+		return performanceDao.findBonus(performanceQuery);
+	}
+
+	@Override
+	public List<Performance> findList(PerformanceQuery query, String statement)
+			throws ServiceException {
+		return performanceDao.findList(statement, query);
+	}
+	/**
+	 * 显示系统订单审核后该订单的奖励人信息
+	 * @param userId
+	 * @return
+	 */
+	@Override
+	public List<Performance> getSysorderSaleInfo(PerformanceQuery query) {
+		return performanceDao.getSysorderSaleInfo(query);
+	}
+
+
+}

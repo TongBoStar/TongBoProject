@@ -1,0 +1,95 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.GchartInfo;
+import com.terrence.crm.dol.dao.IGchartInfoDao;
+import com.terrence.crm.dol.query.GchartInfoQuery;
+@Repository
+public class GchartInfoDao extends BaseIbatisDao<GchartInfo,java.lang.Long> implements IGchartInfoDao{
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		
+		return "GchartInfo";
+	}
+
+	@Override
+	public void saveOrUpdate(GchartInfo entity) throws DataAccessException {
+		if(null==entity.getGchartid()){
+			save(entity);
+		}else{
+			update(entity);
+		}
+	}
+
+	@Override
+	public List<Map<String,Object>> findChartData(GchartInfoQuery gchartInfoQuery) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String, Object> resultmap = null;
+		List<Map<String,Object>> resultList = new ArrayList<Map<String,Object>>();
+		String sql = "";
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			/**if(gchartInfoQuery.getModelid().longValue()!=17){
+				if(null==gchartInfoQuery.getGchartid()){
+					//	sql = "select * from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"' order by cdid asc";
+						sql = "select * from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+ " and stepid="+gchartInfoQuery.getStepid();
+						sql += "'   or checktimeid is null and checktimeid=(select MAX(checktimeid) from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"') order by fkey1,cdid asc";
+						
+					}else{
+					//	sql = "select * from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"'and gchartid="+gchartInfoQuery.getGchartid()+" order by cdid asc";
+						sql = "select  cdid,fkey1,fkey2,fkey3,fkey4,fkey5,fkey6,fkey7,trialid,itemcode,stepid,tplid,seqno from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"'   or checktimeid is null and gchartid="+gchartInfoQuery.getGchartid()+" and checktimeid=(select MAX(checktimeid) from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"') order by fkey1,cdid asc";
+					}
+			//}else{
+			//	sql = "select itemcode,tplid,trialid,seqno,gchartid,ISNULL(t_start_03, '')+ISNULL(t_start_02, '') t_start_02,ISNULL(p_start_04, 0)+ISNULL(p_start_17, 0) p_start_17,t_start_01,p_end_04 from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"'  and (t_start_02 is not null or t_start_03 is not null) order by cdid asc";
+			//}*/
+			sql = "select * from t_checkdata_detail ";
+			sql += "where seqno='"+gchartInfoQuery.getSerialNumber()+"' and stepid="+gchartInfoQuery.getStepid();
+			sql += " and (checktimeid is null or checktimeid=(";
+			sql += "select max(checktimeid) from (";
+			sql += "select * from t_checkdata_detail where seqno='"+gchartInfoQuery.getSerialNumber()+"' and stepid="+gchartInfoQuery.getStepid();
+			sql += ") steptemp))  order by fkey1,cdid asc";
+			rs=  stmt.executeQuery(sql);
+			ResultSetMetaData rsmd=rs.getMetaData();
+			Integer columnCount = rsmd.getColumnCount();//查询出有多少个列
+			String head;
+			while (rs.next()) {
+				resultmap = new HashMap<String, Object>();
+				for (int i = 1; i <= columnCount; i++) {
+					head = rsmd.getColumnName(i);//取出表头
+					resultmap.put(head, (null==rs.getObject(head)?null:rs.getObject(head).toString()));
+				}
+				resultList.add(resultmap);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+		return resultList;
+	}
+}

@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Bitem">
+
+        
+	<resultMap id="RM.Bitem" class="com.terrence.crm.dol.bean.Bitem">
+        <result property="fitemid" column="fitemid"/>
+        <result property="fitemclassid" column="fitemclassid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="funused" column="funused"/>
+        <result property="ffullnumber" column="ffullnumber"/>
+        <result property="fdeleted" column="fdeleted"/>
+        <result property="fshortnumber" column="fshortnumber"/>
+        <result property="ffullname" column="ffullname"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fdetail" column="fdetail"/>
+        <result property="fparentid" column="fparentid"/>
+        <result property="seq" column="seq"/>
+    </resultMap>
+	<resultMap id="RM.BitemTree" class="com.terrence.crm.dol.bean.Bitem">
+        <result property="fitemid" column="fitemid"/>
+        <result property="fitemclassid" column="fitemclassid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="fdeleted" column="fdeleted"/>
+        <result property="fparentid" column="fparentid"/>
+
+    </resultMap>
+	<!-- 用于树结构的查询 -->
+	<sql id="Bitem.treecolumns">
+	    <![CDATA[
+        	cte.fitemid,
+        	cte.fname,
+        	cte.fnumber,
+        	cte.fitemclassid,
+        	cte.fparentid,
+        	cte.fdeleted
+	    ]]>
+	</sql>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Bitem.columns">
+	    <![CDATA[
+        	t_bitem.fitemid ,
+        	t_bitem.fitemclassid ,
+        	t_bitem.fnumber ,
+        	t_bitem.fname ,
+        	t_bitem.funused ,
+        	t_bitem.ffullnumber ,
+        	t_bitem.fdeleted ,
+        	t_bitem.fshortnumber ,
+        	t_bitem.ffullname ,
+        	t_bitem.flevel ,
+        	t_bitem.fdetail,
+        	t_bitem.fparentid,
+        	t_bitem.seq
+	    ]]>
+	</sql>
+	
+   <insert id="Bitem.insert" >
+   INSERT INTO
+        t_bitem (
+        fnumber ,
+        fname 
+        <dynamic prepend="">
+        <isNotEmpty prepend="," property="fitemclassid">fitemclassid</isNotEmpty>
+        <isNotEmpty prepend="," property="funused">funused</isNotEmpty>
+        <isNotEmpty prepend="," property="ffullnumber">ffullnumber</isNotEmpty>
+        <isNotEmpty prepend="," property="fdeleted">fdeleted</isNotEmpty>
+        <isNotEmpty prepend="," property="fshortnumber">fshortnumber</isNotEmpty>
+        <isNotEmpty prepend="," property="ffullname">ffullname</isNotEmpty>
+        <isNotEmpty prepend="," property="flevel">flevel</isNotEmpty>
+        <isNotEmpty prepend="," property="fdetail">fdetail</isNotEmpty>
+        <isNotEmpty prepend="," property="fparentid">fparentid</isNotEmpty>
+        <isNotEmpty prepend="," property="seq">seq</isNotEmpty>
+        </dynamic>
+        ) VALUES (
+        #fnumber# ,
+        #fname# 
+        <dynamic prepend="">
+        <isNotEmpty prepend="," property="fitemclassid">#fitemclassid#</isNotEmpty>
+        <isNotEmpty prepend="," property="funused">#funused#</isNotEmpty>
+        <isNotEmpty prepend="," property="ffullnumber">#ffullnumber#</isNotEmpty>
+        <isNotEmpty prepend="," property="fdeleted">#fdeleted#</isNotEmpty>
+        <isNotEmpty prepend="," property="fshortnumber">#fshortnumber#</isNotEmpty>
+        <isNotEmpty prepend="," property="ffullname">#ffullname#</isNotEmpty>
+        <isNotEmpty prepend="," property="flevel">#flevel#</isNotEmpty>
+        <isNotEmpty prepend="," property="fdetail">#fdetail#</isNotEmpty>
+        <isNotEmpty prepend="," property="fparentid">#fparentid#</isNotEmpty>
+        <isNotEmpty prepend="," property="seq">#seq#</isNotEmpty>
+        </dynamic>
+        )
+    <!-- <![CDATA[
+        INSERT INTO
+        t_bitem (
+        	fitemid ,
+        	fitemclassid ,
+        	fnumber ,
+        	fname ,
+        	funused ,
+        	ffullnumber ,
+        	fdeleted ,
+        	fshortnumber ,
+        	ffullname ,
+        	flevel ,
+        	fdetail,
+        	fparentid,
+        	seq
+        ) VALUES (
+        	#fitemid# ,
+        	#fitemclassid# ,
+        	#fnumber# ,
+        	#fname# ,
+        	#funused# ,
+        	#ffullnumber# ,
+        	#fdeleted# ,
+        	#fshortnumber# ,
+        	#ffullname# ,
+        	#flevel# ,
+        	#fdetail#,
+        	#fparentid#,
+        	#seq#
+        )
+    ]]> --> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fitemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Bitem.update" parameterClass="com.terrence.crm.dol.bean.Bitem">         
+        UPDATE t_bitem 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fitemclassid">
+	        	fitemclassid = #fitemclassid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="funused">
+	        	funused = #funused# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ffullnumber">
+	        	ffullnumber = #ffullnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdeleted">
+	        	fdeleted = #fdeleted# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fshortnumber">
+	        	fshortnumber = #fshortnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ffullname">
+	        	ffullname = #ffullname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdetail">
+	        	fdetail = #fdetail# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fparentid">
+	        	fparentid = #fparentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seq">
+	        	seq = #seq# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fitemid = #fitemid# 
+    </update>
+    
+	<delete id="Bitem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_bitem where
+       fitemid = #fitemid# 
+    ]]>
+    </delete>
+    
+    <delete id="Bitem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_bitem 
+        WHERE
+       fitemid in ($fitemid$) 
+    ]]>
+    </delete>
+    
+    <select id="Bitem.getById" resultMap="RM.Bitem">
+	    select <include refid="Bitem.columns"/>
+	    
+	        from t_bitem 
+	        where 
+		        fitemid = #fitemid# 
+	    
+    </select>
+    
+	<select id="Bitem.getByProperty" resultMap="RM.Bitem">
+		select <include refid="Bitem.columns"/> from t_bitem where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Bitem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_bitem.fitemid = #fitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fitemclassid">
+	             t_bitem.fitemclassid = #fitemclassid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_bitem.fnumber = #fnumber#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_bitem.fname = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="funused">
+	             t_bitem.funused = #funused#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ffullnumber">
+	             t_bitem.ffullnumber = #ffullnumber#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_bitem.fdeleted = #fdeleted#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fshortnumber">
+	             t_bitem.fshortnumber = #fshortnumber#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ffullname">
+	             t_bitem.ffullname = #ffullname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_bitem.flevel = #flevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdetail">
+	             t_bitem.fdetail = #fdetail#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fparentid">
+	        	t_bitem.fparentid = #fparentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="seq">
+	        	t_bitem.seq = #seq# 
+	        </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Bitem.findPage.and">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_bitem.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fitemclassid">
+	             t_bitem.fitemclassid = #fitemclassid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_bitem.fnumber = #fnumber#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_bitem.fname = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="funused">
+	             t_bitem.funused = #funused#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ffullnumber">
+	             t_bitem.ffullnumber = #ffullnumber#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_bitem.fdeleted = #fdeleted#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fshortnumber">
+	             t_bitem.fshortnumber = #fshortnumber#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ffullname">
+	             t_bitem.ffullname = #ffullname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_bitem.flevel = #flevel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdetail">
+	             t_bitem.fdetail = #fdetail#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fparentid">
+	        	t_bitem.fparentid = #fparentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="seq">
+	        	t_bitem.seq = #seq# 
+	        </isNotEmpty>
+	</sql>
+	
+    <select id="Bitem.Entity" resultMap="RM.Bitem">
+    	SELECT 	<include refid="Bitem.columns"/> FROM t_bitem <include refid="Bitem.findPage.where"/>
+    </select>
+    
+    <select id="Bitem.findList" resultMap="RM.Bitem">
+    	SELECT 
+    		<include refid="Bitem.columns"/> 
+    	FROM 
+    		t_bitem
+		<include refid="Bitem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Bitem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_bitem
+    ]]>
+		<include refid="Bitem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Bitem.findPage" resultMap="RM.Bitem">
+    	select <include refid="Bitem.columns"/>	    
+	        from t_bitem 	   
+		<include refid="Bitem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Bitem.findPage" resultMap="RM.Bitem">
+    	select <include refid="Bitem.columns"/>	    
+	        from t_bitem where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fitemid 
+	   not in(select $notTop$ 
+       fitemid 
+	   from t_bitem <include refid="Bitem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Bitem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <select id="Bitem.findTreeList" resultMap="RM.BitemTree">
+    	 <![CDATA[
+    	 with cte as  
+		 (  
+		 select a.fitemid,a.fname,a.fnumber,a.fparentid,a.fitemclassid,a.fdeleted from t_bitem a  where a.fitemid=0
+		 union all   
+		 select k.fitemid,k.fname,k.fnumber,k.fparentid,k.fitemclassid,k.fdeleted  from t_bitem k inner join cte c on c.fitemid = k.fparentid  where k.fdeleted=0
+		 ) 
+ 		]]>
+ 		select <include refid="Bitem.treecolumns"/> from cte
+    </select>
+    
+    <procedure id="Bitem.getdata.tongbu.erp">
+    	{call pro_ItemK3ErpData()}
+    </procedure>
+	
+	<!-- 查询父节点的code -->
+	<select id="Bitem.findParent.Code" resultMap="RM.Bitem">
+    	select <include refid="Bitem.columns"/>   from t_bitem where fitemid = #fitemid#
+    </select>
+    
+    <procedure id="Bitem.update.item.department.province.data">
+    	{call pro_erpAllData()}
+    </procedure>
+</sqlMap>

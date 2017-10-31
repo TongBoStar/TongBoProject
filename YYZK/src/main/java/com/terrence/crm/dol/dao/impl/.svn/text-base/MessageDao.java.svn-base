@@ -1,0 +1,78 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Repository
+public class MessageDao extends BaseIbatisDao<Message,java.lang.Long> implements IMessageDao{
+	public String getIbatisSqlMapNamespace() {
+		return "Message"; 
+	}
+	public void saveOrUpdate(Message entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public Message getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Message)this.getSqlMapClientTemplate().queryForObject("Message.getByProperty", map);
+	}
+	@Override
+	public Integer changeMessage(Long finterId, String fbillNo,String url, String mark,
+			List<Long> handlerIds){
+		try {
+			//1先将原来的消息更新为status=2
+			MessageQuery query = new MessageQuery();
+			query.setFbillid(finterId);
+			query.setProcessname(mark);
+			query.setSortColumns("id");
+			List<Message> lists = findList(query);
+			if(lists!=null&&lists.size()>0){
+				Message mes = lists.get(lists.size()-1);
+				mes.setStatus(2);
+				mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+				update(mes);
+			}
+			//2如果有当前执行人则插入数据
+			String empids="";
+			if(handlerIds!=null&&handlerIds.size()>0){
+				for(int i=0;i<handlerIds.size();i++){
+					if(i==handlerIds.size()-1){
+						empids +=handlerIds.get(i);
+					}else{
+						empids +=handlerIds.get(i)+",";
+					}
+				}
+			}
+			if(empids!=null&&!empids.equals("")){
+				Message message = new Message();
+				message.setName("采购申请单待审核");//消息名称
+				message.setContent("单据编号："+fbillNo+";制单人："+SpringSecurityUtils.getCurrentRealName()+";制单日期："+DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//消息内容
+				message.setType(1);//单据类型
+				message.setFbillno(fbillNo);//单据编号
+				message.setFbillid(finterId);//单据主键
+				message.setUrl(url);//链接地址
+				message.setStatus(1);//消息状态(1未处理2已处理)
+				message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+				message.setEmpids(empids);//执行人
+				message.setProcessname(mark);//流程名称
+				save(message);
+			}
+			return 1;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+}

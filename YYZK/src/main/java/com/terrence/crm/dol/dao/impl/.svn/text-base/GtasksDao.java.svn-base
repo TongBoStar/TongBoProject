@@ -1,0 +1,113 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Gtasks;
+import com.terrence.crm.dol.dao.IGtasksDao;
+import com.terrence.crm.dol.query.GtasksQuery;
+
+@Repository
+public class GtasksDao extends BaseIbatisDao<Gtasks,java.lang.Long> implements IGtasksDao{
+
+		
+	public void saveOrUpdate(Gtasks entity) {
+		if(entity.getTaskid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Gtasks";
+	}
+	public Gtasks getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Gtasks)this.getSqlMapClientTemplate().queryForObject("Gtasks.getByProperty", map);		
+	}
+
+	@Override
+	public Long saveNewTask(Gtasks entity) {
+		return (Long) this.getSqlMapClientTemplate().insert("Gtasks.insert.newTask", entity);
+		
+	}
+
+	@Override
+	public void updategtasks(Gtasks gtasks) {
+		this.getSqlMapClientTemplate().update("Gtasks.update.gtasks", gtasks);
+		
+	}
+
+	@Override
+	public void updatefbno(Gtasks tasks) {
+		this.getSqlMapClientTemplate().update("Gtasks.update.fbno", tasks);
+		
+	}
+
+	@Override
+	public void deletefno(Gtasks gtasks) {//申请列表删除后，任务列表相应数据也删除
+		this.getSqlMapClientTemplate().delete("Gtasks.delete.fno", gtasks);
+		
+	}
+
+	@Override
+	public Gtasks findEntity(Gtasks gtasks) {
+		return (Gtasks) this.getSqlMapClientTemplate().queryForObject("Gtasks.find.entity", gtasks);
+	}
+
+	@Override
+	public Long saveTasksPoor(Gtasks entity) {
+		return (Long) this.getSqlMapClientTemplate().insert("Tasks.insert.tasksPoor", entity);
+	}
+
+	@Override
+	public Gtasks findGtasksEntity(Gtasks gtasks) {
+		return  (Gtasks) this.getSqlMapClientTemplate().queryForObject("Gtasks.find.entity",gtasks);
+	}
+
+	@Override
+	public void updategtasksfbillno(Gtasks gtasks) {
+		this.getSqlMapClientTemplate().update("Gtasks.update.status.detail", gtasks);
+		
+	}
+
+	@Override
+	public Gtasks findtaskid(Gtasks task) {
+		
+		return (Gtasks) this.getSqlMapClientTemplate().queryForObject("Gtaska.find.tasksid", task);
+	}
+
+	@Override
+	public void updategtasksbatch(Gtasks gtasks) {
+		this.getSqlMapClientTemplate().update("Gtasks.update.status.detail",gtasks );
+		
+	}
+
+	@Override
+	public void deleteRejected(Gtasks gt) {
+		this.getSqlMapClientTemplate().delete("Gtasks.delete.rejected", gt);
+	}
+
+	@Override
+	public List<Gtasks> findlistgtasks(GtasksQuery gtasksQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Gtasks.find.findlistgtasks", gtasksQuery);
+	}
+
+	@Override
+	public List<Gtasks> findDelete(Gtasks gtasks) {
+		return this.getSqlMapClientTemplate().queryForList("Gtasks.find.delete.data.for.poorder", gtasks);
+	}
+
+}

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd"
+	   default-lazy-init="false">
+	   
+	<!-- 数据源定义 -->
+	
+    <bean id="ds_read" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="url">
+			<value>${ds.read.jdbc.url}</value>
+		</property>
+		<property name="username">
+			<value>${ds.read.jdbc.username}</value>
+		</property>
+		<property name="password">
+			<value>${ds.read.jdbc.password}</value>
+		</property>
+		<property name="maxActive">
+			<value>50</value>
+		</property>
+		<property name="maxIdle">
+			<value>5</value>
+		</property>
+		<property name="maxWait">
+			<value>3000</value>
+		</property>
+		<property name="validationQuery">
+			<value>select 1</value>
+		</property>
+		<property name="testOnBorrow">
+			<value>true</value>
+		</property>
+		<property name="testOnReturn">
+			<value>false</value>
+		</property>
+		<property name="testWhileIdle">
+			<value>true</value>
+		</property>
+	</bean>
+    <bean id="ds_write" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="url">
+			<value>${ds.write.jdbc.url}</value>
+		</property>
+		<property name="username">
+			<value>${ds.write.jdbc.username}</value>
+		</property>
+		<property name="password">
+			<value>${ds.write.jdbc.password}</value>
+		</property>
+		<property name="maxActive">
+			<value>50</value>
+		</property>
+		<property name="maxIdle">
+			<value>5</value>
+		</property>
+		<property name="maxWait">
+			<value>3000</value>
+		</property>
+		<property name="validationQuery">
+			<value>select 1</value>
+		</property>
+		<property name="testOnBorrow">
+			<value>true</value>
+		</property>
+		<property name="testOnReturn">
+			<value>false</value>
+		</property>
+		<property name="testWhileIdle">
+			<value>true</value>
+		</property>
+	</bean>
+	
+    <bean id="dataSource" class="com.base.DynamicDataSource">
+		<property name="targetDataSources">
+			<map key-type="java.lang.String">
+				<entry key="10" value-ref="ds_read" />
+				<entry key="11" value-ref="ds_write" />
+				<!-- <entry key="12" value-ref="ds_kingdee_read"/>
+				<entry key="13" value-ref="ds_kingdeecz_read"/> -->
+            </map>
+		</property>
+		<!-- property name="defaultTargetDataSource" ref="ds_error" / -->
+	</bean>
+	
+	<bean class="com.terrence.crm.dol.base.DbContextAspect">
+		<property name="readDS" value="10"/>
+		<property name="writeDS" value="11"/>
+		<property name="k3Ds" value="12"/>
+		<property name="k3DsCz" value="13"/>
+	</bean>
+	
+
+	<!-- log4jdbc可以将数据源执行的sql将占位符?替换成字符,并以日志打印出来. log4j配置: log4j.logger.jdbc.sqltiming=INFO    详情请看: http://code.google.com/p/rapid-framework/wiki/log4jdbc
+	如oracle示例: 
+		原来的sql: select * from user where birth_date = ? and username = ? and age > ?
+		转换后sql: select * from user where birth_date = to_date('2010-08-13','yyyy-mm-dd') and username = 'badqiu' and age > 20
+	 -->
+	<bean id="log4jdbcInterceptor" class="net.sf.log4jdbc.DataSourceSpyInterceptor" />
+    <bean id="dataSourceLog4jdbcAutoProxyCreator" class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+       <property name="interceptorNames">
+           <list>
+              <value>log4jdbcInterceptor</value>        
+           </list>
+       </property>
+       <property name="beanNames">
+           <list>
+              <value>dataSource</value>
+           </list>
+       </property>
+    </bean>
+
+</beans>

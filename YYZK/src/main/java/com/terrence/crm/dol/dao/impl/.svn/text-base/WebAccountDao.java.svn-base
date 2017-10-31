@@ -1,0 +1,50 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WebAccount;
+import com.terrence.crm.dol.dao.IWebAccountDao;
+import com.terrence.crm.dol.query.WebAccountQuery;
+@Repository
+public class WebAccountDao extends BaseIbatisDao<WebAccount,java.lang.Long> implements IWebAccountDao {
+	public void saveOrUpdate(WebAccount entity) {
+		if(entity.getFaccountId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WebAccount";
+	}
+	public WebAccount getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WebAccount)this.getSqlMapClientTemplate().queryForObject("WebAccount.getByProperty", map);		
+	}
+	public WebAccount getByFnumber(java.lang.String v) {
+		return (WebAccount)getSqlMapClientTemplate().queryForObject("WebAccount.getByUsername",v);
+	}	
+	public List<WebAccount> findAllListWithSortColumns(WebAccountQuery WebAccountQuery)  
+	{
+		return this.getSqlMapClientTemplate().queryForList("WebAccount.findList", WebAccountQuery);
+	}
+	
+	public List<WebAccount> findAllAccountList(WebAccountQuery WebAccountQuery)  
+	{
+		return this.getSqlMapClientTemplate().queryForList("WebAccount.findAllList", WebAccountQuery);
+	}
+	public void deleteAll(String sqlid){
+		this.getSqlMapClientTemplate().delete(sqlid);
+	}
+	public void saveAll(String sqlid){
+		this.getSqlMapClientTemplate().insert(sqlid);
+	}
+}

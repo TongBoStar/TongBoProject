@@ -1,0 +1,105 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.query.IcmoQuery;
+
+@Repository
+public class IcmoDao extends BaseIbatisDao<Icmo,java.lang.Long> implements IIcmoDao{
+
+	/*
+	 * 	(non-Javadoc)
+	 * @see com.terrence.crm.dol.base.IBaseDao#saveOrUpdate(java.lang.Object)
+	 */
+	public void saveOrUpdate(Icmo entity) {
+		if(entity.getIcmoid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.base.IBaseDao#getIbatisSqlMapNamespace()
+	 */
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Icmo";
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.dao.IIcmoDao#getByProperty(java.lang.String, java.lang.Object)
+	 */
+	public Icmo getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Icmo)this.getSqlMapClientTemplate().queryForObject("Icmo.getByProperty", map);		
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.dao.IIcmoDao#getAllCounts()
+	 */
+	public int getAllCounts() {
+		int counts=0;
+		HashMap hashmap=(HashMap) this.getSqlMapClientTemplate().queryForObject("Icmo.BaseItem.findAllCounts");
+		
+		counts=Integer.valueOf(hashmap.get("icmoid").toString());
+		
+		return counts;
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.dao.IIcmoDao#findNotExistsWork()
+	 */
+	@Override
+	public List<Icmo> findNotExistsWork() throws DataAccessException {
+		return this.getSqlMapClientTemplate().queryForList("Icmo.NotExists.findList");
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.dao.IIcmoDao#saveK3Wrok()
+	 */
+	@Override
+	public void saveK3Wrok() throws DataAccessException {
+		this.getSqlMapClientTemplate().insert("Icmo.insert.work");
+		
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.dao.IIcmoDao#saveK3004Work()
+	 */
+	@Override
+	public void saveK3004Work() throws DataAccessException {
+		this.getSqlMapClientTemplate().insert("Icmo.insert.work.004");
+	}
+	@Override
+	public List<Icmo> findlistIcmo(IcmoQuery icmoQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Icmo.find.data.Monthly", icmoQuery);
+	}
+	@Override
+	public Icmo getErpno(String string, IcmoQuery iquery) {
+		return (Icmo) this.getSqlMapClientTemplate().queryForObject(string, iquery);
+		
+	}
+	@Override
+	public Icmo findEntity(IcmoQuery icmoQuery) {
+		return (Icmo) this.getSqlMapClientTemplate().queryForObject("Icmo.find.entity.data.makefqty", icmoQuery);
+	}
+	
+	
+}

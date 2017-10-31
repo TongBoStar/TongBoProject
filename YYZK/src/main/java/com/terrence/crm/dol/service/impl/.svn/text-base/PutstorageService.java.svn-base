@@ -1,0 +1,2009 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.dao.IPoorderentryDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.impl.ProcessExetaskDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.IcserialQuery;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.ProcessExetaskQuery;
+import com.terrence.crm.dol.query.PutstorageQuery;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.service.IPutstorageService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.IIcStockBillK3Service;
+import com.terrence.k3.dol.service.IK3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+
+@Service
+@Transactional
+public class PutstorageService extends BaseService implements IPutstorageService {
+	protected static Logger logger = LoggerFactory.getLogger(PutstorageService.class);
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+//	@Autowired
+//	@Qualifier("icmoDao")
+//	private IIcmoDao icmoDao;
+	
+	@Autowired
+	@Qualifier("icStockBillK3Service")
+	public IIcStockBillK3Service icStockBillK3Service;
+	
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	
+	@Autowired
+	@Qualifier("poorderentryDao")
+	private IPoorderentryDao poorderentryDao;
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+	
+	
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+//	@Autowired
+//	@Qualifier("assemblyTaskDao")
+//	private IAssemblyTaskDao assemblyTaskDao;
+	
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	@Autowired
+	@Qualifier("k3ServiceProxy")
+	private IK3ServiceProxy k3ServiceProxy; 
+	
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	
+	@Autowired
+	@Qualifier("porequestentryDao")
+	private IPorequestentryDao porequestentryDao;
+	
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Putstorage";
+	}
+	@Transactional(readOnly=true)
+	public Putstorage getById(java.lang.Long id) throws ServiceException
+	{
+		return putstorageDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Putstorage entity) throws ServiceException
+	{
+		putstorageDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Putstorage entity) throws ServiceException
+	{
+		Long adId = putstorageDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Putstorage entity) throws ServiceException
+	{
+		Integer returnValue =  putstorageDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = putstorageDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = putstorageDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PutstorageQuery query = new PutstorageQuery();
+		try {
+			return putstorageDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Putstorage> findPage(Page<Putstorage> page, PutstorageQuery query) throws ServiceException
+	{
+		return putstorageDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Putstorage> findPage(Page<Putstorage> page,String statement, PutstorageQuery query) throws ServiceException
+	{
+		return putstorageDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorage> findList(PutstorageQuery query) throws ServiceException
+	{
+		return putstorageDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorage> findList(PutstorageQuery query,Integer pageSize) throws ServiceException
+	{
+		return putstorageDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Putstorage> findList(PutstorageQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return putstorageDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorage> findAllList() throws ServiceException
+	{
+		return putstorageDao.findAllList();
+	}
+	@Override
+	public void updatestatusAll(List<Long> checkedIdList,Putstorage pstor)
+			throws ServiceException {
+		String updateIds = StringUtils.join(checkedIdList, ",");
+		Putstorage putstorage = new Putstorage();
+		putstorage.setFinterids(updateIds);
+		putstorage.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核日期
+		putstorage.setChecker(SpringSecurityUtils.getCurrentUserId());//审核人
+		putstorage.setStatus(1);//0、待审  1、审核
+		putstorageDao.update("Putstorage.update.status.sh", putstorage);
+	
+		Putstorage put = new Putstorage();
+		put.setFinterids(updateIds);
+		List<Putstorage> pupList = putstorageDao.findtongbu(put);//erpfbillno--03-10添加//审核erp时回写单据编号
+		Putstorageentity putstorageentity = new Putstorageentity();
+		putstorageentity.setFinterids(updateIds);
+		
+		List<Putstorageentity> putList = putstorageentityDao.findputList(putstorageentity);//查询finterid在updateIds中的入库单明细
+		if(putList.size() > 0){
+			for(int i=0;i<putList.size();i++){
+				InventoryBatch inventoryBatch = new InventoryBatch();
+				inventoryBatch.setItemcode(putList.get(i).getItemcode());//物料代码
+				
+				inventoryBatch.setItemname(putList.get(i).getIcitemput().getItemname());//物料名称
+				inventoryBatch.setItemmode(putList.get(i).getIcitemput().getFormatno());//规格型号
+				
+				inventoryBatch.setFitemid(putList.get(i).getStorageid().intValue());//库房id
+			
+				//===============2014-4-19根据标记判断入哪个帐套，不选择标记则默认3===============================
+				if(putList.get(i).getFxmark() != null){
+					inventoryBatch.setDbno(putList.get(i).getFxmark());
+				}else{
+					inventoryBatch.setDbno(3);//帐套：3
+				}
+				//==============================================
+				
+			
+				
+				if(putList.get(i).getIcitemput().getIsbatch() == null || putList.get(i).getIcitemput().getIsbatch() == 0){ //非批次号管理
+				
+					//=============================
+					InventoryBatch inventbatch = new InventoryBatch();
+					inventbatch.setItemcode(putList.get(i).getItemcode());
+					inventbatch.setFitemid(putList.get(i).getStorageid().intValue());
+					if(putList.get(i).getFxmark() != null){
+						inventbatch.setDbno(putList.get(i).getFxmark());
+					}else{
+						inventbatch.setDbno(3);
+					}
+					
+					//InventoryBatch ibentity = inventoryBatchDao.findIBentity(inventbatch);//查询非批次号管理的数据============
+					
+					InventoryBatch ibentity = inventoryBatchDao.findIBentityBatchno(inventbatch);//查询非批次号管理的数据
+					
+					if(ibentity == null){
+						
+						if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+							inventoryBatch.setFqty2(putList.get(i).getFqty());//数量
+						}else{
+							inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+						}
+					
+						
+						inventoryBatchDao.save(inventoryBatch, "InventoryBatch.insert.NewData.in.putstorage");//非批次号管理的，库存里没有的物料，保存
+					}else{
+						
+						if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+							Double sun = ibentity.getFqty2();
+							Double sum = sun + putList.get(i).getFqty();
+							inventoryBatch.setFqty2(sum);
+						}else{
+							Double sun = ibentity.getFqty();
+							Double sum = sun + putList.get(i).getFqty();
+							inventoryBatch.setFqty(sum);
+						}
+						//inventoryBatch.setFqty(sum);
+						inventoryBatchDao.update("InventoryBatch.update.in.putstorage", inventoryBatch);//不是批次号管理的更新当前数据
+						
+					}
+					//=================================================
+				}else{
+					if(putList.get(i).getFbatchno() != null){
+						inventoryBatch.setBatchno(putList.get(i).getFbatchno());
+						
+						//inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+						
+						InventoryBatchQuery inbQuery=new InventoryBatchQuery();  
+						InventoryBatch inventoryb =null;
+						
+						inbQuery.setBatchno(inventoryBatch.getBatchno());
+						inbQuery.setFitemid(inventoryBatch.getFitemid());
+						inbQuery.setDbno(inventoryBatch.getDbno());
+						inbQuery.setItemcode(inventoryBatch.getItemcode());
+						
+						
+						inventoryb=inventoryBatchDao.getByEntity("InventoryBatch.getBydb.codebatchnofitemid", inbQuery);
+						if(inventoryb!=null){//已存在同批次,同物料,同仓库,直接更新数量
+							if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+								inventoryBatch.setFqty2(putList.get(i).getFqty()+inventoryb.getFqty2());//数量
+							}else{
+								inventoryBatch.setFqty(putList.get(i).getFqty()+inventoryb.getFqty());//数量
+							}	
+							inventoryBatchDao.update("InventoryBatch.update.in.putstorage.batch",inventoryBatch);
+						}else{
+							if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+								inventoryBatch.setFqty2(putList.get(i).getFqty());//数量
+							}else{
+								inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+							}
+							inventoryBatchDao.save(inventoryBatch, "InventoryBatch.insert.in.putstorage");//批次号管理的插入新的数据	
+						}
+					}
+				}
+			
+				//=====================================================
+				
+				Putstorage pstorag = new Putstorage();
+				pstorag.setFinterid(putList.get(i).getFinterid());
+				Putstorage storagePut = putstorageDao.findputstorage(pstorag);//查询待入库单
+				
+				if(storagePut.getSrctype().intValue() == 71 && storagePut.getIsreturn() == null){//单据类型为订单(71)时用,区分机加工入库
+					Poorderentry pder = new Poorderentry();
+					pder.setOrderid(putList.get(i).getOrderid());
+					Poorderentry ppder = poorderentryDao.findpp(pder);
+					
+					Double fqtyzh = 0.0;
+					Double putfqty = ppder.getPutqty();//订单明细中已入库数
+					
+					
+					Double fqty = putList.get(i).getFqty();//当前审核入库数
+					if(putfqty != null){
+						fqtyzh = putfqty + fqty;
+					}else{
+						fqtyzh = fqty;
+					}
+					
+					
+					Poorderentry poorderentry = new Poorderentry();
+//					poorderentry.setFinterid(per.getFinterid());
+//					poorderentry.setItemcode(putList.get(i).getItemcode());
+					poorderentry.setPutqty(fqtyzh);
+					poorderentry.setOrderid(putList.get(i).getOrderid());
+					
+					poorderentryDao.update("poorderentry.update.putqty", poorderentry);//更新入库数
+					
+				
+					Double db2 = fqtyzh - ppder.getFqty();
+					Integer db3 = 0;
+					if(db2 > 0 || db2 == 0){
+						db3 = 1;
+					}
+					
+					if(db3 == 1 || fqtyzh > ppder.getFqty()){//入库数等于或大于订单数,关闭行业务
+						Poorderentry orderentry = new Poorderentry();
+						orderentry.setMrpclosed(1);//1、关闭
+						orderentry.setOrderid(putList.get(i).getOrderid());
+						poorderentryDao.update("Poorderentry.update.for.detail", orderentry);
+						
+						//=================================全部入库
+							Poorderentry enpo = poorderentryDao.getById(putList.get(i).getOrderid());
+							if(enpo.getFsourcebillno() != null && !enpo.getFsourcebillno().equals("")){
+								Porequest poqut = porequestDao.getByProperty("fbillno", enpo.getFsourcebillno());
+								
+								if(poqut!=null){
+									Porequestentry trypor = new Porequestentry();
+									trypor.setFinterid(poqut.getFinterid());
+									trypor.setItemcode(enpo.getItemcode());
+									trypor.setPutstore(2);//全部入库
+									porequestentryDao.update("Porequestentry.yiruku.shu.zhuangtai", trypor);
+								}
+								
+							}	
+							
+							
+						//==================================
+						
+					}else{//部分入库
+						Poorderentry enpo = poorderentryDao.getById(putList.get(i).getOrderid());
+						 
+						if(enpo.getFsourcebillno() != null && !enpo.getFsourcebillno().equals("")){
+							Porequest poqut = porequestDao.getByProperty("fbillno", enpo.getFsourcebillno());
+							if(poqut!=null){
+								Porequestentry trypor = new Porequestentry();
+								trypor.setFinterid(poqut.getFinterid());
+								trypor.setItemcode(enpo.getItemcode());
+								trypor.setPutstore(1);//部分入库
+								porequestentryDao.update("Porequestentry.yiruku.shu.zhuangtai", trypor);
+							}
+						}
+						
+					}
+					Poorder poorder = new Poorder();
+					poorder.setFbillno(putList.get(i).getPoorderno());
+					Poorder per = poorderDao.findper(poorder);
+					
+					Poorderentry poorderen = new Poorderentry();
+					poorderen.setFinterid(per.getFinterid());
+					List<Poorderentry> listPoorderentry = poorderentryDao.findListPoorderentry(poorderen);
+					Integer yy = 0;
+					if(listPoorderentry.size()>0){
+						
+						for(int y =0; y < listPoorderentry.size();y++){
+							if(listPoorderentry.get(y).getMrpclosed()==1){//判断是否行关闭
+								yy++;
+							}
+						}
+					}
+					if(yy == listPoorderentry.size()){//如果都行关闭了，则关闭订单
+						Poorder pdder = new Poorder();
+						pdder.setFclosed(1);//关闭订单
+						pdder.setFinterid(per.getFinterid());
+						poorderDao.update("Poorder.update.in.tasks", pdder);
+					}
+					
+				}
+			}
+		}
+	
+		//===============List<Putstorage> pupList
+		
+		//Map<Long, List<Icserial>> mapIcserial = new HashMap<Long, List<Icserial>>();123123
+		JSONObject jsonObj=new JSONObject();
+		List<List<Putstorageentity>> list = new ArrayList<List<Putstorageentity>>();
+		List<List<Poorder>> listpoorder = new ArrayList<List<Poorder>>();
+		
+		List<Putstorage> ppList = new ArrayList<Putstorage>();
+		for(int y=0;y<pupList.size();y++){//表头循环
+			
+			
+			List<Putstorageentity> listput = new ArrayList<Putstorageentity>();
+			
+			Putstorageentity putentity = new Putstorageentity();
+			putentity.setFinterid(pupList.get(y).getFinterid());
+			List<Putstorageentity> putentityList =  putstorageentityDao.findtongbudata(putentity);//查询入库单明细
+			
+					
+			for(int t=0;t<putentityList.size();t++){
+				
+				if(putentityList.get(t).getFxmark()==null || putentityList.get(t).getFxmark()==3){//判断帐套
+					/**
+					 * 更新物料表中的数据
+					 */
+					if(putentityList.get(t).getPoorderno().substring(0,3).equals("JOB") || putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia") || putentityList.get(t).getPoorderno().substring(0,5).equals("POORD")){
+						updateBaseItemBase(putentityList.get(t),1);
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,4).equals("TQIN")||putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia")){//其他入库
+						//============================保存序列号=======================================	
+							BaseItem baseitem = new BaseItem();
+							BaseItemQuery bQuery=new BaseItemQuery();
+							bQuery.setItemcode(putentityList.get(t).getItemcode());
+							baseitem.setItemcode(putentityList.get(t).getItemcode());
+							
+							BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+							if(bitem.getFissnmanager()==1){//序列号管理
+//								Long fitemid = bitem.getFitemid();//原物料内码
+//								Integer fid = fitemid.intValue();
+								
+								IcserialQuery icserialQuery = new IcserialQuery();
+								//icserial.setFstatus(1);//0、出库 1、在库
+								//icserial.setFvalid(1);//0、无效 1、有效
+								icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//								icserialQuery.setFitemid(fid);
+								icserialQuery.setLockstatus(0);
+								icserialQuery.setDb(3);
+								icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+								icserialQuery.setFtrantypeid(pupList.get(y).getSrctype());//最后操作单据类型----
+								icserialQuery.setFinterid(putentityList.get(t).getEntityid());//最后操作单据内码----待入库单明细id
+								icserialQuery.setFsnlistid(putentityList.get(t).getEntityid());//最后操作流转id-----待入库单明细id
+								
+								List<Icserial> icserialList = icserialDao.findList("Icserial.findlist.TQIN", icserialQuery);
+								for(Icserial ics:icserialList){//序列号更新为在库有效状态
+									ics.setFstatus(1);//0、出库 1、在库
+									ics.setFvalid(1);//0、无效 1、有效
+									icserialDao.update(ics);
+								}
+							}
+						//========================================================================
+					}
+					
+					if(putentityList.get(t).getPoorderno().substring(0,5).equals("POORD") && putentityList.get(t).getFqty()>0){//外购入库
+						//============================修改序列号状态=======================================	
+						BaseItem baseitem = new BaseItem();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(putentityList.get(t).getItemcode());
+						baseitem.setItemcode(putentityList.get(t).getItemcode());
+						
+						BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+						if(bitem.getFissnmanager()==1){//序列号管理
+
+							IcserialQuery icserialQuery = new IcserialQuery();
+							icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+							icserialQuery.setLockstatus(0);
+							icserialQuery.setDb(3);
+							icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+							icserialQuery.setFtrantypeid(71L);//最后操作单据类型----
+							//===========================后来改为=========================
+							icserialQuery.setFinterid(putentityList.get(t).getWaitid());//最后操作单据内码
+							icserialQuery.setFsnlistid(putentityList.get(t).getOrderid());
+							//===========================================================
+							List<Icserial> icserialList = icserialDao.findList("Icserial.POORD.list.for.find", icserialQuery);
+							for(Icserial ics:icserialList){//序列号更新为在库有效状态
+								ics.setFstatus(1);//0、出库 1、在库
+								ics.setFvalid(1);//0、无效 1、有效
+								icserialDao.update(ics);
+							}
+						}
+					//========================================================================
+					}
+					
+					if(pupList.get(y).getIsreturn()!=null){
+						Putstorageentity spt = putstorageentityDao.getById(putentityList.get(t).getOldentityid());
+						putentityList.get(t).setFcommitqy(spt.getFcommitqy());//传递提交数 fcommitqy
+					}
+					
+					if(pupList.get(y).getIserp()==null||pupList.get(y).getIserp()==1){//需同步---ERP
+
+						//查询是否标记K3任务单,若标记K3任务单，则按标记的任务单号处理
+						String checkPoorderno=null;
+						checkPoorderno=putentityList.get(t).getPoorderno();
+						
+//						//机加工任务单处理标记-----------------------------------------
+//						if(checkPoorderno!=null&&checkPoorderno.substring(0, 5).equals("JiJia")){
+//							IcmoQuery iquery=new IcmoQuery();
+//							iquery.setFbillno(checkPoorderno);
+//							Icmo icmonoentity =new Icmo(); 
+//							icmonoentity=icmoDao.getByEntity("Icmo.geticmono", iquery);
+//							if(icmonoentity.getIcmono()!=null&&!icmonoentity.getIcmono().equals("")){//标记不为空，不为null
+//								//putentityList.get(t).setPoorderno(icmonoentity.getIcmono());
+//								putentityList.get(t).setIcmono(icmonoentity.getIcmono());
+//							}
+//						}
+//						//------------------------------------------------------------
+						Long entryorderid = null;
+						entryorderid = putentityList.get(t).getOrderid();
+						if(checkPoorderno!=null&&checkPoorderno.substring(0,5).equals("POORD")){
+							Poorderentry epfno = new Poorderentry();
+							epfno.setOrderid(entryorderid);
+							Poorderentry erentry = poorderentryDao.findentry(epfno);
+							if(erentry.getJobno()!=null&&!erentry.getJobno().equals("")){
+								putentityList.get(t).setJobno(erentry.getJobno());//k3与排产对应的单据编号
+								putentityList.get(t).setIsupdate(1);//需要更新
+								
+							}
+						}
+						//------------------------------------------------------------
+
+						listput.add(putentityList.get(t));
+					}
+					
+				}else{//4帐套-------------------
+					/**
+					 * 更新物料表中的数据
+					 */
+					if(putentityList.get(t).getPoorderno().substring(0,3).equals("JOB") || putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia") || putentityList.get(t).getPoorderno().substring(0,5).equals("POORD")){
+						updateBaseItemBase(putentityList.get(t),1);
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,4).equals("TQIN")||putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia")){//其他入库
+						//============================保存序列号=======================================	
+							BaseItem baseitem = new BaseItem();
+							BaseItemQuery bQuery=new BaseItemQuery();
+							bQuery.setItemcode(putentityList.get(t).getItemcode());
+							baseitem.setItemcode(putentityList.get(t).getItemcode());
+							
+							BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+							if(bitem.getFissnmanager()==1){//序列号管理
+//								Long fitemid = bitem.getFitemid();//原物料内码
+//								Integer fid = fitemid.intValue();
+								
+								IcserialQuery icserialQuery = new IcserialQuery();
+								//icserial.setFstatus(1);//0、出库 1、在库
+								//icserial.setFvalid(1);//0、无效 1、有效
+								icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//								icserialQuery.setFitemid(fid);
+								icserialQuery.setLockstatus(0);
+								icserialQuery.setDb(4);
+								icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+								icserialQuery.setFtrantypeid(pupList.get(y).getSrctype());//最后操作单据类型----
+								icserialQuery.setFinterid(putentityList.get(t).getEntityid());//最后操作单据内码----待入库单明细id
+								icserialQuery.setFsnlistid(putentityList.get(t).getEntityid());//最后操作流转id-----待入库单明细id
+								
+								List<Icserial> icserialList = icserialDao.findList("Icserial.findlist.TQIN", icserialQuery);
+								for(Icserial ics:icserialList){//序列号更新为在库有效状态
+									ics.setFstatus(1);//0、出库 1、在库
+									ics.setFvalid(1);//0、无效 1、有效
+									icserialDao.update(ics);
+								}
+							}
+						//========================================================================
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,5).equals("POORD") && putentityList.get(t).getFqty()>0){//外购入库
+						//============================修改序列号状态=======================================	
+						BaseItem baseitem = new BaseItem();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(putentityList.get(t).getItemcode());
+						baseitem.setItemcode(putentityList.get(t).getItemcode());
+						
+						BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+						if(bitem.getFissnmanager()==1){//序列号管理
+//							Long fitemid = bitem.getFitemid();//原物料内码
+//							Integer fid = fitemid.intValue();
+							
+							IcserialQuery icserialQuery = new IcserialQuery();
+							//icserial.setFstatus(1);//0、出库 1、在库
+							//icserial.setFvalid(1);//0、无效 1、有效
+							icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//							icserialQuery.setFitemid(fid);
+							icserialQuery.setLockstatus(0);
+							icserialQuery.setDb(4);
+							icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+							icserialQuery.setFtrantypeid(71L);//最后操作单据类型
+							//icserialQuery.setFinterid(putentityList.get(t).getOrderid());//最后操作单据内码
+							
+							//===========================后来改为=========================
+							if(putentityList.get(t).getWaitid()!=null && !putentityList.get(t).getWaitid().equals("")){
+								icserialQuery.setFinterid(putentityList.get(t).getWaitid());//最后操作单据内码
+							}
+							
+							icserialQuery.setFsnlistid(putentityList.get(t).getOrderid());
+							//===========================================================
+							List<Icserial> icserialList = icserialDao.findList("Icserial.POORD.list.for.find", icserialQuery);
+							for(Icserial ics:icserialList){//序列号更新为在库有效状态
+								ics.setFstatus(1);//0、出库 1、在库
+								ics.setFvalid(1);//0、无效 1、有效
+								icserialDao.update(ics);
+							}
+						}
+					//========================================================================
+					}
+				}
+			}
+			
+			if(listput.size()>0){
+				list.add(listput);
+				ppList.add(pupList.get(y));
+				//list.add(putentityList);
+				
+				List<Poorder> liststatus = new ArrayList<Poorder>();
+				for(int z = 0;z<listput.size();z++){//查询订单明细
+					Poorder pooer = new Poorder();	
+					pooer.setFbillno(listput.get(z).getPoorderno());
+					Poorder pper = poorderDao.findpper(pooer);
+					liststatus.add(pper);
+				}
+				listpoorder.add(liststatus);
+			}
+			
+		}
+		
+		/***/if(list.size()>0){//------同步暂时屏蔽，只为跑流程-------2015-10-13-1620
+			//======================== 同步erp数据  表icstockbill================================
+			
+			TREReturn	terreturn = k3ServiceProxy.
+					saveNewIcstock(ppList,list,listpoorder,jsonObj);
+			System.out.println(terreturn.getStrText());
+			if( terreturn.getnCode() == -1){
+				throw new ServiceException(terreturn.getStrText(),"-1");
+			}			
+			Map mm=new HashMap();
+			mm=terreturn.getMap();
+			
+			Putstorage pp=new Putstorage();
+			Iterator iter = mm.keySet().iterator();
+			while (iter.hasNext()) {
+			    Long key = (Long) iter.next();
+			    String value = (String) mm.get(key);
+
+			    pp.setFinterid(key);
+			    pp.setErpfbillno(value);
+				putstorageDao.update(pp);
+			}
+			
+			//==========================================================
+			
+			
+		}
+		
+	}
+/**
+ * 装配单据、机加单据、外购入库单 更新物料表的在制品数量
+ * @param putstorageentity
+ */
+	
+	private void updateBaseItemBase(Putstorageentity putstorageentity,int flage) {
+		List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+		BaseItemQuery bQuery=new BaseItemQuery();
+		bQuery.setItemcode(putstorageentity.getItemcode());
+		baseitemList = baseItemDao.findEntityBase(bQuery);
+		if(baseitemList.size()>0){
+			if(putstorageentity.getFxmark()==4){//4账套
+				Double sumfqty = 0D;
+				if(flage==1){//审核减
+					sumfqty = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4())-putstorageentity.getFqty();
+				}else{//反审时增加
+					sumfqty = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4())+putstorageentity.getFqty();
+				}
+				
+				BaseItem bitem = new BaseItem();
+				bitem.setItemcode(putstorageentity.getItemcode());
+				bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+				bitem.setMakingnums4(sumfqty<0?0D:sumfqty);//入库数
+				baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+			}else{//3账套
+				Double sumfqty = 0D;
+				if(flage==1){
+					sumfqty = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums())-putstorageentity.getFqty();
+				}else{
+					sumfqty = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums())+putstorageentity.getFqty();
+				}
+				
+				BaseItem bitem = new BaseItem();
+				bitem.setItemcode(putstorageentity.getItemcode());
+				bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+				bitem.setMakingnums(sumfqty<0?0D:sumfqty);//入库数
+				baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+			}
+		}else{
+			throw new ServiceException("物料表中不存在物料："+putstorageentity.getItemcode());
+		}
+		
+	}
+	@Override
+	public void updatestatusUNaudit(List<Long> checkedIdList)//反审核
+			throws ServiceException {
+		
+		
+		String updateIds = StringUtils.join(checkedIdList, ",");
+		
+		Putstorage ageput = new Putstorage();
+		ageput.setFinterids(updateIds);
+		List<Putstorage> plistageList = putstorageDao.findIsold(ageput);
+		
+		
+		if(plistageList.size()>0){
+			for(int y=0;y<plistageList.size();y++){
+				if(plistageList.get(y).getIsold()!=0){
+					throw new ServiceException("旧单据不可反审核");
+				}
+			}
+			
+		}
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		ProcessDetail processDetail = processDetails.get(0);
+		String handlers = "";
+		List<Long> handlids = new ArrayList<Long>();
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+			handlids.add(ph.getHandler());
+		}
+		Putstorage putstorage = new Putstorage();
+		putstorage.setFinterids(updateIds);
+		putstorage.setStatus(0);//0、待审  1、审核
+		putstorage.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		putstorageDao.update("Putstorage.update.status.sh", putstorage);
+		
+		
+		
+		Putstorageentity putstorageentity = new Putstorageentity();
+		putstorageentity.setFinterids(updateIds);
+		
+		List<Putstorageentity> putList = putstorageentityDao.findputList(putstorageentity);//查询finterid在updateIds中的入库单明细
+		
+		if(putList.size() > 0){
+			for(int i=0;i<putList.size();i++){
+				/**
+				 * 更新物料表中的在制品量
+				 */
+				if(putList.get(i).getPoorderno().substring(0,3).equals("JOB") || putList.get(i).getPoorderno().substring(0,5).equals("JiJia") || putList.get(i).getPoorderno().substring(0,5).equals("POORD")){
+					updateBaseItemBase(putList.get(i),0);
+				}
+				
+				
+				
+				InventoryBatch inventoryBatch = new InventoryBatch();
+				inventoryBatch.setItemcode(putList.get(i).getItemcode());//物料代码
+				
+				if(putList.get(i).getIcitemput().getIsbatch() == null || putList.get(i).getIcitemput().getIsbatch() == 0){//非批次管理的
+				
+					//=================================
+					InventoryBatch inventbatch = new InventoryBatch();
+					inventbatch.setItemcode(putList.get(i).getItemcode());
+					inventbatch.setFitemid(putList.get(i).getStorageid().intValue());
+					if(putList.get(i).getFxmark() != null){
+						inventbatch.setDbno(putList.get(i).getFxmark());
+					}else{
+						inventbatch.setDbno(3);
+					}
+					
+				//	InventoryBatch ibentity = inventoryBatchDao.findIBentity(inventbatch);//查询非批次号管理的数据
+					
+					InventoryBatch ibentity = inventoryBatchDao.findIBentityBatchno(inventbatch);//查询非批次号管理的数据
+					
+					
+					Double sum =0.0;
+					if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark()==4){
+						Double sun = ibentity.getFqty2();
+						 sum = sun - putList.get(i).getFqty();
+						inventoryBatch.setFqty2(sum);
+						inventoryBatch.setDbno(4);
+					}else{
+						Double sun = ibentity.getFqty();
+						 sum = sun - putList.get(i).getFqty();
+						inventoryBatch.setFqty(sum);
+						inventoryBatch.setDbno(3);
+					}
+					inventoryBatch.setFitemid(putList.get(i).getStorageid().intValue());
+					
+					if(sum<0){
+						 throw new ServiceException("反审后库存为负,不可反审!!");
+					}else{
+					inventoryBatchDao.update("InventoryBatch.update.in.putstorage", inventoryBatch);//不是批次号管理的更新当前数据
+					//==========================
+					}
+				
+				
+				}else{
+					Double unfqty = putList.get(i).getFqty();
+					
+					if(putList.get(i).getFbatchno() != null){
+						inventoryBatch.setBatchno(putList.get(i).getFbatchno());//批次
+						inventoryBatch.setFitemid(putList.get(i).getStorageid().intValue());
+						
+						InventoryBatchQuery inventoryBatchQ=new InventoryBatchQuery();
+						inventoryBatchQ.setBatchno(putList.get(i).getFbatchno());
+						inventoryBatchQ.setFitemid(putList.get(i).getStorageid().intValue());
+						inventoryBatchQ.setItemcode(inventoryBatch.getItemcode());
+						
+												
+						if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark()==4){
+							inventoryBatch.setFqty2(putList.get(i).getFqty());
+							inventoryBatch.setDbno(4);
+							inventoryBatchQ.setDbno(4);
+							
+							InventoryBatch in = inventoryBatchDao.getByEntity("InventoryBatch.getByEntity.fqtycheck", inventoryBatchQ);
+							if((in.getFqty2()-putList.get(i).getFqty())<0){
+								throw new ServiceException("反审后库存为负,不可反审!!");
+							}
+						}else{
+							inventoryBatch.setFqty(putList.get(i).getFqty());
+							inventoryBatch.setDbno(3);
+							inventoryBatchQ.setDbno(3);
+							
+							InventoryBatch in = inventoryBatchDao.getByEntity("InventoryBatch.getByEntity.fqtycheck", inventoryBatchQ);
+							if((in.getFqty()-putList.get(i).getFqty())<0){
+								throw new ServiceException("反审后库存为负,不可反审!!");
+							}
+						}
+						
+						
+						//inventoryBatchDao.deleteIB(inventoryBatch);
+					//	throw new ServiceException("反审后库存为负,不可反审!!");
+						
+						
+						
+						
+						
+						
+						inventoryBatchDao.update("InventoryBatch.update.for.batchno.dataUpdate", inventoryBatch);
+					
+				}
+				}
+				
+				if(!putList.get(i).getPoorderno().substring(0,5).equals("JiJia") && !putList.get(i).getPoorderno().substring(0,3).equals("JOB")&& !putList.get(i).getPoorderno().substring(0,4).equals("TQIN")){
+					Poorder poorder = new Poorder();
+					poorder.setFbillno(putList.get(i).getPoorderno());
+					poorder.setFclosed(0);//0、未关闭
+					poorderDao.update("Poorder.update.for.fbillno", poorder);//更改订单状态为未关闭
+					
+					
+					Poorderentry pp = new Poorderentry();
+					pp.setOrderid(putList.get(i).getOrderid());
+					Poorderentry poop = poorderentryDao.findMingXi(pp);
+					
+					Poorderentry poorderentry = new Poorderentry();
+					poorderentry.setOrderid(putList.get(i).getOrderid());
+					poorderentry.setPutqty(poop.getPutqty() - putList.get(i).getFqty());
+					poorderentry.setMrpclosed(0);//0、未关闭
+					poorderentryDao.update("Poorderentry.update.for.detail", poorderentry);//修改订单明细行业务状态为未关闭
+				}
+				
+				
+				//--停用序列号-----------------------------
+				if(putList.get(i).getIcitemput().getFissnmanager() != null && putList.get(i).getIcitemput().getFissnmanager() == 1){//序列号管理---
+					if(putList.get(i).getPoorderno().substring(0, 4).equals("TQIN")||putList.get(i).getPoorderno().substring(0, 5).equals("JiJia")){//其他入库的序列号停用
+						
+						IcserialQuery icsQ=new IcserialQuery();
+						icsQ.setItemcode(putList.get(i).getItemcode());
+						icsQ.setDb(putList.get(i).getFxmark());
+						icsQ.setFinterid(putList.get(i).getEntityid());
+						icsQ.setFsnlistid(putList.get(i).getEntityid());
+						if(putList.get(i).getPoorderno().substring(0, 4).equals("TQIN")){
+							icsQ.setFtrantypeid(-1L);//其他入库
+						}else if(putList.get(i).getPoorderno().substring(0, 5).equals("JiJia")){
+							icsQ.setFtrantypeid(85L);//机加入库	
+						}
+						
+						icsQ.setFstockid(putList.get(i).getStorageid().intValue());//仓库
+						
+						List<Icserial> icList = icserialDao.findList("Icserial.find.TQIN", icsQ);
+						for(Icserial icser:icList){
+							icser.setFstatus(0);
+							icser.setFvalid(0);
+							icserialDao.update(icser);
+						}
+						
+					}	
+					
+				}
+				
+				if(putList.get(i).getIcitemput().getFissnmanager() != null && putList.get(i).getIcitemput().getFissnmanager() == 1){//序列号管理---
+					if(putList.get(i).getPoorderno().substring(0,3).equals("JOB")){
+						
+						IcserialQuery icsQ=new IcserialQuery();
+						icsQ.setItemcode(putList.get(i).getItemcode());
+						icsQ.setDb(putList.get(i).getFxmark());
+						icsQ.setFinterid(putList.get(i).getFinterid());
+						icsQ.setFstockid(putList.get(i).getStorageid().intValue());//仓库
+						
+						icsQ.setFtrantypeid(2L);//最后操作单据类型-----产品入库单
+				
+						icsQ.setFsnlistid(putList.get(i).getEntityid());//最后操作流转id-----待入库单明细id
+						List<Icserial> icList = icserialDao.findList("Icserial.POORD.list.for.find", icsQ);
+						
+						if(icList.size()>0){
+							for(int sq =0;sq<icList.size();sq++){
+								if(icList.get(sq).getFstatus()==0){
+									throw new ServiceException("序列号中有已出库的，不可反审");
+								}
+								if(icList.get(sq).getLockstatus()==1){
+									throw new ServiceException("序列号中有已锁库的，不可反审");
+								}
+								
+							}
+							//icserialDao.deleteByWhere("Icserial.delete.for.where.query", icsQ);
+							//上面的方法在此项目中没有，暂时屏蔽，以后可添加方法，根据条件删除序列号
+						}
+							
+						
+						
+												
+					}	
+				}
+				
+				
+				if(putList.get(i).getIcitemput().getFissnmanager() != null && putList.get(i).getIcitemput().getFissnmanager() == 1){//序列号管理---
+					if(putList.get(i).getPoorderno().substring(0,5).equals("POORD") && putList.get(i).getFqty()>0){
+						
+						IcserialQuery icsQ=new IcserialQuery();
+						icsQ.setItemcode(putList.get(i).getItemcode());
+						icsQ.setDb(putList.get(i).getFxmark());
+						//icsQ.setFinterid(putList.get(i).getOrderid());//之前用的
+						//=================后来改的===========================
+						if(putList.get(i).getWaitid() != null && !putList.get(i).getWaitid().equals("")){
+							icsQ.setFinterid(putList.get(i).getWaitid());
+						}
+						
+						icsQ.setFsnlistid(putList.get(i).getOrderid());
+						//============================================
+						icsQ.setFinterid(putList.get(i).getOrderid());
+						
+						
+						icsQ.setFtrantypeid(71L);//外购入库	
+						
+						icsQ.setFstockid(putList.get(i).getStorageid().intValue());//仓库
+						
+						List<Icserial> icList = icserialDao.findList("Icserial.POORD.list.for.find", icsQ);
+						
+						if(icList.size()>0){
+							for(int sq =0;sq<icList.size();sq++){
+								if(icList.get(sq).getFstatus()==0){
+									throw new ServiceException("序列号中有已出库的，不可反审");
+								}
+								if(icList.get(sq).getLockstatus()==1){
+									throw new ServiceException("序列号中有已锁库的，不可反审");
+								}
+								
+							}
+							
+							for(Icserial icser:icList){
+								icser.setFstatus(0);
+								icser.setFvalid(0);
+								icserialDao.update(icser);
+							}
+						}					
+					}	
+					
+					
+				}
+				ProcessHistask processHistask = new ProcessHistask();
+				processHistask.setSourceCode(putList.get(i).getPoorderno());
+				processHistask.setSourceId(putList.get(i).getFinterid());
+				processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+				processHistask.setExamineStatus(null);
+				processHistask.setFmark("");
+				processHistask.setNodeSeq(0);
+				processHistask.setNodeName("提交单据!");
+				processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+				processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+				processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+				processHistaskDao.save(processHistask);
+				
+				ProcessExetask processExetask = new ProcessExetask();
+				processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+				processExetask.setSourceCode(putList.get(i).getPoorderno());
+				processExetask.setSourceId(putList.get(i).getFinterid());
+				processExetask.setNodeName(processDetail.getNodeName());
+				processExetask.setNodeSeq(processDetail.getNodeSeq());
+				processExetask.setHandlers(handlers);
+				processExetaskDao.save(processExetask);
+				//写入信息提醒
+				Integer messageres = messageDao.changeMessage(putList.get(i).getFinterid(), putList.get(i).getPoorderno(), 
+						"procure/purchase/godown_table.htm", "TO_PUSHINTO_INVENTORY", handlids);
+				if(messageres!=1){
+					throw new ServiceException("系统错误,插入处理人信息失败，请联系管理员!");
+				}
+			}
+		}
+		
+		
+		Putstorage put = new Putstorage();
+		put.setFinterids(updateIds);
+		List<Putstorage> pupList = putstorageDao.findtongbu(put);
+		
+		JSONObject jsonObj=new JSONObject();
+		List<List<Putstorageentity>> list = new ArrayList<List<Putstorageentity>>();
+		List<Putstorage> liststorage = new ArrayList<Putstorage>();
+		
+//		for(int y=0;y<putList.size();y++){
+		for(int y=0;y<pupList.size();y++){
+			Putstorageentity putentity = new Putstorageentity();
+			List<Putstorageentity> pylist = new ArrayList<Putstorageentity>();
+			
+//			putentity.setFinterid(putList.get(y).getFinterid());
+			putentity.setFinterid(pupList.get(y).getFinterid());
+			List<Putstorageentity> putentityList =  putstorageentityDao.findtongbudata(putentity);//查询入库单明细
+			
+			for(int t = 0;t<putentityList.size();t++){
+				if(putentityList.get(t).getFxmark() == null || putentityList.get(t).getFxmark()==3){
+					if(pupList.get(y).getIserp()==null||pupList.get(y).getIserp()==1){//需反审ERP
+						pylist.add(putentityList.get(t));	
+					}
+				}
+			}
+			
+			//list.add(putentityList);
+			if(pylist.size()>0){
+				list.add(pylist);
+				liststorage.add(pupList.get(y));
+			}
+			
+		}
+		/*同步先屏蔽，跑本地流程，2015-10-13*/
+		//=====================反审核ERP同步=========================
+		if(list.size()>0){
+			
+			TREReturn	terreturn = k3ServiceProxy.deleteIcstock(
+					icStockBillK3Service,
+					pupList,list,jsonObj);
+			if( terreturn.getnCode() == -1){
+				throw new ServiceException(terreturn.getStrText());
+			}
+			
+			
+		}
+		
+		//==============================================
+		
+	}
+	
+	@Override
+	public void saveOtherAdd(Putstorage entity) throws ServiceException {
+		String snStr = entity.getSnStr();// 序列号字符集已;;分割
+		Long supplierid = entity.getSupplierid();// 其他入库客户id
+		String suppliername = entity.getSuppliername();
+		Long teamid = entity.getTeamid();// 交货部门
+		Integer addtype = entity.getAddtype();// 入库类型
+		
+		Putstorage putstorage = new Putstorage();
+		
+		putstorage.setSuppliername(suppliername);
+		putstorage.setIsclose(0);// 关闭标志
+		putstorage.setStatus(0);// 审核标记
+		putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());// 制单人,当前登录人
+		putstorage.setSrctype(-1L);// 原单类型
+		putstorage.setTeamid(teamid);// 交货部门---(K3,t_Department部门表取值213)
+		putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));// 创建时间
+		putstorage.setAddtype(entity.getAddtype());// 入库类型-----分为产品入库和其他
+		// --单据编号------------------------------------------------
+		String fbillno = "";
+		Icbillno icbillno = icbillnoDao.getByProperty("fpreletter", "TQIN");
+		Integer icblength = icbillno.getFlength();
+		String fcurno = icbillno.getFcurno() + "";
+		if (fcurno.length() < icblength) {
+			String head = "";
+			for (int i = 0; i < icblength - fcurno.length(); i++) {
+				head = head + "0";
+			}
+			fbillno = icbillno.getFpreletter() + head + fcurno;
+		}
+		putstorage.setFbillno(fbillno);// 入库单号
+
+		Long putstorageid = putstorageDao.save(putstorage,"Putstorage.insert.fromTQIN");// 保存入库单
+
+		// 更新单据编号
+		icbillno.setFcurno(icbillno.getFcurno() + 1);
+		icbillnoDao.update(icbillno);
+
+		// --添加入库单详细----------------------------------------------------------------------------
+		String[] codelist = entity.getCodelist();
+		String[] namelist = entity.getNamelist();
+		String[] formatnolist = entity.getFormatnolist();
+		String[] unitnamelist = entity.getUnitnamelist();// t_Measureunit单位表查询id
+		Long[] stockidlist = entity.getStockidlist();
+		// String[] batchnolist=entity.getBatchnolist();
+		String[] batchnolist = entity.getTdbatchno();
+
+		Integer[] dbnolist = entity.getTddbno();
+		Integer[] issnlist = entity.getIssnlist();
+		Double[] tdfqty = entity.getTdfqty();
+		int listsize = codelist.length;
+		// ---截取序列号-----------------
+		String[] snlist = snStr.split(";;");
+		int snsize = snlist.length;
+		List<String[]> list = new ArrayList<String[]>();
+		for (int i = 0; i < snsize; i++) {
+			String[] alonelist = snlist[i].split(",");
+			list.add(alonelist);
+		}
+		int listNumber = 0;
+		for (int i = 0; i < listsize; i++) {// 遍历处理添加入库单详细------
+			Putstorageentity putstorageentity = new Putstorageentity();
+			putstorageentity.setFinterid(putstorageid);
+			putstorageentity.setItemcode(codelist[i]);
+			putstorageentity.setStorageid(stockidlist[i]);// 收料仓库
+			putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));// 创建时间
+			putstorageentity.setUnitid(baseItemDao.getByProperty("itemcode", codelist[i]).getUnitid().longValue());
+			putstorageentity.setFqty(tdfqty[i]);// 数量
+			putstorageentity.setFbatchno(batchnolist[i] == null ? "": batchnolist[i]);// 批次
+			// putstorageentity.setFsrcinterid(checkId);//原单内码
+			putstorageentity.setPoorderno(fbillno);//
+			putstorageentity.setFxmark(dbnolist[i]);// 帐套标记
+
+			Long entityid = putstorageentityDao.save(putstorageentity,"Putstorageentity.insert.in.TQIN");
+			// 处理序列号---
+			if (issnlist[i] == 1) {// 序列号管理
+				listNumber++;
+				Long srctype = putstorage.getSrctype();
+				String[] snstrlist = list.get(listNumber - 1);
+				for (String ss : snstrlist) {
+					Icserial icserial = new Icserial();
+					icserial.setItemcode(codelist[i]);
+					icserial.setFserialnum(ss);
+					icserial.setFstatus(0);// 不在库
+					icserial.setFvalid(0);// 无效
+					icserial.setFitemid(baseItemDao.getByProperty("itemcode", codelist[i]).getFitemid().intValue());
+					icserial.setFstockid(stockidlist[i].intValue());// 仓库
+					icserial.setLockstatus(0);// 未锁库
+					icserial.setDb(dbnolist[i]);// 帐套
+					icserial.setFtrantypeid(srctype);
+					icserial.setFinterid(entityid);
+					icserial.setFsnlistid(entityid);
+					// 判断序列号是否重复
+					IcserialQuery snquery = new IcserialQuery();
+					snquery.setItemcode(icserial.getItemcode());
+					snquery.setDb(icserial.getDb());
+					snquery.setFserialnum(icserial.getFserialnum());
+
+					List<Icserial> snlists = new ArrayList<Icserial>();
+					snlists = icserialDao.findList("Icserial.findByDbCode",
+							snquery);
+					if (snlists.size() > 0) {// 序列号已存在
+						throw new ServiceException("物料" + snquery.getItemcode()+ "序列号:" + snquery.getFserialnum()+ "已存在!请重新输入!");
+					}
+					icserialDao.save(icserial, "Icserial.insert.in.TQIN");
+				}
+			}
+		}
+	}
+	@Override
+	public void saveOtherAddp(Putstorage entity) throws ServiceException {
+
+		 String snStr=entity.getSnStr();//序列号字符集已;;分割
+		 Long supplierid=entity.getSupplierid();// 其他入库客户id
+		 String suppliername = entity.getSuppliername();
+		 Long teamid=entity.getTeamid();//交货部门
+		 Integer addtype = entity.getAddtype();//入库类型
+		 
+		 
+		 	ProcessTask processTask = processTaskDao.getByProperty("taskCode","TO_PUSHINTO_INVENTORY");
+			ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+			processDetailQuery.setProcessId(processTask.getProcessIds());
+			List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+			ProcessDetail processDetail = processDetails.get(0);
+			String handlers = "";
+			for (ProcessHandle ph : processDetail.getProcessHandleList()) {
+				handlers += ph.getHandlerName() + " ";
+			}
+		 	Putstorage putstorage=new Putstorage();
+		 	
+//		 	putstorage.setIserp(Putstorage.ERP_NOTADD);
+		 	putstorage.setIserp(Putstorage.ERPADD);
+		 	putstorage.setSuppliername(suppliername);
+		 	putstorage.setSupplier(supplierid);
+			putstorage.setIsclose(0);//关闭标志
+			//putstorage.setStatus(0);//审核标记
+			putstorage.setStatus(processDetail.getNodeSeq());// 审核标记
+			putstorage.setFstatusDesc(processDetail.getNodeName() + ",执行人:"+ handlers);
+			putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());//制单人,当前登录人
+			putstorage.setEmpid(SpringSecurityUtils.getCurrentUserId());
+			putstorage.setSrctype(-1L);//原单类型
+			putstorage.setTeamid(teamid);//交货部门---(K3,t_Department部门表取值213)
+			putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+			putstorage.setAddtype(entity.getAddtype());//入库类型-----分为产品入库和其他
+			//--单据编号------------------------------------------------
+			String fbillno="";
+			Icbillno icbillno = icbillnoDao.getByProperty("fpreletter", "TQIN");
+			Integer icblength = icbillno.getFlength();
+			String fcurno = icbillno.getFcurno()+"";
+			if(fcurno.length()<icblength){
+				String head="";
+				for(int i=0;i<icblength-fcurno.length();i++){
+					head=head+"0";
+				}
+				fbillno=icbillno.getFpreletter()+head+fcurno;
+			}
+			putstorage.setFbillno(fbillno);//入库单号
+			
+			Long putstorageid = putstorageDao.save(putstorage, "Putstorage.insert.fromTQIN");//保存入库单
+			ProcessHistask processHistask = new ProcessHistask();
+			processHistask.setSourceCode(fbillno);
+			processHistask.setSourceId(putstorageid);
+			processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+			processHistask.setExamineStatus(null);
+			processHistask.setFmark("");
+			processHistask.setNodeSeq(0);
+			processHistask.setNodeName("提交单据!");
+			processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+			processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+			processHistask.setOperateTime(DateUtils.formtDateTime(new Date(),"yyyy-MM-dd HH:mm:ss"));
+			processHistaskDao.save(processHistask);
+
+			ProcessExetask processExetask = new ProcessExetask();
+			processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+			processExetask.setSourceCode(fbillno);
+			processExetask.setSourceId(putstorageid);
+			processExetask.setNodeName(processDetail.getNodeName());
+			processExetask.setNodeSeq(processDetail.getNodeSeq());
+			processExetask.setHandlers(handlers);
+			processExetaskDao.save(processExetask);
+			
+			//更新单据编号
+			icbillno.setFcurno(icbillno.getFcurno()+1);
+			icbillnoDao.update(icbillno);
+			
+			
+			//--添加入库单详细----------------------------------------------------------------------------
+			 String[] codelist=entity.getCodelist();
+			 String[] namelist=entity.getNamelist();
+			 String[] formatnolist=entity.getFormatnolist();
+			 String[] unitnamelist=entity.getUnitnamelist();//t_Measureunit单位表查询id
+			 Long[] stockidlist=entity.getStockidlist();
+//			 String[] batchnolist=entity.getBatchnolist();
+			 String[] batchnolist=entity.getTdbatchno();
+			 
+			 Integer[] dbnolist=entity.getTddbno();
+			 Integer[] issnlist=entity.getIssnlist();
+			 Double[] tdfqty=entity.getTdfqty();
+			 int listsize = codelist.length;
+			 //---截取序列号-----------------
+			 String[] snlist = snStr.split(";;");
+			 int snsize = snlist.length;
+			 System.out.println("============="+snsize+"==========");
+			 List<String[]> list=new ArrayList<String[]>();
+			 for(int i=0;i<snsize;i++){
+				 String[] alonelist = snlist[i].split(",");
+				 list.add(alonelist);
+			 }
+			 int listNumber=0;	
+			 for(int i=0;i<listsize;i++){//遍历处理添加入库单详细------
+					Putstorageentity putstorageentity=new Putstorageentity();
+					putstorageentity.setFinterid(putstorageid);
+					putstorageentity.setItemcode(codelist[i]);
+					putstorageentity.setStorageid(stockidlist[i]);//收料仓库
+					putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+					putstorageentity.setUnitid(baseItemDao.getByProperty("itemcode", codelist[i]).getUnitid().longValue());
+					putstorageentity.setFqty(tdfqty[i]);//数量
+					
+					putstorageentity.setFbatchno(batchnolist[i]==null?"":batchnolist[i]);//批次
+				//	putstorageentity.setFsrcinterid(checkId);//原单内码
+					putstorageentity.setPoorderno(fbillno);//
+					//putstorageentity.setFxmark(dbnolist[i]);//帐套标记
+					putstorageentity.setFxmark(3);//帐套标记	
+					putstorageentity.setMakecodeNumber(entity.getMakecodeNumber());
+					Long entityid = putstorageentityDao.save(putstorageentity, "Putstorageentity.insert.in.TQIN");
+					//处理序列号---
+					if(issnlist[i]==1){//序列号管理
+						listNumber++;
+					
+					Long srctype = putstorage.getSrctype();
+					
+					String[] snstrlist = list.get(listNumber-1);
+					for(String ss:snstrlist){
+						Icserial icserial=new Icserial();
+						icserial.setItemcode(codelist[i]);
+						icserial.setFserialnum(ss);
+						icserial.setFstatus(0);//不在库
+						icserial.setFvalid(0);//无效
+						icserial.setFitemid(baseItemDao.getByProperty("itemcode",codelist[i]).getFitemid().intValue());
+						icserial.setFstockid(stockidlist[i].intValue());//仓库
+						icserial.setLockstatus(0);//未锁库
+						icserial.setDb(dbnolist[i]);//帐套
+						icserial.setFtrantypeid(srctype);
+						icserial.setFinterid(entityid);
+						icserial.setFsnlistid(entityid);
+						//判断序列号是否重复
+						IcserialQuery snquery=new IcserialQuery();
+						snquery.setItemcode(icserial.getItemcode());
+						snquery.setDb(icserial.getDb());
+						snquery.setFserialnum(icserial.getFserialnum());
+						
+						List<Icserial> snlists=new ArrayList<Icserial>(); 
+						snlists= icserialDao.findList("Icserial.findByDbCode", snquery);
+						if(snlists.size()>0){//序列号已存在
+							throw new ServiceException("物料"+snquery.getItemcode()+"序列号:"+snquery.getFserialnum()+"已存在!请重新输入!");
+						}
+						
+						icserialDao.save(icserial, "Icserial.insert.in.TQIN");
+					}
+					
+				}	
+			 }
+			 AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+						.getAuthentication().getPrincipal();
+			 operationLogDao.save(ConfigTerrence.MODEL_GODOWN, ConfigTerrence.OPT_ADD, "单据编号为："+fbillno+"的入库单添加成功，操作人为"+admin.getAdmin().getAdminName());
+	//--------------------------------------------------------------------------------------------------	
+		
+	}
+	@Override
+	public Boolean exeProcess(Putstorage entity, ProcessExetask processExetask) {
+
+		Boolean examResult=false;
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);//不需要分发节点
+		if(!(Boolean)map.get("flag")){//流程没有异常
+			throw new ServiceException((String)map.get("msg"));
+		}else if((Boolean)map.get("rebackTag")){//被驳回
+			entity.setStatus((Integer)map.get("step"));
+			entity.setFstatusDesc((String)map.get("stepName"));
+		}else if((Boolean)map.get("flag")){//是正常的往下执行的流程
+			entity.setStatus((Integer)map.get("step"));
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");//获取下一步的名称和执行人
+			entity.setFstatusDesc(desc);
+			//修改表头中对应的标签的信息
+			if((Boolean)map.get("endTag")){//审批流程结束,修改库存
+				//返回流程结束标志
+				examResult=true;
+			}
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		//设定审核时间
+		entity.setCheckdate(DateConvertUtils.getCurrentDateTimeInfo());
+		entity.setChecker(SpringSecurityUtils.getCurrentUserId());
+		putstorageDao.update(entity);
+		return examResult;
+	
+	}
+	@Override
+	public void updatestatusAll(Putstorage entity, ProcessExetask processExetask) {
+		// TODO Auto-generated method stub
+		
+		ProcessExetaskQuery query = new ProcessExetaskQuery();
+		query.setSourceId(processExetask.getSourceId());
+		query.setTaskCode(processExetask.getTaskCode());
+		List<ProcessExetask> processExetasks = processExetaskDao.findList(query);
+		processExetask = processExetasks.get(0);
+		Boolean examResult=false;
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);//不需要分发节点
+		if(!(Boolean)map.get("flag")){//流程没有异常
+			throw new ServiceException((String)map.get("msg"));
+		}else if((Boolean)map.get("rebackTag")){//被驳回
+			entity.setStatus((Integer)map.get("step"));
+			entity.setFstatusDesc((String)map.get("stepName"));
+			changeMessage(entity,map);//向系统消息中写入数据
+		}else if((Boolean)map.get("flag")){//是正常的往下执行的流程
+			entity.setStatus((Integer)map.get("step"));
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");//获取下一步的名称和执行人
+			entity.setFstatusDesc(desc);
+			changeMessage(entity,map);//向系统消息中写入数据
+			//修改表头中对应的标签的信息
+			if((Boolean)map.get("endTag")){//审批流程结束,修改库存
+				//返回流程结束标志
+				examResult=true;
+			}
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		//设定审核时间
+		entity.setCheckdate(DateConvertUtils.getCurrentDateTimeInfo());
+		entity.setChecker(SpringSecurityUtils.getCurrentUserId());
+		/*if(null!=processExetask.getExamineStatus()
+				&&0==processExetask.getExamineStatus()){
+			entity.setStatus(-1);
+			if(null!=processExetask.getFmark()){
+				entity.setFstatusDesc(processExetask.getFmark());
+			}else{
+				entity.setFstatusDesc("");
+			}
+		}*/
+		putstorageDao.update(entity);
+		
+		//////////////////////
+		if(!examResult){//流程未结束
+			//throw new ServiceException("审核失败,请重试!");
+		}
+		else{
+		String updateIds = entity.getFinterid()+"";
+		Putstorage putstorage = new Putstorage();
+		putstorage.setFinterids(updateIds);
+		putstorage.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核日期
+		putstorage.setChecker(SpringSecurityUtils.getCurrentUserId());//审核人
+		putstorage.setStatus(100);//0、待审  1、审核
+		putstorageDao.update("Putstorage.update.status.sh", putstorage);
+		Putstorage put = new Putstorage();
+		put.setFinterids(updateIds);
+		List<Putstorage> pupList = putstorageDao.findtongbu(put);//erpfbillno--03-10添加//审核erp时回写单据编号
+		Putstorageentity putstorageentity = new Putstorageentity();
+		putstorageentity.setFinterids(updateIds);
+		
+		List<Putstorageentity> putList = putstorageentityDao.findputList(putstorageentity);//查询finterid在updateIds中的入库单明细
+		if(putList.size() > 0){
+			for(int i=0;i<putList.size();i++){
+				InventoryBatch inventoryBatch = new InventoryBatch();
+				inventoryBatch.setItemcode(putList.get(i).getItemcode());//物料代码
+				
+				inventoryBatch.setItemname(putList.get(i).getIcitemput().getItemname());//物料名称
+				inventoryBatch.setItemmode(putList.get(i).getIcitemput().getFormatno());//规格型号
+				
+				inventoryBatch.setFitemid(putList.get(i).getStorageid().intValue());//库房id
+			
+				//===============2014-4-19根据标记判断入哪个帐套，不选择标记则默认3===============================
+				if(putList.get(i).getFxmark() != null){
+					inventoryBatch.setDbno(putList.get(i).getFxmark());
+				}else{
+					inventoryBatch.setDbno(3);//帐套：3
+				}
+				//==============================================
+				
+			
+				
+				if(putList.get(i).getIcitemput().getIsbatch() == null || putList.get(i).getIcitemput().getIsbatch() == 0){ //非批次号管理
+				
+					//=============================
+					InventoryBatch inventbatch = new InventoryBatch();
+					inventbatch.setItemcode(putList.get(i).getItemcode());
+					inventbatch.setFitemid(putList.get(i).getStorageid().intValue());
+					if(putList.get(i).getFxmark() != null){
+						inventbatch.setDbno(putList.get(i).getFxmark());
+					}else{
+						inventbatch.setDbno(3);
+					}
+					
+					//InventoryBatch ibentity = inventoryBatchDao.findIBentity(inventbatch);//查询非批次号管理的数据============
+					
+					InventoryBatch ibentity = inventoryBatchDao.findIBentityBatchno(inventbatch);//查询非批次号管理的数据
+					
+					if(ibentity == null){
+						
+						if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+							inventoryBatch.setFqty2(putList.get(i).getFqty());//数量
+						}else{
+							inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+						}
+					
+						
+						inventoryBatchDao.save(inventoryBatch, "InventoryBatch.insert.NewData.in.putstorage");//非批次号管理的，库存里没有的物料，保存
+					}else{
+						
+						if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+							Double sun = ibentity.getFqty2();
+							Double sum = sun + putList.get(i).getFqty();
+							inventoryBatch.setFqty2(sum);
+						}else{
+							Double sun = ibentity.getFqty();
+							Double sum = sun + putList.get(i).getFqty();
+							inventoryBatch.setFqty(sum);
+						}
+						//inventoryBatch.setFqty(sum);
+						inventoryBatchDao.update("InventoryBatch.update.in.putstorage", inventoryBatch);//不是批次号管理的更新当前数据
+						
+					}
+					//=================================================
+				}else{
+					if(putList.get(i).getFbatchno() != null){
+						inventoryBatch.setBatchno(putList.get(i).getFbatchno());
+						
+						//inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+						
+						InventoryBatchQuery inbQuery=new InventoryBatchQuery();  
+						InventoryBatch inventoryb =null;
+						
+						inbQuery.setBatchno(inventoryBatch.getBatchno());
+						inbQuery.setFitemid(inventoryBatch.getFitemid());
+						inbQuery.setDbno(inventoryBatch.getDbno());
+						inbQuery.setItemcode(inventoryBatch.getItemcode());
+						
+						
+						inventoryb=inventoryBatchDao.getByEntity("InventoryBatch.getBydb.codebatchnofitemid", inbQuery);
+						if(inventoryb!=null){//已存在同批次,同物料,同仓库,直接更新数量
+							if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+								inventoryBatch.setFqty2(putList.get(i).getFqty()+inventoryb.getFqty2());//数量
+							}else{
+								inventoryBatch.setFqty(putList.get(i).getFqty()+inventoryb.getFqty());//数量
+							}	
+							inventoryBatchDao.update("InventoryBatch.update.in.putstorage.batch",inventoryBatch);
+						}else{
+							if(putList.get(i).getFxmark() != null && putList.get(i).getFxmark() == 4){
+								inventoryBatch.setFqty2(putList.get(i).getFqty());//数量
+							}else{
+								inventoryBatch.setFqty(putList.get(i).getFqty());//数量
+							}
+							inventoryBatchDao.save(inventoryBatch, "InventoryBatch.insert.in.putstorage");//批次号管理的插入新的数据	
+						}
+					}
+				}
+			
+				//=====================================================
+				
+				Putstorage pstorag = new Putstorage();
+				pstorag.setFinterid(putList.get(i).getFinterid());
+				Putstorage storagePut = putstorageDao.findputstorage(pstorag);//查询待入库单
+				
+				if(storagePut.getSrctype().intValue() == 71 && storagePut.getIsreturn() == null){//单据类型为订单(71)时用,区分机加工入库
+					Poorderentry pder = new Poorderentry();
+					pder.setOrderid(putList.get(i).getOrderid());
+					Poorderentry ppder = poorderentryDao.findpp(pder);
+					
+					Double fqtyzh = 0.0;
+					Double putfqty = ppder.getPutqty();//订单明细中已入库数
+					
+					
+					Double fqty = putList.get(i).getFqty();//当前审核入库数
+					if(putfqty != null){
+						fqtyzh = putfqty + fqty;
+					}else{
+						fqtyzh = fqty;
+					}
+					
+					
+					Poorderentry poorderentry = new Poorderentry();
+//					poorderentry.setFinterid(per.getFinterid());
+//					poorderentry.setItemcode(putList.get(i).getItemcode());
+					poorderentry.setPutqty(fqtyzh);
+					poorderentry.setOrderid(putList.get(i).getOrderid());
+					
+					poorderentryDao.update("poorderentry.update.putqty", poorderentry);//更新入库数
+					
+				
+					Double db2 = fqtyzh - ppder.getFqty();
+					Integer db3 = 0;
+					if(db2 > 0 || db2 == 0){
+						db3 = 1;
+					}
+					
+					if(db3 == 1 || fqtyzh > ppder.getFqty()){//入库数等于或大于订单数,关闭行业务
+						Poorderentry orderentry = new Poorderentry();
+						orderentry.setMrpclosed(1);//1、关闭
+						orderentry.setOrderid(putList.get(i).getOrderid());
+						poorderentryDao.update("Poorderentry.update.for.detail", orderentry);
+						
+						//=================================全部入库
+							Poorderentry enpo = poorderentryDao.getById(putList.get(i).getOrderid());
+							if(enpo.getFsourcebillno() != null && !enpo.getFsourcebillno().equals("")){
+								Porequest poqut = porequestDao.getByProperty("fbillno", enpo.getFsourcebillno());
+								
+								if(poqut!=null){
+									Porequestentry trypor = new Porequestentry();
+									trypor.setFinterid(poqut.getFinterid());
+									trypor.setItemcode(enpo.getItemcode());
+									trypor.setPutstore(2);//全部入库
+									porequestentryDao.update("Porequestentry.yiruku.shu.zhuangtai", trypor);
+								}
+								
+							}	
+							
+							
+						//==================================
+						
+					}else{//部分入库
+						Poorderentry enpo = poorderentryDao.getById(putList.get(i).getOrderid());
+						 
+						if(enpo.getFsourcebillno() != null && !enpo.getFsourcebillno().equals("")){
+							Porequest poqut = porequestDao.getByProperty("fbillno", enpo.getFsourcebillno());
+							if(poqut!=null){
+								Porequestentry trypor = new Porequestentry();
+								trypor.setFinterid(poqut.getFinterid());
+								trypor.setItemcode(enpo.getItemcode());
+								trypor.setPutstore(1);//部分入库
+								porequestentryDao.update("Porequestentry.yiruku.shu.zhuangtai", trypor);
+							}
+						}
+						
+					}
+					Poorder poorder = new Poorder();
+					poorder.setFbillno(putList.get(i).getPoorderno());
+					Poorder per = poorderDao.findper(poorder);
+					
+					Poorderentry poorderen = new Poorderentry();
+					poorderen.setFinterid(per.getFinterid());
+					List<Poorderentry> listPoorderentry = poorderentryDao.findListPoorderentry(poorderen);
+					Integer yy = 0;
+					if(listPoorderentry.size()>0){
+						
+						for(int y =0; y < listPoorderentry.size();y++){
+							if(listPoorderentry.get(y).getMrpclosed()==1){//判断是否行关闭
+								yy++;
+							}
+						}
+					}
+					if(yy == listPoorderentry.size()){//如果都行关闭了，则关闭订单
+						Poorder pdder = new Poorder();
+						pdder.setFclosed(1);//关闭订单
+						pdder.setFinterid(per.getFinterid());
+						poorderDao.update("Poorder.update.in.tasks", pdder);
+					}
+					
+				}
+			}
+		}
+	
+		//===============List<Putstorage> pupList
+		
+		//Map<Long, List<Icserial>> mapIcserial = new HashMap<Long, List<Icserial>>();123123
+		JSONObject jsonObj=new JSONObject();
+		List<List<Putstorageentity>> list = new ArrayList<List<Putstorageentity>>();
+		List<List<Poorder>> listpoorder = new ArrayList<List<Poorder>>();
+		
+		List<Putstorage> ppList = new ArrayList<Putstorage>();
+		for(int y=0;y<pupList.size();y++){//表头循环
+			
+			
+			List<Putstorageentity> listput = new ArrayList<Putstorageentity>();
+			
+			Putstorageentity putentity = new Putstorageentity();
+			putentity.setFinterid(pupList.get(y).getFinterid());
+			List<Putstorageentity> putentityList =  putstorageentityDao.findtongbudata(putentity);//查询入库单明细
+			
+					
+			for(int t=0;t<putentityList.size();t++){
+				
+				if(putentityList.get(t).getFxmark()==null || putentityList.get(t).getFxmark()==3){//判断帐套
+					/**
+					 * 更新物料表中的数据
+					 */
+					if(putentityList.get(t).getPoorderno().substring(0,3).equals("JOB") || putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia") || putentityList.get(t).getPoorderno().substring(0,5).equals("POORD")){
+						updateBaseItemBase(putentityList.get(t),1);
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,4).equals("TQIN")||putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia")){//其他入库
+						//============================保存序列号=======================================	
+							BaseItem baseitem = new BaseItem();
+							BaseItemQuery bQuery=new BaseItemQuery();
+							bQuery.setItemcode(putentityList.get(t).getItemcode());
+							baseitem.setItemcode(putentityList.get(t).getItemcode());
+							
+							BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+							if(bitem.getFissnmanager()==1){//序列号管理
+//								Long fitemid = bitem.getFitemid();//原物料内码
+//								Integer fid = fitemid.intValue();
+								
+								IcserialQuery icserialQuery = new IcserialQuery();
+								//icserial.setFstatus(1);//0、出库 1、在库
+								//icserial.setFvalid(1);//0、无效 1、有效
+								icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//								icserialQuery.setFitemid(fid);
+								icserialQuery.setLockstatus(0);
+								icserialQuery.setDb(3);
+								icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+								icserialQuery.setFtrantypeid(pupList.get(y).getSrctype());//最后操作单据类型----
+								icserialQuery.setFinterid(putentityList.get(t).getEntityid());//最后操作单据内码----待入库单明细id
+								icserialQuery.setFsnlistid(putentityList.get(t).getEntityid());//最后操作流转id-----待入库单明细id
+								
+								List<Icserial> icserialList = icserialDao.findList("Icserial.findlist.TQIN", icserialQuery);
+								for(Icserial ics:icserialList){//序列号更新为在库有效状态
+									ics.setFstatus(1);//0、出库 1、在库
+									ics.setFvalid(1);//0、无效 1、有效
+									icserialDao.update(ics);
+								}
+							}
+						//========================================================================
+					}
+					
+					if(putentityList.get(t).getPoorderno().substring(0,5).equals("POORD") && putentityList.get(t).getFqty()>0){//外购入库
+						//============================修改序列号状态=======================================	
+						BaseItem baseitem = new BaseItem();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(putentityList.get(t).getItemcode());
+						baseitem.setItemcode(putentityList.get(t).getItemcode());
+						
+						BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+						if(bitem.getFissnmanager()==1){//序列号管理
+
+							IcserialQuery icserialQuery = new IcserialQuery();
+							icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+							icserialQuery.setLockstatus(0);
+							icserialQuery.setDb(3);
+							icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+							icserialQuery.setFtrantypeid(71L);//最后操作单据类型----
+							//===========================后来改为=========================
+							icserialQuery.setFinterid(putentityList.get(t).getWaitid());//最后操作单据内码
+							icserialQuery.setFsnlistid(putentityList.get(t).getOrderid());
+							//===========================================================
+							List<Icserial> icserialList = icserialDao.findList("Icserial.POORD.list.for.find", icserialQuery);
+							for(Icserial ics:icserialList){//序列号更新为在库有效状态
+								ics.setFstatus(1);//0、出库 1、在库
+								ics.setFvalid(1);//0、无效 1、有效
+								icserialDao.update(ics);
+							}
+						}
+					//========================================================================
+					}
+					
+					if(pupList.get(y).getIsreturn()!=null){
+						Putstorageentity spt = putstorageentityDao.getById(putentityList.get(t).getOldentityid());
+						putentityList.get(t).setFcommitqy(spt.getFcommitqy());//传递提交数 fcommitqy
+					}
+					
+					if(pupList.get(y).getIserp()==null||pupList.get(y).getIserp()==1){//需同步---ERP
+
+						//查询是否标记K3任务单,若标记K3任务单，则按标记的任务单号处理
+						String checkPoorderno=null;
+						checkPoorderno=putentityList.get(t).getPoorderno();
+						
+//						//机加工任务单处理标记-----------------------------------------
+//						if(checkPoorderno!=null&&checkPoorderno.substring(0, 5).equals("JiJia")){
+//							IcmoQuery iquery=new IcmoQuery();
+//							iquery.setFbillno(checkPoorderno);
+//							Icmo icmonoentity =new Icmo(); 
+//							icmonoentity=icmoDao.getByEntity("Icmo.geticmono", iquery);
+//							if(icmonoentity.getIcmono()!=null&&!icmonoentity.getIcmono().equals("")){//标记不为空，不为null
+//								//putentityList.get(t).setPoorderno(icmonoentity.getIcmono());
+//								putentityList.get(t).setIcmono(icmonoentity.getIcmono());
+//							}
+//						}
+//						//------------------------------------------------------------
+						Long entryorderid = null;
+						entryorderid = putentityList.get(t).getOrderid();
+						if(checkPoorderno!=null&&checkPoorderno.substring(0,5).equals("POORD")){
+							Poorderentry epfno = new Poorderentry();
+							epfno.setOrderid(entryorderid);
+							Poorderentry erentry = poorderentryDao.findentry(epfno);
+							if(erentry.getJobno()!=null&&!erentry.getJobno().equals("")){
+								putentityList.get(t).setJobno(erentry.getJobno());//k3与排产对应的单据编号
+								putentityList.get(t).setIsupdate(1);//需要更新
+								
+							}
+						}
+						//------------------------------------------------------------
+
+						listput.add(putentityList.get(t));
+					}
+					
+				}else{//4帐套-------------------
+					/**
+					 * 更新物料表中的数据
+					 */
+					if(putentityList.get(t).getPoorderno().substring(0,3).equals("JOB") || putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia") || putentityList.get(t).getPoorderno().substring(0,5).equals("POORD")){
+						updateBaseItemBase(putentityList.get(t),1);
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,4).equals("TQIN")||putentityList.get(t).getPoorderno().substring(0,5).equals("JiJia")){//其他入库
+						//============================保存序列号=======================================	
+							BaseItem baseitem = new BaseItem();
+							BaseItemQuery bQuery=new BaseItemQuery();
+							bQuery.setItemcode(putentityList.get(t).getItemcode());
+							baseitem.setItemcode(putentityList.get(t).getItemcode());
+							
+							BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+							if(bitem.getFissnmanager()==1){//序列号管理
+//								Long fitemid = bitem.getFitemid();//原物料内码
+//								Integer fid = fitemid.intValue();
+								
+								IcserialQuery icserialQuery = new IcserialQuery();
+								//icserial.setFstatus(1);//0、出库 1、在库
+								//icserial.setFvalid(1);//0、无效 1、有效
+								icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//								icserialQuery.setFitemid(fid);
+								icserialQuery.setLockstatus(0);
+								icserialQuery.setDb(4);
+								icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+								icserialQuery.setFtrantypeid(pupList.get(y).getSrctype());//最后操作单据类型----
+								icserialQuery.setFinterid(putentityList.get(t).getEntityid());//最后操作单据内码----待入库单明细id
+								icserialQuery.setFsnlistid(putentityList.get(t).getEntityid());//最后操作流转id-----待入库单明细id
+								
+								List<Icserial> icserialList = icserialDao.findList("Icserial.findlist.TQIN", icserialQuery);
+								for(Icserial ics:icserialList){//序列号更新为在库有效状态
+									ics.setFstatus(1);//0、出库 1、在库
+									ics.setFvalid(1);//0、无效 1、有效
+									icserialDao.update(ics);
+								}
+							}
+						//========================================================================
+					}
+					
+					
+					if(putentityList.get(t).getPoorderno().substring(0,5).equals("POORD") && putentityList.get(t).getFqty()>0){//外购入库
+						//============================修改序列号状态=======================================	
+						BaseItem baseitem = new BaseItem();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(putentityList.get(t).getItemcode());
+						baseitem.setItemcode(putentityList.get(t).getItemcode());
+						
+						BaseItem bitem = baseItemDao.getByEntity("BaseItem.get.baseitemissn", bQuery);
+						if(bitem.getFissnmanager()==1){//序列号管理
+//							Long fitemid = bitem.getFitemid();//原物料内码
+//							Integer fid = fitemid.intValue();
+							
+							IcserialQuery icserialQuery = new IcserialQuery();
+							//icserial.setFstatus(1);//0、出库 1、在库
+							//icserial.setFvalid(1);//0、无效 1、有效
+							icserialQuery.setItemcode(putentityList.get(t).getItemcode());
+//							icserialQuery.setFitemid(fid);
+							icserialQuery.setLockstatus(0);
+							icserialQuery.setDb(4);
+							icserialQuery.setFstockid(putentityList.get(t).getStorageid().intValue());//仓库
+							icserialQuery.setFtrantypeid(71L);//最后操作单据类型
+							//icserialQuery.setFinterid(putentityList.get(t).getOrderid());//最后操作单据内码
+							
+							//===========================后来改为=========================
+							if(putentityList.get(t).getWaitid()!=null && !putentityList.get(t).getWaitid().equals("")){
+								icserialQuery.setFinterid(putentityList.get(t).getWaitid());//最后操作单据内码
+							}
+							
+							icserialQuery.setFsnlistid(putentityList.get(t).getOrderid());
+							//===========================================================
+							List<Icserial> icserialList = icserialDao.findList("Icserial.POORD.list.for.find", icserialQuery);
+							for(Icserial ics:icserialList){//序列号更新为在库有效状态
+								ics.setFstatus(1);//0、出库 1、在库
+								ics.setFvalid(1);//0、无效 1、有效
+								icserialDao.update(ics);
+							}
+						}
+					//========================================================================
+					}
+				}
+			}
+			
+			if(listput.size()>0){
+				list.add(listput);
+				ppList.add(pupList.get(y));
+				//list.add(putentityList);
+				
+				List<Poorder> liststatus = new ArrayList<Poorder>();
+				for(int z = 0;z<listput.size();z++){//查询订单明细
+					Poorder pooer = new Poorder();	
+					pooer.setFbillno(listput.get(z).getPoorderno());
+					Poorder pper = poorderDao.findpper(pooer);
+					liststatus.add(pper);
+				}
+				listpoorder.add(liststatus);
+			}
+			
+		}
+		
+		/***/if(list.size()>0){//------同步暂时屏蔽，只为跑流程-------2015-10-13-1620
+			//======================== 同步erp数据  表icstockbill================================
+			
+			TREReturn	terreturn = k3ServiceProxy.
+					saveNewIcstock(ppList,list,listpoorder,jsonObj);
+			System.out.println(terreturn.getStrText());
+			if( terreturn.getnCode() == -1){
+				throw new ServiceException(terreturn.getStrText(),"-1");
+			}			
+			Map mm=new HashMap();
+			mm=terreturn.getMap();
+			
+			Putstorage pp=new Putstorage();
+			Iterator iter = mm.keySet().iterator();
+			while (iter.hasNext()) {
+			    Long key = (Long) iter.next();
+			    String value = (String) mm.get(key);
+
+			    pp.setFinterid(key);
+			    pp.setErpfbillno(value);
+				putstorageDao.update(pp);
+			}
+			
+			//==========================================================
+		}
+		
+	}
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_GODOWN, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getFinterid()+"的入库单审核成功，操作人为"+admin.getAdmin().getAdminName());
+		
+	}
+	//更新和保存系统消息
+	public void changeMessage(Putstorage entity,Map<String,Object> map){
+		Putstorage da = putstorageDao.getById(entity.getFinterid());
+		String mark="TO_PUSHINTO_INVENTORY";
+		//1先将原来的消息更新为status=2
+		MessageQuery query = new MessageQuery();
+		query.setFbillid(da.getFinterid());
+		query.setProcessname(mark);
+		query.setSortColumns("id");
+		List<Message> lists = messageDao.findList(query);
+		if(lists!=null&&lists.size()>0){
+			Message mes = lists.get(lists.size()-1);
+			mes.setStatus(2);
+			mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+			this.messageDao.update(mes);
+		}
+		//2如果有当前执行人则插入数据
+		if(map!=null&&map.get("handlerIds")!=null){
+			List<Long> handlerIds = new ArrayList<Long>();
+			handlerIds = (List<Long>) map.get("handlerIds");
+			String empids="";
+			if(handlerIds!=null&&handlerIds.size()>0){
+				for(int i=0;i<handlerIds.size();i++){
+					if(i==handlerIds.size()-1){
+						empids +=handlerIds.get(i);
+					}else{
+						empids +=handlerIds.get(i)+",";
+					}
+				}
+			}
+			if(empids!=null&&!empids.equals("")){
+				Message message = new Message();
+				message.setName("入库单待审核");//消息名称
+				message.setContent("单据编号："+da.getFbillno()+";制单日期："+(da.getCreatdateString()==null?"":da.getCreatdateString().substring(0, 10)));//消息内容
+				message.setType(1);//单据类型
+				message.setFbillno(da.getFbillno());//单据编号
+				message.setFbillid(da.getFinterid());//单据主键
+				message.setUrl("procure/purchase/godown_table.htm");//链接地址
+				message.setStatus(1);//消息状态(1未处理2已处理)
+				message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+				message.setEmpids(empids);//执行人
+				message.setProcessname(mark);//流程名称
+				this.messageDao.save(message);
+			}
+		}
+	}
+	@Override
+	public void updatestatusAll(List<Long> checkedIdList,ProcessExetask processExetask) throws Exception {
+		Putstorage entity = null;
+		for(Long lo:checkedIdList){
+			entity=new Putstorage();
+			entity.setFinterid(lo);
+			processExetask.setSourceId(lo);
+			updatestatusAll(entity,processExetask);
+		}
+	}
+}

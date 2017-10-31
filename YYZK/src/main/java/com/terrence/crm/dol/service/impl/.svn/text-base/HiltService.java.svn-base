@@ -1,0 +1,135 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Hilt;
+import com.terrence.crm.dol.dao.IHiltDao;
+import com.terrence.crm.dol.query.HiltQuery;
+import com.terrence.crm.dol.query.MeasureCategoryQuery;
+import com.terrence.crm.dol.service.IHiltService;
+
+@Service
+@Transactional
+public class HiltService extends BaseService implements IHiltService {
+	protected static Logger logger = LoggerFactory.getLogger(HiltService.class);
+	@Autowired
+	@Qualifier("hiltDao")
+	private IHiltDao hiltDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Hilt";
+	}
+	@Transactional(readOnly=true)
+	public Hilt getById(java.lang.Long id) throws ServiceException
+	{
+		return hiltDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Hilt entity) throws ServiceException
+	{
+		hiltDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Hilt entity) throws ServiceException
+	{
+		Long adId = hiltDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Hilt entity) throws ServiceException
+	{
+		Integer returnValue =  hiltDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = hiltDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		HiltQuery query=new HiltQuery();
+		query.setParentcode(hiltDao.getById(Long.valueOf(delIds)).getHiltcode());
+		
+		Integer returnValue=0;
+		if(hiltDao.findList(query).size()>0)
+		{
+			return 0;
+		}
+		else
+		{
+			returnValue = hiltDao.deleteByMultipleId(delIds);
+			return returnValue;
+		}
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		HiltQuery query = new HiltQuery();
+		try {
+			return hiltDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Hilt> findPage(Page<Hilt> page, HiltQuery query) throws ServiceException
+	{
+		return hiltDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Hilt> findPage(Page<Hilt> page,String statement, HiltQuery query) throws ServiceException
+	{
+		return hiltDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Hilt> findList(HiltQuery query) throws ServiceException
+	{
+		return hiltDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Hilt> findList(HiltQuery query,Integer pageSize) throws ServiceException
+	{
+		return hiltDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Hilt> findList(HiltQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return hiltDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Hilt> findAllList() throws ServiceException
+	{
+		return hiltDao.findAllList();
+	}
+
+}

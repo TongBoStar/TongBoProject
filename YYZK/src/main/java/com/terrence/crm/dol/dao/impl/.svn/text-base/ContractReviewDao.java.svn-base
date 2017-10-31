@@ -1,0 +1,40 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ContractReview;
+import com.terrence.crm.dol.dao.IContractReviewDao;
+
+/**
+ * 合同评审数据访问实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-7-18 下午4:21:48
+ */
+@Repository
+public class ContractReviewDao extends BaseIbatisDao<ContractReview, java.lang.Long> implements
+		IContractReviewDao {
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		return "ContractReview";
+	}
+	
+	@Override
+	public void saveOrUpdate(ContractReview entity) throws DataAccessException {
+		SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		if(null==entity.getContractReviewId()){
+			entity.setReviewStatus(0);
+			entity.setCreateTime(formt.format(new Date()));
+			save(entity);
+		}else {
+			update(entity);
+		}
+	}
+
+}

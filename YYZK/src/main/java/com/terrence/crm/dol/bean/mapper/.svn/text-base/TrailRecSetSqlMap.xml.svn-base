@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailRecSet">
+
+        
+	<resultMap id="RM.TrailRecSet" class="com.terrence.crm.dol.bean.TrailRecSet">
+        <result property="recid" column="recid"/>
+        <result property="gid" column="gid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="colid" column="colid"/>
+        <result property="coltitle" column="coltitle"/>
+        <result property="fename" column="fename"/>
+        <result property="fcol" column="fcol"/>
+        <result property="frow" column="frow"/>
+    </resultMap>
+	<resultMap id="RM.TrailRecSet.Two" class="com.terrence.crm.dol.bean.TrailRecSet">
+        <result property="coltitle" column="coltitle"/>
+        <result property="fename" column="fename"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailRecSet.columns">
+	    <![CDATA[
+        	t_trail_rec_set.recid ,
+        	t_trail_rec_set.gid ,
+        	t_trail_rec_set.colid ,
+        	t_trail_rec_set.tplid ,
+        	t_trail_rec_set.coltitle ,
+        	t_trail_rec_set.fename ,
+        	t_trail_rec_set.fcol ,
+        	t_trail_rec_set.frow 
+	    ]]>
+	</sql>
+	
+   <insert id="TrailRecSet.insert" >
+    
+        INSERT INTO
+        t_trail_rec_set (
+
+        	gid 
+        	<isNotEmpty prepend="," property="colid">
+	        	colid  
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="coltitle">
+	        	coltitle  
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fename">
+	        	fename  
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	fcol  
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="frow">
+	        	frow  
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="tplid">
+	        	tplid  
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="fcnname">
+	        	fcnname  
+	        </isNotEmpty>
+        	
+       
+        ) VALUES (
+
+        	#gid# 
+        	<isNotEmpty prepend="," property="colid">
+	        	#colid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="coltitle">
+	        	 #coltitle# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fename">
+	        	 #fename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	 #fcol# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="frow">
+	        	 #frow# 
+	        </isNotEmpty> 
+	        <isNotEmpty prepend="," property="tplid">
+	        	#tplid#  
+	        </isNotEmpty>
+			<isNotEmpty prepend="," property="fcnname">
+	        	#fcnname#  
+	        </isNotEmpty>
+        	
+
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="recid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailRecSet.update" parameterClass="com.terrence.crm.dol.bean.TrailRecSet">         
+        UPDATE t_trail_rec_set 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="gid">
+	        	gid = #gid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="colid">
+	        	colid = #colid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="tplid">
+	        	tplid = #tplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="coltitle">
+	        	coltitle = #coltitle# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fename">
+	        	fename = #fename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	fcol = #fcol# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="frow">
+	        	frow = #frow# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        recid = #recid# 
+    </update>
+    
+	<delete id="TrailRecSet.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_rec_set where
+       recid = #recid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrailRecSet.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_rec_set 
+        WHERE
+       recid in ($recid$) 
+    ]]>
+    </delete>
+    
+    
+    <delete id="TrailRecSet.deletebygid">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_rec_set 
+        WHERE
+       gid=$gid$ 
+    ]]>
+    </delete>
+    
+    
+    
+    <select id="TrailRecSet.getById" resultMap="RM.TrailRecSet">
+	    select <include refid="TrailRecSet.columns"/>
+	    
+	        from t_trail_rec_set 
+	        where 
+		        recid = #recid# 
+	    
+    </select>
+   
+	<select id="TrailRecSet.getByProperty" resultMap="RM.TrailRecSet">
+		select <include refid="TrailRecSet.columns"/> from t_trail_rec_set where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailRecSet.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_trail_rec_set.recid = #recid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gid">
+	             t_trail_rec_set.gid = #gid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="colid">
+	             t_trail_rec_set.colid = #colid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trail_rec_set.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="coltitle">
+	             t_trail_rec_set.coltitle = #coltitle#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fename">
+	             t_trail_rec_set.fename = #fename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcol">
+	             t_trail_rec_set.fcol = #fcol#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="frow">
+	             t_trail_rec_set.frow = #frow#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailRecSet.findPage.and">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_trail_rec_set.recid = #recid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gid">
+	             t_trail_rec_set.gid = #gid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="colid">
+	             t_trail_rec_set.colid = #colid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trail_rec_set.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="coltitle">
+	             t_trail_rec_set.coltitle = #coltitle#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fename">
+	             t_trail_rec_set.fename = #fename#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcol">
+	             t_trail_rec_set.fcol = #fcol#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="frow">
+	             t_trail_rec_set.frow = #frow#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrailRecSet.Entity" resultMap="RM.TrailRecSet">
+    	SELECT 	<include refid="TrailRecSet.columns"/> FROM t_trail_rec_set <include refid="TrailRecSet.findPage.where"/>
+    </select>
+    <select id="TrailRecSet.findTrailRecSetList" resultMap="RM.TrailRecSet.Two">
+	    select distinct coltitle,fename 
+	        from t_trail_rec_set 
+	        <include refid="TrailRecSet.findPage.where"/>
+    </select>
+    <select id="TrailRecSet.findList" resultMap="RM.TrailRecSet">
+    	SELECT 
+    		<include refid="TrailRecSet.columns"/> 
+    	FROM 
+    		t_trail_rec_set
+		<include refid="TrailRecSet.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailRecSet.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_rec_set
+    ]]>
+		<include refid="TrailRecSet.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailRecSet.findPage" resultMap="RM.TrailRecSet">
+    	select <include refid="TrailRecSet.columns"/>	    
+	        from t_trail_rec_set 	   
+		<include refid="TrailRecSet.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailRecSet.findPage" resultMap="RM.TrailRecSet">
+    	select <include refid="TrailRecSet.columns"/>	    
+	        from t_trail_rec_set where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       recid 
+	   not in(select $notTop$ 
+       recid 
+	   from t_trail_rec_set <include refid="TrailRecSet.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailRecSet.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+
+	<insert id="TrailRecSet.update.Copy">
+		insert into t_trail_rec_set(gid,colid,coltitle,fename,fcol,frow,tplid,tagname,fcnname)
+		select 
+		#newgid#
+		,colid,coltitle,fename,fcol,frow,#tplid#,tagname,fcnname
+		from t_trail_rec_set where gid=#gid#
+	</insert>
+
+	
+</sqlMap>

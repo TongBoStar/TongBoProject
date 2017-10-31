@@ -1,0 +1,117 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+
+@Repository
+public class DispatchWorkDao extends BaseIbatisDao<DispatchWork,java.lang.Long> implements IDispatchWorkDao{
+
+		
+	public void saveOrUpdate(DispatchWork entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "DispatchWork";
+	}
+	public DispatchWork getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (DispatchWork)this.getSqlMapClientTemplate().queryForObject("DispatchWork.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByProperty(String propertyName, String propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", propertyValue);
+		this.getSqlMapClientTemplate().delete("DispatchWork.deleteByProperty", map);
+	}
+	/**
+	 * 添加任务时加车间派工任务
+	 * @param icmoid
+	 */
+	public void saveDispatchWrok(Long icmoid)
+	{
+		//this.getSqlMapClientTemplate().insert("DispatchWork.save", icmoid);
+	}
+//======添加=====================================================================
+	public Long createDispatchWork(DispatchWork entity) {
+		return (Long)this.getSqlMapClientTemplate().insert("DispatchWork.create", entity);
+	}
+//=====根据workid删除===========================================================================	
+	public void deleteByWorkid(Long id) {
+		this.getSqlMapClientTemplate().delete("DispatchWork.deleteByWorkid", id);
+	}
+	
+	public List<HashMap> findcreatList(){
+		
+		return	this.getSqlMapClientTemplate().queryForList("DispatchWork.findCreatList");
+		
+	}
+
+	@Override
+	public void updateDispatchWork(DispatchWork entity) {
+		this.getSqlMapClientTemplate().update("DispatchWork.update.processnum", entity);
+	}
+
+	@Override
+	public void saveBatchWork() {
+		//this.getSqlMapClientTemplate().insert("DispatchWork.batch.create");
+	}
+
+	@Override
+	public void deleteByItemcode(String itemCode) {
+		this.getSqlMapClientTemplate().delete("DispatchWork.deleteByItemcode", itemCode);
+	}
+
+	@Override
+	public Long saveTeamProcess(DispatchWork entity) {
+		return (Long)this.getSqlMapClientTemplate().insert("DispatchWork.addProcess",entity);
+	}
+
+	@Override
+	public DispatchWork getProcedurePrice(Long id) {
+
+		return (DispatchWork)this.getSqlMapClientTemplate().queryForObject("DispatchWork.getProcedurePrice",id);
+		
+	}
+
+	@Override
+	public Long savePlanTime(DispatchWork entity) {
+
+		return (Long)this.getSqlMapClientTemplate().insert("DispatchWork.insertPlanTime",entity);
+	}
+
+	@Override
+	public Integer getByAcceptNum(Long workseqid) {
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("DispatchWork.accecpednum", workseqid);
+	}
+
+	@Override
+	public long saveDispatchAuto(DispatchWork dwork) {
+
+		return (Long)this.getSqlMapClientTemplate().insert("DispatchWork.insertAuto",dwork);
+		
+	}
+	
+	
+	
+}

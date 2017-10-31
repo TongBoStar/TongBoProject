@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Seorder;
+import com.terrence.crm.dol.dao.ISeorderDao;
+
+@Repository
+public class SeorderDao extends BaseIbatisDao<Seorder,java.lang.Long> implements ISeorderDao{
+
+		
+	public void saveOrUpdate(Seorder entity) {
+		if(entity.getOrderid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Seorder";
+	}
+	public Seorder getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Seorder)this.getSqlMapClientTemplate().queryForObject("Seorder.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Inventory">
+
+        
+	<resultMap id="RM.Inventory" class="com.terrence.crm.dol.bean.Inventory">
+        <result property="id" column="id"/>
+        <result property="stockid" column="stockid"/>
+        <result property="batchno" column="batchno"/>
+        <result property="itemid" column="itemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fqty2" column="fqty2"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="demand" column="demand"/>
+        <result property="secinv" column="secinv"/>
+        <result property="pdstatus" column="pdstatus"/>
+        <result property="stockup" column="stockup"/>
+        <result property="itemproperty" column="itemproperty"/>
+    </resultMap>
+	<resultMap id="RM.Inventory.warning" class="com.terrence.crm.dol.bean.Inventory">
+        <result property="id" column="id"/>
+        <result property="stockid" column="stockid"/>
+        <result property="batchno" column="batchno"/>
+        <result property="itemid" column="itemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fqty2" column="fqty2"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="demand" column="demand"/>
+        <result property="secinv" column="secinv"/>
+        <result property="pdstatus" column="pdstatus"/>
+        <result property="stockup" column="stockup"/>
+        <result property="nature" column="nature"/>
+        <result property="itemproperty" column="itemproperty"/>
+    </resultMap>
+	<resultMap id="RM.Inventory.Item" class="com.terrence.crm.dol.bean.Inventory">
+        <result property="id" column="id"/>
+        <result property="stockid" column="stockid"/>
+        <result property="batchno" column="batchno"/>
+        <result property="itemid" column="itemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fqty2" column="fqty2"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="demand" column="demand"/>
+        <result property="secinv" column="secinv"/>
+        <result property="pdstatus" column="pdstatus"/>
+        <result property="stockup" column="stockup"/>
+        <result property="itemproperty" column="itemproperty"/>
+    </resultMap>  
+    <!-- 自身库存 -->
+    <resultMap id="RM.Inventory.self" class="com.terrence.crm.dol.bean.Inventory">
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fqty2" column="fqty2"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="demand" column="demand"/>
+        <result property="secinv" column="secinv"/>
+        <result property="itemproperty" column="itemproperty"/>
+        <result property="amount" column="amount"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Inventory.columns">
+	    <![CDATA[
+        	t_inventory.id ,
+        	t_inventory.stockid ,
+        	t_inventory.batchno ,
+        	t_inventory.itemid ,
+        	t_inventory.itemcode ,
+        	t_inventory.itemname ,
+        	t_inventory.fqty ,
+        	t_inventory.fqty2,
+        	t_inventory.itemmode,
+        	t_inventory.demand ,
+        	t_inventory.secinv ,
+        	t_inventory.pdstatus ,
+        	t_inventory.stockup ,
+        	t_inventory.itemproperty
+	    ]]>
+	</sql>
+	
+   <insert id="Inventory.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_inventory (
+        	id ,
+        	stockid ,
+        	batchno ,
+        	itemid ,
+        	itemcode ,
+        	itemname ,
+        	fqty ,
+        	itemproperty 
+        ) VALUES (
+        	#id# ,
+        	#stockid# ,
+        	#batchno# ,
+        	#itemid# ,
+        	#itemcode# ,
+        	#itemname# ,
+        	#fqty# ,
+        	#itemproperty#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<insert id="Inventory.Insert.Sync">
+	insert into t_inventory (itemid,itemcode,itemname,fqty,itemmode,secinv,itemproperty)
+	select invent.fitemid,item.fnumber,item.fname,sum(invent.fqty) fqty,item.fmodel,item.fsecinv,item.ferpclsid 
+	from K33.AIS20120718093132.dbo.icinventory invent,K33.AIS20120718093132.dbo.t_icitem item where
+	invent.fitemid=item.fitemid and not exists (select * from t_inventory b where item.fnumber=b.itemcode)
+ 	group by invent.fitemid,item.fnumber,item.fname,item.fmodel,item.fsecinv,item.ferpclsid
+	</insert>
+	<update id="Inventory.update.Sync">
+	update t_inventory set fqty=k3invent.fqty from 
+	(select invent.fitemid,item.fnumber,item.fname,sum(invent.fqty) fqty,item.fmodel from K33.AIS20120718093132.dbo.icinventory invent,K33.AIS20120718093132.dbo.t_icitem item where
+	invent.fitemid=item.fitemid and  exists (select * from t_inventory b where item.fnumber=b.itemcode)
+ 	group by invent.fitemid,item.fnumber,item.fname,item.fmodel) k3invent where t_inventory.itemid=k3invent.fitemid
+	</update>
+	<update id="Inventory.Insert.Sync.004">
+	update t_inventory set fqty2=k3invent.fqty,itemid2=k3invent.fitemid from 
+	(select invent.fitemid,item.fnumber,item.fname,sum(invent.fqty) fqty from K33.AIS20120912135429.dbo.icinventory invent,
+	K33.AIS20120912135429.dbo.t_icitem item where
+	invent.fitemid=item.fitemid and  exists (select * from t_inventory b where item.fnumber=b.itemcode)
+ 	group by invent.fitemid,item.fnumber,item.fname) k3invent where t_inventory.itemcode=k3invent.fnumber
+	</update>
+	<insert id="Inventory.update.Sync.004">
+	insert into t_inventory (itemid2,itemcode,itemname,fqty2,itemmode,secinv,itemproperty)
+	select invent.fitemid,item.fnumber,item.fname,sum(invent.fqty) fqty,item.fmodel,item.fsecinv,item.ferpclsid 
+	from K33.AIS20120912135429.dbo.icinventory invent,K33.AIS20120912135429.dbo.t_icitem item where
+	invent.fitemid=item.fitemid and not exists (select * from t_inventory b where item.fnumber=b.itemcode)
+ 	group by invent.fitemid,item.fnumber,item.fname,item.fmodel,item.fsecinv,item.ferpclsid
+	</insert>
+	
+	<update id="Inventory.update" parameterClass="com.terrence.crm.dol.bean.Inventory">         
+        UPDATE t_inventory 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="stockid">
+	        	stockid = #stockid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="batchno">
+	        	batchno = #batchno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemid">
+	        	itemid = #itemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemmode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqty">
+	        	fqty = #fqty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqty2">
+	        	fqty2 = #fqty2# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="demand">
+	        	demand = #demand# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secinv">
+	        	secinv = #secinv# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pdstatus">
+	        	pdstatus = #pdstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stockup">
+	        	stockup = #stockup# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemproperty">
+	        	itemproperty = #itemproperty# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    <update id="Inventory.update.demand.add" parameterClass="com.terrence.crm.dol.bean.Inventory">         
+        UPDATE t_inventory 
+        <dynamic prepend="SET">
+	       
+	        <isNotEmpty prepend="," property="demand">
+	        	demand = isnull(demand,0)+#demand# 
+	        </isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        itemcode = #itemcode# 
+    </update>
+    <update id="Inventory.update.demand.substract" parameterClass="com.terrence.crm.dol.bean.Inventory">         
+        UPDATE t_inventory 
+        <dynamic prepend="SET">
+	       
+	        <isNotEmpty prepend="," property="demand">
+	        	demand = isnull(demand,0)-#demand# 
+	        </isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        itemcode = #itemcode# 
+    </update>
+	<delete id="Inventory.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_inventory where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="Inventory.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_inventory 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="Inventory.getById" resultMap="RM.Inventory">
+	    select <include refid="Inventory.columns"/>
+	    
+	        from t_inventory 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="Inventory.getByProperty" resultMap="RM.Inventory">
+		select <include refid="Inventory.columns"/> from t_inventory where $propertyName$=#propertyValue#
+	</select>
+	
+	<!-- 订单查物料库存 -->
+	<select id="Inventory.getByItemcode" resultMap="RM.Inventory.self">
+	select t_inventory.itemcode,t_inventory.itemname,t_inventory.itemproperty,t_inventory.itemmode,isnull(t_inventory.fqty,0) fqty,
+	isnull(t_inventory.fqty2,0) fqty2,isnull(t_inventory.demand,0) demand,t_inventory.secinv,t_po.amount from t_inventory left join 
+	(select sum(amount) amount,itemcode from t_po where status=1 group by itemcode) t_po on t_inventory.itemcode=t_po.itemcode
+	where t_inventory.itemcode=#itemcode#
+	</select>
+	<sql id="Inventory.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_inventory.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stockid">
+	             t_inventory.stockid = #stockid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_inventory.batchno = #batchno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_inventory.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_inventory.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_inventory.itemname = #itemname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemmode">
+	             t_inventory.itemmode like ('%$itemcode$%') 
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_inventory.fqty = #fqty#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_inventory.secinv = #secinv#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pdstatus">
+	             t_inventory.pdstatus = #pdstatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stockup">
+	             t_inventory.stockup = #stockup#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nature">
+	             t_inventory.nature = #nature#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemproperty">
+	             t_inventory.itemproperty = #itemproperty#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Inventory.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_inventory.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stockid">
+	             t_inventory.stockid = #stockid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_inventory.batchno = #batchno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_inventory.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_inventory.itemcode like ('%$itemcode$%') 
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_inventory.itemname = #itemname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemmode">
+	             t_inventory.itemmode = #itemmode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_inventory.fqty = #fqty#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_inventory.secinv = #secinv#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pdstatus">
+	             t_inventory.pdstatus = #pdstatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stockup">
+	             t_inventory.stockup = #stockup#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nature">
+	             t_inventory.nature = #nature#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemproperty">
+	             t_inventory.itemproperty = #itemproperty#
+	       </isNotEmpty>
+	</sql>
+    <select id="Inventory.Temp.findList" resultMap="RM.Inventory">
+    select <include refid="Inventory.columns"/> from t_inventory where demand>0
+    </select>
+    <select id="Inventory.findList" resultMap="RM.Inventory">
+    	SELECT 
+    		<include refid="Inventory.columns"/> 
+    	FROM 
+    		t_inventory
+		<include refid="Inventory.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Inventory.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_inventory
+    ]]>
+		<include refid="Inventory.findPage.where"/>    
+    </select>
+    
+    <!-- 2013-08-21  -->
+    
+    <select id="Inventory.findBatchno" resultMap="RM.Inventory">
+    	select <include refid="Inventory.columns"/>  from t_inventory where itemcode like ('%$itemcode$%')
+    </select>
+   <select id="Inventory.findItemName" resultMap="RM.Inventory">
+    	select <include refid="Inventory.columns"/>  from t_inventory where itemcode like ('%$itemcode$%')
+    </select>
+    
+    
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Inventory.findPage" resultMap="RM.Inventory">
+    	select <include refid="Inventory.columns"/>	    
+	        from t_inventory 	   
+		<include refid="Inventory.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    <select id="Inventory.warning.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from (select * from orderwarning where  (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0)
+		union all
+		select * from stockupwarning where  (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0)
+		) t_inventory
+    ]]>
+		<include refid="Inventory.findPage.where"/>    
+    </select>
+    <!-- 产品预警 -->
+    <select id="Inventory.warning.findPage" resultMap="RM.Inventory.warning">
+    	select id ,stockid ,batchno ,itemid ,itemcode ,	itemname ,isnull(fqty,0) fqty,isnull(fqty2,0) fqty2
+    	,itemid2,isnull(demand,0) demand,itemmode,isnull(secinv,0) secinv,pdstatus,isnull(stockup,0) stockup,itemproperty,nature  from 
+    	(select * from orderwarning <![CDATA[ where (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0)]]>
+		union all
+		select * from stockupwarning <![CDATA[where  (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0)]]>
+		) t_inventory where 1=1
+	   <isNotEmpty property="notTop">  and 
+       id not in(select $notTop$ id from (select * from orderwarning <![CDATA[where  (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0) ]]>
+		union all
+		select * from stockupwarning <![CDATA[ where  (isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)-isnull(stockup,0))<isnull(secinv,0) ]]>
+		) t_inventory <include refid="Inventory.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Inventory.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	<select id="Sql.Inventory.findPage" resultMap="RM.Inventory">
+    	select <include refid="Inventory.columns"/>	    
+	        from t_inventory where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id not in(select $notTop$ id from t_inventory <include refid="Inventory.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Inventory.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Inventory.Shortage.findPage.count" resultClass="long">
+		<![CDATA[
+        select count(*) from t_inventory   ,t_order_item where t_inventory.itemcode=t_order_item.fnumber 
+		and isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)<0
+		]]>
+		<include refid="Inventory.findPage.and"/>  
+	</select>
+	<select id="Inventory.Shortage.findPage" resultMap="RM.Inventory.Item">
+		select <include refid="Inventory.columns"/> from t_inventory where isnull(fqty,0)+isnull(fqty2,0)-isnull(demand,0)&lt;0
+		<isNotEmpty property="notTop">  and 
+       id not in(select $notTop$ id from t_inventory <include refid="Inventory.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Inventory.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+</sqlMap>

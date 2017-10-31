@@ -1,0 +1,128 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Team;
+import com.terrence.crm.dol.query.TeamQuery;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.service.ITeamService;
+
+@Service
+@Transactional
+public class TeamService extends BaseService implements ITeamService {
+	protected static Logger logger = LoggerFactory.getLogger(TeamService.class);
+	@Autowired
+	@Qualifier("teamDao")
+	private ITeamDao teamDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Team";
+	}
+	@Transactional(readOnly=true)
+	public Team getById(java.lang.Long id) throws ServiceException
+	{
+		return teamDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Team entity) throws ServiceException
+	{
+		teamDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Team entity) throws ServiceException
+	{
+		Long adId = teamDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Team entity) throws ServiceException
+	{
+		Integer returnValue =  teamDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = teamDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = teamDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TeamQuery query = new TeamQuery();
+		try {
+			return teamDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Team> findPage(Page<Team> page, TeamQuery query) throws ServiceException
+	{
+		return teamDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Team> findPage(Page<Team> page,String statement, TeamQuery query) throws ServiceException
+	{
+		return teamDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Team> findList(TeamQuery query) throws ServiceException
+	{
+		return teamDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Team> findList(TeamQuery query,Integer pageSize) throws ServiceException
+	{
+		return teamDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Team> findList(TeamQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return teamDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Team> findAllList() throws ServiceException
+	{
+		return teamDao.findAllList();
+	}
+	@Override
+	public Team findTeam(TeamQuery teamQuery) throws ServiceException {
+		return teamDao.findTeam(teamQuery);
+	}
+
+}

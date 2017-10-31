@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.dao.IOrdersProductDao;
+
+@Repository
+public class OrdersProductDao extends BaseIbatisDao<OrdersProduct,java.lang.Long> implements IOrdersProductDao{
+
+		
+	public void saveOrUpdate(OrdersProduct entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "OrdersProduct";
+	}
+	public OrdersProduct getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (OrdersProduct)this.getSqlMapClientTemplate().queryForObject("OrdersProduct.getByProperty", map);		
+	}
+
+	@Override
+	public List<OrdersProduct> findPro(OrdersProduct op) {
+		return this.getSqlMapClientTemplate().queryForList("OrdersProduct.find.product.list", op);
+	}
+
+	@Override
+	public OrdersProduct findentity(OrdersProduct op) {
+		return (OrdersProduct) this.getSqlMapClientTemplate().queryForObject("OrdersProduct.find.entity.select", op);
+	}
+
+	@Override
+	public OrdersProduct findorderentity(OrdersProduct porder) {
+		return (OrdersProduct) this.getSqlMapClientTemplate().queryForObject("OrdersProduct.order.find.data.select", porder);
+	}
+
+}

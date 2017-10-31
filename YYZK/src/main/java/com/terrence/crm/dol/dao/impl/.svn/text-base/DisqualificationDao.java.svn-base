@@ -1,0 +1,57 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Disqualification;
+import com.terrence.crm.dol.dao.IDisqualificationDao;
+import com.terrence.crm.dol.query.DisqualificationQuery;
+
+@Repository
+public class DisqualificationDao extends BaseIbatisDao<Disqualification,java.lang.Long> implements IDisqualificationDao{
+
+		
+	public void saveOrUpdate(Disqualification entity) {
+		if(entity.getDqid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Disqualification";
+	}
+	public Disqualification getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Disqualification)this.getSqlMapClientTemplate().queryForObject("Disqualification.getByProperty", map);		
+	}
+
+	@Override
+	public Long saveNew(Disqualification disqualification) {
+		return (Long) this.getSqlMapClientTemplate().insert("Disqualification.insert.save.new", disqualification);
+	}
+
+	@Override
+	public Disqualification findEntity(
+			DisqualificationQuery disqualificationQuery) {
+		return (Disqualification) this.getSqlMapClientTemplate().queryForObject("Disqualification.find.entity", disqualificationQuery);
+	}
+
+	@Override
+	public void updateemp(Disqualification entity) {
+		this.getSqlMapClientTemplate().update("Disqualification.update.emp",entity);
+		
+	}
+
+}

@@ -1,0 +1,89 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.SalesBratio;
+import com.terrence.crm.dol.dao.ISalesBratioDao;
+import com.terrence.crm.dol.query.SalesBratioQuery;
+import com.terrence.crm.dol.service.ISalesBratioService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+@Service
+@Transactional
+public class SalesBratioService  extends BaseService implements ISalesBratioService {
+	@Autowired
+	@Qualifier("salesBratioDao")
+	private ISalesBratioDao salesBratioDao;
+	@Override
+	public SalesBratio getById(Long id) throws ServiceException {
+		return salesBratioDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(SalesBratio entity) throws ServiceException {
+		Long id=null;
+		if(entity.getId()!=null){
+			id=entity.getId();
+		}
+		salesBratioDao.saveOrUpdate(entity);
+		if(id==null){
+			
+			operationLogDao.save(ConfigTerrence.MODEL_SALESMAN,ConfigTerrence.OPT_ADD, "添加业务员:"+entity.getSaleName()+"");
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_SALESMAN,ConfigTerrence.OPT_EDIT, "业务员为:"+entity.getSaleName()+",ID:"+id+"修改成功");
+
+		}
+	}
+	@Override
+	public Long save(SalesBratio entity) throws ServiceException {
+		return salesBratioDao.save(entity);
+	}
+	@Override
+	public Integer update(SalesBratio entity) throws ServiceException {
+		return salesBratioDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		operationLogDao.save(ConfigTerrence.MODEL_SALESMAN,ConfigTerrence.OPT_DEL, "主键为:"+id+"删除成功");
+
+		return salesBratioDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		operationLogDao.save(ConfigTerrence.MODEL_SALESMAN,ConfigTerrence.OPT_DEL, "主键为:"+delIds+"删除成功");
+
+		Integer returnValue = salesBratioDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<SalesBratio> findPage(Page<SalesBratio> page, SalesBratioQuery query) throws ServiceException{
+		return salesBratioDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<SalesBratio> findPage(Page<SalesBratio> page,String statement, SalesBratioQuery query) throws ServiceException{
+		return salesBratioDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<SalesBratio> findList(SalesBratioQuery query) throws ServiceException{
+		return salesBratioDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<SalesBratio> findList(SalesBratioQuery query,Integer pageSize) throws ServiceException{
+		return salesBratioDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<SalesBratio> findList(SalesBratioQuery query,String statement,Integer pageSize) throws ServiceException{
+		return salesBratioDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<SalesBratio> findAllList() throws ServiceException{
+		return salesBratioDao.findAllList();
+	}
+}

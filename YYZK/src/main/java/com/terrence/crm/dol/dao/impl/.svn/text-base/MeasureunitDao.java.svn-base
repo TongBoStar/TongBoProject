@@ -1,0 +1,50 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Measureunit;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.dao.IMeasureunitDao;
+import com.terrence.crm.dol.query.MeasureunitsQuery;
+import com.terrence.crm.dol.query.OrderQuery;
+
+@Repository
+public class MeasureunitDao extends BaseIbatisDao<Measureunit,java.lang.Long> implements IMeasureunitDao{
+
+		
+	public void saveOrUpdate(Measureunit entity) {
+		if(entity.getFmeasureunitid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Measureunit";
+	}
+	public Measureunit getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Measureunit)this.getSqlMapClientTemplate().queryForObject("Measureunit.getByProperty", map);		
+	}
+
+	@Override
+	public void findUnit() {
+		this.getSqlMapClientTemplate().queryForObject("Measureunit.ERP.dataTongBu");
+	}
+	public List<Measureunit> findMeasureunitList(MeasureunitsQuery query ) {
+		return (List<Measureunit>)this.getSqlMapClientTemplate().queryForList("Measureunit.findMeasureunitList", query);
+	}
+}

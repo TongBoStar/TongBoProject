@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PmSection;
+import com.terrence.crm.dol.query.PmSectionQuery;
+import com.terrence.crm.dol.dao.IPmSectionDao;
+import com.terrence.crm.dol.service.IPmSectionService;
+
+@Service
+@Transactional
+public class PmSectionService extends BaseService implements IPmSectionService {
+	protected static Logger logger = LoggerFactory.getLogger(PmSectionService.class);
+	@Autowired
+	@Qualifier("pmSectionDao")
+	private IPmSectionDao pmSectionDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PmSection";
+	}
+	@Transactional(readOnly=true)
+	public PmSection getById(java.lang.Long id) throws ServiceException
+	{
+		return pmSectionDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PmSection entity) throws ServiceException
+	{
+		pmSectionDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PmSection entity) throws ServiceException
+	{
+		Long adId = pmSectionDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PmSection entity) throws ServiceException
+	{
+		Integer returnValue =  pmSectionDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pmSectionDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pmSectionDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PmSectionQuery query = new PmSectionQuery();
+		try {
+			return pmSectionDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PmSection> findPage(Page<PmSection> page, PmSectionQuery query) throws ServiceException
+	{
+		return pmSectionDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PmSection> findPage(Page<PmSection> page,String statement, PmSectionQuery query) throws ServiceException
+	{
+		return pmSectionDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PmSection> findList(PmSectionQuery query) throws ServiceException
+	{
+		return pmSectionDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PmSection> findList(PmSectionQuery query,Integer pageSize) throws ServiceException
+	{
+		return pmSectionDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PmSection> findList(PmSectionQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pmSectionDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PmSection> findAllList() throws ServiceException
+	{
+		return pmSectionDao.findAllList();
+	}
+
+}

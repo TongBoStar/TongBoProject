@@ -1,0 +1,64 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ItemStepInstructor;
+import com.terrence.crm.dol.dao.IItemStepInstructorDao;
+import com.terrence.crm.dol.query.ItemStepInstructorQuery;
+
+@Repository
+public class ItemStepInstructorDao extends BaseIbatisDao<ItemStepInstructor,java.lang.Long> implements IItemStepInstructorDao{
+
+		
+	public void saveOrUpdate(ItemStepInstructor entity) {
+		if(entity.getFitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemStepInstructor";
+	}
+	public ItemStepInstructor getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ItemStepInstructor)this.getSqlMapClientTemplate().queryForObject("ItemStepInstructor.getByProperty", map);		
+	}
+
+	@Override
+	public List<ItemStepInstructor> findbookData(
+			ItemStepInstructorQuery itemStepInstructorQuery) {
+		return this.getSqlMapClientTemplate().queryForList("ItemStepInstructor.find.book.data", itemStepInstructorQuery);
+	}
+
+	@Override
+	public List<ItemStepInstructor> findAllScheme(
+			ItemStepInstructorQuery itemStepInstructorQuery) {
+		return this.getSqlMapClientTemplate().queryForList("ItemStepInstructor.find.for.AllScheme", itemStepInstructorQuery);
+	}
+
+	@Override
+	public void deleteScheme(ItemStepInstructorQuery itemStepInstructorQuery) {
+		this.deleteByWhere("ItemStepInstructor.delete.for.scheme", itemStepInstructorQuery);
+		
+	}
+
+	@Override
+	public List<ItemStepInstructor> findListISI(ItemStepInstructor isi) {
+		return this.getSqlMapClientTemplate().queryForList("ItemStepInstructor.find.list.dataISI", isi);
+	}
+
+}

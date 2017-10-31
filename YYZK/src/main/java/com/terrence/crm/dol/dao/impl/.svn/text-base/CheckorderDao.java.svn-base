@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Checkorder;
+import com.terrence.crm.dol.dao.ICheckorderDao;
+import com.terrence.crm.dol.query.CheckorderQuery;
+
+@Repository
+public class CheckorderDao extends BaseIbatisDao<Checkorder,java.lang.Long> implements ICheckorderDao{
+
+		
+	public void saveOrUpdate(Checkorder entity) {
+		if(entity.getCheckid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Checkorder";
+	}
+	public Checkorder getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Checkorder)this.getSqlMapClientTemplate().queryForObject("Checkorder.getByProperty", map);		
+	}
+
+
+	@Override
+	public Checkorder finddata(CheckorderQuery checkorderQuery) {
+		return (Checkorder) this.getSqlMapClientTemplate().queryForObject("Checkorder.get.data.checkdata", checkorderQuery);
+	}
+
+}

@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PlanTask;
+import com.terrence.crm.dol.dao.IPlanTaskDao;
+@Repository
+public class PlanTaskDao extends BaseIbatisDao<PlanTask,java.lang.Long> implements IPlanTaskDao{
+	public String getIbatisSqlMapNamespace() {
+		return "PlanTask"; 
+	}
+	public void saveOrUpdate(PlanTask entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public PlanTask getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PlanTask)this.getSqlMapClientTemplate().queryForObject("PlanTask.getByProperty", map);
+	}
+}

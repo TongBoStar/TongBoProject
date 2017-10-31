@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CirculationRaw">
+
+        
+	<resultMap id="RM.CirculationRaw" class="com.terrence.crm.dol.bean.CirculationRaw">
+        <result property="rawid" column="rawid"/>
+        <result property="circulationid" column="circulationid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="batchno" column="batchno"/>
+        <result property="dbno" column="dbno"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CirculationRaw.columns">
+	    <![CDATA[
+        	t_circulation_raw.rawid ,
+        	t_circulation_raw.circulationid ,
+        	t_circulation_raw.itemcode ,
+        	t_circulation_raw.batchno ,
+        	t_circulation_raw.dbno 
+	    ]]>
+	</sql>
+	
+   <insert id="CirculationRaw.insert" >
+    
+        INSERT INTO
+        t_circulation_raw (
+        	circulationid
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemcode">itemcode</isNotEmpty>
+        		<isNotEmpty prepend="," property="batchno">batchno</isNotEmpty>
+        		<isNotEmpty prepend="," property="dbno">dbno</isNotEmpty>
+        	</dynamic>
+        ) VALUES (
+        	#circulationid#
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemcode">#itemcode#</isNotEmpty>
+        		<isNotEmpty prepend="," property="batchno">#batchno#</isNotEmpty>
+        		<isNotEmpty prepend="," property="dbno">#dbno#</isNotEmpty>
+        	</dynamic>
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="rawid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CirculationRaw.update" parameterClass="com.terrence.crm.dol.bean.CirculationRaw">         
+        UPDATE t_circulation_raw 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="circulationid">
+	        	circulationid = #circulationid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="batchno">
+	        	batchno = #batchno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dbno">
+	        	dbno = #dbno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        rawid = #rawid# 
+    </update>
+    
+	<delete id="CirculationRaw.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_circulation_raw where
+       rawid = #rawid# 
+    ]]>
+    </delete>
+    
+    <delete id="CirculationRaw.deleteByCirculationid" >
+    <![CDATA[
+        delete from t_circulation_raw where
+       circulationid= #circulationid# 
+    ]]>
+    </delete>
+    
+    <delete id="CirculationRaw.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_circulation_raw 
+        WHERE
+       rawid in ($rawid$) 
+    ]]>
+    </delete>
+    
+    <select id="CirculationRaw.getById" resultMap="RM.CirculationRaw">
+	    select <include refid="CirculationRaw.columns"/>
+	    
+	        from t_circulation_raw 
+	        where 
+		        rawid = #rawid# 
+	    
+    </select>
+    
+	<select id="CirculationRaw.getByProperty" resultMap="RM.CirculationRaw">
+		select <include refid="CirculationRaw.columns"/> from t_circulation_raw where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CirculationRaw.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="rawid">
+	             t_circulation_raw.rawid = #rawid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="circulationid">
+	             t_circulation_raw.circulationid = #circulationid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_circulation_raw.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_circulation_raw.batchno = #batchno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dbno">
+	             t_circulation_raw.dbno = #dbno#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CirculationRaw.findPage.and">
+			<isNotEmpty prepend="AND" property="rawid">
+	             t_circulation_raw.rawid = #rawid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="circulationid">
+	             t_circulation_raw.circulationid = #circulationid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_circulation_raw.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_circulation_raw.batchno = #batchno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dbno">
+	             t_circulation_raw.dbno = #dbno#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="CirculationRaw.Entity" resultMap="RM.CirculationRaw">
+    	SELECT 	<include refid="CirculationRaw.columns"/> FROM t_circulation_raw <include refid="CirculationRaw.findPage.where"/>
+    </select>
+    
+    <select id="CirculationRaw.findList" resultMap="RM.CirculationRaw">
+    	SELECT 
+    		<include refid="CirculationRaw.columns"/> 
+    	FROM 
+    		t_circulation_raw
+		<include refid="CirculationRaw.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CirculationRaw.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_circulation_raw
+    ]]>
+		<include refid="CirculationRaw.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.CirculationRaw.findPage" resultMap="RM.CirculationRaw">
+    	select <include refid="CirculationRaw.columns"/>	    
+	        from t_circulation_raw 	   
+		<include refid="CirculationRaw.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="CirculationRaw.findPage" resultMap="RM.CirculationRaw">
+    	select <include refid="CirculationRaw.columns"/>	    
+	        from t_circulation_raw where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       rawid 
+	   not in(select $notTop$ 
+       rawid 
+	   from t_circulation_raw <include refid="CirculationRaw.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CirculationRaw.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

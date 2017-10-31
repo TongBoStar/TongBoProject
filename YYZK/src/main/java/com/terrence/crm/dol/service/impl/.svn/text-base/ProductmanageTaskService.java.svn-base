@@ -1,0 +1,107 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProductmanageTask;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.dao.IProductmanageTaskDao;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.query.ProductmanageTaskQuery;
+import com.terrence.crm.dol.service.IProductmanageTaskService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class ProductmanageTaskService implements IProductmanageTaskService {
+	@Autowired
+	@Qualifier("productmanageTaskDao")
+	private IProductmanageTaskDao productmanageTaskDao;
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	
+	@Override
+	public ProductmanageTask getById(Long id) throws ServiceException {
+		ProductmanageTask da = productmanageTaskDao.getById(id);
+		ModelListQuery mquery = new ModelListQuery();
+		mquery.setChangestatus(0);
+		mquery.setDesignassistId(da.getSourceId());
+		mquery.setModelMark("t_bracket_list");
+		da.setBracketLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_bait_list");
+		da.setBaitLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assweld_list");
+		da.setAssweldLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assemble_list");
+		da.setAssembleLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_delivery_list");
+		da.setDeliveryLists(modelListDao.findList(mquery));
+		return da;
+	}
+	@Override
+	public void saveOrUpdate(ProductmanageTask entity) throws ServiceException {
+		productmanageTaskDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(ProductmanageTask entity) throws ServiceException {
+		return productmanageTaskDao.save(entity);
+	}
+	@Override
+	public Integer update(ProductmanageTask entity) throws ServiceException {
+		return productmanageTaskDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return productmanageTaskDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = productmanageTaskDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProductmanageTask> findPage(Page<ProductmanageTask> page, ProductmanageTaskQuery query) throws ServiceException{
+		return productmanageTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProductmanageTask> findPage(Page<ProductmanageTask> page,String statement, ProductmanageTaskQuery query) throws ServiceException{
+		return productmanageTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProductmanageTask> findList(ProductmanageTaskQuery query) throws ServiceException{
+		return productmanageTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProductmanageTask> findList(ProductmanageTaskQuery query,Integer pageSize) throws ServiceException{
+		return productmanageTaskDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProductmanageTask> findList(ProductmanageTaskQuery query,String statement,Integer pageSize) throws ServiceException{
+		return productmanageTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProductmanageTask> findAllList() throws ServiceException{
+		return productmanageTaskDao.findAllList();
+	}
+	@Override
+	public void closeToJson(List<Long> checkedIdList, ProductmanageTask entity)
+			throws Exception {
+		ProductmanageTask temp = null;
+		for(Long id:checkedIdList){
+			temp = new ProductmanageTask();
+			temp.setId(id);
+			temp.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			temp.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+			temp.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+			temp.setFstatus(100);
+			productmanageTaskDao.update(temp);
+		}
+	}
+}

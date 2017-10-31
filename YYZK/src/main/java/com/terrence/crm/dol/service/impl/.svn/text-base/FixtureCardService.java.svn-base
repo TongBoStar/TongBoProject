@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.FixtureCard;
+import com.terrence.crm.dol.query.FixtureCardQuery;
+import com.terrence.crm.dol.dao.IFixtureCardDao;
+import com.terrence.crm.dol.service.IFixtureCardService;
+
+@Service
+@Transactional
+public class FixtureCardService extends BaseService implements IFixtureCardService {
+	protected static Logger logger = LoggerFactory.getLogger(FixtureCardService.class);
+	@Autowired
+	@Qualifier("fixtureCardDao")
+	private IFixtureCardDao fixtureCardDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "FixtureCard";
+	}
+	@Transactional(readOnly=true)
+	public FixtureCard getById(java.lang.Long id) throws ServiceException
+	{
+		return fixtureCardDao.getById(id);
+	}
+	
+	public void saveOrUpdate(FixtureCard entity) throws ServiceException
+	{
+		fixtureCardDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(FixtureCard entity) throws ServiceException
+	{
+		Long adId = fixtureCardDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(FixtureCard entity) throws ServiceException
+	{
+		Integer returnValue =  fixtureCardDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = fixtureCardDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = fixtureCardDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		FixtureCardQuery query = new FixtureCardQuery();
+		try {
+			return fixtureCardDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<FixtureCard> findPage(Page<FixtureCard> page, FixtureCardQuery query) throws ServiceException
+	{
+		return fixtureCardDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<FixtureCard> findPage(Page<FixtureCard> page,String statement, FixtureCardQuery query) throws ServiceException
+	{
+		return fixtureCardDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<FixtureCard> findList(FixtureCardQuery query) throws ServiceException
+	{
+		return fixtureCardDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<FixtureCard> findList(FixtureCardQuery query,Integer pageSize) throws ServiceException
+	{
+		return fixtureCardDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<FixtureCard> findList(FixtureCardQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return fixtureCardDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<FixtureCard> findAllList() throws ServiceException
+	{
+		return fixtureCardDao.findAllList();
+	}
+
+}

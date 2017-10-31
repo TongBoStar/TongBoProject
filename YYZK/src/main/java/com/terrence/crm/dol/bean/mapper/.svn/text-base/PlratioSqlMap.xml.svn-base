@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Plratio">
+
+        
+	<resultMap id="RM.Plratio" class="com.terrence.crm.dol.bean.Plratio">
+        <result property="ratioid" column="ratioid"/>
+        <result property="salesid" column="salesid"/>
+        <result property="pl4200" column="PL4200"/>
+        <result property="pl3000" column="PL3000"/>
+        <result property="ssv3500" column="SSV3500"/>
+        <result property="pl2000" column="PL2000"/>
+        <result property="bratio" column="bratio"/>
+        <result property="fyear" column="fyear"/>
+        <result property="selfratio" column="selfratio"/>
+        <result property="salesmanagerratio" column="salesmanagerratio"/>
+        <result property="regionmanagerratio" column="regionmanagerratio"/>
+        <result property="companyratio" column="companyratio"/>
+    </resultMap>
+	
+	  <resultMap id="Plratio.RM.select.entity" class="com.terrence.crm.dol.bean.Plratio">
+        <result property="ratioid" column="ratioid"/>
+        <result property="salesid" column="salesid"/>
+        <result property="pl4200" column="PL4200"/>
+        <result property="pl3000" column="PL3000"/>
+        <result property="ssv3500" column="SSV3500"/>
+        <result property="pl2000" column="PL2000"/>
+        <result property="bratio" column="bratio"/>
+        <result property="fyear" column="fyear"/>
+        <result property="selfratio" column="selfratio"/>
+        <result property="salesmanagerratio" column="salesmanagerratio"/>
+        <result property="regionmanagerratio" column="regionmanagerratio"/>
+        <result property="companyratio" column="companyratio"/>
+        <result property="salesName" column="salesName"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Plratio.columns">
+	    <![CDATA[
+        	t_plratio.ratioid ,
+        	t_plratio.salesid ,
+        	t_plratio.PL4200 ,
+        	t_plratio.PL3000 ,
+        	t_plratio.SSV3500 ,
+        	t_plratio.PL2000 ,
+        	t_plratio.bratio ,
+        	t_plratio.fyear ,
+        	t_plratio.selfratio ,
+        	t_plratio.salesmanagerratio ,
+        	t_plratio.regionmanagerratio ,
+        	t_plratio.companyratio 
+	    ]]>
+	</sql>
+	
+   <insert id="Plratio.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_plratio (
+        	salesid ,
+        	PL4200 ,
+        	PL3000 ,
+        	SSV3500 ,
+        	PL2000 ,
+        	bratio ,
+        	fyear ,
+        	selfratio ,
+        	salesmanagerratio ,
+        	regionmanagerratio ,
+        	companyratio 
+        ) VALUES (
+        	#salesid# ,
+        	#pl4200# ,
+        	#pl3000# ,
+        	#ssv3500# ,
+        	#pl2000# ,
+        	#bratio# ,
+        	#fyear# ,
+        	#selfratio# ,
+        	#salesmanagerratio# ,
+        	#regionmanagerratio# ,
+        	#companyratio# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="ratioid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Plratio.update" parameterClass="com.terrence.crm.dol.bean.Plratio">         
+        UPDATE t_plratio 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="salesid">
+	        	salesid = #salesid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pl4200">
+	        	PL4200 = #pl4200# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pl3000">
+	        	PL3000 = #pl3000# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ssv3500">
+	        	SSV3500 = #ssv3500# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pl2000">
+	        	PL2000 = #pl2000# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bratio">
+	        	bratio = #bratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="selfratio">
+	        	selfratio = #selfratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="salesmanagerratio">
+	        	salesmanagerratio = #salesmanagerratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="regionmanagerratio">
+	        	regionmanagerratio = #regionmanagerratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="companyratio">
+	        	companyratio = #companyratio# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        ratioid = #ratioid# 
+    </update>
+    
+	<delete id="Plratio.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_plratio where
+       ratioid = #ratioid# 
+    ]]>
+    </delete>
+    
+    <delete id="Plratio.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_plratio 
+        WHERE
+       ratioid in ($ratioid$) 
+    ]]>
+    </delete>
+    
+    <select id="Plratio.getById" resultMap="RM.Plratio">
+	    select <include refid="Plratio.columns"/>
+	    
+	        from t_plratio 
+	        where 
+		        ratioid = #ratioid# 
+	    
+    </select>
+    
+	<select id="Plratio.getByProperty" resultMap="RM.Plratio">
+		select <include refid="Plratio.columns"/> from t_plratio where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Plratio.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="ratioid">
+	             t_plratio.ratioid = #ratioid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="salesid">
+	             t_plratio.salesid = #salesid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pl4200">
+	             t_plratio.PL4200 = #pl4200#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pl3000">
+	             t_plratio.PL3000 = #pl3000#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ssv3500">
+	             t_plratio.SSV3500 = #ssv3500#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pl2000">
+	             t_plratio.PL2000 = #pl2000#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="bratio">
+	             t_plratio.bratio = #bratio#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_plratio.fyear = #fyear#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Plratio.findPage.and">
+			<isNotEmpty prepend="AND" property="ratioid">
+	             t_plratio.ratioid = #ratioid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="salesid">
+	             t_plratio.salesid = #salesid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pl4200">
+	             t_plratio.PL4200 = #pl4200#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pl3000">
+	             t_plratio.PL3000 = #pl3000#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ssv3500">
+	             t_plratio.SSV3500 = #ssv3500#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pl2000">
+	             t_plratio.PL2000 = #pl2000#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="bratio">
+	             t_plratio.bratio = #bratio#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_plratio.fyear = #fyear#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Plratio.Entity" resultMap="RM.Plratio">
+    	SELECT 	<include refid="Plratio.columns"/> FROM t_plratio <include refid="Plratio.findPage.where"/>
+    </select>
+    
+    <select id="Plratio.findList" resultMap="RM.Plratio">
+    	SELECT 
+    		<include refid="Plratio.columns"/> 
+    	FROM 
+    		t_plratio
+		<include refid="Plratio.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Plratio.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_plratio
+        left join t_admin on t_plratio.salesid = t_admin.adminId
+    ]]>
+		<include refid="Plratio.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Plratio.findPage" resultMap="RM.Plratio">
+    	select <include refid="Plratio.columns"/>	    
+	        from t_plratio 	   
+		<include refid="Plratio.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Plratio.findPage" resultMap="Plratio.RM.select.entity">
+    	select <include refid="Plratio.columns"/>,t_admin.adminName  salesName	    
+	        from t_plratio 
+	        left join t_admin on t_plratio.salesid = t_admin.adminId
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       ratioid 
+	   not in(select $notTop$ 
+       ratioid 
+	   from t_plratio 
+	   left join t_admin on t_plratio.salesid = t_admin.adminId
+	   <include refid="Plratio.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Plratio.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <select id="Plratio.getentity.data.select" resultMap="Plratio.RM.select.entity">
+    	SELECT 
+    		<include refid="Plratio.columns"/> ,t_admin.adminName  salesName
+    	FROM 
+    		t_plratio
+    		left join t_admin on t_plratio.salesid = t_admin.adminId
+		<include refid="Plratio.findPage.where"/>
+    </select>
+	
+</sqlMap>

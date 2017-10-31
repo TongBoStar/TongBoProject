@@ -1,0 +1,68 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.query.PickingQuery;
+
+@Repository
+public class PickingDao extends BaseIbatisDao<Picking,java.lang.Long> implements IPickingDao{
+
+		
+	public void saveOrUpdate(Picking entity) {
+		if(entity.getPickingid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Picking";
+	}
+	public Picking getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Picking)this.getSqlMapClientTemplate().queryForObject("Picking.getByProperty", map);		
+	}
+
+	@Override
+	public List<Picking> findentity(PickingQuery pickingq) {
+		return this.getSqlMapClientTemplate().queryForList("Picking.find.plist.data",pickingq);
+	}
+
+	@Override
+	public Picking findPicking(PickingQuery pickingQuery) {
+		return (Picking) this.getSqlMapClientTemplate().queryForObject("Picking.select.returnStock.data", pickingQuery);
+	}
+
+	@Override
+	public Picking getPickingIdEntity(Picking kingpic) {
+		return (Picking) this.getSqlMapClientTemplate().queryForObject("Picking.tuihuo.data.select", kingpic);
+	}
+
+	@Override
+	public Picking findjobbillno(Picking k) {
+		return (Picking) this.getSqlMapClientTemplate().queryForObject("Picking.find.JOBfbillno.data", k);
+	}
+
+	@Override
+	public Picking findcheckData(Picking ing) {
+		return (Picking) this.getSqlMapClientTemplate().queryForObject("Picking.find.checkdata.select.data", ing);
+	}
+	@Override
+	public List<Picking> findbycallslip(PickingQuery query) throws Exception{
+		return this.getSqlMapClientTemplate().queryForList("Picking.find.checkdata.select.data", query);
+	}
+
+}

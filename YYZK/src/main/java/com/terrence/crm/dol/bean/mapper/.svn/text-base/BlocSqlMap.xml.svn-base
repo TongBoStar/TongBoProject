@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Bloc">
+
+        
+	<resultMap id="RM.Bloc" class="com.terrence.crm.dol.bean.Bloc">
+        <result property="blocid" column="blocid"/>
+        <result property="blocname" column="blocname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Bloc.columns">
+	    <![CDATA[
+        	t_bloc.blocid ,
+        	t_bloc.blocname 
+	    ]]>
+	</sql>
+	
+   <insert id="Bloc.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_bloc (
+        	blocname 
+        ) VALUES (
+        	#blocname# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="blocid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Bloc.update" parameterClass="com.terrence.crm.dol.bean.Bloc">         
+        UPDATE t_bloc 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="blocname">
+	        	blocname = #blocname# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        blocid = #blocid# 
+    </update>
+    
+	<delete id="Bloc.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_bloc where
+       blocid = #blocid# 
+    ]]>
+    </delete>
+    
+    <delete id="Bloc.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_bloc 
+        WHERE
+       blocid in ($blocid$) 
+    ]]>
+    </delete>
+    
+    <select id="Bloc.getById" resultMap="RM.Bloc">
+	    select <include refid="Bloc.columns"/>
+	    
+	        from t_bloc 
+	        where 
+		        blocid = #blocid# 
+	    
+    </select>
+    
+	<select id="Bloc.getByProperty" resultMap="RM.Bloc">
+		select <include refid="Bloc.columns"/> from t_bloc where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Bloc.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="blocid">
+	             t_bloc.blocid = #blocid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="blocname">
+	             t_bloc.blocname like ('%$blocname$%')
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Bloc.findPage.and">
+			<isNotEmpty prepend="AND" property="blocid">
+	             t_bloc.blocid = #blocid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="blocname">
+	             t_bloc.blocname like ('%$blocname$%')
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Bloc.findList" resultMap="RM.Bloc">
+    	SELECT 
+    		<include refid="Bloc.columns"/> 
+    	FROM 
+    		t_bloc
+		<include refid="Bloc.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Bloc.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_bloc
+    ]]>
+		<include refid="Bloc.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Bloc.findPage" resultMap="RM.Bloc">
+    	select <include refid="Bloc.columns"/>	    
+	        from t_bloc 	   
+		<include refid="Bloc.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Bloc.findPage" resultMap="RM.Bloc">
+    	select <include refid="Bloc.columns"/>	    
+	        from t_bloc where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       blocid 
+	   not in(select $notTop$ 
+       blocid 
+	   from t_bloc <include refid="Bloc.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Bloc.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

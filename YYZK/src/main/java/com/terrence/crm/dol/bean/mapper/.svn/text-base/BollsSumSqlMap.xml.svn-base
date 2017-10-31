@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="BollsSum">
+
+        
+	<resultMap id="RM.BollsSum" class="com.terrence.crm.dol.bean.BollsSum">
+        <result property="id" column="id"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="fqy" column="fqy"/>
+        <result property="dosing" column="dosing"/>
+        <result property="dispatchid" column="dispatchid"/>
+        <result property="billno" column="billno"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="BollsSum.columns">
+	    <![CDATA[
+        	t_bolls_sum.id ,
+        	t_bolls_sum.itemcode ,
+        	t_bolls_sum.fqy ,
+        	t_bolls_sum.dosing ,
+        	t_bolls_sum.dispatchid ,
+        	t_bolls_sum.billno 
+	    ]]>
+	</sql>
+	
+   <insert id="BollsSum.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_bolls_sum (
+        	id ,
+        	itemcode ,
+        	fqy ,
+        	dosing ,
+        	dispatchid ,
+        	billno 
+        ) VALUES (
+        	#id# ,
+        	#itemcode# ,
+        	#fqy# ,
+        	#dosing# ,
+        	#dispatchid# ,
+        	#billno# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="BollsSum.update" parameterClass="com.terrence.crm.dol.bean.BollsSum">         
+        UPDATE t_bolls_sum 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqy">
+	        	fqy = #fqy# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dosing">
+	        	dosing = #dosing# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dispatchid">
+	        	dispatchid = #dispatchid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="billno">
+	        	billno = #billno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="BollsSum.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_bolls_sum where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="BollsSum.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_bolls_sum 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="BollsSum.getById" resultMap="RM.BollsSum">
+	    select <include refid="BollsSum.columns"/>
+	    
+	        from t_bolls_sum 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="BollsSum.getByProperty" resultMap="RM.BollsSum">
+		select <include refid="BollsSum.columns"/> from t_bolls_sum where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="BollsSum.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_bolls_sum.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_bolls_sum.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fqy">
+	             t_bolls_sum.fqy = #fqy#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dosing">
+	             t_bolls_sum.dosing = #dosing#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_bolls_sum.dispatchid = #dispatchid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="billno">
+	             t_bolls_sum.billno = #billno#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="BollsSum.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_bolls_sum.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_bolls_sum.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fqy">
+	             t_bolls_sum.fqy = #fqy#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dosing">
+	             t_bolls_sum.dosing = #dosing#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_bolls_sum.dispatchid = #dispatchid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="billno">
+	             t_bolls_sum.billno = #billno#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="BollsSum.findList" resultMap="RM.BollsSum">
+    	SELECT 
+    		<include refid="BollsSum.columns"/> 
+    	FROM 
+    		t_bolls_sum
+		<include refid="BollsSum.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="BollsSum.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_bolls_sum
+    ]]>
+		<include refid="BollsSum.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="BollsSum.findPage" resultMap="RM.BollsSum">
+    	select <include refid="BollsSum.columns"/>	    
+	        from t_bolls_sum 	   
+		<include refid="BollsSum.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.BollsSum.findPage" resultMap="RM.BollsSum">
+    	select <include refid="BollsSum.columns"/>	    
+	        from t_bolls_sum where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_bolls_sum <include refid="BollsSum.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="BollsSum.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

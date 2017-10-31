@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckgchartShow">
+	<resultMap id="RM.CheckgchartShow" class="com.terrence.crm.dol.bean.CheckgchartShow">
+        <result property="gshowid" column="gshowid"/>
+        <result property="modelid" column="modelid"/>
+        <result property="xz" column="xz"/>
+        <result property="yz" column="yz"/>
+        <result property="charttype" column="charttype"/>
+        <result property="stepid" column="stepid"/>
+        <result property="xzname" column="xzname"/>
+        <result property="yzscatter" column="yzscatter"/>
+        <result property="xzinterval" column="xzinterval"/>
+        <result property="xtitle" column="xtitle"/>
+        <result property="ytitle" column="ytitle"/>
+        <result property="showsubname" column="showsubname"/>
+         <result property="showmainname" column="showmainname"/>
+        <result property="ys" column="gshowid" select="RM.CheckgchartShow_YS"/>
+        <!-- <result property="yzname" column="yzname"/> -->
+    </resultMap>
+    <resultMap id="RM.CheckgchartShow_YSM" class="com.terrence.crm.dol.bean.Checkgcshowys">
+        <result property="ysid" column="ysid"/>
+        <result property="gshowid" column="gshowid"/>
+        <result property="ykey" column="ykey"/>
+         <result property="yname" column="yname"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckgchartShow.columns">
+	    <![CDATA[
+        	t_check_gchartshow.gshowid ,
+        	t_check_gchartshow.modelid ,
+        	t_check_gchartshow.stepid ,
+        	rtrim(t_check_gchartshow.xz) xz,
+        	rtrim(t_check_gchartshow.yz) yz,
+        	charttype,
+        	yzscatter,
+        	xzinterval,
+        	rtrim(t_check_gchartshow.xtitle) xtitle,
+        	rtrim(t_check_gchartshow.ytitle) ytitle,
+        	showsubname,
+        	showmainname
+	    ]]>
+	</sql>
+	
+   <insert id="CheckgchartShow.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_check_gchartshow (
+        	modelid,
+        	xz ,
+        	yz ,
+        	stepid,
+        	charttype ,
+        	yzscatter,
+        	xzinterval,
+        	xtitle,
+        	ytitle,
+        	showsubname,
+        	showmainname
+        ) VALUES (
+        	#modelid#,
+        	#xz# ,
+        	#yz# ,
+        	#stepid#,
+        	#charttype#,
+        	#yzscatter#,
+        	#xzinterval#,
+        	#xtitle#,
+        	#ytitle#,
+        	#showsubname#,
+        	#showmainname#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="gshowid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    <insert id="CheckgchartShow.insert_ys" >
+    <![CDATA[
+        INSERT INTO
+        t_check_gcshowys (
+        	gshowid,
+        	ykey
+        ) VALUES (
+        	$gshowid$,
+        	'$ykey$'
+        )
+    ]]> 
+    </insert>
+    <select id="CheckgchartShow.findList" resultMap="RM.CheckgchartShow">
+    	select <include refid="CheckgchartShow.columns"/>,rtrim(tcf1.fname) xzname
+	        from t_check_gchartshow
+	        left join t_check_field tcf1 on t_check_gchartshow.xz = tcf1.fkey
+	        where t_check_gchartshow.modelid = #modelid#
+    </select>
+    <select id="CheckgchartShow.getById" resultMap="RM.CheckgchartShow">
+    	select <include refid="CheckgchartShow.columns"/>,rtrim(tcf1.fname) xzname
+	        from t_check_gchartshow 
+	        left join t_check_field tcf1 on t_check_gchartshow.xz = tcf1.fkey
+	        where gshowid = $checkgchartShowId$
+    </select>
+	<update id="CheckgchartShow.update" parameterClass="com.terrence.crm.dol.bean.CheckgchartShow">         
+        UPDATE t_check_gchartshow set 
+        	stepid=#stepid#,xz = #xz# ,yz = #yz# ,charttype=#charttype#,yzscatter=#yzscatter#,
+        	xzinterval=#xzinterval#,xtitle=#xtitle#,ytitle=#ytitle#,showsubname=#showsubname#,showmainname=#showmainname# 
+        WHERE 
+	        gshowid = #gshowid#
+    </update>
+    
+	<delete id="CheckgchartShow.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_gchartshow where gshowid = #gshowid# 
+    ]]>
+    </delete>
+    <select id="RM.CheckgchartShow_YS" resultMap="RM.CheckgchartShow_YSM">
+			select 
+				t_check_gcshowys.ysid ,
+	        	t_check_gcshowys.gshowid ,
+	        	t_check_gcshowys.ykey ,
+	        	tcf.fname yname 
+        	from 
+        		t_check_gcshowys 
+        	left join t_check_field tcf on t_check_gcshowys.ykey = tcf.fkey 
+        	where gshowid=#gshowid#
+	</select>
+	<select id="RM.CheckgchartShow_YS_string" resultClass="java.lang.String">
+		select t_check_gcshowys.ykey from t_check_gcshowys where gshowid=$gshowid$
+	</select>
+	<delete id="RM.CheckgchartShow_YS_Delete">
+    <![CDATA[
+        delete from t_check_gcshowys where gshowid = $gshowid$
+    ]]>
+    </delete>
+</sqlMap>

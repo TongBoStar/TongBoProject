@@ -1,0 +1,184 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.BillsDetail;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAdttDao;
+import com.terrence.crm.dol.dao.IBillsDetailDao;
+import com.terrence.crm.dol.query.AdttQuery;
+import com.terrence.crm.dol.query.TemplateFlowQuery;
+import com.terrence.crm.dol.service.IAdttService;
+
+@Service
+@Transactional
+public class AdttService extends BaseService implements IAdttService {
+	protected static Logger logger = LoggerFactory.getLogger(AdttService.class);
+	@Autowired
+	@Qualifier("adttDao")
+	private IAdttDao adttDao;
+	@Autowired
+	@Qualifier("billsDetailDao")
+	private IBillsDetailDao billsDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Adtt";
+	}
+	@Transactional(readOnly=true)
+	public Adtt getById(java.lang.Long id) throws ServiceException
+	{
+		return adttDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Adtt entity) throws ServiceException
+	{
+		adttDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Adtt entity) throws ServiceException
+	{
+		Long adId = adttDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Adtt entity) throws ServiceException
+	{
+		Integer returnValue =  adttDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = adttDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = adttDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AdttQuery query = new AdttQuery();
+		try {
+			return adttDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Adtt> findPage(Page<Adtt> page, AdttQuery query) throws ServiceException
+	{
+		return adttDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Adtt> findPage(Page<Adtt> page,String statement, AdttQuery query) throws ServiceException
+	{
+		return adttDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Adtt> findList(AdttQuery query) throws ServiceException
+	{
+		return adttDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Adtt> findList(AdttQuery query,Integer pageSize) throws ServiceException
+	{
+		return adttDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Adtt> findList(AdttQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return adttDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Adtt> findAllList() throws ServiceException
+	{
+		return adttDao.findAllList();
+	}
+	@Override
+	public void updateReason(Adtt entity) throws ServiceException {
+		adttDao.update("Adtt.update.updateReason.save", entity);
+	}
+	@Override
+	public void deleData(List<Long> checkedIdList) throws ServiceException {
+		Adtt adtt = new Adtt();
+		adtt.setAdttid(checkedIdList.get(0));
+		adtt.setStatus(4);
+		adttDao.update("Adtt.update.status.zhuangtai.data", adtt);
+	}
+	public void saveAddedItem(Adtt entity,String params){
+		updateBillDetails(params,entity);
+		if(entity.getAddstatus().intValue()==0){
+			Adtt adtt= adttDao.getById(entity.getAdttid());
+			TemplateFlowQuery query = new TemplateFlowQuery();
+			query.setTemplateid(3L);
+			query.setNodeid(5L);
+			//TemplateFlow flow = templateFlowDao.getByEntity("TemplateFlow.findByNodeIdAndTpId", query);
+			adtt.setStatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+			adtt.setNodeid(5L);
+			adtt.setSeqtask(null);
+			adtt.setSeqno(null);
+			adtt.setLaststep(null);
+			
+			adttDao.save(adtt);
+		}
+		
+	}
+	
+	public void updateBillDetails(String params,Adtt entity){
+		String[] bds = params.split("\\|");
+		BillsDetail bd = null;
+		List<Integer> bdnos = billsDetailDao.findbdnosBydidandft(entity.getDispatchid(),1);
+		for(String str:bds){
+			//bd = new BillsDetail();
+			String[] temp = str.split(",");
+			if(entity.getAddstatus().intValue()==0){
+				bd = new BillsDetail();
+				bd.setBaseqty(Double.valueOf(temp[0]));
+			}else{
+				if(bdnos.contains(Long.valueOf(temp[1]))){
+					bd = billsDetailDao.getById(Long.valueOf(temp[1]));
+					bd.setBaseqty((bd.getBaseqty()==null?0:bd.getBaseqty())+Double.valueOf(temp[0]));
+				}else{
+					bd = new BillsDetail();
+					bd.setBaseqty(Double.valueOf(temp[0]));
+				}
+			}
+			bd.setDetailno(Long.valueOf(temp[1]));
+			bd.setFadditem(1);
+			billsDetailDao.update(bd);
+		}
+	}
+}

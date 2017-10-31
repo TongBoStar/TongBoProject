@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd"
+	default-lazy-init="true">
+
+	<description>SpringSecurity安全配置</description>
+
+	<!-- http安全配置 -->
+	<s:http auto-config="false" entry-point-ref="authenticationProcessingFilterEntryPoint">
+	    <s:intercept-url pattern="/resources/**" filters="none" />
+		<s:intercept-url pattern="/common/**" filters="none" />
+		<s:intercept-url pattern="/css/**" filters="none" />
+		<s:intercept-url pattern="/images/**" filters="none" />
+		<s:intercept-url pattern="/scripts/**" filters="none" />
+		<s:intercept-url pattern="/files/**" filters="none" />
+		<s:intercept-url pattern="/index.html" filters="none"/>
+		<s:intercept-url pattern="/index.jsp" filters="none"/>
+        <s:intercept-url pattern="/login.jsp" filters="none"/>        
+       	<s:anonymous enabled="true" granted-authority="R_ANONYMOUS"/>
+ 
+ 		<s:custom-filter before="FILTER_SECURITY_INTERCEPTOR" ref="myFilter" />
+        <s:custom-filter before="FORM_LOGIN_FILTER" ref="webLoginFilter"/>
+		<s:custom-filter before="LOGOUT_FILTER" ref="webLogoutFilter"/>
+	</s:http>
+
+
+	<bean id="authenticationProcessingFilterEntryPoint"
+		class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+		<property name="loginFormUrl" value="/login.jsp" />
+	</bean>
+    <bean id="webLoginFilter" class="com.terrence.crm.dol.filter.WebLoginFilter">
+   		<property name="authenticationManager" ref="authenticationManager" />
+		<property name="authenticationSuccessHandler" ref="webAuthenticationSuccessHandler" />
+		<property name="authenticationFailureHandler" ref="webAuthenticationFailureHandler" />
+		<property name="filterProcessesUrl" value="/j_spring_security_check" />
+	</bean>
+
+	<bean id="webAuthenticationSuccessHandler"
+		class="com.terrence.crm.dol.filter.WebAuthenticationSuccessHandler">
+		<property name="defaultTargetUrl" value="/home.htm" />
+		<property name="alwaysUseDefaultTargetUrl" value="true" />
+	</bean>
+
+	<bean id="webAuthenticationFailureHandler"
+		class="com.terrence.crm.dol.filter.WebAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/login.jsp?error=1" />
+		<property name="exceptionMappings">
+			<props>
+				<prop key="com.terrence.crm.dol.filter.exception.BadVerificationCodeException">/login.jsp?error=2</prop>
+			</props>
+			
+		</property>
+	</bean>
+	
+
+	<bean id="webLogoutFilter" class="com.terrence.crm.dol.filter.WebLogoutFilter">
+		<constructor-arg>
+			<ref local="webSimpleUrlLogoutSuccessHandler"/>
+		</constructor-arg>
+		<constructor-arg>
+			<list>
+				<bean
+					class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler" />
+			</list>
+		</constructor-arg>
+		<property name="filterProcessesUrl" value="/j_spring_security_logout" />
+	</bean>
+	<bean id="webSimpleUrlLogoutSuccessHandler" class="com.terrence.crm.dol.filter.WebLogoutSuccessHandler">
+		<property name="defaultTargetUrl" value="/"/>
+	</bean>
+
+
+	<bean id="userDetailsService" class="com.terrence.crm.dol.service.security.UserDetailsServiceImpl" />
+	
+	<bean id="myFilter" class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+        <property name="authenticationManager"
+            ref="authenticationManager" />
+        <property name="accessDecisionManager"
+            ref="accessDecisionManager" />
+        <property name="securityMetadataSource"
+            ref="securityMetadataSource" />
+    </bean>
+	
+    
+    <bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+     	<property name="allowIfAllAbstainDecisions" value="false"></property>
+		<property name="decisionVoters">
+			<list>
+				<bean class="org.springframework.security.access.vote.RoleVoter">
+					<property name="rolePrefix" value="ROLE_" /> 
+				</bean>
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="securityMetadataSource" class="com.terrence.crm.dol.service.security.DefinitionSourceFactoryBean">
+	</bean>
+	<s:authentication-manager alias="authenticationManager">
+		<s:authentication-provider user-service-ref="userDetailsService">
+			<s:password-encoder hash="md5">
+			<s:salt-source user-property="username"/>
+		</s:password-encoder>
+		</s:authentication-provider>
+	</s:authentication-manager>
+    
+	
+    
+</beans>

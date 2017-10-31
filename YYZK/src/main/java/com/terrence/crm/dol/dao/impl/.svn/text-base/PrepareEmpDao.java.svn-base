@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+
+@Repository
+public class PrepareEmpDao extends BaseIbatisDao<PrepareEmp,java.lang.Long> implements IPrepareEmpDao{
+
+		
+	public void saveOrUpdate(PrepareEmp entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PrepareEmp";
+	}
+	public PrepareEmp getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PrepareEmp)this.getSqlMapClientTemplate().queryForObject("PrepareEmp.getByProperty", map);		
+	}
+
+	@Override
+	public Integer delteByEmptask(String ids) throws DataAccessException {
+		return getSqlMapClientTemplate().delete("PrepareEmp.deleteEmpTask", ids);
+	}
+
+	@Override
+	public Integer updateByEmptaskid(PrepareEmp pe) throws DataAccessException {
+		return getSqlMapClientTemplate().update("PrepareEmp.update.byEmployeetaskid", pe);
+	}
+}

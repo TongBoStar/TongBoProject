@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Pl">
+
+        
+	<resultMap id="RM.Pl" class="com.terrence.crm.dol.bean.Pl">
+        <result property="plid" column="plid"/>
+        <result property="fyear" column="fyear"/>
+        <result property="fquarter" column="fquarter"/>
+        <result property="ordercode" column="ordercode"/>
+        <result property="adminid" column="adminid"/>
+        <result property="pl3000" column="pl3000"/>
+        <result property="pl4200" column="pl4200"/>
+        <result property="ssv3500" column="ssv3500"/>
+        <result property="spl2000" column="spl2000"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Pl.columns">
+	    <![CDATA[
+        	t_pl.plid ,
+        	t_pl.fyear ,
+        	t_pl.fquarter ,
+        	t_pl.ordercode ,
+        	t_pl.adminid ,
+        	t_pl.pl3000 ,
+        	t_pl.pl4200 ,
+        	t_pl.ssv3500 ,
+        	t_pl.spl2000 
+	    ]]>
+	</sql>
+	
+   <insert id="Pl.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pl (
+        	fyear ,
+        	fquarter ,
+        	ordercode ,
+        	adminid ,
+        	pl3000 ,
+        	pl4200 ,
+        	ssv3500 ,
+        	spl2000 
+        ) VALUES (
+        	#fyear# ,
+        	#fquarter# ,
+        	#ordercode# ,
+        	#adminid# ,
+        	#pl3000# ,
+        	#pl4200# ,
+        	#ssv3500# ,
+        	#spl2000# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="plid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Pl.update" parameterClass="com.terrence.crm.dol.bean.Pl">         
+        UPDATE t_pl 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fquarter">
+	        	fquarter = #fquarter# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ordercode">
+	        	ordercode = #ordercode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pl3000">
+	        	pl3000 = #pl3000# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pl4200">
+	        	pl4200 = #pl4200# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ssv3500">
+	        	ssv3500 = #ssv3500# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="spl2000">
+	        	spl2000 = #spl2000# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        plid = #plid# 
+    </update>
+    
+	<delete id="Pl.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pl where
+       plid = #plid# 
+    ]]>
+    </delete>
+    
+    <delete id="Pl.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pl 
+        WHERE
+       plid in ($plid$) 
+    ]]>
+    </delete>
+    
+    <select id="Pl.getById" resultMap="RM.Pl">
+	    select <include refid="Pl.columns"/>
+	    
+	        from t_pl 
+	        where 
+		        plid = #plid# 
+	    
+    </select>
+    
+	<select id="Pl.getByProperty" resultMap="RM.Pl">
+		select <include refid="Pl.columns"/> from t_pl where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Pl.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="plid">
+	             t_pl.plid = #plid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_pl.fyear = #fyear#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fquarter">
+	             t_pl.fquarter = #fquarter#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ordercode">
+	             t_pl.ordercode = #ordercode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_pl.adminid = #adminid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pl3000">
+	             t_pl.pl3000 = #pl3000#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pl4200">
+	             t_pl.pl4200 = #pl4200#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ssv3500">
+	             t_pl.ssv3500 = #ssv3500#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="spl2000">
+	             t_pl.spl2000 = #spl2000#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Pl.findPage.and">
+			<isNotEmpty prepend="AND" property="plid">
+	             t_pl.plid = #plid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_pl.fyear = #fyear#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fquarter">
+	             t_pl.fquarter = #fquarter#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ordercode">
+	             t_pl.ordercode = #ordercode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_pl.adminid = #adminid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pl3000">
+	             t_pl.pl3000 = #pl3000#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pl4200">
+	             t_pl.pl4200 = #pl4200#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ssv3500">
+	             t_pl.ssv3500 = #ssv3500#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="spl2000">
+	             t_pl.spl2000 = #spl2000#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Pl.Entity" resultMap="RM.Pl">
+    	SELECT 	<include refid="Pl.columns"/> FROM t_pl <include refid="Pl.findPage.where"/>
+    </select>
+    
+    <select id="Pl.findList" resultMap="RM.Pl">
+    	SELECT 
+    		<include refid="Pl.columns"/> 
+    	FROM 
+    		t_pl
+		<include refid="Pl.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Pl.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pl
+    ]]>
+		<include refid="Pl.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Pl.findPage" resultMap="RM.Pl">
+    	select <include refid="Pl.columns"/>	    
+	        from t_pl 	   
+		<include refid="Pl.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Pl.findPage" resultMap="RM.Pl">
+    	select <include refid="Pl.columns"/>	    
+	        from t_pl where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       plid 
+	   not in(select $notTop$ 
+       plid 
+	   from t_pl <include refid="Pl.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Pl.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

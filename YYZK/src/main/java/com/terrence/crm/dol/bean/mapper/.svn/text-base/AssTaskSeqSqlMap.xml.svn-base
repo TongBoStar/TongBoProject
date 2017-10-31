@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssTaskSeq">
+
+        
+	<resultMap id="RM.AssTaskSeq" class="com.terrence.crm.dol.bean.AssTaskSeq">
+        <result property="seqid" column="seqid"/>
+        <result property="dispatchid" column="dispatchid"/>
+        <result property="seqcode" column="seqcode"/>
+        <result property="finishdate" column="finishdate"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="finishstate" column="finishstate"/>
+        <result property="plandate" column="plandate"/>
+        <result property="prefix" column="prefix"/>
+        <result property="seqno" column="seqno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="teamid" column="teamid"/>
+        <result property="taskid" column="taskid"/>
+        <result property="planstartdate" column="planstartdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="adttid" column="adttid"/>
+        <result property="dbno" column="dbno"/>
+    </resultMap>
+	<resultMap id="RM.AssTaskSeq.Seqno" class="com.terrence.crm.dol.bean.AssTaskSeq">
+        <result property="seqno" column="seqno"/>
+    </resultMap>
+	<resultMap id="RM.AssTaskSeq.BaseItem" class="com.terrence.crm.dol.bean.AssTaskSeq">
+        <result property="seqid" column="seqid"/>
+        <result property="dispatchid" column="dispatchid"/>
+        <result property="seqcode" column="seqcode"/>
+        <result property="finishdate" column="finishdate"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="finishstate" column="finishstate"/>
+        <result property="plandate" column="plandate"/>
+        <result property="prefix" column="prefix"/>
+        <result property="seqno" column="seqno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="teamid" column="teamid"/>
+        <result property="taskid" column="taskid"/>
+        <result property="planstartdate" column="planstartdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="adttid" column="adttid"/>
+        <result property="dbno" column="dbno"/>
+        <result property="baseItem" resultMap="RM.AssTaskSeq.BaseItem.Detail"/>
+    </resultMap>  
+    <resultMap class="com.terrence.crm.dol.bean.BaseItem" id="RM.AssTaskSeq.BaseItem.Detail">
+    	<result property="itemname" column="itemname"/>
+    	<result property="formatno" column="formatno"/>
+    	<result property="unitname" column="unitname"/>
+    </resultMap>
+    
+    <resultMap id="AssTaskSeq.find.data.seqcode.all" class="com.terrence.crm.dol.bean.AssTaskSeq">
+        <result property="seqid" column="seqid"/>
+        <result property="dispatchid" column="dispatchid"/>
+        <result property="seqcode" column="seqcode"/>
+        <result property="finishdate" column="finishdate"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="finishstate" column="finishstate"/>
+        <result property="plandate" column="plandate"/>
+        <result property="prefix" column="prefix"/>
+        <result property="seqno" column="seqno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="teamid" column="teamid"/>
+        <result property="taskid" column="taskid"/>
+        <result property="planstartdate" column="planstartdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="adttid" column="adttid"/>
+        <result property="dbno" column="dbno"/>
+        <result property="taskcode" column="taskcode"/>
+        <result property="baseItem" resultMap="RM.AssTaskSeq.BaseItem.Detail"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssTaskSeq.columns">
+	    <![CDATA[
+        	t_ass_task_seq.seqid ,
+        	t_ass_task_seq.dispatchid ,
+        	t_ass_task_seq.seqcode ,
+        	t_ass_task_seq.finishdate ,
+        	t_ass_task_seq.checkdate ,
+        	t_ass_task_seq.finishstate ,
+        	t_ass_task_seq.plandate ,
+        	t_ass_task_seq.prefix ,
+        	t_ass_task_seq.seqno ,
+        	t_ass_task_seq.itemcode  ,
+        	t_ass_task_seq.teamid  ,
+        	t_ass_task_seq.taskid ,
+        	t_ass_task_seq.planstartdate ,
+        	t_ass_task_seq.startdate ,
+        	t_ass_task_seq.adttid,
+        	t_ass_task_seq.dbno
+	    ]]>
+	</sql>
+	
+   <insert id="AssTaskSeq.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_ass_task_seq (
+        	dispatchid ,
+        	seqcode ,
+        	finishstate ,
+        	prefix ,
+        	seqno ,
+        	itemcode  ,
+        	taskid ,
+        	planstartdate,
+        	adttid,
+        	dbno
+        ) VALUES (
+        	#dispatchid# ,
+        	#seqcode# ,
+        	#finishstate# ,
+        	#prefix# ,
+        	#seqno# ,
+        	#itemcode# ,
+        	#taskid# ,
+        	#planstartdate#,
+        	#adttid#,
+        	#dbno#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="seqid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssTaskSeq.update" parameterClass="com.terrence.crm.dol.bean.AssTaskSeq">         
+        UPDATE t_ass_task_seq 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="dispatchid">
+	        	dispatchid = #dispatchid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqcode">
+	        	seqcode = #seqcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="finishdate">
+	        	finishdate = #finishdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkdate">
+	        	checkdate = #checkdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="finishstate">
+	        	finishstate = #finishstate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="plandate">
+	        	plandate = #plandate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="prefix">
+	        	prefix = #prefix# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskid">
+	        	taskid = #taskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="planstartdate">
+	        	planstartdate = #planstartdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="startdate">
+	        	startdate = #startdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adttid">
+	        	adttid = #adttid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dbno">
+	        	dbno = #dbno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        seqid = #seqid# 
+    </update>
+    
+	<delete id="AssTaskSeq.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_ass_task_seq where
+       seqid = #seqid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssTaskSeq.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_ass_task_seq 
+        WHERE
+       seqid in ($seqid$) 
+    ]]>
+    </delete>
+    
+    <select id="AssTaskSeq.getById" resultMap="RM.AssTaskSeq.BaseItem">
+	    select <include refid="AssTaskSeq.columns"/>,t_base_item.itemname,t_base_item.formatno,t_base_item.unitname
+	        from t_ass_task_seq ,t_base_item  where t_ass_task_seq.itemcode=t_base_item.itemcode and 
+		        seqid = #seqid# 
+	    
+    </select>
+    
+	<select id="AssTaskSeq.getByProperty" resultMap="RM.AssTaskSeq">
+		select <include refid="AssTaskSeq.columns"/> from t_ass_task_seq where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssTaskSeq.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="seqid">
+	             t_ass_task_seq.seqid = #seqid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_ass_task_seq.dispatchid = #dispatchid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqcode">
+	             t_ass_task_seq.seqcode = #seqcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finishdateBegin">
+	             t_ass_task_seq.finishdate &gt;= #finishdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="finishdateEnd">
+	             t_ass_task_seq.finishdate &lt;= #finishdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checkdateBegin">
+	             t_ass_task_seq.checkdate &gt;= #checkdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateEnd">
+	             t_ass_task_seq.checkdate &lt;= #checkdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finishstate">
+	             t_ass_task_seq.finishstate = #finishstate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="plandateBegin">
+	             t_ass_task_seq.plandate &gt;= #plandateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="plandateEnd">
+	             t_ass_task_seq.plandate &lt;= #plandateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="prefix">
+	             t_ass_task_seq.prefix = #prefix#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_ass_task_seq.seqno = #seqno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_ass_task_seq.itemcode like  ('%$itemcode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_ass_task_seq.teamid = #teamid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="taskid">
+	             t_ass_task_seq.taskid = #taskid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planstartdateBegin">
+	             t_ass_task_seq.planstartdate &gt;= #planstartdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planstartdateEnd">
+	             t_ass_task_seq.planstartdate &lt;= #planstartdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="startdateBegin">
+	             t_ass_task_seq.startdate &gt;= #startdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="startdateEnd">
+	             t_ass_task_seq.startdate &lt;= #startdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adttid">
+	             t_ass_task_seq.adttid = #adttid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_ass_task_seq.dbno = #dbno#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="taskcode">
+	             t_assembly_task.taskcode = #taskcode#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssTaskSeq.findPage.and">
+			<isNotEmpty prepend="AND" property="seqid">
+	             t_ass_task_seq.seqid = #seqid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_ass_task_seq.dispatchid = #dispatchid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqcode">
+	             t_ass_task_seq.seqcode = #seqcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finishdateBegin">
+	             t_ass_task_seq.finishdate &gt;= #finishdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="finishdateEnd">
+	             t_ass_task_seq.finishdate &lt;= #finishdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checkdateBegin">
+	             t_ass_task_seq.checkdate &gt;= #checkdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateEnd">
+	             t_ass_task_seq.checkdate &lt;= #checkdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finishstate">
+	             t_ass_task_seq.finishstate = #finishstate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="plandateBegin">
+	             t_ass_task_seq.plandate &gt;= #plandateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="plandateEnd">
+	             t_ass_task_seq.plandate &lt;= #plandateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="prefix">
+	             t_ass_task_seq.prefix = #prefix#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_ass_task_seq.seqno = #seqno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_ass_task_seq.itemcode  like  ('%$itemcode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_ass_task_seq.teamid = #teamid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="taskid">
+	             t_ass_task_seq.taskid = #taskid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planstartdateBegin">
+	             t_ass_task_seq.planstartdate &gt;= #planstartdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planstartdateEnd">
+	             t_ass_task_seq.planstartdate &lt;= #planstartdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="startdateBegin">
+	             t_ass_task_seq.startdate &gt;= #startdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="startdateEnd">
+	             t_ass_task_seq.startdate &lt;= #startdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adttid">
+	             t_ass_task_seq.adttid = #adttid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_ass_task_seq.dbno = #dbno#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="taskcode">
+	             t_assembly_task.taskcode = #taskcode#
+	       </isNotEmpty>
+	</sql>
+	<delete id="AssTaskSeq.delete.where">
+    <![CDATA[
+        delete from t_ass_task_seq where  t_ass_task_seq.dispatchid = #dispatchid#
+    ]]>
+    </delete>
+    
+    
+    <parameterMap class="map" id="serialParameters">
+    	 <parameter property="seqcode" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>  
+    	 <parameter property="seqcodenew" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/> 
+    	 <parameter property="adminid" jdbcType="bigint" javaType="java.lang.Long" mode="IN"/>   
+    </parameterMap>
+    <procedure id="AssTaskSeq.update.serial.sumData" parameterMap="serialParameters" > 
+		{call pro_serial_update_sumdata (?,?,?)} 
+	</procedure>   
+
+
+
+    
+    <select id="AssTaskSeq.GetMax.seqno" resultMap="RM.AssTaskSeq.Seqno">
+    select isnull(max(seqno),0) seqno from t_ass_task_seq    <include refid="AssTaskSeq.findPage.where"/>
+    </select>
+    <select id="AssTaskSeq.findList" resultMap="RM.AssTaskSeq">
+    	SELECT 
+    		<include refid="AssTaskSeq.columns"/> 
+    	FROM 
+    		t_ass_task_seq
+		<include refid="AssTaskSeq.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssTaskSeq.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_ass_task_seq
+    ]]>
+		<include refid="AssTaskSeq.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssTaskSeq.findPage" resultMap="RM.AssTaskSeq">
+    	select <include refid="AssTaskSeq.columns"/>	    
+	        from t_ass_task_seq 	   
+		<include refid="AssTaskSeq.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssTaskSeq.findPage" resultMap="RM.AssTaskSeq">
+    	select <include refid="AssTaskSeq.columns"/>	    
+	        from t_ass_task_seq where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       seqid 
+	   not in(select $notTop$ 
+       seqid 
+	   from t_ass_task_seq <include refid="AssTaskSeq.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssTaskSeq.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>		
+    </select>
+	
+	
+	<select id="AssTaskSeq.getMaxSeqno" resultClass="Integer">
+    <![CDATA[
+        select isnull(MAX(seqno),0) from t_ass_task_seq where taskid=#taskid#
+    ]]>
+    </select>
+    
+	<select id="AssTaskSeq.find.entry.list.data" resultMap="RM.AssTaskSeq.BaseItem"><!-- 查询 -->
+		select <include refid="AssTaskSeq.columns"/> ,t_base_item.itemname,t_base_item.formatno,t_base_item.unitname
+	        from t_ass_task_seq ,t_base_item  where t_ass_task_seq.itemcode=t_base_item.itemcode
+	        <isNotEmpty prepend="AND" property="seqid">
+	             t_ass_task_seq.seqid = #seqid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqcode">
+	             t_ass_task_seq.seqcode = #seqcode#
+	       </isNotEmpty>
+		     
+	</select>
+	
+	<select id="AssTaskSeq.findPage.allData.for.seqcode.count" resultClass="long"><!-- 查询所有序列号 -->
+    <![CDATA[
+        select 
+        count(*)
+        from t_ass_task_seq
+         left join t_base_item on t_ass_task_seq.itemcode = t_base_item.itemcode
+         left join t_assembly_task on t_ass_task_seq.taskid = t_assembly_task.id
+    ]]>
+		<include refid="AssTaskSeq.findPage.where"/>    
+    </select>
+    <select id="AssTaskSeq.findPage.allData.for.seqcode" resultMap="AssTaskSeq.find.data.seqcode.all">
+    	select <include refid="AssTaskSeq.columns"/>,t_base_item.itemname,t_base_item.formatno,t_base_item.unitname,t_assembly_task.taskcode  taskcode
+	        from t_ass_task_seq 
+	        left join t_base_item on t_ass_task_seq.itemcode = t_base_item.itemcode
+	        left join t_assembly_task on t_ass_task_seq.taskid = t_assembly_task.id
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       seqid 
+	   not in(select $notTop$ 
+       seqid 
+	   from t_ass_task_seq
+	   left join t_base_item on t_ass_task_seq.itemcode = t_base_item.itemcode
+	   left join t_assembly_task on t_ass_task_seq.taskid = t_assembly_task.id
+	    <include refid="AssTaskSeq.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssTaskSeq.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>		
+    </select>
+	
+	
+	<select id="AssTaskSeq.entity.data" resultMap="RM.AssTaskSeq">
+		select <include refid="AssTaskSeq.columns"/> from t_ass_task_seq where seqid = #seqid#
+	</select>
+	
+	<select id="AssTaskSeq.find.data.factoryReport" resultMap="RM.AssTaskSeq">
+		select <include refid="AssTaskSeq.columns"/> from t_ass_task_seq where t_ass_task_seq.seqcode = #seqcode#
+	</select>
+	
+	<select id="AssTaskSeq.find.list.select.data" resultMap="RM.AssTaskSeq">
+		select <include refid="AssTaskSeq.columns"/> from t_ass_task_seq where t_ass_task_seq.seqcode = #seqcode# and  t_ass_task_seq.taskid = #taskid#
+	</select>
+</sqlMap>

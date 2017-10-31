@@ -1,0 +1,535 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IIcmoService;
+import com.terrence.crm.dol.service.IItemProcedureService;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/itemProcedure")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "itemProcedure." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemProcedureAction extends CrudActionSupport<ItemProcedure>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("itemProcedureService")
+	private IItemProcedureService itemProcedureService;
+	@Autowired
+	@Qualifier("icmoService")
+	private IIcmoService icmoService;
+	
+	
+	private ItemProcedure entity;
+
+	private ItemProcedureQuery itemProcedureQuery;
+	
+	
+	private java.lang.Long itemProcedureId;
+	
+	/** 分页器 */
+	private Page<ItemProcedure> page = new Page<ItemProcedure>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ItemProcedure> itemProcedureList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemProcedureId != null ) {
+			entity = itemProcedureService.getById(itemProcedureId);
+		} else {
+			entity = new ItemProcedure();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			itemProcedureService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(itemProcedureQuery == null) {
+			itemProcedureQuery = new ItemProcedureQuery();
+		}
+		
+		try {
+			itemProcedureList = itemProcedureService.findList(itemProcedureQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemProcedureId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemProcedureQuery == null) {
+			itemProcedureQuery = new ItemProcedureQuery();
+		}
+		
+		try {
+			page = itemProcedureService.findPage(page, itemProcedureQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			itemProcedureService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	
+	@Action("/system/saveItemProcedureProcess")	
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemProcedureService.getById(itemProcedureId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+	@Action("/system/ItemProcedureList")
+	public String listQuery() throws Exception
+	{
+		try{
+			//itemProcessQuery.setSortColumns("itemprocessid");
+			itemProcedureQuery.setSortColumns("seqno");
+			itemProcedureList = itemProcedureService.findList(itemProcedureQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	@Action("/system/newItemProcedureList")
+	public String listQuerynew() throws Exception
+	{
+		try{
+			//itemProcessQuery.setSortColumns("itemprocessid");
+			itemProcedureQuery.setSortColumns("seqno");
+		//	itemProcedureList = itemProcedureService.findList(itemProcedureQuery);
+		//	System.out.println(itemProcedureQuery.getFverid()+"------"+itemProcedureQuery.getItemid());
+		//	itemProcedureQuery.fbillno
+		//	itemProcedureList = itemProcedureService.findList(itemProcedureQuery, "ItemProcedure.findList.newjijia");
+			
+			Icmo ic=null; 
+			ic= icmoService.getByProperty("fbillno", itemProcedureQuery.getFbillno());
+			if(ic==null){
+				itemProcedureList = itemProcedureService.findList(itemProcedureQuery, "ItemProcedure.findList.newjijia");
+			}else{
+				itemProcedureQuery.setIcmoid(ic.getIcmoid());
+				itemProcedureList = itemProcedureService.findList(itemProcedureQuery, "ItemProcedure.findList.updatejijia");
+			}
+		
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String listAll() throws Exception {
+		try{
+			itemProcedureList = itemProcedureService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	public void prepareSaveItemProcedures() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/saveItemProcedures")	
+	public String saveItemProcedures() throws Exception {
+		
+		try {
+		//	save();
+			Long check=itemProcedureService.saveOrUpdateItemProcedures(entity);
+			if(check.longValue()==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "同一工序不可重复添加!";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			}	
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveInsertionProcedures() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/saveInsertionProcedures")	
+	public String saveInsertionProcedures() throws Exception {
+		
+		try {
+			
+		Long ids=itemProcedureService.saveInsertionProcedures(entity);
+		if(ids.longValue()==-1){
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同一工序不可重复添加!";
+		}else{
+			resultInfo[0] = "0";
+			resultInfo[1] = ""+ids;
+			}	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareSaveProcedureItem() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/saveProcedureItem")	
+	public String saveProcedureItem() throws Exception {
+		
+		try {
+			Long itemProcedureid = itemProcedureService.save(entity);
+			if(itemProcedureid==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "同一工序不可重复添加!";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = ""+itemProcedureid;	
+			}
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ItemProcedure getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemProcedureQuery getItemProcedureQuery() {
+		return itemProcedureQuery;
+	}
+
+	
+	public void setItemProcedureQuery(ItemProcedureQuery itemProcedureQuery) {
+		this.itemProcedureQuery = itemProcedureQuery;
+	}
+
+	public void setItemProcedureId(java.lang.Long itemProcedureId) {
+		this.itemProcedureId = itemProcedureId;
+	}
+	
+	
+	public java.lang.Long getItemProcedureId() {
+		return this.itemProcedureId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ItemProcedure> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ItemProcedure> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ItemProcedure> getItemProcedureList() {
+		return itemProcedureList;
+	}
+	
+	
+}

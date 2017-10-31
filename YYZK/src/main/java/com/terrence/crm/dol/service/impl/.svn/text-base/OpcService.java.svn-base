@@ -1,0 +1,1411 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import net.sf.json.JSONArray;
+
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.star.uno.RuntimeException;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.AssemblyCheck;
+import com.terrence.crm.dol.bean.CheckSelectedField;
+import com.terrence.crm.dol.bean.CheckStepRec;
+import com.terrence.crm.dol.bean.CheckDataDetail;
+import com.terrence.crm.dol.bean.GchartInfo;
+import com.terrence.crm.dol.bean.OpcDetail;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.bean.TplTrailIn;
+import com.terrence.crm.dol.bean.TrailCheckNums;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.bean.TrailPdStepQualVar;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.bean.TrailStepExpl;
+import com.terrence.crm.dol.bean.TrailTabRecord;
+import com.terrence.crm.dol.bean.TrailUseCol;
+import com.terrence.crm.dol.bean.TrainRecord;
+import com.terrence.crm.dol.bean.Trial;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IAssemblyCheckDao;
+import com.terrence.crm.dol.dao.ICheckDataDetailDao;
+import com.terrence.crm.dol.dao.ICheckSelectedFieldDao;
+import com.terrence.crm.dol.dao.ICheckStepRecDao;
+import com.terrence.crm.dol.dao.IGchartInfoDao;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.dao.ITplTrailInDao;
+import com.terrence.crm.dol.dao.ITrailCheckNumsDao;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.dao.ITrailStepExplDao;
+import com.terrence.crm.dol.dao.ITrailTabRecordDao;
+import com.terrence.crm.dol.dao.ITrailUseColDao;
+import com.terrence.crm.dol.dao.ITrainRecordDao;
+import com.terrence.crm.dol.dao.ITrialDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.dao.impl.TrainRecordDao;
+import com.terrence.crm.dol.query.AssemblyCheckQuery;
+import com.terrence.crm.dol.query.CheckSelectedFieldQuery;
+import com.terrence.crm.dol.query.CheckStepRecQuery;
+import com.terrence.crm.dol.query.GchartInfoQuery;
+import com.terrence.crm.dol.query.TplTrailInQuery;
+import com.terrence.crm.dol.query.TrailCheckNumsQuery;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+import com.terrence.crm.dol.query.TrailRecSetQuery;
+import com.terrence.crm.dol.query.TrailStepExplQuery;
+import com.terrence.crm.dol.query.TrailUseColQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.service.IOpcService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+
+
+import javafish.clients.opc.JCustomOpc;
+import javafish.clients.opc.JOpc;
+import javafish.clients.opc.browser.JOpcBrowser;
+import javafish.clients.opc.component.OpcGroup;
+import javafish.clients.opc.component.OpcItem;
+import javafish.clients.opc.exception.ComponentNotFoundException;
+import javafish.clients.opc.exception.ConnectivityException;
+import javafish.clients.opc.exception.HostException;
+import javafish.clients.opc.exception.NotFoundServersException;
+import javafish.clients.opc.exception.SynchReadException;
+import javafish.clients.opc.exception.SynchWriteException;
+import javafish.clients.opc.exception.UnableAddGroupException;
+import javafish.clients.opc.exception.UnableAddItemException;
+import javafish.clients.opc.exception.UnableBrowseBranchException;
+import javafish.clients.opc.exception.UnableBrowseLeafException;
+import javafish.clients.opc.exception.UnableIBrowseException;
+import javafish.clients.opc.exception.UnableRemoveGroupException;
+import javafish.clients.opc.exception.UnableRemoveItemException;
+import javafish.clients.opc.handle.ReReadOpc;
+import javafish.clients.opc.handle.ReadOpc;
+import javafish.clients.opc.handle.WriteOpc;
+
+
+
+/**
+ * 处理OPCServer的通信，读写的一个业务基础类
+ * @author Administrator
+ *
+ */
+@Service
+@Transactional
+public class OpcService extends BaseService implements IOpcService{
+	private static final Logger log = Logger.getLogger(OpcService.class);
+	private SimpleDateFormat formt1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private SimpleDateFormat formt2 = new SimpleDateFormat("yyyy-MM-dd");
+	@Autowired
+	@Qualifier("trialDao")
+	private ITrialDao trialDao;
+	
+	
+	@Autowired
+	@Qualifier("trailStepExplDao")
+	private ITrailStepExplDao trailStepExplDao;
+	
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	
+	
+	@Autowired
+	@Qualifier("trailUseColDao")
+	private ITrailUseColDao trailUseColDao;
+	
+	@Autowired
+	@Qualifier("assemblyCheckDao")
+	private IAssemblyCheckDao assemblyCheckDao;
+	
+	@Autowired
+	@Qualifier("trailCheckNumsDao")
+	private ITrailCheckNumsDao trailCheckNumsDao;
+	
+	
+	@Autowired
+	@Qualifier("trainRecordDao")
+	private ITrainRecordDao trainRecordDao;
+	@Autowired
+	@Qualifier("trailTabRecordDao")
+	private ITrailTabRecordDao trailTabRecordDao;
+	
+	@Autowired
+	@Qualifier("trailPdStepDao")
+	private ITrailPdStepDao trailPdStepDao;
+	
+	@Autowired
+	@Qualifier("trailRecSetDao")
+	private ITrailRecSetDao trailRecSetDao;
+	
+	@Autowired
+	@Qualifier("checkStepRecDao")
+	private ICheckStepRecDao checkStepRecDao;
+	
+	@Autowired
+	@Qualifier("tplTrailInDao")
+	private ITplTrailInDao tplTrailInDao;
+	
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	@Autowired
+	@Qualifier("checkDataDetailDao")
+	private ICheckDataDetailDao checkDataDetailDao;
+	@Autowired
+	@Qualifier("checkSelectedFieldDao")
+	private ICheckSelectedFieldDao checkSelectedFieldDao;
+	@Autowired
+	@Qualifier("gchartInfoDao")
+	private IGchartInfoDao gchartInfoDao;
+	
+	private boolean falg;
+	private Integer isStop;
+	private Trial trial;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "OpcService";
+	}
+	public Properties getProperties() throws IOException{
+		Properties properties = new Properties();
+		InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("opcserver.properties");
+		properties.load(inputStream);
+		return properties;
+	}
+	/**
+	 * itemTag:写入的标签名称
+	 * itemGroupName:分组名称
+	 */
+		@Override
+		public String[] read(String itemTag, String itemGroupName,Trial trial,JOpcBrowser jbrowser) throws UnableBrowseLeafException, UnableIBrowseException, UnableAddGroupException, UnableAddItemException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, IOException, ServiceException{
+			//String[] conntions = getconntionData(itemTag,itemGroupName,deviceId);
+			//Properties properties = getProperties();
+			//String host = properties.getProperty("host");//端口号
+			//String serverProgID = properties.getProperty("serverProgID");//运行程序的名称
+			
+			String deviceName = trial.getDevicecode();//工位号
+			String channelDevice =trial.getChanneldevice();//通道节点
+			String[] items=null;
+			if(itemGroupName==null||itemGroupName.equals("")){
+				items = jbrowser.getOpcItems(channelDevice+"."+deviceName, true);
+				}else {
+					 items = jbrowser.getOpcItems(channelDevice+"."+deviceName+"."+itemGroupName,true);
+				}
+				//ReadOpc.coUninitialize();
+				return items;
+		}
+	
+		public Trial findTrialByDeviceId(Long deviceId){
+			return trialDao.getById(deviceId);
+		}
+		/**
+		 * itemTag:写入的标签名称
+		 * itemGroupName:分组名称
+		 */
+		@Override
+		public void write(String value,String itemTag,String itemGroupName,Long deviceId) throws ComponentNotFoundException, UnableAddGroupException, UnableAddItemException, SynchReadException, SynchWriteException, UnableRemoveItemException, UnableRemoveGroupException, ConnectivityException, IOException, ServiceException{
+			//String[] conntions = getconntionData(itemTag,itemGroupName,deviceId);
+			Properties properties = getProperties();
+			String host = properties.getProperty("host");//端口号
+			String serverProgID = properties.getProperty("serverProgID");//运行程序的名称
+			trial = findTrialByDeviceId(deviceId);
+			if(trial==null){
+				throw new ServiceException("没有找到相应的设备","-1");
+			}
+			String deviceName = trial.getDevicecode();//工位号
+			String channelDevice =trial.getChanneldevice();//通道节点
+			OpcGroup group=new OpcGroup("Group2",true,500,0.0f);
+			OpcItem item =null;
+			
+			if(itemGroupName==null||itemGroupName.equals("")){
+				 item=new OpcItem(channelDevice+"."+deviceName+"."+itemTag,true,"");
+			}else {
+				 item=new OpcItem(channelDevice+"."+deviceName+"."+itemGroupName+"."+itemTag,true,"");
+			}
+			new WriteOpc().writeOpcValue(group, item, value,  host,serverProgID, channelDevice);
+			
+		}
+		@Override
+		public java.util.Map<String, String> readdeviceinfo(Long deviceId,Integer isfirst)throws Exception {
+			Map<String, String> deviceMap = new HashMap<String, String>();
+			Trial trial = findTrialByDeviceId(deviceId);
+			if (trial==null) {
+				throw new ServiceException("没有找到设备","-1");
+			}
+			if(trial.getDevicecode()==null||"".equals(trial.getDevicecode())){
+				throw new ServiceException("没有工位号","-1");
+			}
+			deviceMap.put("rrate",String.valueOf(trial.getRrate()));
+			String[] groupNames =null;
+			if(isfirst == 3){//只加载全局输出变量，检测报告变量
+				groupNames = TerrcnceConstants.globalGroupNames;
+			}else if(isfirst ==1){//加载开关变量，运行步骤变量，全局输出变量
+				groupNames = TerrcnceConstants.shortGroupNames;
+			}else{//加载所有组下面的变量
+				groupNames = TerrcnceConstants.groupNames;
+			}
+			JOpcBrowser jbrowser = new ReadOpc().getJbrowser();
+			String[] data;
+			for (String groupName : groupNames) {
+				String[] readData = read(null,groupName,trial,jbrowser);
+				for (int i = 0; i < readData.length; i++) {
+					data = readData[i].split(";");
+					deviceMap.put(data[0], data[3]);
+				}
+			}
+			jbrowser.coUninitialize();
+			//JOpcBrowser.coUninitialize();//-----注释掉了释放资源
+			return deviceMap;
+		}
+	
+		/**
+		 *<p>把字符串拼成时间<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-6-19上午9:05:54
+		 * @param dataValue
+		 * @return
+		 */
+		public String getdate(String dataValue){
+			String[] dateBytes =dataValue.substring(2, dataValue.length()-1).split(",");
+			Integer[] integers = new Integer[7];
+			int j =0;
+			String year =null;
+			String month = null;
+			String day = null;
+			String hours = null;
+			String minute = null;
+			String second = null;
+			for (int i = 0; i < dateBytes.length; i++) {
+				if(i%2!=0){
+					integers[j]= Integer.valueOf(dateBytes[i]);
+					j++;
+				}
+			}
+			for (int i = 0; i < integers.length; i++) {
+				if(integers[0]>99&&integers[0]!=0){
+					year = "1990";
+				}else if(integers[0]==0){
+					year = "1990";
+				}else{
+					year ="20"+integers[0];
+				}
+				
+				if(integers[1]<10&& integers[1]!=0){
+					month ="0"+integers[1];
+				}else if (integers[1]>12||integers[1]==0) {
+					month ="01";
+					
+				} else{
+					month = String.valueOf(integers[1]);
+				}
+				if(integers[2]<10&&integers[2]!=0){
+					day ="0"+integers[2];
+				}else if (integers[2]>31||integers[2]==0) {
+					day ="01";
+					
+				}else {
+					day = String.valueOf(integers[2]);
+				}
+				if(integers[3]<10){
+					hours ="0"+integers[3];
+				}else if (integers[3]>24) {
+					hours ="00";
+					
+				}else {
+					hours = String.valueOf(integers[3]);
+				}
+				if(integers[4]<10){
+					minute ="0"+integers[4];
+				}else if (integers[4]>60) {
+					minute ="00";
+					
+				}else {
+					minute = String.valueOf(integers[4]);
+				}
+				if(integers[5]<10){
+					second ="0"+integers[5];
+				}else if (integers[5]>60) {
+					second ="00";
+					
+				}else {
+					second = String.valueOf(integers[5]);
+				}
+			}
+			return year+"-"+month+"-"+day+" " + hours+":"+minute+":"+second;
+		}
+		@Override
+		public void updateDeviceStatus(String value,String fename,String groupName, Long deviceId) throws ComponentNotFoundException, UnableAddGroupException, UnableAddItemException, SynchReadException, SynchWriteException, UnableRemoveItemException, UnableRemoveGroupException, ConnectivityException, ServiceException, IOException, UnableBrowseLeafException, UnableIBrowseException, HostException, NotFoundServersException, UnableBrowseBranchException {
+			Trial trial = findTrialByDeviceId(deviceId);
+			if (trial==null) {
+				throw new ServiceException("没有找到设备","-1");
+			}
+			if(trial.getDevicename()==null||"".equals(trial.getDevicename())){
+				throw new ServiceException("没有工位号","-1");
+			}
+			if(fename==null||"".equals(fename)){
+				throw new ServiceException("没有找到要写的变量","-1");
+			}
+			write(value,  fename,groupName,deviceId);
+		}
+		@Override
+		public void saveProjectData(Long deviceId,Long tplid,String groupName)
+				throws ServiceException, ComponentNotFoundException, UnableAddGroupException, UnableAddItemException, SynchReadException, SynchWriteException, UnableRemoveItemException, UnableRemoveGroupException, UnableBrowseLeafException, UnableIBrowseException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, IOException {
+			TplTrailInQuery tplTrailInQuery = new TplTrailInQuery();
+			tplTrailInQuery.setTplid(tplid);
+			List<TplTrailIn> tplTrailIns = loadInputData(tplTrailInQuery);
+			if(tplTrailIns.size()>0){
+				for (TplTrailIn tplTrailIn : tplTrailIns) {
+					updateDeviceStatus(tplTrailIn.getDefaultval()+"", tplTrailIn.getTagName(),groupName, deviceId);
+				}
+			}
+		}
+		/**
+		 *<p>取出要输入变量参数值<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-8-6上午10:03:43
+		 * @param tplTrailInQuery
+		 * @return
+		 * @throws ServiceException
+		 */
+		public List<TplTrailIn> loadInputData(TplTrailInQuery tplTrailInQuery)
+				throws ServiceException {
+			List<TplTrailIn> tplTrailInList = new ArrayList<TplTrailIn>();
+			List<TplTrailIn> tplTrailIns = findTplTrailInListByTplId(tplTrailInQuery);
+			if (tplTrailIns.size()>0) {
+				for (TplTrailIn tplTrailIn : tplTrailIns) {
+					TrialDevice trialDevice = trialDeviceDao.getById(tplTrailIn.getDid());
+					tplTrailIn.setTagName(trialDevice.getFename());
+					tplTrailIn.setTagNameDesc(trialDevice.getDivicename());
+					tplTrailInList.add(tplTrailIn);
+				}
+			}
+			return tplTrailInList;
+		}
+		/**
+		 *<p>根据模板ID取出输入参数列表<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-8-6上午9:30:44
+		 * @param tplid
+		 * @return
+		 */
+		private List<TplTrailIn> findTplTrailInListByTplId(TplTrailInQuery tplTrailInQuery) {
+			return tplTrailInDao.findList(tplTrailInQuery);
+		}
+		/**
+		 * 在启动和停止OPCServer时保存数据
+		 */
+		@Override
+		public void saveGlobalData(Long deviceId,Integer isDo,Long checkid,Long tplid, String serialNumber, String itemcode) throws Exception {
+				falg = true;
+				isStop = isDo;
+				List<TrailRecSet> trailRecSets = null;
+			try {
+					while (falg) {
+						String sqlinsert=null;
+						String sqlvalue = ") values(";
+						Map<String, String> allDataMap = readdeviceinfo(deviceId,3);
+						String insertValue = null;
+						if (isStop==0) {
+							sqlinsert="insert into t_train_record (";
+							trailRecSets = findTrailRecSetsByTplid(tplid);
+							// TrailCheckNums trailCheckNums = findCheckNumsById(checkid);
+							 insertValue = null;
+								if (getTrainRecordByCheckid(itemcode, serialNumber, checkid)>0) {
+									break ;
+								}
+							//插入检测报告数据
+							for (int i = 0; i<trailRecSets.size();i++) {
+								TrailRecSet trailRecSet = trailRecSets.get(i);
+								if(trailRecSet.getFename().contains("_Time_")||trailRecSet.getFename().contains("_TIME")){
+									insertValue = getdate(allDataMap.get(trailRecSet.getFename()).trim());
+									if("200-00-00 00:00:00".equals(insertValue)){
+										insertValue = "1900-01-01 00:00:00";
+									}else {
+										insertValue = getdate(allDataMap.get(trailRecSet.getFename()).trim());
+									}
+								}else {
+									insertValue = allDataMap.get(trailRecSet.getFename()).trim();
+								}
+								
+								if (i==trailRecSets.size()-1&&checkid!=0) {
+									sqlinsert+=trailRecSet.getColtitle()+",createdate,checktimeid,seqno,itemcode,ctime,trialid,tplid";
+									sqlvalue +="'"+insertValue+"','"+DateUtils.GetDateTimeHM()+"',"+checkid+",'"+serialNumber+"','"+itemcode+"','"+DateUtils.GetDate()+"',"+deviceId+","+tplid;
+								}else {
+									sqlinsert+=trailRecSet.getColtitle()+",";
+									sqlvalue +="'"+insertValue+"',";
+								}
+							 }
+							//插入检测报告合格不合格数据
+							List<CheckStepRec> checkStepRecs = findCheckStepRecList(checkid,serialNumber,itemcode);
+							if(checkStepRecs.size()==0){
+								List<TrailPdStep> trailPdSteps = findTrailPdStepList(tplid,null);
+								if (trailPdSteps.size()>0) {
+									for (TrailPdStep trailPdStep : trailPdSteps) {
+										System.out.println("检测结果："+trailPdStep.getQualvar());
+										if(null!=trailPdStep.getVarlist()&&trailPdStep.getVarlist().size()>0){
+											for(TrailPdStepQualVar tsQualVar:trailPdStep.getVarlist()){
+												String isPass = allDataMap.get(tsQualVar.getVarname()).trim();
+												if(isPass.trim().equals("False")){
+													isPass="0";
+												}else {
+													isPass = "1";
+												}
+												//插入检测结果报告
+												CheckStepRec checkStepRec = new CheckStepRec();
+												checkStepRec.setChecktimeid(checkid);	
+												checkStepRec.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+												checkStepRec.setItemcode(itemcode);
+												checkStepRec.setSeqcode(serialNumber);
+												checkStepRec.setStepid(trailPdStep.getStepid());
+												checkStepRec.setIspass(Integer.valueOf(isPass));
+												checkStepRecDao.save(checkStepRec);	
+											}
+										}
+									}
+								}
+							}
+						}else{
+							/**
+							List<TrailUseCol> trailUseCols = null;
+							sqlinsert="insert into t_trail_tab_record (";
+							 trailUseCols = findTrailUseColsByDeviceId(deviceId,3);
+							for (int i = 0; i<trailUseCols.size();i++) {
+								TrailUseCol trailUseCol = trailUseCols.get(i);
+								if (i==trailUseCols.size()-1&&checkid!=0) {
+									sqlinsert+=trailUseCol.getFcolumn()+",createdate,checktimeid,ctime";
+									sqlvalue +="'"+allDataMap.get(trailUseCol.getFrealvar()).trim()+"','"+DateUtils.GetDateTimeHM()+"',"+checkid+",'"+DateUtils.GetTime()+"'";
+								}else {
+									sqlinsert+=trailUseCol.getFcolumn()+",";
+									sqlvalue +="'"+allDataMap.get(trailUseCol.getFrealvar()).trim()+"',";
+								}
+							}*/
+							sqlinsert="insert into t_checkdata_detail (";
+							trailRecSets = findTrailRecSetsByTplid(tplid);
+							// TrailCheckNums trailCheckNums = findCheckNumsById(checkid);
+							insertValue = null;
+							if (getTrainRecordByCheckid(itemcode, serialNumber, checkid)>0) {
+								break ;
+							}
+							//插入检测报告数据
+							for (int i = 0; i<trailRecSets.size();i++) {
+								TrailRecSet trailRecSet = trailRecSets.get(i);
+								if(trailRecSet.getFename().contains("_Time_")||trailRecSet.getFename().contains("_TIME")){
+									insertValue = getdate(allDataMap.get(trailRecSet.getFename()).trim());
+									if("200-00-00 00:00:00".equals(insertValue)||"1990-01-01 00:00:00".equals(insertValue)){
+										insertValue = "1900-01-01 00:00:00";
+										continue;
+									}else {
+										insertValue = getdate(allDataMap.get(trailRecSet.getFename()).trim());
+									}
+								}else {
+									insertValue = allDataMap.get(trailRecSet.getFename()).trim();
+								}
+								
+								if (i==trailRecSets.size()-1&&checkid!=0) {
+									sqlinsert+=trailRecSet.getColtitle()+",createdate,checktimeid,seqno,itemcode,ctime,trialid,tplid";
+									sqlvalue +="'"+insertValue+"','"+DateUtils.GetDateTimeHM()+"',"+checkid+",'"+serialNumber+"','"+itemcode+"','"+DateUtils.GetDate()+"',"+deviceId+","+tplid;
+								}else {
+									sqlinsert+=trailRecSet.getColtitle()+",";
+									sqlvalue +="'"+insertValue+"',";
+								}
+							 }
+						}
+						String sql = sqlinsert+sqlvalue+")";
+						System.out.println(sql);
+						Integer resultInfo = trialDeviceDao.insertDataBySql(sql);
+						if (resultInfo==0) {
+							this.updateAssemblyCheck(checkid);
+							trailCheckNumsDao.deleteById(checkid);
+							throw new ServiceException("保存数据失败！", "-1");
+						}
+						if(isStop==0){
+							isStop = 0;
+							falg = false;
+							break;
+						}
+						//Thread.sleep(trial.getWrate());
+					}
+					
+					//==================修改产品档案数据状态=======================产品档案状态的修改时间点儿为：品管质检完提交时
+					PdFile pdfile = new PdFile();
+					pdfile.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测时间
+					//SpringSecurityUtils.getCurrentUserId()
+					Admin admin = adminDao.getById(SpringSecurityUtils.getCurrentUserId());
+					pdfile.setCheckemp(admin.getAdminName());//检测人
+				//	pdfile.setIsc(1);//有记录了
+					pdfile.setSeqno(serialNumber);
+					pdFileDao.update("Pdfile.update.checkBaoBiao.data", pdfile);
+//					//============================================================
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		/**
+		 *<p>查询检测结果List<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-8-5上午9:24:28
+		 * @param checkid:检测次数ID
+		 * @param serialNumber:序列号
+		 * @param itemcode:物料代码
+		 * @return 
+		 */
+		private List<CheckStepRec> findCheckStepRecList(Long checkid,
+				String serialNumber, String itemcode) {
+				CheckStepRecQuery checkStepRecQuery = new CheckStepRecQuery();
+				checkStepRecQuery.setChecktimeid(checkid);
+				checkStepRecQuery.setSeqcode(serialNumber);
+				checkStepRecQuery.setItemcode(itemcode);
+			return checkStepRecDao.findList(checkStepRecQuery);
+		}
+		private List<TrailPdStep> findTrailPdStepList(Long tplid, Long deviceId) {
+			TrailPdStepQuery trailPdStepQuery = new TrailPdStepQuery();
+			trailPdStepQuery.setDid(deviceId);
+			trailPdStepQuery.setTplid(tplid);
+			return trailPdStepDao.findAllList(trailPdStepQuery);
+		}
+		/**
+		 *<p>根据模板ID 取出该模板要用的字段<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-7-31下午7:17:42
+		 * @param tplid 模板ID
+		 * @return
+		 */
+		private List<TrailRecSet> findTrailRecSetsByTplid(Long tplid) {
+			TrailRecSetQuery trailRecSetQuery = new TrailRecSetQuery();
+			trailRecSetQuery.setTplid(tplid);
+			return trailRecSetDao.findTrailRecSetList(trailRecSetQuery);
+		}
+		/**
+		 * <p>取出检测记录的次数<p>.
+		 * @param itemcode:物料代码
+		 * @param itemsqe:序列号
+		 * @param checkId:检测次数ID
+		 * @return
+		 */
+		private  Integer getTrainRecordByCheckid(String itemcode,String itemsqe,Long checkId){
+			
+			String sql = "select COUNT(*) from t_train_record where checktimeid ="+checkId+" and seqno='"+itemsqe+"' and itemcode ='"+itemcode+"'";
+			return trainRecordDao.getRecordCount(sql);
+		}
+		/**
+		 * <p>更新检测记录次数</p>.
+		 * @param checkid:检测次数ID
+		 */
+		private void updateAssemblyCheck(Long checkid) {
+			TrailCheckNums trailCheckNums = findCheckNumsById(checkid);
+			AssemblyCheck assemblyCheck = assemblyCheckDao.getById(trailCheckNums.getCheckid());
+			assemblyCheck.setFtimes(assemblyCheck.getFtimes()-1);
+			assemblyCheckDao.update(assemblyCheck);
+			
+		}
+		private TrailCheckNums findCheckNumsById(Long checkId){
+			return trailCheckNumsDao.getById(checkId);
+		}
+		/**
+		 * <p>取出已用字段列表</p>.
+		 * @param deviceId:设备ID
+		 * @param devicetype:设备类型
+		 * @return
+		 */
+		private List<TrailUseCol> findTrailUseColsByDeviceId(Long deviceId,Integer devicetype){
+			TrailUseColQuery query = new TrailUseColQuery();
+			query.setTrialid(deviceId);
+			query.setDevicetype(devicetype);
+			List<TrailUseCol> trailUseCols = trailUseColDao.findList(query);
+			return trailUseCols;
+		}
+		/**
+		 * <p>保存一个物料的检测次数的记录</p>.
+		 * @param itemcode:物料代码
+		 * @param serialNumber:序列号
+		 * @return
+		 */
+		public Long saveCheckRecord(String itemcode, String serialNumber)
+				throws ServiceException {
+			TrailCheckNums trailCheckNums = null;
+			try {
+				AssemblyCheck assemblyCheck = null;
+				AssemblyCheckQuery assemblyCheckQuery = new AssemblyCheckQuery();
+				assemblyCheckQuery.setItemcode(itemcode);
+				assemblyCheckQuery.setSeqno(serialNumber);
+				assemblyCheck = assemblyCheckDao.getByEntity("AssemblyCheck.Entity", assemblyCheckQuery);
+				if (assemblyCheck ==null) {//做保存操作
+					assemblyCheck = new AssemblyCheck();
+					assemblyCheck.setFtimes(1);
+					assemblyCheck.setItemcode(itemcode);
+					assemblyCheck.setSeqno(serialNumber);
+				}else {
+					assemblyCheck.setFtimes(assemblyCheck.getFtimes()+1);
+				}
+				assemblyCheckDao.saveOrUpdate(assemblyCheck);
+				 trailCheckNums = new TrailCheckNums();
+				trailCheckNums.setCheckid(assemblyCheck.getCheckid());
+				trailCheckNums.setItemcode(itemcode);
+				trailCheckNums.setItemseq(serialNumber);
+				trailCheckNums.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+				trailCheckNumsDao.save(trailCheckNums);
+			} catch (Exception e) {
+				throw new ServiceException("保存失败！", "-1");
+			}
+			return trailCheckNums.getChecktimeid();
+		}
+		/**
+		 * 清空检测输入参数值
+		 * 
+		 */
+		@Override
+		public void cleanProjectData(Long deviceId,Long tplid,String groupName) throws ComponentNotFoundException, UnableAddGroupException, UnableAddItemException, SynchReadException, SynchWriteException, UnableRemoveItemException, UnableRemoveGroupException, UnableBrowseLeafException, UnableIBrowseException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, ServiceException, IOException {
+			TplTrailInQuery tplTrailInQuery = new TplTrailInQuery();
+			tplTrailInQuery.setTplid(tplid);
+			List<TplTrailIn> tplTrailIns = loadInputData(tplTrailInQuery);
+			if(tplTrailIns.size()>0){
+				for (TplTrailIn tplTrailIn : tplTrailIns) {
+					updateDeviceStatus("0", tplTrailIn.getTagName(),groupName, deviceId);
+				}
+			}
+		}
+		/**
+		 * 取出检测次数ID最大的
+		 * 
+		 */
+		@Override
+		public Long numsMaxId(String itemcode, String serialNumber)
+				throws ServiceException {
+			TrailCheckNumsQuery trailCheckNumsQuery = new  TrailCheckNumsQuery();
+			trailCheckNumsQuery.setItemcode(itemcode);
+			trailCheckNumsQuery.setItemseq(serialNumber);
+			Long checkid = trailCheckNumsDao.getMaxCountId(trailCheckNumsQuery);
+			return checkid;
+		}
+		/**
+		 * 取出检测实时变量的最大值，为做曲线图
+		 */
+		@Override
+		public Integer findTabRecordMaxValue(String itemcode,String serialNumber, Long deviceId) {
+			Long checkid = numsMaxId(itemcode, serialNumber);
+			Integer maxValue= null;
+			if(checkid!=null){
+				String column = getColumnMaxValue(deviceId);
+				String sql = "select "+column+" from t_trail_tab_record where checktimeid="+checkid;
+				List<Integer> maxValueList = trailTabRecordDao.findTabRecordMaxValue(sql);
+				 maxValue = Collections.max(maxValueList);
+			}
+			return maxValue;
+		}
+		/**
+		 * 取出检测报告的数据
+		 */
+		@Override
+		public List<TrailTabRecord> findTraliTabRecordList(String itemcode,
+				String serialNumber,Long deviceId) throws ServiceException {
+			Long checkid = numsMaxId(itemcode, serialNumber);
+			List<TrailTabRecord> trailTabRecords= null;
+			if(checkid!=null){
+				String column = getGlableColumn(deviceId);
+				String sql = "select "+column+" createdate from t_trail_tab_record where checktimeid="+checkid+" order by createdate asc";
+				trailTabRecords = trailTabRecordDao.findTraliTabRecordList(sql);
+			}
+			return trailTabRecords;
+		}
+		/**
+		 *<p>根据已选的字段，把他全部取出来组合成对应的查询列<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-7-22下午2:33:25
+		 * @param trialid
+		 * @return
+		 */
+		private String getGlableColumn(Long trialid){
+			List<TrailUseCol> trailUseCols = findTrailUseColList(trialid,3);
+			String column = "";
+			for (TrailUseCol trailUseCol : trailUseCols) {
+				column+=trailUseCol.getFcolumn()+",";
+			}
+			return column;
+		}
+		/**
+		 *<p>组合出实时变量的最大值的列<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-7-22下午2:30:12
+		 * @param trialid
+		 * @return
+		 */
+		private String getColumnMaxValue(Long trialid){
+			List<TrailUseCol> trailUseCols = findTrailUseColList(trialid,3);
+			String column = "";
+			for (int i = 0; i < trailUseCols.size(); i++) {
+				if(i==trailUseCols.size()-1){
+					column +="MAX("+trailUseCols.get(i).getFcolumn()+")";
+				}else {
+					column +="MAX("+trailUseCols.get(i).getFcolumn()+"),";
+				}
+			}
+			return column;
+		}
+		/**
+		 *<p>根据设备ID 和 设备类型 取出用户已用字段列表<p>.
+		 *Author:ZhangYuPeng
+		 *CreatDate:2014-7-22下午2:35:47
+		 * @param trialId
+		 * @param deviceType
+		 * @return
+		 */
+		private List<TrailUseCol> findTrailUseColList(Long trialId,Integer deviceType){
+			TrailUseColQuery trailUseColQuery = new TrailUseColQuery();
+			trailUseColQuery.setDevicetype(deviceType);
+			trailUseColQuery.setTrialid(trialId);
+			List<TrailUseCol> trailUseCols = trailUseColDao.findList(trailUseColQuery);
+			return trailUseCols;
+		}
+		@Override
+		public List<TrailTabRecord> findTraliTabRecordHighChar(Long checkid,
+				Long deviceId) throws ServiceException {
+			String column = getGlableColumn(deviceId);
+			String sql = "select "+column+" createdate from t_trail_tab_record where checktimeid="+checkid+" order by createdate asc";
+			List<TrailTabRecord> trailTabRecords = trailTabRecordDao.findTraliTabRecordList(sql);
+			return trailTabRecords;
+		}
+		@Override
+		public Integer loadAllDeviceDetail(Long deviceId) throws ServiceException, UnableBrowseLeafException, UnableIBrowseException, UnableAddGroupException, UnableAddItemException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, IOException {
+ 				//String[] groupNames ={"Tag_Input","Tag_Output","Tag_Presstransfer","Tag_Temp","Tag_Valve"};//OPCServer分组名称
+				Integer updateAllCount = 0;
+						//全局输入参数
+							updateAllCount+=saveTrialDevice(deviceId, 2, TerrcnceConstants.TAG_INPUT);
+						//输出结果参数
+							updateAllCount+=saveTrialDevice(deviceId, 4, TerrcnceConstants.TAG_OUTPUT);
+						//开关
+							updateAllCount+=saveTrialDevice(deviceId, 1, TerrcnceConstants.TAG_VALUE);
+						//全局输出参数
+							updateAllCount+=saveTrialDevice(deviceId, 3, TerrcnceConstants.TAG_PRESSTRANSFER);
+						//运行步骤
+							updateAllCount+=saveTrialDevice(deviceId, 5, TerrcnceConstants.TAG_STEP);
+						//自动/手动
+							updateAllCount+=saveTrialDevice(deviceId, 8, TerrcnceConstants.TAG_AUTOMANUAL);
+						//调节输入变量
+							updateAllCount+=saveTrialDevice(deviceId, 9, TerrcnceConstants.TAG_TIAOJIE);
+							
+							return updateAllCount;
+		}
+		/**
+		 * <p>保存设备部件</p>.
+		 * @param deviceId
+		 * @param deviceType
+		 * @param groupName
+		 * @return
+		 * @throws UnableBrowseLeafException
+		 * @throws UnableIBrowseException
+		 * @throws UnableAddGroupException
+		 * @throws UnableAddItemException
+		 * @throws HostException
+		 * @throws NotFoundServersException
+		 * @throws UnableBrowseBranchException
+		 * @throws ConnectivityException
+		 * @throws ServiceException
+		 * @throws IOException
+		 */
+		public Integer saveTrialDevice(Long deviceId,Integer deviceType,String groupName) throws UnableBrowseLeafException, UnableIBrowseException, UnableAddGroupException, UnableAddItemException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, ServiceException, IOException{
+			Integer  updateCount=0;
+			JOpcBrowser jbrowser = new ReadOpc().getJbrowser();
+			Trial trial = this.findTrialByDeviceId(deviceId);
+			String [] readData = read(null,groupName, trial,jbrowser);
+			for (int i = 0; i < readData.length; i++) {
+				String[] data = readData[i].split(";");
+				String tagName=	data[0];//取出变量名称
+				TrialDevice trialDevice = new TrialDevice();
+				trialDevice.setDevicetype(deviceType);
+				trialDevice.setFename(tagName);
+				trialDevice.setTrialid(deviceId);
+				TrialDevice entiry = getTrialDevice(deviceId, deviceType, tagName);
+				if (entiry==null) {
+					trialDeviceDao.saveOrUpdate(trialDevice);
+					updateCount+=1;
+				}
+			}
+			//JOpc.coUninitialize();
+			jbrowser.coUninitialize();//------注释掉了释放资源
+			return updateCount;
+		}
+		/**
+		 * <p>取出设备部件的对象</p>.
+		 * @param deviceId :设备ID
+		 * @param deviceType: 设备类型
+		 * @param tagName:设备名称
+		 * @return
+		 */
+		private TrialDevice getTrialDevice(Long deviceId,Integer deviceType,String tagName){
+			TrialDeviceQuery trialDeviceQuery =new TrialDeviceQuery();
+			trialDeviceQuery.setDevicetype(deviceType);
+			trialDeviceQuery.setFename(tagName);
+			trialDeviceQuery.setTrialid(deviceId);
+			TrialDevice entiry = trialDeviceDao.getByEntity("TrialDevice.Entity", trialDeviceQuery);
+			return entiry;
+		}
+		@Override
+		public String findLongTime(String itemcode, String serialNumber,
+				Long deviceId) throws ServiceException, SQLException {
+			Long checkid = numsMaxId(itemcode, serialNumber);
+			String longTimeStr = null;
+			if(checkid!=null){
+				String sql = "select DATEDIFF(Second,MIN(createdate), MAX(createdate)) from t_trail_tab_record where checktimeid="+checkid;
+				Long longTime = trailTabRecordDao.findQueryForResultSet(sql);
+				longTimeStr = DateUtils.getDiffLongTime(longTime);
+				
+			}
+			return longTimeStr;
+		}
+		@Override
+		public void saveXlsInfo(Long deviceId, Long checkid, Long tplid,
+				String serialNumber, String itemcode, List<String> list,Map<String,List<String>> sqlMap) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("insert into t_train_record (checktimeid,seqno,itemcode,tplid,trialid,createdate,ctime,");
+			sb.append(list.get(0));
+			sb.deleteCharAt(sb.length()-1);
+			sb.append(")values(");
+			sb.append(checkid).append(',').append('\'').append(serialNumber).append('\'').append(',');
+			sb.append('\'').append(itemcode).append('\'').append(',').append(tplid).append(',').append(deviceId).append(',');
+			sb.append('\'').append(formt1.format(new Date())).append('\'').append(',');
+			sb.append('\'').append(formt2.format(new Date())).append('\'').append(',');
+			sb.append(list.get(1));
+			sb.deleteCharAt(sb.length()-1);
+			sb.append(")");
+			System.out.println(sb.toString());
+			int resultinfo = trialDeviceDao.insertDataBySql(sb.toString());
+			if(resultinfo==0){
+				throw new RuntimeException("SQL执行错误！");
+			}
+			if(null!=list&&null!=list.get(2)&&list.get(2).length()>0){
+				String[] tempResult = list.get(2).split(",");
+				Map<String,Integer> map = new HashMap<String, Integer>();
+				for(String str:tempResult){
+					map.put(str.split("==")[0], Integer.valueOf(str.split("==")[1]));
+				}
+				//插入合格不合格数据
+				List<TrailPdStep> trailPdSteps = findTrailPdStepList(tplid,null);
+				if (trailPdSteps.size()>0) {
+					for (TrailPdStep trailPdStep : trailPdSteps) {
+						if(null!=trailPdStep.getVarlist()&&trailPdStep.getVarlist().size()>0){
+							for(TrailPdStepQualVar trailPdStepQualVar:trailPdStep.getVarlist()){
+								System.out.println(trailPdStepQualVar.getCnname());
+								saveCheckResult(checkid,itemcode,serialNumber,trailPdStepQualVar.getStepid(),map.get(trailPdStepQualVar.getCnname()));
+							}
+						}
+					}
+				}
+			}
+			saveChcekDataDetail(sqlMap,tplid);
+		}
+		private void saveChcekDataDetail(Map<String,List<String>> sqlMap,Long modelid) {
+			if(null!=sqlMap&&sqlMap.size()>0){
+				for(Entry<String, List<String>> entry:sqlMap.entrySet()){
+					for(String sql:entry.getValue()){
+						checkDataDetailDao.saveData(sql);
+					}
+				}
+				System.out.println("执行成功!");
+			}
+		}
+		public void saveCheckResult(Long checkid,String itemcode,String serialNumber,Long stepid,Integer isPass){
+			CheckStepRec checkStepRec = new CheckStepRec();
+			checkStepRec.setChecktimeid(checkid);	
+			checkStepRec.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+			checkStepRec.setItemcode(itemcode);
+			checkStepRec.setSeqcode(serialNumber);
+			checkStepRec.setStepid(stepid);
+			checkStepRec.setIspass(isPass);
+			checkStepRecDao.save(checkStepRec);	
+		}
+		
+	    /**
+	     * 得到Excel表中的值
+	     * 
+	     * @param hssfCell
+	     *            Excel中的每一个格子
+	     * @return Excel中每一个格子中的值
+	     */
+	    @SuppressWarnings("static-access")
+	    private String getValue(HSSFCell hssfCell,int type) {
+	        if (hssfCell.getCellType() == hssfCell.CELL_TYPE_BOOLEAN) {
+	            // 返回布尔类型的值
+	            return String.valueOf(hssfCell.getBooleanCellValue());
+	        } else if (hssfCell.getCellType() == hssfCell.CELL_TYPE_NUMERIC) {
+	            // 返回数值类型的值
+	        	if(HSSFDateUtil.isCellDateFormatted(hssfCell)){
+	        		String datestr = formt1.format(HSSFDateUtil.getJavaDate(hssfCell.getNumericCellValue()));
+	        		if(type==1){
+	        			return "\'"+datestr+"\'";
+	        		}else{
+	        			return datestr;
+	        		}
+	        	}
+	            return String.valueOf(hssfCell.getNumericCellValue());
+	        } else {
+	            // 返回字符串类型的值
+	        	if(type==1){
+	        		return String.valueOf("\'"+hssfCell.getRichStringCellValue().toString()+"\'").trim();
+	        	}else{
+	        		return String.valueOf(hssfCell.getRichStringCellValue().toString()).trim();
+	        	}
+	        }
+	        
+	    }
+	    /**
+	     * 得到Excel表中的值
+	     * 
+	     * @param hssfCell
+	     *            Excel中的每一个格子
+	     * @return Excel中每一个格子中的值
+	     */
+	    @SuppressWarnings("static-access")
+	    private String getValue2007(XSSFCell xssfCell,int type) {
+	        if (xssfCell.getCellType() == xssfCell.CELL_TYPE_BOOLEAN) {
+	            // 返回布尔类型的值
+	            return String.valueOf(xssfCell.getBooleanCellValue());
+	        } else if (xssfCell.getCellType() == xssfCell.CELL_TYPE_NUMERIC) {
+	            // 返回数值类型的值
+	        	if(HSSFDateUtil.isCellDateFormatted(xssfCell)){
+	        		String datestr = formt1.format(HSSFDateUtil.getJavaDate(xssfCell.getNumericCellValue()));
+	        		if(type==1){
+	        			return "\'"+datestr+"\'";
+	        		}else{
+	        			return datestr;
+	        		}
+	        	}
+	            return String.valueOf(xssfCell.getNumericCellValue());
+	        } else {
+	            // 返回字符串类型的值
+	        	if(type==1){
+	        		return String.valueOf("\'"+xssfCell.getRichStringCellValue().toString()+"\'");
+	        	}else{
+	        		return String.valueOf(xssfCell.getRichStringCellValue().toString());
+	        	}
+	        }
+	        
+	    }
+		 /**
+	     * 读取xls文件内容2003
+	     * 
+	     * @return List<XlsDto>对象
+	     * @throws IOException
+	     *             输入/输出(i/o)异常
+	     */
+	    @Override
+	    public List<String> readXls(String xlsPath,Long deviceId) throws Exception {
+	    	List<String> kvs = new ArrayList<String>();
+	    	StringBuffer s1 = new StringBuffer();
+	    	StringBuffer s2 = new StringBuffer();
+	    	StringBuffer s3 = new StringBuffer();
+	        InputStream is = new FileInputStream(xlsPath);
+	        HSSFWorkbook hssfWorkbook = new HSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        HSSFSheet hssfSheet = hssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        HSSFRow hssfRow;
+	        HSSFCell key;
+	        HSSFCell value; 
+	        for (int rowNum = 13; rowNum <= 113; rowNum++) {
+	        	hssfRow = hssfSheet.getRow(rowNum);
+	            if (hssfRow == null) {
+	                continue;
+	            }
+	            key = hssfRow.getCell(9);
+	            if (key == null||key.getCellType()==HSSFCell.CELL_TYPE_BLANK) {
+	            	continue;
+	            }
+	            value = hssfRow.getCell(10);
+	            if (value == null||value.getCellType()==HSSFCell.CELL_TYPE_BLANK||
+	            		getValue(value,0) == null||getValue(value,0).trim().equals("")) {
+	            	continue;
+	            }
+
+	            if (!getValue(value,0).equals("合格")&&!getValue(value,0).equals("不合格")) {
+	            	String tempKey = getValue(key,0);
+	                TrialDeviceQuery query = new TrialDeviceQuery();
+	                query.setDivicename(tempKey);
+	                query.setTrialid(deviceId);
+	                List<TrialDevice> list = trialDeviceDao.findList(query, "TrialDevice.findByDeviceName", 10);
+	                if(null!=list && list.size()==1&&(null!=list.get(0).getFcolumn())){//
+	                	s1.append(list.get(0).getFcolumn()).append(',');
+	                }else if(null!=list && list.size()>1){
+	                	throw new RuntimeException("数据库中'"+tempKey+"'对应的字段有多个,请联系管理员");
+	                }else{
+	                	throw new RuntimeException("数据库中没有'"+tempKey+"'对应的字段,请联系管理员");
+	                }
+	                if(value == null){
+	                	s2.append("null").append(',');
+	                	continue;
+	                }
+	            }else{
+	            	if(getValue(value,0).equals("合格")){
+	            		s3.append(getValue(key, 0)).append("==").append('1').append(',');
+	            	}else if(getValue(value,0).equals("不合格")){
+	            		s3.append(getValue(key, 0)).append("==").append('0').append(',');
+	            	}else{
+	            		throw new RuntimeException(getValue(key, 0)+"对应的是未知的数值!");
+	            	}
+	            	continue;
+	            }
+	            s2.append(getValue(value,1)).append(',');
+	        }
+	        kvs.add(s1.toString());
+	        kvs.add(s2.toString());
+	        kvs.add(s3.toString());
+	        return kvs;
+	    }
+	    /**
+	     * 读取xls文件内容2007
+	     * 
+	     * @return List<XlsDto>对象
+	     * @throws IOException
+	     *             输入/输出(i/o)异常
+	     */
+	    public List<String> readXls2007(String xlsPath,Long deviceId) throws Exception {
+	    	List<String> kvs = new ArrayList<String>();
+	    	StringBuffer s1 = new StringBuffer();
+	    	StringBuffer s2 = new StringBuffer();
+	    	StringBuffer s3 = new StringBuffer();
+	        InputStream is = new FileInputStream(xlsPath);
+	        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        XSSFRow xssfRow;
+	        XSSFCell key;
+	        XSSFCell value; 
+	        for (int rowNum = 13; rowNum <= 113; rowNum++) {
+	        	xssfRow = xssfSheet.getRow(rowNum);
+	            if (xssfRow == null) {
+	                continue;
+	            }
+	            key = xssfRow.getCell(9);
+	            if (key == null||key.getCellType()==HSSFCell.CELL_TYPE_BLANK) {
+	            	continue;
+	            }
+	            value = xssfRow.getCell(10);
+	            if (value == null||value.getCellType()==HSSFCell.CELL_TYPE_BLANK||
+	            		getValue2007(value,0) == null||getValue2007(value,0).trim().equals("")) {
+	            	continue;
+	            }
+
+	            if (!getValue2007(value,0).equals("合格")&&!getValue2007(value,0).equals("不合格")) {
+	            	String tempKey = getValue2007(key,0);
+	                TrialDeviceQuery query = new TrialDeviceQuery();
+	                query.setDivicename(tempKey);
+	                query.setTrialid(deviceId);
+	                List<TrialDevice> list = trialDeviceDao.findList(query, "TrialDevice.findByDeviceName", 10);
+	                if(null!=list && list.size()==1&&(null!=list.get(0).getFcolumn())){//
+	                	s1.append(list.get(0).getFcolumn()).append(',');
+	                }else if(null!=list && list.size()>1){
+	                	throw new RuntimeException("数据库中'"+tempKey+"'对应的字段有多个,请联系管理员");
+	                }else{
+	                	throw new RuntimeException("数据库中没有'"+tempKey+"'对应的字段,请联系管理员");
+	                }
+	                if(value == null){
+	                	s2.append("null").append(',');
+	                	continue;
+	                }
+	            }else{
+	            	if(getValue2007(value,0).equals("合格")){
+	            		s3.append(getValue2007(key, 0)).append("==").append('1').append(',');
+	            	}else if(getValue2007(value,0).equals("不合格")){
+	            		s3.append(getValue2007(key, 0)).append("==").append('0').append(',');
+	            	}else{
+	            		throw new RuntimeException(getValue2007(key, 0)+"对应的是未知的数值!");
+	            	}
+	            	continue;
+	            }
+	            s2.append(getValue2007(value,1)).append(',');
+	        }
+	        kvs.add(s1.toString());
+	        kvs.add(s2.toString());
+	        kvs.add(s3.toString());
+	        return kvs;
+	    }
+	    /**
+	     * 读取xls文件内容 2003格式
+	     * 
+	     * @return List<XlsDto>对象
+	     * @throws IOException
+	     *             输入/输出(i/o)异常
+	     */
+		@Override
+	    public Map<String,List<String>> readFlowXls(String xlsPath,Long tplid,String serialNumber) throws Exception {
+	    	Map<String,List<String>> map = new HashMap<String, List<String>>();
+	        InputStream is = new FileInputStream(xlsPath);
+	        HSSFWorkbook hssfWorkbook = new HSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        HSSFSheet hssfSheet = hssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        CheckSelectedFieldQuery query = new CheckSelectedFieldQuery();
+	        query.setModelid(tplid);
+	        List<CheckSelectedField> csfList = checkSelectedFieldDao.findList(query);
+	        GchartInfoQuery gchartQuery = new GchartInfoQuery();
+	        gchartQuery.setModelid(tplid);
+	        List<GchartInfo> gchartInfos = gchartInfoDao.findList(gchartQuery);
+	        StringBuffer names = null;
+	        StringBuffer values = null;
+	        StringBuffer sql = null;
+	        List<String> kvs = null;
+	        HSSFCell tmp; 
+	        for(GchartInfo temp:gchartInfos){
+	        	kvs = new ArrayList<String>();
+	        	HSSFRow hssfRow;
+		        for (Long rowNum = temp.getStartrow(); rowNum <= temp.getEndrow(); rowNum++) {
+		        	names = new StringBuffer();
+		        	values = new StringBuffer();
+		        	sql = new StringBuffer();
+		        	hssfRow = hssfSheet.getRow(rowNum.intValue());
+		            if (hssfRow == null) {
+		                continue;
+		            }
+		            names.append("tplid,stepid,seqno,");
+		            values.append(tplid).append(",").append(temp.getForder()).append(",");
+		            values.append("'").append(serialNumber).append("'").append(",");
+		        	for(CheckSelectedField tmpcsf:csfList){
+		        		tmp = hssfRow.getCell(tmpcsf.getFseqno()-1);
+		        		if(null==tmp){
+		        			continue;
+		        		}
+		        		names.append(tmpcsf.getFkey()).append(",");
+		        		values.append("'").append(getValue(tmp, 0)).append("'").append(",");
+		        	}
+		        	names.deleteCharAt(names.length()-1);
+		        	values.deleteCharAt(values.length()-1);
+		        	sql.append("insert into t_checkdata_detail (").append(names).append(") ");
+		        	sql.append("values(").append(values).append(")");
+		        	System.out.println("======="+sql.toString());
+		        	kvs.add(sql.toString());
+		        }
+		        map.put(String.valueOf(temp.getChartname()), kvs);
+	        }
+	        return map;
+	    }
+		/**
+	     * 读取xls文件内容 2007格式
+	     * 
+	     * @return List<XlsDto>对象
+	     * @throws IOException
+	     *             输入/输出(i/o)异常
+	     */
+	    public Map<String,List<String>> readFlowXls2007(String xlsPath,Long tplid,String serialNumber) throws Exception {
+	    	Map<String,List<String>> map = new HashMap<String, List<String>>();
+	        InputStream is = new FileInputStream(xlsPath);
+	        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        CheckSelectedFieldQuery query = new CheckSelectedFieldQuery();
+	        query.setModelid(tplid);
+	        List<CheckSelectedField> csfList = checkSelectedFieldDao.findList(query);
+	        GchartInfoQuery gchartQuery = new GchartInfoQuery();
+	        gchartQuery.setModelid(tplid);
+	        List<GchartInfo> gchartInfos = gchartInfoDao.findList(gchartQuery);
+	        StringBuffer names = null;
+	        StringBuffer values = null;
+	        StringBuffer sql = null;
+	        List<String> kvs = null;
+	        XSSFCell tmp; 
+	        for(GchartInfo temp:gchartInfos){
+	        	kvs = new ArrayList<String>();
+	        	XSSFRow xssfRow;
+		        for (Long rowNum = temp.getStartrow(); rowNum <= temp.getEndrow(); rowNum++) {
+		        	names = new StringBuffer();
+		        	values = new StringBuffer();
+		        	sql = new StringBuffer();
+		        	xssfRow = xssfSheet.getRow(rowNum.intValue());
+		            if (xssfRow == null) {
+		                continue;
+		            }
+		            names.append("tplid,stepid,seqno,");
+		            values.append(tplid).append(",").append(temp.getForder()).append(",");
+		            values.append("'").append(serialNumber).append("'").append(",");
+		        	for(CheckSelectedField tmpcsf:csfList){
+		        		tmp = xssfRow.getCell(tmpcsf.getFseqno()-1);
+		        		if(null==tmp){
+		        			continue;
+		        		}
+		        		names.append(tmpcsf.getFkey()).append(",");
+		        		values.append("'").append(getValue2007(tmp, 0)).append("'").append(",");
+		        	}
+		        	names.deleteCharAt(names.length()-1);
+		        	values.deleteCharAt(values.length()-1);
+		        	sql.append("insert into t_checkdata_detail (").append(names).append(") ");
+		        	sql.append("values(").append(values).append(")");
+		        	System.out.println("======="+sql.toString());
+		        	kvs.add(sql.toString());
+		        }
+		        map.put(String.valueOf(temp.getChartname()), kvs);
+	        }
+	        return map;
+	    }
+		public Map<String, Object> findChartColumns(Long modelid){
+			return checkDataDetailDao.findChartColumns(modelid);
+		}
+		@Override
+		public void saveAndDealXls(String xlsPath, Long deviceId, Long tplid,
+				String serialNumber, String itemcode) throws Exception {
+
+//			List<String> list = opcService.readXls(xlsPath,deviceId);
+//			Map<String,List<String>> sqlMap = opcService.readFlowXls(xlsPath,tplid,serialNumber);
+//			checkid = opcService.saveCheckRecord(itemcode,serialNumber);
+//			opcService.saveXlsInfo(deviceId,checkid,tplid, serialNumber, itemcode,list,sqlMap);
+			if(xlsPath.endsWith(".xls")){
+				List<String> list = readXls(xlsPath,deviceId);
+				Long checkid = saveCheckRecord(itemcode,serialNumber);
+				Map<String,List<String>> sqlMap=readFlowXls(xlsPath,tplid,serialNumber,checkid );
+				saveXlsInfo(deviceId,checkid,tplid, serialNumber, itemcode,list,sqlMap);
+			}else if(xlsPath.endsWith(".xlsx")){
+				List<String> list = readXls2007(xlsPath,deviceId);
+				Long checkid = saveCheckRecord(itemcode,serialNumber);
+				Map<String,List<String>> sqlMap=readFlowXls2007(xlsPath,tplid,serialNumber,checkid );
+				saveXlsInfo(deviceId,checkid,tplid, serialNumber, itemcode,list,sqlMap);
+			}else{
+				throw new ServiceException("文件格式不正确,请上传Excel表格!");
+			}
+		}
+		private Map<String, List<String>> readFlowXls(String xlsPath,
+				Long tplid, String serialNumber, Long checkid)  throws Exception{
+			
+			
+	    	Map<String,List<String>> map = new HashMap<String, List<String>>();
+	        InputStream is = new FileInputStream(xlsPath);
+	        HSSFWorkbook hssfWorkbook = new HSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        HSSFSheet hssfSheet = hssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        CheckSelectedFieldQuery query = new CheckSelectedFieldQuery();
+	        query.setModelid(tplid);
+	        List<CheckSelectedField> csfList = checkSelectedFieldDao.findList(query);
+	        GchartInfoQuery gchartQuery = new GchartInfoQuery();
+	        gchartQuery.setModelid(tplid);
+	        List<GchartInfo> gchartInfos = gchartInfoDao.findList(gchartQuery);
+	        StringBuffer names = null;
+	        StringBuffer values = null;
+	        StringBuffer sql = null;
+	        List<String> kvs = null;
+	        HSSFCell tmp; 
+	        for(GchartInfo temp:gchartInfos){
+	        	kvs = new ArrayList<String>();
+	        	HSSFRow hssfRow;
+		        for (Long rowNum = temp.getStartrow(); rowNum <= temp.getEndrow(); rowNum++) {
+		        	names = new StringBuffer();
+		        	values = new StringBuffer();
+		        	sql = new StringBuffer();
+		        	hssfRow = hssfSheet.getRow(rowNum.intValue());
+		            if (hssfRow == null) {
+		                continue;
+		            }
+		            names.append("tplid,stepid,seqno,checktimeid,");
+		            values.append(tplid).append(",").append(temp.getForder()).append(",");
+		            values.append("'").append(serialNumber).append("'").append(",");
+		            values.append(checkid).append(",");
+		        	for(CheckSelectedField tmpcsf:csfList){
+		        		tmp = hssfRow.getCell(tmpcsf.getFseqno()-1);
+		        		if(null==tmp){
+		        			continue;
+		        		}
+		        		names.append(tmpcsf.getFkey()).append(",");
+		        		values.append("'").append(getValue(tmp, 0)).append("'").append(",");
+		        	}
+		        	names.deleteCharAt(names.length()-1);
+		        	values.deleteCharAt(values.length()-1);
+		        	sql.append("insert into t_checkdata_detail (").append(names).append(") ");
+		        	sql.append("values(").append(values).append(")");
+		        	System.out.println("======="+sql.toString());
+		        	kvs.add(sql.toString());
+		        }
+		        map.put(String.valueOf(temp.getChartname()), kvs);
+	        }
+	        return map;
+	    
+		}
+		private Map<String, List<String>> readFlowXls2007(String xlsPath,
+				Long tplid, String serialNumber, Long checkid)  throws Exception{
+			
+			
+	    	Map<String,List<String>> map = new HashMap<String, List<String>>();
+	        InputStream is = new FileInputStream(xlsPath);
+	        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(is);
+	        // 循环工作表Sheet
+	        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+	        // 循环行Row
+	        CheckSelectedFieldQuery query = new CheckSelectedFieldQuery();
+	        query.setModelid(tplid);
+	        List<CheckSelectedField> csfList = checkSelectedFieldDao.findList(query);
+	        GchartInfoQuery gchartQuery = new GchartInfoQuery();
+	        gchartQuery.setModelid(tplid);
+	        List<GchartInfo> gchartInfos = gchartInfoDao.findList(gchartQuery);
+	        StringBuffer names = null;
+	        StringBuffer values = null;
+	        StringBuffer sql = null;
+	        List<String> kvs = null;
+	        XSSFCell tmp; 
+	        for(GchartInfo temp:gchartInfos){
+	        	kvs = new ArrayList<String>();
+	        	XSSFRow xssfRow;
+		        for (Long rowNum = temp.getStartrow(); rowNum <= temp.getEndrow(); rowNum++) {
+		        	names = new StringBuffer();
+		        	values = new StringBuffer();
+		        	sql = new StringBuffer();
+		        	xssfRow = xssfSheet.getRow(rowNum.intValue());
+		            if (xssfRow == null) {
+		                continue;
+		            }
+		            names.append("tplid,stepid,seqno,checktimeid,");
+		            values.append(tplid).append(",").append(temp.getForder()).append(",");
+		            values.append("'").append(serialNumber).append("'").append(",");
+		            values.append(checkid).append(",");
+		        	for(CheckSelectedField tmpcsf:csfList){
+		        		tmp = xssfRow.getCell(tmpcsf.getFseqno()-1);
+		        		if(null==tmp){
+		        			continue;
+		        		}
+		        		names.append(tmpcsf.getFkey()).append(",");
+		        		values.append("'").append(getValue2007(tmp, 0)).append("'").append(",");
+		        	}
+		        	names.deleteCharAt(names.length()-1);
+		        	values.deleteCharAt(values.length()-1);
+		        	sql.append("insert into t_checkdata_detail (").append(names).append(") ");
+		        	sql.append("values(").append(values).append(")");
+		        	System.out.println("======="+sql.toString());
+		        	kvs.add(sql.toString());
+		        }
+		        map.put(String.valueOf(temp.getChartname()), kvs);
+	        }
+	        return map;
+	    
+		}
+}

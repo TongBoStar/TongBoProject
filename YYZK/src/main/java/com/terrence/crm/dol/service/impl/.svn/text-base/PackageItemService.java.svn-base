@@ -1,0 +1,151 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PackageItem;
+import com.terrence.crm.dol.query.PackageItemQuery;
+import com.terrence.crm.dol.dao.IPackageItemDao;
+import com.terrence.crm.dol.service.IPackageItemService;
+
+@Service
+@Transactional
+public class PackageItemService extends BaseService implements IPackageItemService {
+	protected static Logger logger = LoggerFactory.getLogger(PackageItemService.class);
+	@Autowired
+	@Qualifier("packageItemDao")
+	private IPackageItemDao packageItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PackageItem";
+	}
+	@Transactional(readOnly=true)
+	public PackageItem getById(java.lang.Long id) throws ServiceException
+	{
+		return packageItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PackageItem entity) throws ServiceException
+	{
+		packageItemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PackageItem entity) throws ServiceException
+	{
+		Long adId = packageItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PackageItem entity) throws ServiceException
+	{
+		Integer returnValue =  packageItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = packageItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = packageItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PackageItemQuery query = new PackageItemQuery();
+		try {
+			return packageItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PackageItem> findPage(Page<PackageItem> page, PackageItemQuery query) throws ServiceException
+	{
+		return packageItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PackageItem> findPage(Page<PackageItem> page,String statement, PackageItemQuery query) throws ServiceException
+	{
+		return packageItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PackageItem> findList(PackageItemQuery query) throws ServiceException
+	{
+		return packageItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PackageItem> findList(PackageItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return packageItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PackageItem> findList(PackageItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return packageItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PackageItem> findAllList() throws ServiceException
+	{
+		return packageItemDao.findAllList();
+	}
+	@Override
+	public void saveBatch(List<Long> checktplidList, PackageItem entity) {
+		PackageItem packageItem = null;
+		List<Long> list = packageItemDao.findpItemsByPid(entity.getPid());
+		if(null!=checktplidList&&checktplidList.size()>0){
+			for(Long ctplid:checktplidList){
+				if(list.contains(ctplid)){
+					list.remove(ctplid);
+					continue;
+				}else{
+					packageItem = new PackageItem();
+					packageItem.setPid(entity.getPid());
+					packageItem.setTplid(ctplid);
+					packageItemDao.save(packageItem);
+				}
+			}
+		}
+		if(null!=list&&list.size()>0){
+			for(int i=0;i<list.size();i++){
+				packageItemDao.deleteBypidandtplid(entity.getPid(),list.get(i));
+			}
+		}
+	}
+	@Override
+	public List<Long> findpItemsByPid(Long pid) {
+		return packageItemDao.findpItemsByPid(pid);
+	}
+
+}

@@ -1,0 +1,131 @@
+package com.terrence.crm.dol.utils;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.apache.struts2.json.JSONException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+
+import com.terrence.core.dol.bean.Menu;
+import com.terrence.crm.dol.bean.ClientInfo;
+import com.terrence.crm.dol.bean.security.AdminSession;
+/**
+ * SpringSecurity的工具类.
+ * 
+ */
+public class SpringSecurityUtils {
+	/**
+	 * 获取客户端的ip地址和计算机名称
+	 * @param authentication
+	 */
+	public static ClientInfo getClientInfo(Authentication authentication){
+		WebAuthenticationDetails wauth = (WebAuthenticationDetails)authentication.getDetails();
+		String ip = wauth.getRemoteAddress();
+		String companyName = "";
+		try {
+			companyName = InetAddress.getByName(ip).getHostName();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		ClientInfo clientInfo = new ClientInfo(ip,companyName);
+		return clientInfo;
+	}
+	/**
+	 * 取得当前用户的登录名, 如果当前用户未登录则返回空字符串.
+	 */
+	public static String getCurrentUserName() {
+		SecurityContext context = SecurityContextHolder.getContext();
+		if (context != null) {
+			Authentication authentication = context.getAuthentication();
+			if (authentication != null)
+				return authentication.getName();
+		}
+		return "";
+	}
+
+	/**
+	 * 取得当前用户, 返回值为SpringSecurity的User类及其子类, 如果当前用户未登录则返回null.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends User> T getCurrentUser() {
+		SecurityContext context = SecurityContextHolder.getContext();
+		if (context != null) {
+			Authentication authentication = context.getAuthentication();
+			if (authentication != null) {
+				Object principal = authentication.getPrincipal();
+				if (principal != null&&!(principal instanceof String))
+					return (T) principal;
+			}
+		}
+		return null;
+	}
+
+	public static String getCurrentRealName() {
+		AdminSession user = getCurrentUser();
+		if (user != null)
+			return user.getAdmin().getAdminName();
+
+		return "";
+	}
+	
+	
+	
+	public static String getCurrentLoginId() {
+		AdminSession user = getCurrentUser();
+		if (user != null)
+			return user.getAdmin().getLoginName();
+
+		return "";
+	}
+	
+	public static Integer getCurrentType() {
+		AdminSession user = getCurrentUser();
+		if (user != null)
+			return user.getAdmin().getType();
+
+		return -1;
+	}
+
+	public static Long getCurrentUserId() {
+		AdminSession user = getCurrentUser();
+		if (user != null)
+			return user.getAdmin().getAdminId();
+
+		return -1l;
+	}
+	
+	public static String getCurrentUserJson() {
+		try {
+			AdminSession user = getCurrentUser();
+			if (user != null) {
+				Collection<Pattern> excludeProperties = new ArrayList<Pattern>();
+				// ^[\w\[\].]*fieldHandler,^[\w\[\].]*session
+				excludeProperties.add(Pattern.compile("^[\\w\\[\\].]*fieldHandler"));
+				excludeProperties.add(Pattern.compile("^[\\w\\[\\].]*session"));
+				return org.apache.struts2.json.JSONUtil
+						.serialize(user.getAdmin(), excludeProperties, null, false, false);
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return "null";
+	}
+	
+	public static List<Menu> getCurrentUserAuthority() {
+		AdminSession user = getCurrentUser();
+		if (user != null)
+			return user.getAdmin().getAuthorityList();
+
+		return Collections.emptyList();
+	}
+}

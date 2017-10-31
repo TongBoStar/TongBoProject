@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+   <resultMap id="RM.MenuOperate" class="com.terrence.core.dol.bean.MenuOperate">
+       <result property="id" column="id"/>
+       <result property="menuId" column="menuId"/>
+       <result property="name" column="name"/>
+       <result property="functionName" column="functionName"/>
+       <result property="iconCls" column="iconCls"/>
+       <result property="remark" column="remark"/>
+       <result property="keywords" column="keywords"/>
+   </resultMap>
+
+   <sql id="MenuOperate.columns">
+       <![CDATA[
+           id,menuId,name,functionName,iconCls,remark,keywords
+       ]]>
+   </sql>
+
+
+   <insert id="MenuOperate.insert" >
+   <![CDATA[
+       INSERT INTO core_menu_operate
+       (
+        menuId
+        ,name
+        ,functionName
+        ,iconCls
+        ,remark
+		,keywords
+       )
+       VALUES
+       (
+        #menuId#
+        ,#name#
+        ,#functionName#
+        ,#iconCls#
+        ,#remark#
+		,#keywords#
+       )
+   ]]>
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="MenuOperate.update" >
+       UPDATE core_menu_operate 
+       <dynamic prepend="SET">
+       <isNotEmpty prepend="," property="menuId">
+           menuId = #menuId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="name">
+           name = #name# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="functionName">
+           functionName = #functionName# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="iconCls">
+           iconCls = #iconCls# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="remark">
+           remark = #remark# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="keywords">
+           keywords = #keywords# 
+       </isNotEmpty>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+
+   <delete id="MenuOperate.delete">
+       <![CDATA[
+       DELETE FROM core_menu_operate WHERE
+       id = #id# 
+       ]]>
+   </delete>
+
+   <select id="MenuOperate.getById" resultMap="RM.MenuOperate">
+       SELECT <include refid="MenuOperate.columns"/>
+       <![CDATA[
+       FROM core_menu_operate 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+   
+   <select id="MenuOperate.getMenuOperateList" resultMap="RM.MenuOperate">
+		select <include refid="MenuOperate.columns"/> 
+		from core_menu_operate 
+		where 
+		id in (select distinct authorityId from core_role_power where roleId in (select roleId from t_admin_role where adminId=#empId#) and code='operate' and menuId=#menuId#)
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+ 		</isNotEmpty>
+	</select>
+
+   <sql id="MenuOperate.findPage.where">
+       <dynamic prepend="WHERE">
+           <isNotEmpty prepend="AND" property="id">
+               id = #id#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="menuId">
+               menuId = #menuId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="name">
+               name = #name#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="functionName">
+               functionName = #functionName#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="iconCls">
+               iconCls = #iconCls#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="remark">
+               remark = #remark#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="keywords">
+               keywords = #keywords#
+           </isNotEmpty>
+       </dynamic>
+   </sql>
+
+   <select id="MenuOperate.findPage.count" resultClass="long">
+       SELECT count(*) FROM core_menu_operate <include refid="MenuOperate.findPage.where"/>
+   </select>
+
+   <select id="MenuOperate.findPage" resultMap="RM.MenuOperate">
+       SELECT <include refid="MenuOperate.columns"/> 
+       FROM core_menu_operate <include refid="MenuOperate.findPage.where"/>
+           <isNotEmpty property="notTop"> and
+               id not in(select $notTop$ id from core_menu_operate) 
+           </isNotEmpty>  
+           <isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+           </isNotEmpty>
+   </select>
+
+   <select id="MenuOperate.findList" resultMap="RM.MenuOperate">
+       SELECT <include refid="MenuOperate.columns"/> 
+       FROM core_menu_operate <include refid="MenuOperate.findPage.where"/>
+       <isNotEmpty property="sortColumns">
+       ORDER BY $sortColumns$
+       </isNotEmpty>
+   </select>
+   
+   <select id="MenuOperate.findByUserId" resultMap="RM.MenuOperate" >
+	    SELECT <include refid="MenuOperate.columns"/>  from core_menu_operate 
+	    <![CDATA[
+	        WHERE id in (select distinct authorityId from core_role_power where code='operate' and roleId in (select roleId from t_admin_role where adminId=#userId#)) 
+	    ]]>
+    </select>
+
+</sqlMap>

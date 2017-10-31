@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Structure">
+
+	<resultMap id="RM.Structure" class="com.terrence.crm.dol.bean.Structure">
+        <result property="id" column="id"/>
+        <result property="structurename" column="structurename"/>
+        <result property="structuretype" column="structuretype"/>
+        <result property="structuredesc" column="structuredesc"/>
+        <result property="isuse" column="isuse"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Structure.columns">
+	    <![CDATA[
+        	 t_structure.id ,
+        	 t_structure.structurename,
+        	 t_structure.structuretype,
+        	 t_structure.structuredesc,
+        	 t_structure.isuse
+	    ]]>
+	</sql>
+	  
+   <insert id="Structure.insert" >
+        INSERT INTO
+        t_structure (
+        	structurename,structuretype
+       		<isNotEmpty prepend="," property="structuredesc">structuredesc</isNotEmpty>
+       		,isuse
+        ) VALUES (
+        	#structurename#,#structuretype#
+	       	<isNotEmpty prepend="," property="structuredesc">#structuredesc#</isNotEmpty>
+			,0
+        )
+   
+   
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Structure.update" parameterClass="com.terrence.crm.dol.bean.Structure">
+        UPDATE t_structure 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="structurename">
+	        	structurename = #structurename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="structuretype">
+	        	structuretype = #structuretype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="structuredesc">
+	        	structuredesc = #structuredesc# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isuse">
+	        	isuse = #isuse# 
+	        </isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="Structure.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_structure where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="Structure.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_structure 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="Structure.getById" resultMap="RM.Structure">
+	    select <include refid="Structure.columns"/>
+	    
+	        from t_structure 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="Structure.getByProperty" resultMap="RM.Structure">
+		select <include refid="Structure.columns"/> from t_structure where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Structure.findPage.where">
+	
+	
+	    <dynamic prepend="WHERE">
+	    	
+			<isNotEmpty prepend="AND" property="structurename">
+	             t_structure.structurename like ('%$structurename$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="structuretype">
+	             t_structure.structuretype =#structuretype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="structuredesc">
+	             t_structure.structuredesc like ('%$structuredesc$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isuse">
+	             t_structure.isuse = #isuse#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Structure.findPage.and">
+			<isNotEmpty prepend="AND" property="structurename">
+	             t_structure.structurename like ('%$structurename$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="structuretype">
+	             t_structure.structuretype =#structuretype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="structuredesc">
+	             t_structure.structuredesc like ('%$structuredesc$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isuse">
+	             t_structure.isuse = #isuse#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Structure.findList" resultMap="RM.Structure">
+    	SELECT 
+    		<include refid="Structure.columns"/> 
+    	FROM 
+    		t_structure
+		<include refid="Structure.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Structure.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_structure
+    ]]>
+		<include refid="Structure.findPage.where"/>    
+    </select>
+    
+	<select id="Structure.findPage" resultMap="RM.Structure">
+    	
+		select <include refid="Structure.columns"/> FROM t_structure where 1=1 
+    	<isNotEmpty property="notTop">  and 
+       id not in(select $notTop$ id from t_structure <include refid="Structure.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>
+	   	<include refid="Structure.findPage.and"/>  
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+		
+    </select>
+    <!-- 查询结构型式 -->
+	<select id="Structure.query.pressure" resultMap="RM.Structure">
+    	
+		select <include refid="Structure.columns"/> 
+		FROM t_structure
+    	
+		
+    </select>
+    
+    <!-- 查询调压部分的结构型式 -->
+	<select id="Structure.query.meter" resultMap="RM.Structure">
+    	
+		select <include refid="Structure.columns"/> 
+		FROM t_structure
+    	where t_structure.structureType='2' and t_structure.isuse='0'
+		
+    </select>
+    <!-- 结构型式名称重复校验 -->
+    <select id="Structure.check.repet" resultMap="RM.Structure">
+    	
+		select <include refid="Structure.columns"/> 
+		FROM t_structure
+    	where 1=1
+    	<isNotEmpty prepend="AND" property="structurename">
+	             t_structure.structurename =#structurename# 
+	    </isNotEmpty>
+		<isNotEmpty prepend="AND" property="structuretype">
+	            t_structure.structuretype =#structuretype# 
+	    </isNotEmpty>
+    </select>
+</sqlMap>

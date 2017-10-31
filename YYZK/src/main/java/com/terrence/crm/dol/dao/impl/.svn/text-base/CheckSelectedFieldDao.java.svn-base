@@ -1,0 +1,42 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckSelectedField;
+import com.terrence.crm.dol.dao.ICheckSelectedFieldDao;
+import com.terrence.crm.dol.query.CheckSelectedFieldQuery;
+@Repository
+public class CheckSelectedFieldDao extends BaseIbatisDao<CheckSelectedField,java.lang.Long> implements ICheckSelectedFieldDao{
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckSelectedField";
+	}
+
+	@Override
+	public void saveOrUpdate(CheckSelectedField entity) throws DataAccessException {
+		if(null==entity.getFid()){
+			save(entity);
+		}else{
+			update(entity);
+		}
+	}
+
+	@Override
+	public void deleteByMKey(CheckSelectedFieldQuery cs) {
+		getSqlMapClientTemplate().delete("CheckSelectedField.deleteByMfkey", cs);
+	}
+
+	@Override
+	public List<String> findListBymkey(String string,
+			CheckSelectedFieldQuery query) {
+		return (List<String>)getSqlMapClientTemplate().queryForList(string, query);
+	}
+}

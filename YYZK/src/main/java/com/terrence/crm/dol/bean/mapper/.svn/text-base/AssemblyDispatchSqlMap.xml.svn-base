@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblyDispatch">
+
+        
+	<resultMap id="RM.AssemblyDispatch" class="com.terrence.crm.dol.bean.AssemblyDispatch">
+        <result property="dispatchid" column="dispatchid"/>
+        <result property="taskid" column="taskid"/>
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="workdate" column="workdate"/>
+        <result property="workday" column="workday"/>
+        <result property="amount" column="amount"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="taskstatus" column="taskstatus"/>
+        <result property="workmonth" column="workmonth"/>
+        <result property="templateid" column="templateid"/>
+        <result property="lastdispatchid" column="lastdispatchid"/>
+        <result property="nodeid" column="nodeid"/>
+        <result property="dbno" column="dbno"/>
+    </resultMap>
+	<resultMap id="RM.AssemblyDispatch.calendar" class="com.terrence.crm.dol.bean.AssemblyDispatch">
+        
+        <result property="workday" column="workday"/>
+        
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.AssemblyDispatch" id="RM.AssemblyDispatch.month">
+    	<result property="dispatchid" column="dispatchid"/>
+        <result property="taskid" column="taskid"/>
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="workdate" column="workdate"/>
+        <result property="workday" column="workday"/>
+        <result property="amount" column="amount"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="taskstatus" column="taskstatus"/>
+        <result property="workmonth" column="workmonth"/>
+        <result property="templateid" column="templateid"/>
+        <result property="lastdispatchid" column="lastdispatchid"/>
+        <result property="nodeid" column="nodeid"/>
+        <result property="dbno" column="dbno"/>
+        <result property="baseitem" resultMap="RM.AssemblyDispatch.month.BaseItem"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.BaseItem" id="RM.AssemblyDispatch.month.BaseItem">
+    	<result property="formatno" column="formatno"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.AssemblyDispatch" id="RM.AssemblyDispatch.Task">
+		<result property="taskid" column="taskid"/>
+        <result property="teamid" column="teamid"/>
+        <result property="workdate" column="workdate"/>
+        <result property="amount" column="amount"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="nodeid" column="nodeid"/>
+        <result property="listTaskFlow" column="{teamid=teamid,workdate=workdate,taskid=taskid}" select="AssemblyTaskFlow.list"/>
+	</resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.AssemblyTaskFlow" id="RM.AssemblyTaskFlow.List">
+		<result property="flowid" column="flowid"/>
+		<result property="status" column="status"/>
+        <result property="seqcode" column="seqcode"/>
+	</resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblyDispatch.columns">
+	    <![CDATA[
+        	t_assembly_dispatch.dispatchid ,
+        	t_assembly_dispatch.taskid ,
+        	t_assembly_dispatch.teamid ,
+        	t_assembly_dispatch.adminId ,
+        	t_assembly_dispatch.workdate ,
+        	t_assembly_dispatch.workday ,
+        	t_assembly_dispatch.amount ,
+        	t_assembly_dispatch.itemcode ,
+        	t_assembly_dispatch.taskstatus ,
+        	t_assembly_dispatch.workmonth ,
+        	t_assembly_dispatch.templateid ,
+        	t_assembly_dispatch.lastdispatchid ,
+        	t_assembly_dispatch.nodeid ,
+        	t_assembly_dispatch.dbno
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblyDispatch.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_assembly_dispatch (
+        	taskid ,
+        	workdate ,
+        	workday ,
+        	amount ,
+        	itemcode ,
+        	taskstatus ,
+        	workmonth ,
+        	templateid ,
+        	dbno
+        ) VALUES (
+        	#taskid# ,
+        	#workdate# ,
+        	#workday# ,
+        	#amount# ,
+        	#itemcode# ,
+        	#taskstatus# ,
+        	#workmonth#  ,
+        	#templateid# ,
+        	#dbno#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="dispatchid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssemblyDispatch.update" parameterClass="com.terrence.crm.dol.bean.AssemblyDispatch">         
+        UPDATE t_assembly_dispatch 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="taskid">
+	        	taskid = #taskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminId">
+	        	adminId = #adminId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="workdate">
+	        	workdate = #workdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="workday">
+	        	workday = #workday# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskstatus">
+	        	taskstatus = #taskstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="workmonth">
+	        	workmonth = #workmonth# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="templateid">
+	        	templateid = #templateid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lastdispatchid">
+	        	lastdispatchid = #lastdispatchid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="nodeid">
+	        	nodeid = #nodeid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dbno">
+	        	dbno = #dbno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        dispatchid = #dispatchid# 
+    </update>
+    
+	<delete id="AssemblyDispatch.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_dispatch where
+       dispatchid = #dispatchid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblyDispatch.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_dispatch 
+        WHERE
+       dispatchid in ($dispatchid$) 
+    ]]>
+    </delete>
+    
+    <select id="AssemblyDispatch.getById" resultMap="RM.AssemblyDispatch">
+	    select <include refid="AssemblyDispatch.columns"/>
+	    
+	        from t_assembly_dispatch 
+	        where 
+		        dispatchid = #dispatchid# 
+	    
+    </select>
+    
+	<select id="AssemblyDispatch.getByProperty" resultMap="RM.AssemblyDispatch">
+		select <include refid="AssemblyDispatch.columns"/> from t_assembly_dispatch where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblyDispatch.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_assembly_dispatch.dispatchid = #dispatchid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_assembly_dispatch.taskid = #taskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_assembly_dispatch.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_assembly_dispatch.adminId = #adminId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="workdateBegin">
+	             t_assembly_dispatch.workdate &gt;= #workdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="workdateEnd">
+	             t_assembly_dispatch.workdate &lt;= #workdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="workday">
+	             t_assembly_dispatch.workday = #workday#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_assembly_dispatch.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_dispatch.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskstatus">
+	             t_assembly_dispatch.taskstatus = #taskstatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="workmonth">
+	             t_assembly_dispatch.workmonth = #workmonth#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="templateid">
+	             t_assembly_dispatch.templateid = #templateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lastdispatchid">
+	             t_assembly_dispatch.lastdispatchid = #lastdispatchid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_assembly_dispatch.nodeid = #nodeid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_assembly_dispatch.dbno = #dbno#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblyDispatch.findPage.and">
+			<isNotEmpty prepend="AND" property="dispatchid">
+	             t_assembly_dispatch.dispatchid = #dispatchid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_assembly_dispatch.taskid = #taskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_assembly_dispatch.teamid = #teamid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_assembly_dispatch.adminId = #adminId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="workdateBegin">
+	             t_assembly_dispatch.workdate &gt;= #workdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="workdateEnd">
+	             t_assembly_dispatch.workdate &lt;= #workdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="workday">
+	             t_assembly_dispatch.workday = #workday#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_assembly_dispatch.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_dispatch.itemcode = #itemcode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nonitemcode">
+	       		t_assembly_dispatch.itemcode != #nonitemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskstatus">
+	             t_assembly_dispatch.taskstatus = #taskstatus#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="workmonth">
+	             t_assembly_dispatch.workmonth = #workmonth#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="templateid">
+	             t_assembly_dispatch.templateid = #templateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lastdispatchid">
+	             t_assembly_dispatch.lastdispatchid = #lastdispatchid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_assembly_dispatch.nodeid = #nodeid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_assembly_dispatch.dbno = #dbno#
+	       </isNotEmpty>
+	</sql>
+    <select id="AssemblyDispatch.findCalendar" resultMap="RM.AssemblyDispatch.calendar">
+    	select workday from t_assembly_dispatch <include refid="AssemblyDispatch.findPage.where"/>
+		group by workday
+    </select>
+    <select id="AssemblyDispatch.month.findList" resultMap="RM.AssemblyDispatch.month">
+   	 SELECT <include refid="AssemblyDispatch.columns"/> ,t_base_item.formatno
+    	FROM t_assembly_dispatch,t_base_item where t_assembly_dispatch.itemcode=t_base_item.itemcode 
+		<include refid="AssemblyDispatch.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="AssemblyDispatch.findList" resultMap="RM.AssemblyDispatch">
+    	SELECT 
+    		<include refid="AssemblyDispatch.columns"/> 
+    	FROM 
+    		t_assembly_dispatch
+		<include refid="AssemblyDispatch.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="AssemblyDispatch.findList.Task" resultMap="RM.AssemblyDispatch.Task">
+	    select sum(amount) amount,itemcode,taskid,workdate,nodeid,teamid from(
+		select  distinct amount,t_assembly_dispatch.itemcode,t_assembly_dispatch.taskid,workdate,t_assembly_task_flow.nodeid,t_assembly_task_flow.teamid 
+		from t_assembly_dispatch ,t_ass_task_seq,t_assembly_task_flow
+		where t_assembly_dispatch.dispatchid=t_ass_task_seq.dispatchid and t_ass_task_seq.seqid=t_assembly_task_flow.seqid) dsf
+		where 1=1 <isNotEmpty prepend="AND" property="teamid"> teamid = #teamid# </isNotEmpty>
+		group by itemcode,taskid,workdate,nodeid,teamid 
+    </select>
+    <select id="AssemblyTaskFlow.list" resultMap="RM.AssemblyTaskFlow.List">
+		select seqcode,status,flowid from t_assembly_task_flow where taskid=#taskid# and teamid=#teamid# and planstartdate=#workdate#
+    </select>
+    <select id="AssemblyDispatch.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_dispatch
+    ]]>
+		<include refid="AssemblyDispatch.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblyDispatch.findPage" resultMap="RM.AssemblyDispatch">
+    	select <include refid="AssemblyDispatch.columns"/>	    
+	        from t_assembly_dispatch 	   
+		<include refid="AssemblyDispatch.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblyDispatch.findPage" resultMap="RM.AssemblyDispatch">
+    	select <include refid="AssemblyDispatch.columns"/>	    
+	        from t_assembly_dispatch where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       dispatchid 
+	   not in(select $notTop$ 
+       dispatchid 
+	   from t_assembly_dispatch <include refid="AssemblyDispatch.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyDispatch.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    
+    <select id="AssemblyDispatch.find.list.in.ataskVoid" resultMap="RM.AssemblyDispatch">
+    	SELECT 
+    		<include refid="AssemblyDispatch.columns"/> 
+    	FROM 
+    		t_assembly_dispatch
+		<include refid="AssemblyDispatch.findPage.where"/>
+    </select>
+	
+</sqlMap>

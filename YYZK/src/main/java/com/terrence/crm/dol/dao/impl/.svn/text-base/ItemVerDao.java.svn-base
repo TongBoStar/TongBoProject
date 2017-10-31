@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.dao.IItemVerDao;
+
+@Repository
+public class ItemVerDao extends BaseIbatisDao<ItemVer,java.lang.Long> implements IItemVerDao{
+
+		
+	public void saveOrUpdate(ItemVer entity) {
+		if(entity.getFverid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemVer";
+	}
+	public ItemVer getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ItemVer)this.getSqlMapClientTemplate().queryForObject("ItemVer.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ItemStep">
+
+<resultMap id="RM.ItemStep" class="com.terrence.crm.dol.bean.ItemStep">
+	<result property="id" column="id"/>
+	<result property="stepName" column="stepName"/>
+	<result property="stepNo" column="stepNo"/>
+	<result property="itemId" column="itemId"/>
+	<result property="stepNeeds" column="stepNeeds"/>
+	<result property="stepContent" column="stepContent"/>
+	<result property="stepTimes" column="stepTimes"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="item" resultMap="RM.ItemStep.Item"/>
+</resultMap>
+<resultMap id="RM.ItemStep.Item" class="com.terrence.crm.dol.bean.Item">
+	<result property="itemName" column="itemName"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ItemStep.columns">
+	<![CDATA[
+		t_item_step.id ,
+		t_item_step.stepName ,
+		t_item_step.stepNo ,
+		t_item_step.itemId ,
+		t_item_step.stepNeeds ,
+		t_item_step.stepContent ,
+		t_item_step.stepTimes ,
+		t_item_step.createTime ,
+		t_item_step.modifyTime
+	]]>
+</sql>
+
+<insert id="ItemStep.insert" >
+	<![CDATA[
+	INSERT INTO t_item_step (
+		stepName,
+		stepNo,
+		itemId,
+		stepNeeds,
+		stepContent,
+		stepTimes,
+		createTime,
+		modifyTime
+	) VALUES (
+		#stepName#,
+		#stepNo#,
+		#itemId#,
+		#stepNeeds#,
+		#stepContent#,
+		#stepTimes#,
+		#createTime#,
+		#modifyTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ItemStep.update" parameterClass="com.terrence.crm.dol.bean.ItemStep"> 
+	UPDATE t_item_step 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="stepName">
+			stepName = #stepName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stepNo">
+			stepNo = #stepNo# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemId">
+			itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stepNeeds">
+			stepNeeds = #stepNeeds# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stepContent">
+			stepContent = #stepContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stepTimes">
+			stepTimes = #stepTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ItemStep.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_item_step.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stepName">
+			t_item_step.stepName = #stepName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stepNo">
+			t_item_step.stepNo = #stepNo# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemId">
+			t_item_step.itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stepNeeds">
+			t_item_step.stepNeeds = #stepNeeds# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stepContent">
+			t_item_step.stepContent = #stepContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stepTimes">
+			t_item_step.stepTimes = #stepTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_item_step.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_item_step.modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ItemStep.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_item_step.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stepName">
+		t_item_step.stepName = #stepName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stepNo">
+		t_item_step.stepNo = #stepNo# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemId">
+		t_item_step.itemId = #itemId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stepNeeds">
+		t_item_step.stepNeeds = #stepNeeds# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stepContent">
+		t_item_step.stepContent = #stepContent# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stepTimes">
+		t_item_step.stepTimes = #stepTimes# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_item_step.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_item_step.modifyTime = #modifyTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="ItemStep.getById" resultMap="RM.ItemStep">
+	select <include refid="ItemStep.columns"/>,t_item.itemName itemName 
+		FROM t_item_step 
+		left join t_item on t_item_step.itemId = t_item.id 
+	where t_item_step.id=#id#
+</select>
+
+<select id="ItemStep.getByProperty" resultMap="RM.ItemStep">
+	select <include refid="ItemStep.columns"/> from t_item_step where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ItemStep.delete">
+	<![CDATA[
+		DELETE FROM t_item_step WHERE id=#id#
+	]]>
+</delete>
+<delete id="ItemStep.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_item_step WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ItemStep.findPage.count" resultClass="long">
+	select count(*) from t_item_step <include refid="ItemStep.findPage.where"/>
+</select>
+
+<select id="ItemStep.findPage" resultMap="RM.ItemStep">
+	select <include refid="ItemStep.columns"/>,t_item.itemName itemName 
+		FROM t_item_step 
+		left join t_item on t_item_step.itemId = t_item.id 
+	<include refid="ItemStep.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ItemStep.findList" resultMap="RM.ItemStep">
+	SELECT <include refid="ItemStep.columns"/>,t_item.itemName itemName 
+		FROM t_item_step 
+		left join t_item on t_item_step.itemId = t_item.id 
+	<include refid="ItemStep.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

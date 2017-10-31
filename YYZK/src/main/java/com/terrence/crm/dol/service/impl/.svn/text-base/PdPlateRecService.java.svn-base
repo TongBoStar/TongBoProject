@@ -1,0 +1,174 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.bean.PdPlateRec;
+import com.terrence.crm.dol.query.PdPlateRecQuery;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.dao.IPdPlateRecDao;
+import com.terrence.crm.dol.service.IPdPlateRecService;
+
+@Service
+@Transactional
+public class PdPlateRecService extends BaseService implements IPdPlateRecService {
+	protected static Logger logger = LoggerFactory.getLogger(PdPlateRecService.class);
+	@Autowired
+	@Qualifier("pdPlateRecDao")
+	private IPdPlateRecDao pdPlateRecDao;
+	
+	
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdPlateRec";
+	}
+	@Transactional(readOnly=true)
+	public PdPlateRec getById(java.lang.Long id) throws ServiceException
+	{
+		return pdPlateRecDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdPlateRec entity) throws ServiceException
+	{
+		pdPlateRecDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdPlateRec entity) throws ServiceException
+	{
+		Long adId = pdPlateRecDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdPlateRec entity) throws ServiceException
+	{
+		Integer returnValue =  pdPlateRecDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdPlateRecDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdPlateRecDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdPlateRecQuery query = new PdPlateRecQuery();
+		try {
+			return pdPlateRecDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdPlateRec> findPage(Page<PdPlateRec> page, PdPlateRecQuery query) throws ServiceException
+	{
+		return pdPlateRecDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdPlateRec> findPage(Page<PdPlateRec> page,String statement, PdPlateRecQuery query) throws ServiceException
+	{
+		return pdPlateRecDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdPlateRec> findList(PdPlateRecQuery query) throws ServiceException
+	{
+		return pdPlateRecDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdPlateRec> findList(PdPlateRecQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdPlateRecDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdPlateRec> findList(PdPlateRecQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdPlateRecDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdPlateRec> findAllList() throws ServiceException
+	{
+		return pdPlateRecDao.findAllList();
+	}
+	@Override
+	public List<PdPlateRec> findPlateRec(PdPlateRecQuery pdPlateRecQuery)
+			throws ServiceException {
+		return pdPlateRecDao.findList("PdPlateRec.find.list.date.rec", pdPlateRecQuery);
+	}
+	@Override
+	public void saveNewRec(PdPlateRec entity) throws ServiceException {
+		List<Long> recids = entity.getRecids();
+		List<String> itemvals = entity.getItemvals();
+		if(recids.size()>0){
+			for(int i =0;i<recids.size();i++){
+				PdPlateRec ppr = new PdPlateRec();
+				if(recids.get(i)!=null && !recids.get(i).equals("")){
+					ppr.setRecid(recids.get(i));
+				}else{
+					break;
+				}
+				if(itemvals.get(i)!=null && !itemvals.get(i).equals("")){
+					ppr.setItemval(itemvals.get(i));
+					ppr.setIsok(0);//数据不完整，图片要上传；0：不完整 1：完整
+					pdPlateRecDao.saveOrUpdate(ppr);
+				}
+			}
+		}
+		
+		
+	}
+	@Override
+	public void updateRec(PdPlateRec entity) throws ServiceException {
+		
+		
+		
+		//=======================产品档案更改状态t_pd_file=========================铭牌的查看
+		PdFile pfile = new PdFile();
+		pfile.setSeqno(entity.getSeqno());
+		pfile.setIsf(1);//产品出厂资料
+		pdFileDao.update("Pdfile.update.checkBaoBiao.data", pfile);
+		//===============================================================
+		
+		
+		pdPlateRecDao.update("PdPlateRec.updaterec.dat.isok", entity);
+	}
+
+}

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CrmContact;
+import com.terrence.crm.dol.dao.ICrmContactDao;
+
+@Repository
+public class CrmContactDao extends BaseIbatisDao<CrmContact,java.lang.Long> implements ICrmContactDao{
+
+		
+	public void saveOrUpdate(CrmContact entity) {
+		if(entity.getContactid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CrmContact";
+	}
+	public CrmContact getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CrmContact)this.getSqlMapClientTemplate().queryForObject("CrmContact.getByProperty", map);		
+	}
+
+}

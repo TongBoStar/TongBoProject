@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckItemResult;
+import com.terrence.crm.dol.dao.ICheckItemResultDao;
+
+@Repository
+public class CheckItemResultDao extends BaseIbatisDao<CheckItemResult,java.lang.Long> implements ICheckItemResultDao{
+
+		
+	public void saveOrUpdate(CheckItemResult entity) {
+		if(entity.getInnerid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckItemResult";
+	}
+	public CheckItemResult getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CheckItemResult)this.getSqlMapClientTemplate().queryForObject("CheckItemResult.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteforData(CheckItemResult cir) {
+		this.getSqlMapClientTemplate().delete("CheckItemResult.delete.data.for.jilu",cir);
+	}
+
+	
+	
+}

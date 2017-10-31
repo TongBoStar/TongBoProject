@@ -1,0 +1,180 @@
+package com.terrence.crm.dol.service.impl;
+
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Structure;
+import com.terrence.crm.dol.query.StructureQuery;
+import com.terrence.crm.dol.dao.IStructureDao;
+import com.terrence.crm.dol.service.IStructureService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+
+
+@Service
+@Transactional
+public class StructureService extends BaseService implements IStructureService {
+	protected static Logger logger = LoggerFactory.getLogger(StructureService.class);
+	@Autowired
+	@Qualifier("structureDao")
+	private IStructureDao structureDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Structure";
+	}
+	
+	/**
+	 * 通过id获取对象
+	 */
+	@Override
+	public Structure getById(Long id) throws ServiceException {
+		return structureDao.getById(id);
+	}
+
+	/**
+	 * 新增或是修改方法
+	 */
+	@Override
+	public void saveOrUpdate(Structure entity) throws ServiceException {
+		//structureDao.saveOrUpdate(entity);
+		if(entity.getId()==null){
+			Long adId = structureDao.save(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_STRUCTURE, ConfigTerrence.OPT_ADD, "id为："+adId+"的结构型式添加成功");
+		}else{
+			structureDao.update(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_STRUCTURE, ConfigTerrence.OPT_EDIT, "id为："+entity.getId()+"的结构型式修改成功");
+		}
+		
+	}
+
+	/**
+	 * 新增方法
+	 */
+	@Override
+	public Long save(Structure entity) throws ServiceException {
+		Long adId = structureDao.save(entity);
+		
+		return adId;
+	}
+
+	/**
+	 * 更新方法
+	 */
+	@Override
+	public Integer update(Structure entity) throws ServiceException {
+		Integer returnValue =  structureDao.update(entity);
+		
+		return returnValue;
+	}
+	/**
+	 * 根据id删除
+	 */
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		Integer returnValue = structureDao.deleteById(id);		
+		return returnValue;
+	}
+	/**
+	 * 根据多个id删除
+	 */
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = structureDao.deleteByMultipleId(delIds);
+		operationLogDao.save(ConfigTerrence.MODEL_STRUCTURE, ConfigTerrence.OPT_DEL, "id为："+delIds+"的结构型式删除成功");
+		return returnValue;
+	}
+	/**
+	 * 唯一判断
+	 */
+	@Override
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		StructureQuery query = new StructureQuery();
+		try {
+			return structureDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	/**
+	 * 根据条件分页查询
+	 */
+	@Override
+	public Page<Structure> findPage(Page<Structure> page, StructureQuery query)
+			throws ServiceException {
+		return this.structureDao.findPage(page, query);
+	}
+
+	/**
+	 * 根据条件分页查询
+	 */
+	@Override
+	public Page<Structure> findPage(Page<Structure> page, String statement,
+			StructureQuery query) throws ServiceException {
+		return this.structureDao.findPage(page, statement, query);
+	}
+
+	/**
+	 * 根据条件查询集合
+	 */
+	@Override
+	public List<Structure> findList(StructureQuery query) throws ServiceException {
+		return this.structureDao.findList(query);
+	}
+
+	@Override
+	public List<Structure> findList(StructureQuery query, Integer pageSize)
+			throws ServiceException {
+		return this.structureDao.findList(query, pageSize);
+	}
+
+
+	@Override
+	public List<Structure> findList(StructureQuery query, String statement,
+			Integer pageSize) throws ServiceException {
+		return this.structureDao.findList(query, statement, pageSize);
+	}
+
+	@Override
+	public List<Structure> findAllList() throws ServiceException {
+		return this.structureDao.findAllList();
+	}
+
+	public List<Structure> findPressureList() throws ServiceException{
+		return this.structureDao.findPressureList();
+	}
+
+	@Override
+	public List<Structure> findMeterList() throws ServiceException {
+		return this.structureDao.findMeterList();
+	}
+
+	public List<Structure> checkRepeat(String string, StructureQuery query) throws ServiceException{
+		return this.structureDao.checkRepeat(string,query);
+	}
+	
+	
+	
+}

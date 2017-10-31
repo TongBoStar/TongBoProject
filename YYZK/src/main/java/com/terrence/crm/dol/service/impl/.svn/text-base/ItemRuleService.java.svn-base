@@ -1,0 +1,300 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemRule;
+import com.terrence.crm.dol.bean.ItemRuleDetail;
+import com.terrence.crm.dol.dao.IItemRuleDao;
+import com.terrence.crm.dol.dao.IItemRuleDetailDao;
+import com.terrence.crm.dol.dao.impl.BitemDao;
+/*import com.terrence.crm.dol.dao.IItemTreeDao;*/
+import com.terrence.crm.dol.query.BitemQuery;
+import com.terrence.crm.dol.query.ItemRuleDetailQuery;
+import com.terrence.crm.dol.query.ItemRuleQuery;
+/*import com.terrence.crm.dol.query.ItemTreeQuery;*/
+import com.terrence.crm.dol.service.IItemRuleService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+@Service
+@Transactional
+public class ItemRuleService extends BaseService implements IItemRuleService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemRuleService.class);
+	@Autowired
+	@Qualifier("itemRuleDao")
+	private IItemRuleDao itemRuleDao;
+	@Autowired
+	@Qualifier("itemRuleDetailDao")
+	private IItemRuleDetailDao itemRuleDetailDao;
+	/*@Autowired
+	@Qualifier("itemTreeDao")
+	private IItemTreeDao itemTreeDao;*/
+	@Autowired
+	@Qualifier("bitemDao")
+	private BitemDao bitemDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemRule";
+	}
+	@Transactional(readOnly=true)
+	public ItemRule getById(java.lang.Long id) throws ServiceException
+	{
+		return itemRuleDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemRule entity) throws ServiceException
+	{
+		itemRuleDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ItemRule entity) throws ServiceException
+	{
+		Long adId = itemRuleDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemRule entity) throws ServiceException
+	{
+		Integer returnValue =  itemRuleDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemRuleDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemRuleDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemRuleQuery query = new ItemRuleQuery();
+		try {
+			return itemRuleDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemRule> findPage(Page<ItemRule> page, ItemRuleQuery query) throws ServiceException
+	{
+		return itemRuleDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemRule> findPage(Page<ItemRule> page,String statement, ItemRuleQuery query) throws ServiceException
+	{
+		return itemRuleDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRule> findList(ItemRuleQuery query) throws ServiceException
+	{
+		return itemRuleDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRule> findList(ItemRuleQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemRuleDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemRule> findList(ItemRuleQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemRuleDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRule> findAllList() throws ServiceException
+	{
+		return itemRuleDao.findAllList();
+	}
+	@Override
+	public void saveall(ItemRule entity) throws ServiceException {
+		String delDetailIds = "";
+		if(entity.getHideRuleIds()!=null&&entity.getHideRuleIds()!=""){
+			delDetailIds = entity.getHideRuleIds();
+		}
+		String[] delIds = new String[]{};
+		if(delDetailIds!=null){
+			if(delDetailIds.contains(",")){
+				delIds = delDetailIds.split(",");
+			}else{
+				delIds =new String[]{delDetailIds};
+			}
+		}
+		Long hideitemid = entity.getHideitemid();
+		String[] rulenamelist=null;
+		Integer[] seqlist=null;
+		Long[] runleidlist =null;
+		String[] signlist=null;
+		Integer[] showseqlist=null;
+		String[] hideitemidslist = entity.getHideitemidslist();
+		Long itemid = entity.getItemid();
+		rulenamelist=entity.getRulenamelist();
+		seqlist = entity.getSeqlist();
+		showseqlist = entity.getShowseqlist();
+		runleidlist = entity.getItemruleidlist();
+		signlist = entity.getSignlist();
+		int length=rulenamelist.length;
+		ItemRule itemRule=null;
+		for(int i=0;i<length;i++){
+			itemRule=new ItemRule();
+			if(runleidlist!=null&&runleidlist[i]!=null){
+				itemRule.setItemruleid(runleidlist[i]);
+			}
+			if(itemid!=null){
+				itemRule.setItemid(itemid);
+			}
+			if(rulenamelist!=null&&rulenamelist[i]!=null){
+				itemRule.setRulename(rulenamelist[i]);
+			}
+			if(seqlist!=null&&seqlist[i]!=null){
+				itemRule.setSeq(seqlist[i]);
+			}
+			
+			if(showseqlist!=null&&showseqlist[i]!=null){
+				itemRule.setShowseq(showseqlist[i]);
+			}
+			if(signlist[i]!=null){
+				itemRule.setSign(signlist[i]);
+			}
+			if(itemRule.getItemruleid()!=null&&runleidlist[i]!=0){
+				//更新不显示的itemids
+				if(delIds!=null&&delIds.length>0){//当选择的不显示详情id不为空时
+					//当前的详情id(detailidlist[i])在选择的不显示详情id(delids)中，判断不显示子节点id(delitemid)是否在数据库的不显示字段中(delitemids)中，如果不在，则添加
+					if(runleidlist[i]!=null&&Arrays.asList(delIds).contains(runleidlist[i].toString())){
+						if(hideitemidslist[i]!=null&&hideitemidslist[i]!=""&&!hideitemidslist[i].contains(hideitemid.toString())){
+							itemRule.setHideitemids(hideitemidslist[i]+","+hideitemid.toString());
+						}else if(hideitemidslist[i]==null||hideitemidslist[i]==""){
+							itemRule.setHideitemids(hideitemid.toString());
+						}
+					}
+					//当前的详情id(detailidlist[i])不在选择的不显示详情id(delids)中，判断不显示子节点id(delitemid)是否在数据库的不显示字段中(delitemids)中，如果包含则去掉   
+					if(runleidlist[i]!=null&&!Arrays.asList(delIds).contains(runleidlist[i].toString())){
+						if(hideitemidslist!=null&&hideitemidslist[i]!=null&&hideitemidslist[i]!=""&&hideitemidslist[i].contains(hideitemid.toString())){
+							itemRule.setHideitemids(convertIds(hideitemidslist[i],hideitemid));
+						}
+					}
+				}else if((delIds==null||delIds.length==0)&&hideitemid!=null){//当没有选择的id时，则将详情中删除ids中去掉此id
+					if(hideitemidslist!=null&&hideitemidslist[i]!=null&&hideitemidslist[i]!=""&&hideitemidslist[i].contains(hideitemid.toString())){
+						itemRule.setHideitemids(convertIds(hideitemidslist[i],hideitemid));
+					}
+				}
+				itemRuleDao.update(itemRule);
+			}else{
+				Long itemruleid;
+				itemruleid = itemRuleDao.save(itemRule);
+				if(rulenamelist[i].equals("原产地")){
+					ItemRuleDetail detail = new ItemRuleDetail();
+					detail.setItemruleid(itemruleid);
+					detail.setItemid(itemid);
+					detail.setFname("中国");
+					detail.setFcode("");
+					this.itemRuleDetailDao.save(detail);
+				}
+			}
+		}		
+		operationLogDao.save(ConfigTerrence.MODEL_ITEMCODE,ConfigTerrence.OPT_ADD, "新增规则列表主键为:"+entity.getItemruleid());	
+	}
+	public String convertIds(String delitemids,Long delitemid){
+		String[] ids = new String[]{};
+		if(delitemids.contains(",")){
+			ids = delitemids.split(",");
+		}else{
+			ids =new String[]{delitemids};
+		}
+		int index=-1;
+		for(int i = 0;i<ids.length;i++){
+			if(ids[i].equals(delitemid.toString())){
+				index = i;
+			}
+		}
+		String delidStr = "";
+		if(index>-1&&index==ids.length-1){
+			for(int m = 0;m<ids.length-1;m++){
+				if(m==ids.length-2){
+					delidStr += ids[m];
+				}else{
+					delidStr += ids[m]+",";
+				}
+			}
+		}else if(index>-1&&index<ids.length-1){
+			for(int m = 0;m<ids.length;m++){
+				if(m==ids.length-1&&!ids[m].equals(delitemid.toString())){
+					delidStr += ids[m];
+				}else if(!ids[m].equals(delitemid.toString())){
+					delidStr += ids[m]+",";
+				}
+			}
+		}
+		
+		return delidStr;
+	}
+	@Override
+	public void deleteAlone(ItemRuleQuery itemRuleQuery)
+			throws ServiceException {
+		ItemRuleDetailQuery itemRuleDetailQuery=new ItemRuleDetailQuery();
+		itemRuleDetailQuery.setItemruleid(itemRuleQuery.getItemruleid());
+		List<ItemRuleDetail> itemRuleDetaillist=null;
+		 itemRuleDetaillist = itemRuleDetailDao.findList(itemRuleDetailQuery);
+		for(ItemRuleDetail detail:itemRuleDetaillist ){
+			itemRuleDetailDao.deleteById(detail.getDetailid());
+		}
+		itemRuleDao.deleteById(itemRuleQuery.getItemruleid());
+	}
+	@Override
+	public List<ItemRule> findListDetail(ItemRuleQuery itemRuleQuery)
+			throws ServiceException {
+		return itemRuleDao.findList("ItemRule.findList.findListDetail", itemRuleQuery);		
+	}
+	@Override
+	public List<ItemRule> findListitemDetail(ItemRuleQuery itemRuleQuery)
+			throws ServiceException {
+		BitemQuery itemQuery = new BitemQuery();
+		itemQuery.setFitemid(itemRuleQuery.getParent());
+		bitemDao.findParent(itemQuery);
+		return itemRuleDao.findListitemDetail(itemRuleQuery);
+	}
+	@Override
+	public ItemRule finditemDetail(ItemRuleQuery itemRuleQuery)
+			throws ServiceException {
+		ItemRule itemRule = new ItemRule();
+		List<ItemRule> itemRulelist = itemRuleDao.findListitemDetail(itemRuleQuery);
+		/*BitemQuery itemQuery = new BitemQuery();
+		itemQuery.setFitemid(itemRuleQuery.getParent());
+		itemRule.setItm(bitemDao.findParent(itemQuery));*/
+		itemRule.setItemRulelist(itemRulelist);
+		return itemRule;
+	}
+
+}

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Icbillno">
+
+        
+	<resultMap id="RM.Icbillno" class="com.terrence.crm.dol.bean.Icbillno">
+        <result property="fbillid" column="fbillid"/>
+        <result property="fbillname" column="fbillname"/>
+        <result property="fpreletter" column="fpreletter"/>
+        <result property="fcurno" column="fcurno"/>
+        <result property="flength" column="flength"/>
+        <result property="fday" column="fday"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Icbillno.columns">
+	    <![CDATA[
+        	t_icbillno.fbillid ,
+        	t_icbillno.fbillname ,
+        	t_icbillno.fpreletter ,
+        	t_icbillno.fcurno ,
+        	t_icbillno.flength ,
+        	t_icbillno.fday
+	    ]]>
+	</sql>
+	
+   <insert id="Icbillno.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_icbillno (
+        	fbillid ,
+        	fbillname ,
+        	fpreletter ,
+        	fcurno ,
+        	flength ,
+        	fday
+        ) VALUES (
+        	#fbillid# ,
+        	#fbillname# ,
+        	#fpreletter# ,
+        	#fcurno# ,
+        	#flength# ,
+        	#fday#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fbillid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Icbillno.update" parameterClass="com.terrence.crm.dol.bean.Icbillno">         
+        UPDATE t_icbillno 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillname">
+	        	fbillname = #fbillname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fpreletter">
+	        	fpreletter = #fpreletter# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcurno">
+	        	fcurno = #fcurno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flength">
+	        	flength = #flength# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fday">
+	        	fday = #fday# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fbillid = #fbillid# 
+    </update>
+    
+    
+    <update id="Icbillno.updatefcurno" parameterClass="com.terrence.crm.dol.bean.Icbillno"><!-- 更新当前编码 -->         
+        UPDATE t_icbillno 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillname">
+	        	fbillname = #fbillname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fpreletter">
+	        	fpreletter = #fpreletter# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcurno">
+	        	fcurno = #fcurno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flength">
+	        	flength = #flength# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fday">
+	        	fday = #fday# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fbillid = #fbillid# 
+    </update>
+    
+    
+     <update id="Icbillno.update.new.fcurno.data" parameterClass="com.terrence.crm.dol.bean.Icbillno"><!-- 每次查询完后更新当前编码 -->         
+        UPDATE t_icbillno 
+        <dynamic prepend="SET">
+	      
+	        <isNotEmpty prepend="," property="fcurno">
+	        	fcurno = #fcurno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fday">
+	        	t_icbillno.fday = #fday# 
+	        </isNotEmpty>
+	       
+	    </dynamic>
+        WHERE 
+	        fbillid = #fbillid#  and  fpreletter = #fpreletter# 
+    </update>
+    
+	<delete id="Icbillno.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_icbillno where
+       fbillid = #fbillid# 
+    ]]>
+    </delete>
+    
+    <delete id="Icbillno.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_icbillno 
+        WHERE
+       fbillid in ($fbillid$) 
+    ]]>
+    </delete>
+    
+    <select id="Icbillno.getById" resultMap="RM.Icbillno">
+	    select <include refid="Icbillno.columns"/>
+	    
+	        from t_icbillno 
+	        where 
+		        fbillid = #fbillid# 
+	    
+    </select>
+    
+	<select id="Icbillno.getByProperty" resultMap="RM.Icbillno">
+		select <include refid="Icbillno.columns"/> from t_icbillno where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Icbillno.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_icbillno.fbillid = #fbillid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillname">
+	             t_icbillno.fbillname = #fbillname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fpreletter">
+	             t_icbillno.fpreletter = #fpreletter#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcurno">
+	             t_icbillno.fcurno = #fcurno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="flength">
+	             t_icbillno.flength = #flength#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fday">
+	        	t_icbillno.fday = #fday# 
+	        </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Icbillno.findPage.and">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_icbillno.fbillid = #fbillid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillname">
+	             t_icbillno.fbillname = #fbillname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fpreletter">
+	             t_icbillno.fpreletter = #fpreletter#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcurno">
+	             t_icbillno.fcurno = #fcurno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flength">
+	             t_icbillno.flength = #flength#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fday">
+	        	t_icbillno.fday = #fday# 
+	        </isNotEmpty>
+	</sql>
+	
+    <select id="Icbillno.Entity" resultMap="RM.Icbillno">
+    	SELECT 	<include refid="Icbillno.columns"/> FROM t_icbillno <include refid="Icbillno.findPage.where"/>
+    </select>
+    
+    <select id="Icbillno.findList" resultMap="RM.Icbillno">
+    	SELECT 
+    		<include refid="Icbillno.columns"/> 
+    	FROM 
+    		t_icbillno
+		<include refid="Icbillno.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Icbillno.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_icbillno
+    ]]>
+		<include refid="Icbillno.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Icbillno.findPage" resultMap="RM.Icbillno">
+    	select <include refid="Icbillno.columns"/>	    
+	        from t_icbillno 	   
+		<include refid="Icbillno.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Icbillno.findPage" resultMap="RM.Icbillno">
+    	select <include refid="Icbillno.columns"/>	    
+	        from t_icbillno where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fbillid 
+	   not in(select $notTop$ 
+       fbillid 
+	   from t_icbillno <include refid="Icbillno.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Icbillno.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+     <select id="Icbillno.findfcurno" resultMap="RM.Icbillno"><!-- 查询当前编号 -->
+	    select <include refid="Icbillno.columns"/>
+	    
+	        from t_icbillno 
+	        where 
+		        fpreletter = #fpreletter# 
+	    
+    </select>
+	
+</sqlMap>

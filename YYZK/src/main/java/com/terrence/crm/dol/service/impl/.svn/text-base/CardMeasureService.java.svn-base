@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CardMeasure;
+import com.terrence.crm.dol.dao.ICardMeasureDao;
+import com.terrence.crm.dol.query.CardMeasureQuery;
+import com.terrence.crm.dol.service.ICardMeasureService;
+
+@Service
+@Transactional
+public class CardMeasureService extends BaseService implements ICardMeasureService {
+	protected static Logger logger = LoggerFactory.getLogger(CardMeasureService.class);
+	@Autowired
+	@Qualifier("cardMeasureDao")
+	private ICardMeasureDao cardMeasureDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CardMeasure";
+	}
+	@Transactional(readOnly=true)
+	public CardMeasure getById(java.lang.Long id) throws ServiceException
+	{
+		return cardMeasureDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CardMeasure entity) throws ServiceException
+	{
+		cardMeasureDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CardMeasure entity) throws ServiceException
+	{
+		Long adId = cardMeasureDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CardMeasure entity) throws ServiceException
+	{
+		Integer returnValue =  cardMeasureDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = cardMeasureDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = cardMeasureDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CardMeasureQuery query = new CardMeasureQuery();
+		try {
+			return cardMeasureDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CardMeasure> findPage(Page<CardMeasure> page, CardMeasureQuery query) throws ServiceException
+	{
+		return cardMeasureDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CardMeasure> findPage(Page<CardMeasure> page,String statement, CardMeasureQuery query) throws ServiceException
+	{
+		return cardMeasureDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CardMeasure> findList(CardMeasureQuery query) throws ServiceException
+	{
+		return cardMeasureDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CardMeasure> findList(CardMeasureQuery query,Integer pageSize) throws ServiceException
+	{
+		return cardMeasureDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CardMeasure> findList(CardMeasureQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return cardMeasureDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CardMeasure> findAllList() throws ServiceException
+	{
+		return cardMeasureDao.findAllList();
+	}
+
+}

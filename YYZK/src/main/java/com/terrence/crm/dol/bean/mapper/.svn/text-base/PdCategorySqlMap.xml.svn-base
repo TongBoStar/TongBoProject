@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdCategory">
+
+        
+	<resultMap id="RM.PdCategory" class="com.terrence.crm.dol.bean.PdCategory">
+        <result property="categoryid" column="categoryid"/>
+        <result property="category" column="category"/>
+        <result property="parentid" column="parentid"/>
+        <result property="levels" column="levels"/>
+        <result property="categorycode" column="categorycode"/>
+        <result property="content" column="content"/>
+        <result property="flen" column="flen"/>
+        <result property="curval" column="curval"/>
+        <result property="ftype" column="ftype"/>
+    </resultMap>
+	
+	<resultMap id="RM.PdCategory.Plan" class="com.terrence.crm.dol.bean.PdCategory">
+        <result property="categoryid" column="categoryid"/>
+        <result property="category" column="category"/>
+        <result property="parentid" column="parentid"/>
+        <result property="levels" column="levels"/>
+        <result property="categorycode" column="categorycode"/>
+        <result property="content" column="content"/>
+        <result property="flen" column="flen"/>
+        <result property="curval" column="curval"/>
+        <result property="plannums" column="plannums"/>
+        <result property="ftype" column="ftype"/>
+    </resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdCategory.columns">
+	    <![CDATA[
+        	t_pd_category.categoryid ,
+        	t_pd_category.category ,
+        	t_pd_category.parentid ,
+        	t_pd_category.levels ,
+        	t_pd_category.categorycode ,
+        	t_pd_category.content ,
+        	t_pd_category.flen,
+        	t_pd_category.curval,
+        	t_pd_category.ftype
+	    ]]>
+	</sql>
+	
+   <insert id="PdCategory.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_category (
+        	category ,
+        	parentid ,
+        	levels ,
+        	categorycode ,
+        	content ,
+        	flen,
+        	curval,
+        	ftype
+        ) VALUES (
+        	#category# ,
+        	#parentid# ,
+        	#levels# ,
+        	#categorycode# ,
+        	#content# ,
+        	#flen#,
+        	#curval#,
+        	#ftype#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="categoryid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdCategory.update" parameterClass="com.terrence.crm.dol.bean.PdCategory">         
+        UPDATE t_pd_category 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="category">
+	        	category = #category# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="levels">
+	        	levels = #levels# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="categorycode">
+	        	categorycode = #categorycode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="content">
+	        	content = #content# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flen">
+	        	flen = #flen# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="curval">
+	        	curval = #curval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftype">
+	        	ftype = #ftype# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        categoryid = #categoryid# 
+    </update>
+    
+	<delete id="PdCategory.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_category where
+       categoryid = #categoryid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdCategory.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_category 
+        WHERE
+       categoryid in ($categoryid$) 
+    ]]>
+    </delete>
+    <delete id="PdCategory.deleteMultiple.parentid">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_category 
+        WHERE
+       parentid in ($categoryid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdCategory.getCategoryCode" resultMap="RM.PdCategory">
+    	select <include refid="PdCategory.columns"/> from t_pd_category,t_base_item where t_pd_category.categoryid=t_base_item.categoryid and t_base_item.itemcode=#itemcode#
+    </select>
+    <select id="PdCategory.getById" resultMap="RM.PdCategory">
+	    select <include refid="PdCategory.columns"/>
+	    
+	        from t_pd_category 
+	        where 
+		        categoryid = #categoryid# 
+	    
+    </select>
+    
+	<select id="PdCategory.getByProperty" resultMap="RM.PdCategory">
+		select <include refid="PdCategory.columns"/> from t_pd_category where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdCategory.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_pd_category.categoryid = #categoryid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="category">
+	             t_pd_category.category = #category#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_pd_category.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_pd_category.levels = #levels#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="categorycode">
+	             t_pd_category.categorycode = #categorycode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="content">
+	             t_pd_category.content = #content#
+	       </isNotEmpty>
+
+
+	       <isNotEmpty prepend="AND" property="ftype">
+	             t_pd_category.ftype = #ftype#
+	       </isNotEmpty>
+
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdCategory.findPage.and">
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_pd_category.categoryid = #categoryid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="category">
+	             t_pd_category.category = #category#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_pd_category.parentid = #parentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="levels">
+	             t_pd_category.levels = #levels#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="categorycode">
+	             t_pd_category.categorycode = #categorycode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="content">
+	             t_pd_category.content = #content#
+	       </isNotEmpty>
+
+	   
+	       <isNotEmpty prepend="AND" property="ftype">
+	             t_pd_category.ftype = #ftype#
+	       </isNotEmpty>
+
+	</sql>
+    
+    <select id="PdCategory.findList" resultMap="RM.PdCategory">
+    	SELECT 
+    		<include refid="PdCategory.columns"/> 
+    	FROM 
+    		t_pd_category
+		<include refid="PdCategory.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="PdCategory.Plan.findList" resultMap="RM.PdCategory.Plan">
+    	SELECT 
+    		<include refid="PdCategory.columns"/> ,plans.plannums
+    	FROM 
+    		t_pd_category left join (select count(planid) plannums,categoryid from t_prod_plan group by categoryid) plans
+		on t_pd_category.categoryid=plans.categoryid
+		<include refid="PdCategory.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="PdCategory.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_category
+    ]]>
+		<include refid="PdCategory.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdCategory.findPage" resultMap="RM.PdCategory">
+    	select <include refid="PdCategory.columns"/>	    
+	        from t_pd_category 	   
+		<include refid="PdCategory.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdCategory.findPage" resultMap="RM.PdCategory">
+    	select <include refid="PdCategory.columns"/>	    
+	        from t_pd_category where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       categoryid 
+	   not in(select $notTop$ 
+       categoryid 
+	   from t_pd_category <include refid="PdCategory.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdCategory.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

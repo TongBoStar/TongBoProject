@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Tools;
+import com.terrence.crm.dol.dao.IToolsDao;
+import com.terrence.crm.dol.query.ToolsQuery;
+
+@Repository
+public class ToolsDao extends BaseIbatisDao<Tools,java.lang.Long> implements IToolsDao{
+
+		
+	public void saveOrUpdate(Tools entity) {
+		if(entity.getToolsid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Tools";
+	}
+	public Tools getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Tools)this.getSqlMapClientTemplate().queryForObject("Tools.getByProperty", map);		
+	}
+
+	
+	
+
+}

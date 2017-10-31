@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItemStepInstructor">
+
+        
+	<resultMap id="RM.ItemStepInstructor" class="com.terrence.crm.dol.bean.ItemStepInstructor">
+        <result property="fitemid" column="fitemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="fnode" column="fnode"/>
+    </resultMap>
+    
+    <resultMap id="RM.ItemStepInstructor.for.workinstructor.node" class="com.terrence.crm.dol.bean.ItemStepInstructor">
+        <result property="fitemid" column="fitemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="fnode" column="fnode"/>
+        <result property="nodename" column="nodename"/>
+        <result property="workinstructor" resultMap="RM.workinstructor.in.ItemStepInstructor"/>
+    </resultMap>
+	
+	
+	<resultMap id="RM.workinstructor.in.ItemStepInstructor" class="com.terrence.crm.dol.bean.Workinstructor">
+        <result property="fname" column="fname"/>
+        <result property="fsourcepath" column="fsourcepath"/>
+        <result property="fswfpath" column="fswfpath"/>
+        <result property="ftype" column="ftype"/>
+        <result property="fnote" column="fnote"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ItemStepInstructor.columns">
+	    <![CDATA[
+        	t_item_step_instructor.fitemid ,
+        	t_item_step_instructor.itemcode ,
+        	t_item_step_instructor.fnode 
+	    ]]>
+	</sql>
+	
+   <insert id="ItemStepInstructor.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_item_step_instructor (
+        	fitemid ,
+        	itemcode ,
+        	fnode 
+        ) VALUES (
+        	#fitemid# ,
+        	#itemcode# ,
+        	#fnode# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fitemiditemcodefnode" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	
+	<insert id="ItemStepInstructor.newData.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_item_step_instructor (
+        	fitemid ,
+        	itemcode ,
+        	fnode 
+        ) VALUES (
+        	#fitemid# ,
+        	#itemcode# ,
+        	#fnode# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fitemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<update id="ItemStepInstructor.update" parameterClass="com.terrence.crm.dol.bean.ItemStepInstructor">         
+        UPDATE t_item_step_instructor 
+        <dynamic prepend="SET">
+	    </dynamic>
+        WHERE 
+	        fitemid = #fitemid# ,
+	        itemcode = #itemcode# ,
+	        fnode = #fnode# 
+    </update>
+    
+	<delete id="ItemStepInstructor.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_item_step_instructor where
+       fitemid = #fitemid# ,
+       itemcode = #itemcode# ,
+       fnode = #fnode# 
+    ]]>
+    </delete>
+    
+    <delete id="ItemStepInstructor.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_item_step_instructor 
+        WHERE
+       fitemid in ($fitemid$) ,
+       itemcode in ($itemcode$) ,
+       fnode in ($fnode$) 
+    ]]>
+    </delete>
+    
+     <delete id="ItemStepInstructor.delete.for.scheme"><!-- 删除 -->
+    
+        DELETE FROM 
+        	t_item_step_instructor 
+        WHERE
+       fitemid = #fitemid# and
+       itemcode =  #itemcode# and
+       fnode = #fnode# 
+    
+    </delete>
+    
+    <select id="ItemStepInstructor.getById" resultMap="RM.ItemStepInstructor">
+	    select <include refid="ItemStepInstructor.columns"/>
+	    
+	        from t_item_step_instructor 
+	        where 
+		        fitemid = #fitemid# ,
+		        itemcode = #itemcode# ,
+		        fnode = #fnode# 
+	    
+    </select>
+    
+	<select id="ItemStepInstructor.getByProperty" resultMap="RM.ItemStepInstructor">
+		select <include refid="ItemStepInstructor.columns"/> from t_item_step_instructor where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ItemStepInstructor.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_item_step_instructor.fitemid = #fitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_item_step_instructor.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnode">
+	             t_item_step_instructor.fnode = #fnode#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ItemStepInstructor.findPage.and">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_item_step_instructor.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_item_step_instructor.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnode">
+	             t_item_step_instructor.fnode = #fnode#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ItemStepInstructor.Entity" resultMap="RM.ItemStepInstructor">
+    	SELECT 	<include refid="ItemStepInstructor.columns"/> FROM t_item_step_instructor <include refid="ItemStepInstructor.findPage.where"/>
+    </select>
+    
+    <select id="ItemStepInstructor.findList" resultMap="RM.ItemStepInstructor">
+    	SELECT 
+    		<include refid="ItemStepInstructor.columns"/> 
+    	FROM 
+    		t_item_step_instructor
+		<include refid="ItemStepInstructor.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ItemStepInstructor.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item_step_instructor
+    ]]>
+		<include refid="ItemStepInstructor.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ItemStepInstructor.findPage" resultMap="RM.ItemStepInstructor">
+    	select <include refid="ItemStepInstructor.columns"/>	    
+	        from t_item_step_instructor 	   
+		<include refid="ItemStepInstructor.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ItemStepInstructor.findPage" resultMap="RM.ItemStepInstructor">
+    	select <include refid="ItemStepInstructor.columns"/>	    
+	        from t_item_step_instructor where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fitemid 
+       itemcode 
+       fnode 
+	   not in(select $notTop$ 
+       fitemid 
+       itemcode 
+       fnode 
+	   from t_item_step_instructor <include refid="ItemStepInstructor.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ItemStepInstructor.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	
+	
+	 <select id="ItemStepInstructor.find.book.data" resultMap="RM.ItemStepInstructor">
+    	SELECT 
+    		<include refid="ItemStepInstructor.columns"/> 
+    	FROM 
+    		t_item_step_instructor
+		<include refid="ItemStepInstructor.findPage.where"/>
+		
+    </select>
+    
+     <select id="ItemStepInstructor.find.for.AllScheme" resultMap="RM.ItemStepInstructor.for.workinstructor.node">
+    	SELECT 
+    		<include refid="ItemStepInstructor.columns"/> ,t_workinstructor.fname,t_workinstructor.fsourcepath,t_workinstructor.fswfpath,
+    		t_workinstructor.ftype,t_workinstructor.fnote,t_node.nodename nodename
+    	FROM 
+    		t_item_step_instructor
+    		left join t_workinstructor on t_item_step_instructor.fitemid =  t_workinstructor.fitemid
+    		left join t_node on  t_item_step_instructor.fnode = t_node.nodeid 
+    		
+		<include refid="ItemStepInstructor.findPage.where"/>
+		
+    </select>
+    
+    
+    <select id="ItemStepInstructor.find.list.dataISI" resultMap="RM.ItemStepInstructor"><!-- 查询 -->
+    	SELECT 
+    		<include refid="ItemStepInstructor.columns"/> 
+    	FROM 
+    		t_item_step_instructor where itemcode=#itemcode# and fnode=#fnode#
+		
+    </select>
+</sqlMap>

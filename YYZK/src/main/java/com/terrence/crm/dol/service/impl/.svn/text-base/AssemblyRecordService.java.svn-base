@@ -1,0 +1,235 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyGuide;
+import com.terrence.crm.dol.bean.AssemblyRecord;
+import com.terrence.crm.dol.bean.AssemblySubRecord;
+import com.terrence.crm.dol.query.AssemblyRecordQuery;
+import com.terrence.crm.dol.dao.IAssemblyGuideDao;
+import com.terrence.crm.dol.dao.IAssemblyRecordDao;
+import com.terrence.crm.dol.dao.IAssemblySubRecordDao;
+import com.terrence.crm.dol.service.IAssemblyRecordService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class AssemblyRecordService extends BaseService implements IAssemblyRecordService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyRecordService.class);
+	@Autowired
+	@Qualifier("assemblyRecordDao")
+	private IAssemblyRecordDao assemblyRecordDao;
+	
+	@Autowired
+	@Qualifier("assemblySubRecordDao")
+	private IAssemblySubRecordDao assemblySubRecordDao;
+	
+	@Autowired
+	@Qualifier("assemblyGuideDao")
+	private IAssemblyGuideDao assemblyGuideDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyRecord";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyRecord getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyRecordDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyRecord entity) throws ServiceException
+	{
+		assemblyRecordDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyRecord entity) throws ServiceException
+	{
+		Long adId = assemblyRecordDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyRecord entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyRecordDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyRecordDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyRecordDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyRecordQuery query = new AssemblyRecordQuery();
+		try {
+			return assemblyRecordDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyRecord> findPage(Page<AssemblyRecord> page, AssemblyRecordQuery query) throws ServiceException
+	{
+		return assemblyRecordDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyRecord> findPage(Page<AssemblyRecord> page,String statement, AssemblyRecordQuery query) throws ServiceException
+	{
+		return assemblyRecordDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyRecord> findList(AssemblyRecordQuery query) throws ServiceException
+	{
+		return assemblyRecordDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyRecord> findList(AssemblyRecordQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyRecordDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyRecord> findList(AssemblyRecordQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyRecordDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyRecord> findAllList() throws ServiceException
+	{
+		return assemblyRecordDao.findAllList();
+	}
+	@Override
+	public void saveRecode(AssemblyRecord entity,List<Integer> radioList) throws ServiceException {
+		
+		if(entity.getGuideid()==null){
+			throw new ServiceException("此物料未绑定装配记录单","-1");	
+		}
+		AssemblyGuide assemblyGuide = assemblyGuideDao.getById(entity.getGuideid());		
+		if(assemblyGuide == null){
+			throw new ServiceException("查询不到此装配记录，请检查","-1");
+		}
+		
+		
+		
+		Long rId = 0L;
+		
+		AssemblyRecord aRecord = new AssemblyRecord();
+		aRecord.setGuideid(entity.getGuideid());
+		aRecord.setItemseq(entity.getItemseq());
+		aRecord.setItemname(entity.getItemname());
+		aRecord.setItemcode(entity.getItemcode());
+		aRecord.setItemmode(entity.getItemmode());
+		aRecord.setWorkno(entity.getWorkno());
+		if(entity.getCreatedate()!= null){
+			aRecord.setCreatedate(entity.getCreatedate());
+		}
+		if(entity.getFsexplain()!=null){
+			aRecord.setFsexplain(entity.getFsexplain());
+		}
+		aRecord.setFversion(entity.getFversion());
+		aRecord.setLoaddate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//装配日期
+		aRecord.setEmpid(SpringSecurityUtils.getCurrentUserId());//装配人员
+		if(entity.getRecordid() == null){
+			rId = assemblyRecordDao.save(aRecord,"AssemblyRecord.insert.new.data");
+		}else{
+			System.out.println("++++++++++++++++++++"+entity.getRecordid());
+			aRecord.setRecordid(entity.getRecordid());
+			assemblyRecordDao.update("AssemblyRecord.update.data.for.newData", aRecord);
+		}
+		
+		
+	
+		List<String> keynames = entity.getKeynames();
+		List<String> keyexplains = entity.getKeyexplains();
+		List<String> fsexplains = entity.getFsexplains();
+		List<Long> subrecids = entity.getSubrecids();
+		for(int tt = 0;tt<keynames.size();tt++){
+			
+			AssemblySubRecord asr = new AssemblySubRecord();
+			if(entity.getRecordid()!=null){
+				asr.setRecordid(entity.getRecordid());
+			}else{
+				asr.setRecordid(rId);
+			}
+			
+			if(keynames.get(tt)!=null){
+				asr.setKeyname(keynames.get(tt));
+			}
+			if(keyexplains.get(tt)!=null){
+				asr.setKeyexplain(keyexplains.get(tt));
+			}
+			if(fsexplains.get(tt)!=null){
+				asr.setFsexplain(fsexplains.get(tt));
+			}
+			if(radioList.get(tt)!=null){
+				asr.setIspass(radioList.get(tt));
+			}
+			
+			if(subrecids.get(tt) == null){
+				assemblySubRecordDao.save(asr, "AssemblySubRecord.insert.new.in.data");
+			}else{
+				asr.setSubrecid(subrecids.get(tt));
+				assemblySubRecordDao.update("AssemblySubRecord.update.data.to.new", asr);
+			}
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+	}
+	@Override
+	public AssemblyRecord findRecordData(AssemblyRecordQuery assemblyRecordQuery)
+			throws ServiceException {
+		return assemblyRecordDao.findRecordData(assemblyRecordQuery);
+	}
+	@Override
+	public void updateData(AssemblyRecord entity)
+			throws ServiceException {
+		assemblyRecordDao.updateData(entity);
+	}
+	@Override
+	public void UpdateUNcheck(AssemblyRecord entity) throws ServiceException {
+		assemblyRecordDao.update("AssemblyRecord.UpdateUNcheck", entity);
+	}
+
+}

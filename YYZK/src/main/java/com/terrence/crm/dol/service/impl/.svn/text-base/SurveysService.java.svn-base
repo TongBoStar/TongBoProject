@@ -1,0 +1,247 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CustomerScore;
+import com.terrence.crm.dol.bean.Grades;
+import com.terrence.crm.dol.bean.Surveys;
+import com.terrence.crm.dol.bean.SurveysEntry;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.ICustomerScoreDao;
+import com.terrence.crm.dol.dao.IGradesDao;
+import com.terrence.crm.dol.dao.ISurveysDao;
+import com.terrence.crm.dol.dao.ISurveysEntryDao;
+import com.terrence.crm.dol.query.SurveysQuery;
+import com.terrence.crm.dol.service.ISurveysService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+@Service
+@Transactional
+public class SurveysService extends BaseService implements ISurveysService {
+	protected static Logger logger = LoggerFactory.getLogger(SurveysService.class);
+	@Autowired
+	@Qualifier("surveysDao")
+	private ISurveysDao surveysDao;
+	@Autowired
+	@Qualifier("surveysEntryDao")
+	private ISurveysEntryDao surveysEntryDao;
+	@Autowired
+	@Qualifier("gradesDao")
+	private IGradesDao gradesDao;
+	@Autowired
+	@Qualifier("customerScoreDao")
+	private ICustomerScoreDao customerScoreDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Surveys";
+	}
+	@Transactional(readOnly=true)
+	public Surveys getById(java.lang.Long id) throws ServiceException
+	{
+		return surveysDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Surveys entity) throws ServiceException
+	{
+		surveysDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Surveys entity) throws ServiceException
+	{
+		entity.setFyear(String.valueOf(DateConvertUtils.getYearOfDate(new Date())));
+		Long adId = surveysDao.save(entity);
+		List<Long> gwids=entity.getGwids();
+		List<Double> scores=entity.getScores();
+		List<Long> weights=entity.getWeights();
+		for(int i=0;i<gwids.size();i++)
+		{
+			SurveysEntry surveyentry=new SurveysEntry();
+			surveyentry.setGwid(gwids.get(i));
+			surveyentry.setScoreval(scores.get(i));
+			surveyentry.setFyear(entity.getFyear());
+			surveyentry.setGwval(weights.get(i));
+			surveyentry.setSurveysid(adId);
+			surveysEntryDao.save(surveyentry);
+		}
+		return adId;
+	}
+	
+	public Integer update(Surveys entity, String scores) throws ServiceException
+	{
+		CustomerScore customerScore = parseScores(scores);
+		AdminSession admin = (AdminSession)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		entity.setFdate(new Date());
+		entity.setFemp(admin.getAdmin().getAdminId());
+		entity.setFscore(customerScore.getAverage());
+		String level = countGrade(entity.getFscore());
+		entity.setFlevel(null==level?null:level);
+		Integer returnValue =  surveysDao.update(entity);
+		customerScore.setFlevel(null==level?null:level);
+		customerScore.setFyear(String.valueOf(DateConvertUtils.getYearOfDate(new Date())));
+		customerScore.setFinnerid(entity.getFinnerid());
+		customerScoreDao.update("CustomerScore.updateByFinnerIdAndYear", customerScore);
+		return returnValue;
+	}
+	
+	private String countGrade(double score) {
+		List<Grades> gradesList = gradesDao.findAllList();
+		if(null!=gradesList&&gradesList.size()>0){
+			for(Grades grade:gradesList){
+				if(score>grade.getLowlimit()&&score<=grade.getUplimit()){
+					return grade.getFlevel();
+				}
+			}
+		}
+		return null;
+	}
+	private CustomerScore parseScores(String scores) {
+		Map<String, String> map = new HashMap<String, String>();
+		Double score = 0D;
+		SurveysEntry surveysEntry = null;
+		String[] ss = scores.split("\\|");
+		CustomerScore customerScore = new CustomerScore();
+		List<Double> scoresList = new ArrayList<Double>();
+		int count = 0;
+		for(String temp:ss){
+			count = count+1;
+			if(!temp.trim().equals("")){
+				String[] scs = temp.split(",");
+				surveysEntry = new SurveysEntry();
+				surveysEntry.setId(Long.valueOf(scs[0]));
+				if(scs.length>2&&null!=scs[2]&&!scs[2].equals("")){
+					surveysEntry.setScoreval(Double.valueOf(scs[2]));
+					score += Double.valueOf(scs[2])*Long.valueOf(scs[1]);
+					scoresList.add(Double.valueOf(scs[2]));
+				}else{
+					surveysEntry.setScoreval(null);
+					score += 0;
+					scoresList.add(null);
+				}
+				if(scs.length>3){
+					if(count<8){
+						surveysEntry.setNotes(scs[3]);
+					}else{
+						if(null!=scs[3]&&!scs[3].trim().equals("")){
+							surveysEntry.setMoney(Double.valueOf(scs[3]));
+						}
+					}
+					if(null!=scs[3]&&!scs[3].trim().equals("")){
+						map.put(String.valueOf(count), scs[3]);
+					}else{
+						map.put(String.valueOf(count), null);
+					}
+				}else{
+					map.put(String.valueOf(count), null);
+				}
+				
+				surveysEntryDao.update(surveysEntry);
+			}
+		}
+		count = 0 ;
+		customerScore.setGwid1(null==scoresList.get(0)?null:scoresList.get(0).longValue());
+		customerScore.setGwid2(null==scoresList.get(1)?null:scoresList.get(1).longValue());
+		customerScore.setGwid3(null==scoresList.get(2)?null:scoresList.get(2).longValue());
+		customerScore.setGwid4(null==scoresList.get(3)?null:scoresList.get(3).longValue());
+		customerScore.setGwid5(null==scoresList.get(4)?null:scoresList.get(4).longValue());
+		customerScore.setGwid6(null==scoresList.get(5)?null:scoresList.get(5).longValue());
+		customerScore.setGwid7(null==scoresList.get(6)?null:scoresList.get(6).intValue());
+		customerScore.setGwid8(null==scoresList.get(7)?null:scoresList.get(7).longValue());
+		customerScore.setGwid9(null==scoresList.get(8)?null:scoresList.get(8).longValue());
+		customerScore.setGwid10(null==scoresList.get(9)?null:scoresList.get(9).longValue());
+		customerScore.setGwid11(null==scoresList.get(10)?null:scoresList.get(10).longValue());
+		customerScore.setGwid12(null==scoresList.get(11)?null:scoresList.get(11).longValue());
+		
+		customerScore.setPayterms(map.get("6"));
+		customerScore.setAmount(null==map.get("8")?null:Double.valueOf(map.get("8")));
+		customerScore.setStanamount(null==map.get("9")?null:Double.valueOf(map.get("9")));
+		customerScore.setSaleval(null==map.get("10")?null:Double.valueOf(map.get("10")));
+		customerScore.setRetamount(null==map.get("11")?null:Double.valueOf(map.get("11")));
+		customerScore.setLurkamount(null==map.get("12")?null:Double.valueOf(map.get("12")));
+		
+		customerScore.setAverage(score/100);
+		return customerScore;
+	}
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = surveysDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = surveysDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SurveysQuery query = new SurveysQuery();
+		try {
+			return surveysDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Surveys> findPage(Page<Surveys> page, SurveysQuery query) throws ServiceException
+	{
+		return surveysDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Surveys> findPage(Page<Surveys> page,String statement, SurveysQuery query) throws ServiceException
+	{
+		return surveysDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Surveys> findList(SurveysQuery query) throws ServiceException
+	{
+		return surveysDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Surveys> findList(SurveysQuery query,Integer pageSize) throws ServiceException
+	{
+		return surveysDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Surveys> findList(SurveysQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return surveysDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Surveys> findAllList() throws ServiceException
+	{
+		return surveysDao.findAllList();
+	}
+
+}

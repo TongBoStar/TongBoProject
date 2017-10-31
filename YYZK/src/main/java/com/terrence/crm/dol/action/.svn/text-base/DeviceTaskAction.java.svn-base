@@ -1,0 +1,668 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IDeviceTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.bean.Device;
+import com.terrence.crm.dol.bean.DeviceTask;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.query.DeviceTaskQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/deviceTask")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "deviceTask." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class DeviceTaskAction extends CrudActionSupport<DeviceTask>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("deviceTaskService")
+	private IDeviceTaskService deviceTaskService;
+	
+	
+	private DeviceTask entity;
+
+	private DeviceTaskQuery deviceTaskQuery;
+	       
+	
+	private java.lang.Long deviceTaskId;
+	
+	/** 分页器 */
+	private Page<DeviceTask> page = new Page<DeviceTask>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<DeviceTask> deviceTaskList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (deviceTaskId != null ) {
+			entity = deviceTaskService.getById(deviceTaskId);
+		} else {
+			entity = new DeviceTask();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			deviceTaskService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(deviceTaskQuery == null) {
+			deviceTaskQuery = new DeviceTaskQuery();
+		}
+		
+		try {
+			deviceTaskList = deviceTaskService.findList(deviceTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("deviceTaskId");
+			page.setOrder(Page.DESC);
+		}
+		if(deviceTaskQuery == null) {
+			deviceTaskQuery = new DeviceTaskQuery();
+		}
+		
+		try {
+			page = deviceTaskService.findPage(page, deviceTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			deviceTaskService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = deviceTaskService.getById(deviceTaskId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			deviceTaskList = deviceTaskService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	
+	public String showdtask() throws Exception {
+			try{
+			//	deviceTaskQuery=new DeviceTaskQuery();
+				
+				String taskdate=deviceTaskQuery.getTaskdate();
+//				System.out.println("========"+deviceTaskQuery.getItemcode());
+//				System.out.println("========"+taskdate);
+				String datelist[]=taskdate.split("-");
+				deviceTaskQuery.setFyear(datelist[0]);
+				deviceTaskQuery.setFmonth(datelist[1]);
+				deviceTaskQuery.setFday(datelist[2]);
+				
+				deviceTaskList = deviceTaskService.findList(deviceTaskQuery, "DeviceTask.findlist.showdtask");
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			} catch(ServiceException e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败"+e.getMessage();
+			}	
+			
+			return JSON;
+		}
+	
+	@Action("/dtask/calendar")
+	public String listdTaskCalendar()throws Exception
+	{
+		try {
+			if(deviceTaskQuery == null) {
+				deviceTaskQuery=new DeviceTaskQuery();
+			}
+			String month=deviceTaskQuery.getMonth(),year=deviceTaskQuery.getYear();
+			String workmonth=deviceTaskQuery.getWorkmonth();
+			if(workmonth==null)
+			{
+				workmonth=DateUtils.GetFormatDate("yyyyMM");
+				deviceTaskQuery.setWorkmonth(workmonth);
+			}
+			
+			String days[];
+			days=new String[42]; 
+			for(int i=0;i<42;i++) 
+			{ 
+			days[i]="";
+			} 
+			Calendar thismonth=Calendar.getInstance(); 
+			if(month!=null&&(!month.equals(""))) 
+			thismonth.set(Calendar.MONTH, Integer.parseInt(month)-1 ); 
+
+			if(year!=null&&(!year.equals(""))) 
+			thismonth.set(Calendar.YEAR, Integer.parseInt(year)); 
+
+			year=String.valueOf(thismonth.get(Calendar.YEAR)); 
+			month=String.valueOf(thismonth.get(Calendar.MONTH)+1); 
+			if(month.length()<2)
+				month="0"+month;
+			thismonth.setFirstDayOfWeek(Calendar.SUNDAY); 
+			thismonth.set(Calendar.DAY_OF_MONTH,1); 
+			int firstindex=thismonth.get(Calendar.DAY_OF_WEEK)-1; 
+			int maxindex=thismonth.getActualMaximum(Calendar.DAY_OF_MONTH); 
+			
+			for(int i=0;i<maxindex;i++) 
+			{ 
+				days[firstindex+i]=String.valueOf(i+1); 
+			} 
+			deviceTaskList=new ArrayList<DeviceTask>();
+			for(int j=0;j<6;j++) 
+			{
+				for(int i=j*7;i<(j+1)*7;i++)
+				{
+				
+					DeviceTask deviceTask=new DeviceTask();
+					deviceTask.setDays(i);
+					deviceTask.setCalendarstatus(1);
+					if(!days[i].equals(""))
+					{
+						deviceTask.setWorkday(Integer.parseInt(days[i]));
+						deviceTask.setWorkdate(DateUtils.GetDate2(year+"-"+month+"-"+days[i], "yyyy-MM-dd"));
+						deviceTask.setWorkmonth(year+month);
+					}
+					else
+					{
+						deviceTask.setWorkday(-1);
+					}
+					
+					deviceTaskList.add(deviceTask);
+				
+				}
+			}
+			
+			/**
+			 * 查询个人任务中设备id
+			 */
+		/*	EmployeeTaskQuery query=new EmployeeTaskQuery();
+			query.setDeviceid(employeeTaskQuery.getDeviceid());
+			query.setWorkmonth(employeeTaskQuery.getWorkmonth());
+			List<EmployeeTask> epList=new ArrayList<EmployeeTask>();
+			epList=employeeTaskService.findList("EmployeeTask.findList.devicework", query);
+			
+			
+			
+			for(EmployeeTask eptask:this.employeeTaskList)
+			{
+				for(EmployeeTask ep:epList)
+				{			
+					//System.out.println("=========="+ep.getWorkmonth().substring(8));							
+					if(eptask.getWorkday().intValue()==Integer.valueOf(ep.getWorkmonth().substring(8)).intValue())
+					{
+						eptask.setCalendarstatus(Device.NOT_FULL);//不饱和
+						if(ep.getRuntime().intValue()>=480){//饱和
+							eptask.setCalendarstatus(Device.FULL);//不饱和	
+						}
+					}
+				}
+			}
+			*/
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		
+		
+		return JSON;
+	}
+	
+//=======	
+	
+	@Action("/dtask/processlist")
+	public String listdTaskProcess()throws Exception
+	{
+		try {
+			if (!page.isOrderBySetted()) {
+				page.setOrderBy("devTaskId");
+				page.setOrder(Page.DESC);
+			}
+			if(deviceTaskQuery == null) {
+				deviceTaskQuery=new DeviceTaskQuery();
+			}
+			page=deviceTaskService.findPage(page,"DeviceTask.findlist.listdTaskProcess",deviceTaskQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();			
+		}
+		return JSON;
+	}
+	
+	@Action("/dtask/unprocesslist")
+	public String listunProcess()throws Exception
+	{
+		try {
+			if (!page.isOrderBySetted()) {
+				page.setOrderBy("devTaskId");
+				page.setOrder(Page.DESC);
+			}
+			if(deviceTaskQuery == null) {
+				deviceTaskQuery=new DeviceTaskQuery();
+			}
+			page=deviceTaskService.findPage(page,"DeviceTask.findlist.listundTaskProcess",deviceTaskQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();			
+		}
+		return JSON;
+	}
+	
+	
+	
+	@Action("/dtask/todaytasklist")
+	public String listTodayTask()throws Exception
+	{
+		try {
+			
+			if(deviceTaskQuery == null) {
+				deviceTaskQuery=new DeviceTaskQuery();
+			}
+			deviceTaskQuery.setYear(DateConvertUtils.getYearOfDate(deviceTaskQuery.getCreatedate())+"");
+			deviceTaskQuery.setMonth(DateConvertUtils.getMonthOfDate(deviceTaskQuery.getCreatedate())+"");
+			deviceTaskQuery.setDays(deviceTaskQuery.getCreatedate().getDate()+"");
+			
+			deviceTaskList=deviceTaskService.findList(deviceTaskQuery, "DeviceTask.findList.listTodayTask");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();			
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveLeadTask() throws Exception {
+		prepareModel();
+	}
+	@Action("/dtask/leadtask")
+	public String saveLeadTask()throws Exception
+	{
+		try {
+			if(deviceTaskQuery == null) {
+				deviceTaskQuery=new DeviceTaskQuery();
+			}
+			
+		//	deviceTaskList=deviceTaskService.findList(deviceTaskQuery, "DeviceTask.findList.listTodayTask");
+			deviceTaskService.saveLeadTask(deviceTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();			
+		}
+		return JSON;
+	}
+	
+	
+	public String showtaskall() throws Exception {
+		
+		if(deviceTaskQuery==null){
+			deviceTaskQuery=new DeviceTaskQuery();
+		}
+		
+		try{
+			
+			deviceTaskList = deviceTaskService.findTaskall("DeviceTask.findlist.showtaskall",deviceTaskQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public DeviceTask getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public DeviceTaskQuery getDeviceTaskQuery() {
+		return deviceTaskQuery;
+	}
+
+	
+	public void setDeviceTaskQuery(DeviceTaskQuery deviceTaskQuery) {
+		this.deviceTaskQuery = deviceTaskQuery;
+	}
+
+	public void setDeviceTaskId(java.lang.Long deviceTaskId) {
+		this.deviceTaskId = deviceTaskId;
+	}
+	
+	
+	public java.lang.Long getDeviceTaskId() {
+		return this.deviceTaskId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<DeviceTask> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<DeviceTask> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<DeviceTask> getDeviceTaskList() {
+		return deviceTaskList;
+	}
+	
+	
+}

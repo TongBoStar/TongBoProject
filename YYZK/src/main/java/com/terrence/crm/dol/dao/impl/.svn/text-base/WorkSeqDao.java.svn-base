@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WorkSeq;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+
+@Repository
+public class WorkSeqDao extends BaseIbatisDao<WorkSeq,java.lang.Long> implements IWorkSeqDao{
+
+		
+	public void saveOrUpdate(WorkSeq entity) {
+		if(entity.getWorkseqid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WorkSeq";
+	}
+	public WorkSeq getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WorkSeq)this.getSqlMapClientTemplate().queryForObject("WorkSeq.getByProperty", map);		
+	}
+
+}

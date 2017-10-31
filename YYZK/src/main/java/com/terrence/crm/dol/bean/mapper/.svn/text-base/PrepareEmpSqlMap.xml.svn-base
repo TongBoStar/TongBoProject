@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PrepareEmp">
+
+        
+	<resultMap id="RM.PrepareEmp" class="com.terrence.crm.dol.bean.PrepareEmp">
+        <result property="id" column="id"/>
+        <result property="preparemins" column="preparemins"/>
+        <result property="money" column="money"/>
+        <result property="empid" column="empid"/>
+        <result property="employeetaskid" column="employeetaskid"/>
+        <result property="processid" column="processid"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="teamid" column="teamid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="itemprocessid" column="itemprocessid"/>
+    </resultMap>
+	
+	<resultMap id="RM.PrepareEmp.Detail" class="com.terrence.crm.dol.bean.PrepareEmp">
+		<result property="employeetaskid" column="employeetaskid"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="procedure" resultMap="RM.PrepareEmp.procedure"/>
+        <result property="itemprocess" resultMap="RM.PrepareEmp.itemprocess"/>
+        
+    </resultMap>  
+	<resultMap class="com.terrence.crm.dol.bean.Procedure" id="RM.PrepareEmp.procedure">
+		<result property="procedurename" column="procedurename"/>
+	</resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.ItemProcess" id="RM.PrepareEmp.itemprocess">
+		<result property="reservefund" column="reservefund"/>
+        <result property="explain" column="explain"/>
+	</resultMap>
+	
+	
+	
+	<resultMap id="RM.PrepareEmp.findpage.emp" class="com.terrence.crm.dol.bean.PrepareEmp">
+		<result property="id" column="id"/>
+		<result property="fbillgroup" column="fbillgroup"/>
+		<result property="procedurename" column="procedurename"/>
+		<result property="preparemins" column="preparemins"/>
+		<result property="money" column="money"/>
+		<result property="empid" column="empid"/>
+		<result property="empname" column="empname"/>
+		<result property="itemcode" column="itemcode"/>
+		<result property="itemname" column="itemname"/>
+		<result property="itemmode" column="itemmode"/>
+    </resultMap>
+	
+	
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PrepareEmp.columns">
+	    <![CDATA[
+        	t_prepare_emp.id ,
+        	t_prepare_emp.preparemins ,
+        	t_prepare_emp.money ,
+        	t_prepare_emp.empid ,
+        	t_prepare_emp.employeetaskid ,
+        	t_prepare_emp.processid ,
+        	t_prepare_emp.checkdate ,
+        	t_prepare_emp.teamid ,
+        	t_prepare_emp.itemcode ,
+        	t_prepare_emp.itemname ,
+        	t_prepare_emp.itemmode ,
+        	t_prepare_emp.itemprocessid 
+	    ]]>
+	</sql>
+	
+   <insert id="PrepareEmp.insert" >
+    
+        INSERT INTO
+        t_prepare_emp (
+        	preparemins ,
+        	money ,
+        	empid ,
+        	employeetaskid ,
+        	processid ,
+        	teamid ,
+        	itemcode ,
+        	itemname ,
+        	itemprocessid 
+        	<isNotEmpty prepend="," property="empname">
+        	empname
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fbillgroup">
+        	fbillgroup
+        	</isNotEmpty>
+        ) VALUES (
+        	#preparemins# ,
+        	#money# ,
+        	#empid# ,
+        	#employeetaskid# ,
+        	#processid# ,
+        	#teamid# ,
+        	#itemcode# ,
+        	#itemname# ,
+        	#itemprocessid# 
+        	<isNotEmpty prepend="," property="empname">
+        	#empname#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fbillgroup">
+        	#fbillgroup#
+        	</isNotEmpty>
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<update id="PrepareEmp.update.byEmployeetaskid" parameterClass="com.terrence.crm.dol.bean.PrepareEmp">
+		UPDATE t_prepare_emp 
+		<dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="preparemins">
+	        	preparemins = #preparemins# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="money">
+	        	money = #money# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="employeetaskid">
+	        	employeetaskid = #employeetaskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processid">
+	        	processid = #processid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkdate">
+	        	checkdate = #checkdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemprocessid">
+	        	itemprocessid = #itemprocessid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        employeetaskid = #employeetaskid#
+	</update>
+	<update id="PrepareEmp.update" parameterClass="com.terrence.crm.dol.bean.PrepareEmp">         
+        UPDATE t_prepare_emp 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="preparemins">
+	        	preparemins = #preparemins# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="money">
+	        	money = #money# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="employeetaskid">
+	        	employeetaskid = #employeetaskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processid">
+	        	processid = #processid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkdate">
+	        	checkdate = #checkdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemprocessid">
+	        	itemprocessid = #itemprocessid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    <delete id="PrepareEmp.delete.LastMonth">
+    delete from [t_prepare_emp] where datename(yyyy,checkdate)+DATENAME(mm,checkdate)=DATENAME(yyyy,getdate())+datename(mm,dateadd(mm,-1,getdate())) 
+    </delete>
+	<delete id="PrepareEmp.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_prepare_emp where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="PrepareEmp.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_prepare_emp 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    <delete id="PrepareEmp.deleteEmpTask">
+    	DELETE FROM 
+        	t_prepare_emp 
+        WHERE
+       employeetaskid in ($id$)
+    </delete>
+    <select id="PrepareEmp.getById" resultMap="RM.PrepareEmp">
+	    select <include refid="PrepareEmp.columns"/>
+	    
+	        from t_prepare_emp 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="PrepareEmp.getByProperty" resultMap="RM.PrepareEmp">
+		select <include refid="PrepareEmp.columns"/> from t_prepare_emp where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PrepareEmp.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_prepare_emp.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="preparemins">
+	             t_prepare_emp.preparemins = #preparemins#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="money">
+	             t_prepare_emp.money = #money#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_prepare_emp.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="employeetaskid">
+	             t_prepare_emp.employeetaskid = #employeetaskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processid">
+	             t_prepare_emp.processid = #processid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateBegin">
+	             t_prepare_emp.checkdate &gt;= #checkdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateEnd">
+	             t_prepare_emp.checkdate &lt;= #checkdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_prepare_emp.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_prepare_emp.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_prepare_emp.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_prepare_emp.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_prepare_emp.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PrepareEmp.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_prepare_emp.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="preparemins">
+	             t_prepare_emp.preparemins = #preparemins#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="money">
+	             t_prepare_emp.money = #money#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_prepare_emp.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="employeetaskid">
+	             t_prepare_emp.employeetaskid = #employeetaskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="processid">
+	             t_prepare_emp.processid = #processid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateBegin">
+	             t_prepare_emp.checkdate &gt;= #checkdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdateEnd">
+	             t_prepare_emp.checkdate &lt;= #checkdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_prepare_emp.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_prepare_emp.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_prepare_emp.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_prepare_emp.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_prepare_emp.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="PrepareEmp.findList" resultMap="RM.PrepareEmp">
+    	SELECT 
+    		<include refid="PrepareEmp.columns"/> 
+    	FROM 
+    		t_prepare_emp
+		<include refid="PrepareEmp.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <!--修改工艺,首检金额,变t_prepare_emp金额,关联t_check_record 仅修改当月 -->
+    <select id="PrepareEmp.findList.checkrecord" resultMap="RM.PrepareEmp">
+    	SELECT 
+    		<include refid="PrepareEmp.columns"/> 
+    	FROM 
+    		t_prepare_emp,t_check_record
+		<include refid="PrepareEmp.findPage.where"/>
+		and t_prepare_emp.employeetaskid=t_check_record.employeetaskid
+		and datename(yyyy,t_check_record.checktime)+datename(mm,t_check_record.checktime)=
+			datename(yyyy,getdate())+datename(mm,getdate())
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PrepareEmp.Detail" resultMap="RM.PrepareEmp.Detail">
+    select t_prepare_emp.employeetaskid,t_prepare_emp.checkdate,t_prepare_emp.itemcode,t_prepare_emp.itemname,t_procedure.procedurename
+     ,t_item_process.reservefund,t_item_process.explain,t_base_item.formatno itemmode from t_prepare_emp,t_item_process,t_item_procedure,t_procedure
+	,t_base_item where datename(yyyy,checkdate)+datename(mm,checkdate)=#yearMonth#  
+        and t_prepare_emp.empid=#empid#  and t_prepare_emp.itemprocessid=t_item_process.itemprocessid
+	and t_item_procedure.itemprocedureid=t_item_process.itemprocedureid and t_item_procedure.procedureid=t_procedure.procedurerid
+	and t_prepare_emp.itemcode=t_base_item.itemcode
+    </select>
+    
+    
+    <select id="PrepareEmp.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_prepare_emp
+    ]]>
+		<include refid="PrepareEmp.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="PrepareEmp.findPage" resultMap="RM.PrepareEmp">
+    	select <include refid="PrepareEmp.columns"/>	    
+	        from t_prepare_emp 	   
+		<include refid="PrepareEmp.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.PrepareEmp.findPage" resultMap="RM.PrepareEmp">
+    	select <include refid="PrepareEmp.columns"/>	    
+	        from t_prepare_emp where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_prepare_emp <include refid="PrepareEmp.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PrepareEmp.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	
+	
+	<select id="PrepareEmp.findpage.emp.count" resultClass="long">
+	    		select 
+					count(*)  	
+			from t_prepare_emp 
+			left join t_procedure on t_prepare_emp.processid=t_procedure.procedurerid
+			left join t_admin on t_prepare_emp.empid=t_admin.adminid
+			left join t_base_item on t_prepare_emp.itemcode=t_base_item.itemcode
+			where 1=1  
+			<isNotEmpty prepend="and" property="processname">
+				t_prepare_emp.processid in($processname$)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="itemcode">
+				t_prepare_emp.itemcode like ('%#itemcode#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="itemname">
+				t_prepare_emp.itemname like ('%#itemname#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="fbillno">
+				t_prepare_emp.fbillgroup like ('%#fbillno#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="empid">
+				t_prepare_emp.empid = #empid#
+			</isNotEmpty>
+    </select>
+	
+	<select id="PrepareEmp.findpage.emp" resultMap="RM.PrepareEmp.findpage.emp">
+			select 
+				t_prepare_emp.id,
+				t_prepare_emp.fbillgroup,
+				t_procedure.procedurename procedurename,
+				t_prepare_emp.preparemins,
+			  	t_prepare_emp.money,
+			  	t_prepare_emp.empid,
+			  	t_admin.adminname empname,
+			  	t_prepare_emp.itemcode,
+			  	t_prepare_emp.itemname,
+			  	t_base_item.formatno itemmode
+			  	
+			from t_prepare_emp 
+			left join t_procedure on t_prepare_emp.processid=t_procedure.procedurerid
+			left join t_admin on t_prepare_emp.empid=t_admin.adminid
+			left join t_base_item on t_prepare_emp.itemcode=t_base_item.itemcode
+			
+			where 1=1  
+			<isNotEmpty prepend="and" property="processname">
+				t_prepare_emp.processid in($processname$)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="itemcode">
+				t_prepare_emp.itemcode like ('%#itemcode#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="itemname">
+				t_prepare_emp.itemname like ('%#itemname#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="fbillno">
+				t_prepare_emp.fbillgroup like ('%#fbillno#%')
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="empid">
+				t_prepare_emp.empid = #empid#
+			</isNotEmpty>
+			
+			
+			<isNotEmpty property="notTop">  and 
+				      t_prepare_emp.id 
+					   not in(select $notTop$ 
+				       t_prepare_emp.id 
+					   from t_prepare_emp 
+					   where 1=1  
+					<isNotEmpty prepend="and" property="processname">
+						t_prepare_emp.processid in($processname$)
+					</isNotEmpty>
+					<isNotEmpty prepend="and" property="itemcode">
+						t_prepare_emp.itemcode like ('%#itemcode#%')
+					</isNotEmpty>
+					<isNotEmpty prepend="and" property="itemname">
+						t_prepare_emp.itemname like ('%#itemname#%')
+					</isNotEmpty>
+					<isNotEmpty prepend="and" property="fbillno">
+						t_prepare_emp.fbillgroup like ('%#fbillno#%')
+					</isNotEmpty>
+					<isNotEmpty prepend="and" property="empid">
+						t_prepare_emp.empid = #empid#
+					</isNotEmpty>
+					   
+			   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   		</isNotEmpty>
+			<isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>
+			
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+</sqlMap>

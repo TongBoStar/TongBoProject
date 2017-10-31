@@ -1,0 +1,1124 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Bitem;
+import com.terrence.crm.dol.bean.Items;
+import com.terrence.crm.dol.query.BitemQuery;
+import com.terrence.crm.dol.query.ItemsQuery;
+import com.terrence.crm.dol.service.IItemsService;
+import com.terrence.crm.dol.utils.CacheService;
+
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/items")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "items." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemsAction extends CrudActionSupport<Items>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("itemsService")
+	private IItemsService itemsService;
+	
+	
+	private Items entity;
+
+	private ItemsQuery itemQuery;
+	
+	
+	private java.lang.Long itemId;
+	
+	/** 分页器 */
+	private Page<Items> page = new Page<Items>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Items> itemList;
+	private String tree="";
+	private String showtree="";
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemId != null ) {
+			entity = itemsService.getById(itemId);
+		} else {
+			entity = new Items();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			itemsService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		
+		try {
+			itemList = itemsService.findList(itemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		
+		try {
+			page = itemsService.findPage(page, itemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			itemsService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemsService.getById(itemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			itemList = itemsService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//--------------------------------
+	/*private String CATEGORYKEY="itemsTree";
+	@Action("/items/listToTree")
+	public String listToTree()throws Exception
+	{
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		try
+		{
+			if(CacheService.getInstance().get(CATEGORYKEY)==null)
+		   {
+				itemQuery.setDeleted((short)0);
+				List<Items> list=itemsService.findList(itemQuery);
+				itemList=new ArrayList<Items>();
+				for(Items item:list)
+				{
+					 tree="<li><b ref=\""+item.getItemid()+"\" id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:\"\";\">"+item.getItemname()+"</a></b>"+loop(item)+"</li>";
+				}
+			
+			    CacheService.getInstance().add(CATEGORYKEY, tree);
+			}else{
+				tree=(String)CacheService.getInstance().get(CATEGORYKEY);
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String loop(Items item)
+	{
+		ItemsQuery iQuery=new ItemsQuery();
+		iQuery.setParentid(item.getItemid());
+		iQuery.setDeleted((short)0);
+		iQuery.setSortColumns("itemcode");
+		
+		List<Items> list=itemsService.findList(iQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+item.getItemid()+"\">");
+			for(Items itemalone:list)
+			{
+				if(itemalone.getParentid()==1){//第一层
+					sbuf.append("<li><span ref=\""+itemalone.getItemid()+"\" spanname="+itemalone.getItemname()+" spancode=\""+itemalone.getItemcode()+"\" spantype=\""+itemalone.getClassid()+"\"  id=li"+itemalone.getItemid()+" pid="+itemalone.getParentid()+" ><a href=\"javascript:\"\";\">"+itemalone.getItemcode()+"("+itemalone.getItemname()+")</a></span>"+loop(itemalone)+"</li>");
+				}else{//第二层
+					sbuf.append("<li><div ref=\""+itemalone.getItemid()+"\" spanname="+itemalone.getItemname()+" spancode=\""+itemalone.getItemcode()+"\" spantype=\""+itemalone.getClassid()+"\"  id=li"+itemalone.getItemid()+" pid="+itemalone.getParentid()+" ><a href=\"javascript:searchrule("+itemalone.getItemid()+");\">"+itemalone.getItemcode()+"("+itemalone.getItemname()+")</a></div>"+loop(itemalone)+"</li>");
+				}
+			
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}*/
+	
+	//--------
+	//==================================
+	private String SHOWCATEGORYKEY="baseItemTree";//showitemsTree
+	@Action("/items/addlistToTree")//2013-11-11
+	public String addlistToTree()throws Exception
+	{
+		
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		try
+		{
+			if(CacheService.getInstance().get(SHOWCATEGORYKEY)==null)
+			   {
+					List<Items> list=itemsService.findList(itemQuery);
+					itemList=new ArrayList<Items>();
+					for(Items item:list)
+					{
+						showtree="<li><b ref=\""+item.getItemid()+"\" id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:\"\";\">"+item.getItemname()+"</a></b>"+loopAdd(item)+"</li>";
+					}
+					 CacheService.getInstance().add(SHOWCATEGORYKEY, showtree);
+				}else{
+					showtree=(String)CacheService.getInstance().get(SHOWCATEGORYKEY);
+				}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String loopAdd(Items item)
+	{
+		ItemsQuery iQuery=new ItemsQuery();
+		iQuery.setParentid(item.getItemid());
+		
+		iQuery.setDeleted((short)0);
+		iQuery.setSortColumns("itemcode");
+		
+		List<Items> list=itemsService.findList(iQuery);
+		//List<Item> list = itemService.findlistDetail(iQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+item.getItemid()+"\">");
+			for(Items itemalone:list)
+			{
+				if(itemalone.getParentid()==1){//第一层
+					//sbuf.append("<li><span ref=\""+itemalone.getItemid()+"\" spanname="+itemalone.getItemname()+" spancode=\""+itemalone.getItemcode()+"\" spantype=\""+itemalone.getClassid()+"\"  id=li"+itemalone.getItemid()+" pid="+itemalone.getParentid()+" ><a href=\"javascript:\"\";\">"+itemalone.getItemcode()+"("+itemalone.getItemname()+")</a></span>"+loopAdd(itemalone)+"</li>");
+					sbuf.append("<li><span ref=\""+itemalone.getItemid()+"\" spanname="
+							+itemalone.getItemname()+" spancode=\""+itemalone.getItemcode()
+							+"\" spantype=\""+itemalone.getClassid()+"\"  id=li"+itemalone.getItemid()
+							+" pid="+itemalone.getParentid()+" ><a href=\"javascript:searchrule("
+							+itemalone.getParentid()+","+itemalone.getItemid()+",'"+itemalone.getItemcode()+"','"
+							+itemalone.getItemname()+"');\">"
+							+itemalone.getItemcode()+"("+itemalone.getItemname()+")</a></span>"
+							+loopAdd(itemalone)+"</li>");
+				}else{//第二层
+					sbuf.append("<li><div ref=\""+itemalone.getItemid()+"\" " +
+							"spanname="+itemalone.getItemname()+" spancode=\""
+							+itemalone.getItemcode()+"\" spantype=\""
+							+itemalone.getClassid()+"\"  id=li"
+							+itemalone.getItemid()+" pid="
+							+itemalone.getParentid()+" ><a href=\"javascript:searchrule("+itemalone.getParentid()+","+itemalone.getItemid()+",'"+itemalone.getItemcode()+"','"
+							+itemalone.getItemname()+"');\">"+itemalone.getItemcode()+"("+itemalone.getItemname()+")</a></div>"+loopAdd(itemalone)+"</li>");
+				}
+			
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	
+	//==================================
+	public void prepareSaveAlone() throws Exception {
+		prepareModel();
+	}
+	/**
+	 * 删除规则目录操作,同时删除排产和K3没有孩子的目录
+	 * @return
+	 * @throws Exception
+	 */
+	public String deleteAlone() throws Exception {
+		try 
+		{
+			//System.out.println("fItemIDList:"+fItemIDList);
+			Items item = itemsService.getById(itemId);//获取当前节点的父节点信息
+			
+			/**/if(itemsService.deleteInfoById(itemId,item.getFnumber())==1)
+			{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				//begin  同时删除排产和K3没有孩子的目录
+				
+				//end   同时删除排产和K3没有孩子的目录
+				updateTreeCacheCategory();
+				updateShowTreeCacheCategory();
+			}
+			else
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "不能删除包含子数据的节点";
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败"+"系统错误!";
+		
+		}
+		return JSON;
+	} 
+	
+	/**
+	 * 删除规则目录操作 不同时删除排产和K3没有孩子的目录
+	 * @return
+	 * @throws Exception
+	 */
+	public String deleteAloneoldbak() throws Exception {
+		try 
+		{
+			//System.out.println("fItemIDList:"+fItemIDList);
+			/**/if(itemsService.deleteInfoById(itemId,"")==1)
+			{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				updateTreeCacheCategory();
+				updateShowTreeCacheCategory();
+			}
+			else
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "不能删除包含子数据的节点";
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		
+		}
+		return JSON;
+	} 
+	/**
+	 * 保存或更新物料规则会同步修改排产或K3的目录
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAlone() throws Exception {
+		
+		try {
+			
+				Items pitem = itemsService.getById(entity.getParentid());//获取当前节点的父节点信息
+				if(null==pitem.getItemcode()){//ROOT
+					entity.setFnumber(entity.getItemcode());//如果当前节点的父节点为空,则设置当前的节点的编码(可能会是新修改的)即为自己的编码
+					entity.setPfnumber("ROOT");
+					//记录当前的规则的旧的全编码
+					entity.setOldfnumber(entity.getOlditemcode());//同时记录当前节点旧的全编码
+					//记录短编码
+					entity.setShortNumber(entity.getItemcode());
+				}else{
+					////,添加的时候有父节点设置父编码 K3保存时需要
+					entity.setPfnumber(pitem.getFnumber());
+					
+					//这是新的规则的全编码
+					entity.setFnumber(pitem.getFnumber()+"."+entity.getItemcode());//如果当前节点的父节点不为空,则当前节点的全编码为父节点+可能被修改的当前节点
+					//记录当前的规则的旧的全编码
+					entity.setOldfnumber(pitem.getFnumber()+"."+entity.getOlditemcode());//同时记录当前节点旧的全编码
+					//记录短编码
+					entity.setShortNumber(entity.getItemcode());
+				}
+			entity.setDeleted((short)0);
+			
+			 
+			List<Items> itemList=new ArrayList<Items>();
+			//itemList=itemService.getListByProperty("itemcode",entity.getItemcode());
+			itemList=itemsService.getListByProperty("fnumber",entity.getFnumber());//通过全编码判断是否唯一
+			if(null!=itemList&&0<itemList.size()){
+				if(1<itemList.size()){//有一个即自己,2个以上说明有重复的
+					throw new ServiceException(" 原因：代码已经存在,请更换!");
+				}
+			}
+			itemsService.saveOrUpdate(entity);//保存跟新排产规则表
+			
+			/*//begin 201503131058 需求中 规则修改了 同时排产和 K3中的目录及关联子目录都会改变
+			String newRuleName=entity.getItemname();//新的规则的名称
+			String newRuleFullCode=entity.getFnumber();//新的规则全代码
+			String oldRuleFullCode=entity.getOldfnumber();//旧的规则全代码
+			
+			//1 更新排产的目录及关联子目录
+			//itemchildcode
+			if(null!=entity.getBaseitemid()){
+				itemService.updateItemWithChildCode(entity);
+			}else{//保存时 同时保存到排产目录中和K3目录中
+				 
+			}
+			
+			//2 更新K3的目录及关联子目录
+			
+			//end 201503131058 需求中 规则修改了 同时排产和 K3中的目录及关联子目录都会改变
+*/			
+			
+			//updateTreeCacheCategory();
+			//updateShowTreeCacheCategory();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败  "+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 保存或更新物料规则不会同步修改排产或K3的目录bak
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAloneoldbak()throws Exception {
+		
+		try {
+			
+				Items pitem = itemsService.getById(entity.getParentid());//查找当前点击的规则节点的父级
+				if(null==pitem.getItemcode()){//ROOT  父级是根
+					entity.setFnumber(entity.getItemcode());
+				}else{//父级不是根
+					entity.setFnumber(pitem.getItemcode()+"."+entity.getItemcode());
+				}
+			entity.setDeleted((short)0);
+			itemsService.saveOrUpdate(entity);
+			updateTreeCacheCategory();
+			updateShowTreeCacheCategory();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	public String updateShowTreeCacheCategory()throws Exception
+	{
+		try
+		{
+			Object obj=CacheService.getInstance().get(SHOWCATEGORYKEY);
+			if(null!=obj){
+				CacheService.getInstance().delete(SHOWCATEGORYKEY);
+			}
+		/*if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		
+					itemQuery.setItemid((long)1);
+				    
+					List<Items> list=itemsService.findList(itemQuery);
+					itemList=new ArrayList<Items>();
+					for(Items item:list)
+					{
+						showtree="<li><b ref=\""+item.getItemid()+"\" id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:\"\";\">"+item.getItemname()+"</a></b>"+loopAdd(item)+"</li>";
+					}
+				
+					//CacheService.getInstance().replace(SHOWCATEGORYKEY, showtree);
+					CacheService.getInstance().add(SHOWCATEGORYKEY, showtree);*/
+			resultInfo[0] = "0";
+			//resultInfo[1] = "查询列表成功";
+			resultInfo[2] = "opt";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			//resultInfo[1] = "查询列表失败";
+			resultInfo[2] = "opt";
+		}
+		return JSON;
+	
+	}
+	
+	
+	public String updateTreeCacheCategory()throws Exception
+	{
+		Object object=CacheService.getInstance().get(CREATETREEKEY);
+		try
+		{
+			if(null!=object){
+				CacheService.getInstance().delete(CREATETREEKEY);
+			}
+		/*if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		
+					itemQuery.setItemid((long)1);
+					List<Items> list=itemsService.findList(itemQuery);
+					itemList=new ArrayList<Items>();
+					for(Items item:list)
+					{
+						 tree="<li><b ref=\""+item.getItemid()+"\" id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:\"\";\">"+item.getItemname()+"</a></b>"+loop(item)+"</li>";
+					}
+				
+					//CacheService.getInstance().replace(CATEGORYKEY, tree);
+					CacheService.getInstance().add(CATEGORYKEY, tree);*/
+					
+			resultInfo[0] = "0";
+			//resultInfo[1] = "查询列表成功";
+			resultInfo[2] = "opt";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			//resultInfo[1] = "查询列表失败";
+			resultInfo[2] = "opt";
+		}
+		return JSON;
+	
+	}
+	
+	
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Items getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemsQuery getItemQuery() {
+		return itemQuery;
+	}
+
+	
+	public void setItemQuery(ItemsQuery itemQuery) {
+		this.itemQuery = itemQuery;
+	}
+
+	public void setItemId(java.lang.Long itemId) {
+		this.itemId = itemId;
+	}
+	
+	
+	public java.lang.Long getItemId() {
+		return this.itemId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Items> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Items> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Items> getItemList() {
+		return itemList;
+	}
+
+	public String getTree() {
+		return tree;
+	}
+
+	public void setTree(String tree) {
+		this.tree = tree;
+	}
+
+	public void setItemList(List<Items> itemList) {
+		this.itemList = itemList;
+	}
+
+	public String getShowtree() {
+		return showtree;
+	}
+
+	public void setShowtree(String showtree) {
+		this.showtree = showtree;
+	}
+	private String CATEGORYKEY="itemsTree";
+	@Action("/items/listToTree")
+	public String listToTree()throws Exception
+	{
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		try
+		{
+			if(CacheService.getInstance().get(CATEGORYKEY)==null)
+		   {
+				itemQuery.setDeleted((short)0);
+				List<Items> list=itemsService.findList(itemQuery);
+				itemList=new ArrayList<Items>();
+				for(Items items:list)
+				{
+					 tree="<li><b ref=\""+items.getItemid()+"\" id=li"+items.getItemid()+" pid="+items.getParentid()+" ><a href=\"javascript:\"\";\">"+items.getItemname()+"</a></b>"+loop(items)+"</li>";
+				}
+			
+			    CacheService.getInstance().add(CATEGORYKEY, tree);
+			}else{
+				tree=(String)CacheService.getInstance().get(CATEGORYKEY);
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String loop(Items items)
+	{
+		ItemsQuery iQuery=new ItemsQuery();
+		iQuery.setParentid(items.getItemid());
+		iQuery.setDeleted((short)0);
+		iQuery.setSortColumns("itemcode");
+		
+		List<Items> list=itemsService.findList(iQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+items.getItemid()+"\">");
+			for(Items itemsalone:list)
+			{
+				if(itemsalone.getParentid()==1){//第一层
+					sbuf.append("<li><span ref=\""+itemsalone.getItemid()+"\" spanname="+itemsalone.getItemname()+" spancode=\""+itemsalone.getItemcode()+"\" spantype=\""+itemsalone.getClassid()+"\"  id=li"+itemsalone.getItemid()+" pid="+itemsalone.getParentid()+" ><a href=\"javascript:\"\";\">"+itemsalone.getItemcode()+"("+itemsalone.getItemname()+")</a></span>"+loop(itemsalone)+"</li>");
+				}else{//第二层
+					sbuf.append("<li><div ref=\""+itemsalone.getItemid()+"\" spanname="+itemsalone.getItemname()+" spancode=\""+itemsalone.getItemcode()+"\" spantype=\""+itemsalone.getClassid()+"\"  id=li"+itemsalone.getItemid()+" pid="+itemsalone.getParentid()+" ><a href=\"javascript:searchrule("+itemsalone.getItemid()+");\">"+itemsalone.getItemcode()+"("+itemsalone.getItemname()+")</a></div>"+loop(itemsalone)+"</li>");
+				}
+			
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	
+	
+	
+	
+	//=============================
+	//树结构用于新的物料规则添加
+	private String CREATETREEKEY="itemsTreeNew";
+	@Action("/items/listToTreeNew")
+	//方法1将拼好的语句放在meched缓存中
+	public String listToTreeNew()throws Exception
+	{
+		try
+		{
+			if(CacheService.getInstance().get(CREATETREEKEY)==null){
+				tree = createTree();
+				CacheService.getInstance().add(CREATETREEKEY, tree);
+			}else{
+				tree=(String)CacheService.getInstance().get(CREATETREEKEY);
+			}
+			System.out.println(tree.length());
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询树成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	}
+	
+	public String createTree(){
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		StringBuffer sbuf = new StringBuffer();
+		//查找root节点
+		itemQuery.setDeleted((short)0);
+		itemQuery.setItemid(1L);
+		List<Items> listRoot = new ArrayList<Items>();
+		listRoot=itemsService.findList(itemQuery);
+		itemList=new ArrayList<Items>();
+		//查找一级目录
+		List<Items> list=new ArrayList<Items>();
+		itemQuery = new ItemsQuery();
+		itemQuery.setDeleted((short)0);
+		itemQuery.setParentid(1L);
+		itemQuery.setSortColumns("itemcode");
+		list  = itemsService.findList(itemQuery);
+		sbuf.append("<li>");
+		if(listRoot!=null&&listRoot.size()>0){
+			Items item0 = listRoot.get(0);
+			sbuf.append("<b ref=\""+item0.getItemid()+"\" id=li"+item0.getItemid()+" pid="+item0.getParentid()+" ><a href=\"javascript:\"\";\">"+item0.getItemname()+"</a></b>");
+		}
+		if(list!=null&&list.size()>0){
+			sbuf.append("<ul>");
+			for(Items item:list){
+				sbuf.append("<li><span ref=\""+item.getItemid()+"\" spanname="+item.getItemname()+" spancode=\""+item.getItemcode()+"\"   id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:searchrule("
+							+item.getParentid()+","+item.getItemid()+",'"+item.getItemcode()+"','"
+							+item.getItemname()+"');\">"+item.getItemcode()+"("+item.getItemname()+")</a></span>"+loopnew(item.getItemid())+"</li>");
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	public String loopnew(long itemid)
+	{
+		ItemsQuery iQuery=new ItemsQuery();
+		iQuery.setParentid(itemid);
+		iQuery.setDeleted((short)0);
+		iQuery.setSortColumns("itemcode");
+		List<Items> list=itemsService.findList(iQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list!=null&&list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+itemid+"\">");
+			for(Items item:list)
+			{
+				sbuf.append("<li><div ref=\""+item.getItemid()+"\" spanname="+item.getItemname()+" spancode=\""+item.getItemcode()+"\"   id=li"+item.getItemid()+" pid="+item.getParentid()+" ><a href=\"javascript:searchrule("
+							+item.getParentid()+","+item.getItemid()+",'"+item.getItemcode()+"','"
+							+item.getItemname()+"');\">"+item.getItemcode()+"("+item.getItemname()+")</a></div>"+loopnew(item.getItemid())+"</li>");
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	//更新缓存树方法（有参数），只更新某个节点的名称
+	public String updateTreeCacheCategory(Items oldItem)throws Exception
+	{
+		try
+		{
+			if(CacheService.getInstance().get(CREATETREEKEY)==null){
+				tree = createTree();
+				CacheService.getInstance().add(CREATETREEKEY, tree);
+			}else{
+				Items entity = this.itemsService.getById(oldItem.getItemid());
+				tree=(String)CacheService.getInstance().get(CREATETREEKEY);
+				int i = tree.indexOf("<span ref=\""+oldItem.getItemid()+"\"");
+				int i2 = tree.indexOf("<div ref=\""+oldItem.getItemid()+"\"");
+				if(i!=-1){
+					//将更改后的名称替换原来的字符串
+					String str = "<span ref=\""+oldItem.getItemid()+"\" spanname="+oldItem.getItemname()+" spancode=\""+oldItem.getItemcode()+"\"   id=li"+oldItem.getItemid()+" pid="+oldItem.getParentid()+" ><a href=\"javascript:searchrule("
+							+oldItem.getParentid()+","+oldItem.getItemid()+",'"+oldItem.getItemcode()+"','"
+							+oldItem.getItemname()+"');\">"+oldItem.getItemcode()+"("+oldItem.getItemname()+")</a></span>";
+					String strnew = "<span ref=\""+entity.getItemid()+"\" spanname="+entity.getItemname()+" spancode=\""+entity.getItemcode()+"\"   id=li"+entity.getItemid()+" pid="+entity.getParentid()+" ><a href=\"javascript:searchrule("
+							+entity.getParentid()+","+entity.getItemid()+",'"+entity.getItemcode()+"','"
+							+entity.getItemname()+"');\">"+entity.getItemcode()+"("+entity.getItemname()+")</a></span>";
+					tree = tree.substring(0, i)+strnew+tree.substring(i+str.length(), tree.length());
+				}
+				if(i2!=-1){
+					String str1 = "<div ref=\""+oldItem.getItemid()+"\" spanname="+oldItem.getItemname()+" spancode=\""+oldItem.getItemcode()+"\"   id=li"+oldItem.getItemid()+" pid="+oldItem.getParentid()+" ><a href=\"javascript:searchrule("
+							+oldItem.getParentid()+","+oldItem.getItemid()+",'"+oldItem.getItemcode()+"','"
+							+oldItem.getItemname()+"');\">"+oldItem.getItemcode()+"("+oldItem.getItemname()+")</a></div>";
+					
+					
+					String str1new = "<div ref=\""+entity.getItemid()+"\" spanname="+entity.getItemname()+" spancode=\""+entity.getItemcode()+"\"   id=li"+entity.getItemid()+" pid="+entity.getParentid()+" ><a href=\"javascript:searchrule("
+							+entity.getParentid()+","+entity.getItemid()+",'"+entity.getItemcode()+"','"
+							+entity.getItemname()+"');\">"+entity.getItemcode()+"("+entity.getItemname()+")</a></div>";
+					tree = tree.substring(0, i2)+str1new+tree.substring(i2+str1.length(), tree.length());
+				}
+				CacheService.getInstance().replace(CREATETREEKEY, tree);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询树成功";
+			}
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	
+	}
+	public void prepareSaveAloneNew() throws Exception {
+		prepareModel();
+	}
+
+	/**
+	 * 更新物料树的名称
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAloneNew()throws Exception {
+		try {
+			
+			Items oldItem = itemsService.getById(entity.getItemid());
+			itemsService.saveItemCode(entity);
+			updateTreeCacheCategory(oldItem);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败  "+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 查找根节点
+	 * @return
+	 * @throws Exception
+	 */
+	public String findRoot()throws Exception
+	{
+		if(this.itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		try {
+			if(itemQuery!=null&&itemQuery.getItemid()!=null){
+				List<Items> list = itemsService.findRootItem(itemQuery);
+				if(list!=null&&list.size()>0){
+					this.entity=list.get(0);
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询根节点成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 查找所有父节点
+	 * @return
+	 * @throws Exception
+	 */
+	public String findParents()throws Exception
+	{
+		if(itemQuery == null) {
+			itemQuery = new ItemsQuery();
+		}
+		this.itemList = new ArrayList<Items>();
+		try {
+			Items bitem = this.itemsService.getById(itemQuery.getItemid());
+			this.itemList.add(bitem);
+			if(bitem!=null&&bitem.getParentid()!=null&&bitem.getParentid()!=1){
+				Items bitem1 = this.itemsService.getById(bitem.getParentid());
+				if(bitem1!=null&&bitem1.getParentid()!=null&&bitem1.getParentid()==1){
+					this.itemList.add(bitem1);
+				}else if(bitem1!=null&&bitem1.getParentid()!=null&&bitem1.getParentid()!=1){
+					Items bitem2 = this.itemsService.getById(bitem1.getParentid());
+					if(bitem2!=null&&bitem2.getParentid()!=null&&bitem2.getParentid()==1){
+						this.itemList.add(bitem2);
+					}
+					this.itemList.add(bitem1);
+				}
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/items/updateBitcCategory")
+	public String updateBaseItemTreeCacheCategory(){
+		try {
+			itemsService.updateBaseItemTreeCacheCategory();
+			tree = createTree();
+			CacheService.getInstance().replace(CREATETREEKEY, tree);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询树成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	}
+}

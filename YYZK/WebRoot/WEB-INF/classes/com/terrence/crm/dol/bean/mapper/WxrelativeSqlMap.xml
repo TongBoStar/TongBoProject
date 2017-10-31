@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Wxrelative">
+
+<resultMap id="RM.Wxrelative" class="com.terrence.crm.dol.bean.Wxrelative">
+	<result property="id" column="id"/>
+	<result property="wxCode" column="wxCode"/>
+	<result property="upwxCode" column="upwxCode"/>
+	<result property="createTime" column="createTime"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Wxrelative.columns">
+	<![CDATA[
+		t_wxrelative.id ,
+		t_wxrelative.wxCode ,
+		t_wxrelative.upwxCode ,
+		t_wxrelative.createTime
+	]]>
+</sql>
+
+<insert id="Wxrelative.insert" >
+	<![CDATA[
+	INSERT INTO t_wxrelative (
+		wxCode,
+		upwxCode,
+		createTime
+	) VALUES (
+		#wxCode#,
+		#upwxCode#,
+		#createTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Wxrelative.update" parameterClass="com.terrence.crm.dol.bean.Wxrelative"> 
+	UPDATE t_wxrelative 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="wxCode">
+			wxCode = #wxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="upwxCode">
+			upwxCode = #upwxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Wxrelative.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_wxrelative.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="wxCode">
+			t_wxrelative.wxCode = #wxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="upwxCode">
+			t_wxrelative.upwxCode = #upwxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_wxrelative.createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Wxrelative.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_wxrelative.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="wxCode">
+		t_wxrelative.wxCode = #wxCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="upwxCode">
+		t_wxrelative.upwxCode = #upwxCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_wxrelative.createTime = #createTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="Wxrelative.getById" resultMap="RM.Wxrelative">
+	select <include refid="Wxrelative.columns"/> from t_wxrelative where id=#id#
+</select>
+
+<select id="Wxrelative.getByProperty" resultMap="RM.Wxrelative">
+	select <include refid="Wxrelative.columns"/> from t_wxrelative where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Wxrelative.delete">
+	<![CDATA[
+		DELETE FROM t_wxrelative WHERE id=#id#
+	]]>
+</delete>
+<delete id="Wxrelative.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_wxrelative WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Wxrelative.findPage.count" resultClass="long">
+	select count(*) from t_wxrelative <include refid="Wxrelative.findPage.where"/>
+</select>
+
+<select id="Wxrelative.findPage" resultMap="RM.Wxrelative">
+	select <include refid="Wxrelative.columns"/> 
+		from t_wxrelative 
+	<include refid="Wxrelative.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Wxrelative.findList" resultMap="RM.Wxrelative">
+	SELECT <include refid="Wxrelative.columns"/> FROM t_wxrelative
+	<include refid="Wxrelative.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

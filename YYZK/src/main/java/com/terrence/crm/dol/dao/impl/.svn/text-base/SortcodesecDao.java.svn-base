@@ -1,0 +1,80 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Sortcodesec;
+import com.terrence.crm.dol.dao.ISortcodesecDao;
+import com.terrence.crm.dol.query.SortcodesecQuery;
+
+@Repository
+public class SortcodesecDao extends BaseIbatisDao<Sortcodesec,java.lang.Long> implements ISortcodesecDao{
+
+		
+	public void saveOrUpdate(Sortcodesec entity) {
+		if(entity.getSecid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Sortcodesec";
+	}
+	public Sortcodesec getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Sortcodesec)this.getSqlMapClientTemplate().queryForObject("Sortcodesec.getByProperty", map);		
+	}
+
+	@Override
+	public Sortcodesec findName(SortcodesecQuery sortcodesecQuery) {
+		return (Sortcodesec) this.getSqlMapClientTemplate().queryForObject("SortCodeSec.findName", sortcodesecQuery);
+	}
+	@Override
+	public List<Sortcodesec> findSecInfoList(SortcodesecQuery sortcodesecQuery) {
+		return (List<Sortcodesec>) this.getSqlMapClientTemplate()
+		.queryForList("SortCodeSec.findSecInfoList", sortcodesecQuery);
+	}
+
+	@Override
+	public List<Sortcodesec> findSecList() {
+		return this.getSqlMapClientTemplate().queryForList("sortCodeSec.findSecList");
+	}
+
+
+	@Override
+	public List<Sortcodesec> findlistStatus() {
+		return  this.getSqlMapClientTemplate().queryForList("sortCodeSec.listfindStatus");
+	}
+
+	@Override
+	public List<Sortcodesec> findlistsupplierlevl() {
+		return  this.getSqlMapClientTemplate().queryForList("sortCodeSec.listsupplierlevl");
+	}
+
+	@Override
+	public List<Sortcodesec> findlistsuppliergovernment() {
+		return  this.getSqlMapClientTemplate().queryForList("sortCodeSec.listsuppliergovernment");
+	}
+
+	@Override
+	public List<Sortcodesec> findlistsupplierDOC() {
+		return this.getSqlMapClientTemplate().queryForList("sortCodeSec.listsupplierDOC");
+	}
+	@Override
+	public Sortcodesec findSEC() {
+		return (Sortcodesec)this.getSqlMapClientTemplate().queryForObject("SortCode.code");
+	}
+}

@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CustomerScore">
+
+        
+	<resultMap id="RM.CustomerScore" class="com.terrence.crm.dol.bean.CustomerScore">
+        <result property="yscoreid" column="yscoreid"/>
+        <result property="areaid" column="areaid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="blocid" column="blocid"/>
+        <result property="customername" column="customername"/>
+        <result property="gwid1" column="gwid1"/>
+        <result property="contacts" column="contacts"/>
+        <result property="contactlimit" column="contactlimit"/>
+        <result property="gwid2" column="gwid2"/>
+        <result property="gwid3" column="gwid3"/>
+        <result property="gwid4" column="gwid4"/>
+        <result property="gwid5" column="gwid5"/>
+        <result property="payterms" column="payterms"/>
+        <result property="gwid6" column="gwid6"/>
+        <result property="gwid7" column="gwid7"/>
+        <result property="amount" column="amount"/>
+        <result property="gwid8" column="gwid8"/>
+        <result property="stanamount" column="stanamount"/>
+        <result property="gwid9" column="gwid9"/>
+        <result property="saleval" column="saleval"/>
+        <result property="gwid10" column="gwid10"/>
+        <result property="retamount" column="retamount"/>
+        <result property="gwid11" column="gwid11"/>
+        <result property="lurkamount" column="lurkamount"/>
+        <result property="gwid12" column="gwid12"/>
+        <result property="notes" column="notes"/>
+        <result property="average" column="average"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fyear" column="fyear"/>
+        <result property="closestatus" column="closestatus"/>
+        <result property="finnerid" column="finnerid"/>
+    </resultMap>
+	
+	<resultMap id="RM.CustomerScore.Organ" class="com.terrence.crm.dol.bean.CustomerScore">
+        <result property="yscoreid" column="yscoreid"/>
+        <result property="areaid" column="areaid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="blocid" column="blocid"/>
+        <result property="customername" column="customername"/>
+        <result property="gwid1" column="gwid1"/>
+        <result property="contacts" column="contacts"/>
+        <result property="contactlimit" column="contactlimit"/>
+        <result property="gwid2" column="gwid2"/>
+        <result property="gwid3" column="gwid3"/>
+        <result property="gwid4" column="gwid4"/>
+        <result property="gwid5" column="gwid5"/>
+        <result property="payterms" column="payterms"/>
+        <result property="gwid6" column="gwid6"/>
+        <result property="gwid7" column="gwid7"/>
+        <result property="amount" column="amount"/>
+        <result property="gwid8" column="gwid8"/>
+        <result property="stanamount" column="stanamount"/>
+        <result property="gwid9" column="gwid9"/>
+        <result property="saleval" column="saleval"/>
+        <result property="gwid10" column="gwid10"/>
+        <result property="retamount" column="retamount"/>
+        <result property="gwid11" column="gwid11"/>
+        <result property="lurkamount" column="lurkamount"/>
+        <result property="gwid12" column="gwid12"/>
+        <result property="notes" column="notes"/>
+        <result property="average" column="average"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fyear" column="fyear"/>
+        <result property="closestatus" column="closestatus"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="organization" resultMap="RM.Score.Organization.Bloc.Area.Province"/>
+        <result property="surveysEntries" column="{finnerid=finnerid,fyear=fyear}" select="CustomerScore.SurEntry.list"/>
+    </resultMap>  
+	
+	<resultMap id="RM.Score.Organization.Bloc.Area.Province" class="com.terrence.crm.dol.bean.Organization">
+        <result property="finnerid" column="finnerid"/>
+        <result property="fname" column="fname"/>
+        <result property="uplimit" column="uplimit"/>
+        <result property="contracts" column="contracts"/>
+        <result property="bloc" resultMap="Score.Bloc.Organization"/>
+        <result property="area" resultMap="Score.Area.Organization"/>
+        <result property="province" resultMap="Score.Province.Organization"/>
+        <result property="contactList" column="finnerid" select="CustomerScore.CrmContact.list"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.Bloc" id="Score.Bloc.Organization">
+		<result property="blocname" column="blocname"/>
+	</resultMap>  
+
+	<resultMap class="com.terrence.crm.dol.bean.Area" id="Score.Area.Organization">
+		<result property="areaname" column="areaname"/>
+	</resultMap>  
+
+	<resultMap class="com.terrence.crm.dol.bean.Province" id="Score.Province.Organization">
+		<result property="provincename" column="provincename"/>
+	</resultMap>  
+	<resultMap id="RM.CustomerScore.CrmContact.list" class="com.terrence.crm.dol.bean.CrmContact">
+	 <result property="contactid" column="contactid"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="contactname" column="contactname"/>
+        <result property="telphone" column="telphone"/>
+        <result property="mobile" column="mobile"/>
+        <result property="email" column="email"/>
+        <result property="departid" column="departid"/>
+        <result property="department" resultMap="RM.Cdepartment.Name"/>
+    </resultMap>
+    <resultMap id="RM.CustomerScore.SurEntry.list" class="com.terrence.crm.dol.bean.SurveysEntry">
+        <result property="gwid" column="gwid"/>
+        <result property="fyear" column="fyear"/>
+        <result property="gwval" column="gwval"/>
+        <result property="money" column="money"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="notes" column="notes"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CustomerScore.columns">
+	    <![CDATA[
+        	t_customer_score.yscoreid ,
+        	t_customer_score.areaid ,
+        	t_customer_score.provinceid ,
+        	t_customer_score.blocid ,
+        	t_customer_score.customername ,
+        	t_customer_score.gwid1 ,
+        	t_customer_score.contacts ,
+        	t_customer_score.contactlimit ,
+        	t_customer_score.gwid2 ,
+        	t_customer_score.gwid3 ,
+        	t_customer_score.gwid4 ,
+        	t_customer_score.gwid5 ,
+        	t_customer_score.payterms ,
+        	t_customer_score.gwid6 ,
+        	t_customer_score.gwid7 ,
+        	t_customer_score.amount ,
+        	t_customer_score.gwid8 ,
+        	t_customer_score.stanamount ,
+        	t_customer_score.gwid9 ,
+        	t_customer_score.saleval ,
+        	t_customer_score.gwid10 ,
+        	t_customer_score.retamount ,
+        	t_customer_score.gwid11 ,
+        	t_customer_score.lurkamount ,
+        	t_customer_score.gwid12 ,
+        	t_customer_score.notes ,
+        	t_customer_score.average ,
+        	t_customer_score.flevel ,
+        	t_customer_score.fyear ,
+        	t_customer_score.closestatus ,
+        	t_customer_score.finnerid 
+	    ]]>
+	</sql>
+	
+   <insert id="CustomerScore.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_customer_score (
+        	areaid ,
+        	provinceid ,
+        	blocid ,
+        	customername ,
+        	gwid1 ,
+        	contacts ,
+        	contactlimit ,
+        	gwid2 ,
+        	gwid3 ,
+        	gwid4 ,
+        	gwid5 ,
+        	payterms ,
+        	gwid6 ,
+        	gwid7 ,
+        	amount ,
+        	gwid8 ,
+        	stanamount ,
+        	gwid9 ,
+        	saleval ,
+        	gwid10 ,
+        	retamount ,
+        	gwid11 ,
+        	lurkamount ,
+        	gwid12 ,
+        	notes ,
+        	average ,
+        	flevel ,
+        	fyear ,
+        	closestatus ,
+        	finnerid 
+        ) VALUES (
+        	#areaid# ,
+        	#provinceid# ,
+        	#blocid# ,
+        	#customername# ,
+        	#gwid1# ,
+        	#contacts# ,
+        	#contactlimit# ,
+        	#gwid2# ,
+        	#gwid3# ,
+        	#gwid4# ,
+        	#gwid5# ,
+        	#payterms# ,
+        	#gwid6# ,
+        	#gwid7# ,
+        	#amount# ,
+        	#gwid8# ,
+        	#stanamount# ,
+        	#gwid9# ,
+        	#saleval# ,
+        	#gwid10# ,
+        	#retamount# ,
+        	#gwid11# ,
+        	#lurkamount# ,
+        	#gwid12# ,
+        	#notes# ,
+        	#average# ,
+        	#flevel# ,
+        	#fyear# ,
+        	#closestatus# ,
+        	#finnerid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="yscoreid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CustomerScore.update" parameterClass="com.terrence.crm.dol.bean.CustomerScore">         
+        UPDATE t_customer_score 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="areaid">
+	        	areaid = #areaid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="provinceid">
+	        	provinceid = #provinceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="blocid">
+	        	blocid = #blocid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="customername">
+	        	customername = #customername# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid1">
+	        	gwid1 = #gwid1# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="contacts">
+	        	contacts = #contacts# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="contactlimit">
+	        	contactlimit = #contactlimit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid2">
+	        	gwid2 = #gwid2# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid3">
+	        	gwid3 = #gwid3# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid4">
+	        	gwid4 = #gwid4# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid5">
+	        	gwid5 = #gwid5# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="payterms">
+	        	payterms = #payterms# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid6">
+	        	gwid6 = #gwid6# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid7">
+	        	gwid7 = #gwid7# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid8">
+	        	gwid8 = #gwid8# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stanamount">
+	        	stanamount = #stanamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid9">
+	        	gwid9 = #gwid9# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="saleval">
+	        	saleval = #saleval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid10">
+	        	gwid10 = #gwid10# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="retamount">
+	        	retamount = #retamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid11">
+	        	gwid11 = #gwid11# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lurkamount">
+	        	lurkamount = #lurkamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid12">
+	        	gwid12 = #gwid12# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="average">
+	        	average = #average# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="closestatus">
+	        	closestatus = #closestatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="finnerid">
+	        	finnerid = #finnerid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        yscoreid = #yscoreid# 
+    </update>
+    
+	<delete id="CustomerScore.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_customer_score where
+       yscoreid = #yscoreid# 
+    ]]>
+    </delete>
+    
+    <delete id="CustomerScore.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_customer_score 
+        WHERE
+       yscoreid in ($yscoreid$) 
+    ]]>
+    </delete>
+    
+    <select id="CustomerScore.getById" resultMap="RM.CustomerScore">
+	    select <include refid="CustomerScore.columns"/>
+	    
+	        from t_customer_score 
+	        where 
+		        yscoreid = #yscoreid# 
+	    
+    </select>
+    
+	<select id="CustomerScore.getByProperty" resultMap="RM.CustomerScore">
+		select <include refid="CustomerScore.columns"/> from t_customer_score where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CustomerScore.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="yscoreid">
+	             t_customer_score.yscoreid = #yscoreid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_customer_score.areaid = #areaid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_customer_score.provinceid = #provinceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="blocid">
+	             t_customer_score.blocid = #blocid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="blocname">
+	             t_bloc.blocname like ('%$blocname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="customername">
+	             t_organization.fname like ('%$customername$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid1">
+	             t_customer_score.gwid1 = #gwid1#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="contacts">
+	             t_customer_score.contacts = #contacts#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="contactlimit">
+	             t_customer_score.contactlimit = #contactlimit#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid2">
+	             t_customer_score.gwid2 = #gwid2#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid3">
+	             t_customer_score.gwid3 = #gwid3#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid4">
+	             t_customer_score.gwid4 = #gwid4#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid5">
+	             t_customer_score.gwid5 = #gwid5#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="payterms">
+	             t_customer_score.payterms = #payterms#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid6">
+	             t_customer_score.gwid6 = #gwid6#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid7">
+	             t_customer_score.gwid7 = #gwid7#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_customer_score.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid8">
+	             t_customer_score.gwid8 = #gwid8#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stanamount">
+	             t_customer_score.stanamount = #stanamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid9">
+	             t_customer_score.gwid9 = #gwid9#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="saleval">
+	             t_customer_score.saleval = #saleval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid10">
+	             t_customer_score.gwid10 = #gwid10#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="retamount">
+	             t_customer_score.retamount = #retamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid11">
+	             t_customer_score.gwid11 = #gwid11#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lurkamount">
+	             t_customer_score.lurkamount = #lurkamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid12">
+	             t_customer_score.gwid12 = #gwid12#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_customer_score.notes = #notes#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="average">
+	             t_customer_score.average = #average#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_customer_score.flevel = #flevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_customer_score.fyear = #fyear#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="closestatus">
+	             t_customer_score.closestatus = #closestatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_customer_score.finnerid = #finnerid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CustomerScore.findPage.and">
+			<isNotEmpty prepend="AND" property="yscoreid">
+	             t_customer_score.yscoreid = #yscoreid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_customer_score.areaid = #areaid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_customer_score.provinceid = #provinceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="blocid">
+	             t_customer_score.blocid = #blocid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="blocname">
+	              t_bloc.blocname like ('%$blocname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="customername">
+	             t_organization.fname like ('%$customername$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid1">
+	             t_customer_score.gwid1 = #gwid1#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="contacts">
+	             t_customer_score.contacts = #contacts#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="contactlimit">
+	             t_customer_score.contactlimit = #contactlimit#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid2">
+	             t_customer_score.gwid2 = #gwid2#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid3">
+	             t_customer_score.gwid3 = #gwid3#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid4">
+	             t_customer_score.gwid4 = #gwid4#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid5">
+	             t_customer_score.gwid5 = #gwid5#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="payterms">
+	             t_customer_score.payterms = #payterms#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid6">
+	             t_customer_score.gwid6 = #gwid6#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid7">
+	             t_customer_score.gwid7 = #gwid7#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_customer_score.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid8">
+	             t_customer_score.gwid8 = #gwid8#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stanamount">
+	             t_customer_score.stanamount = #stanamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid9">
+	             t_customer_score.gwid9 = #gwid9#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="saleval">
+	             t_customer_score.saleval = #saleval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid10">
+	             t_customer_score.gwid10 = #gwid10#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="retamount">
+	             t_customer_score.retamount = #retamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid11">
+	             t_customer_score.gwid11 = #gwid11#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lurkamount">
+	             t_customer_score.lurkamount = #lurkamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid12">
+	             t_customer_score.gwid12 = #gwid12#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_customer_score.notes = #notes#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="average">
+	             t_customer_score.average = #average#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_customer_score.flevel = #flevel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_customer_score.fyear = #fyear#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="closestatus">
+	             t_customer_score.closestatus = #closestatus#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_customer_score.finnerid = #finnerid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="CustomerScore.findList" resultMap="RM.CustomerScore">
+    	SELECT 
+    		<include refid="CustomerScore.columns"/> 
+    	FROM 
+    		t_customer_score
+		<include refid="CustomerScore.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CustomerScore.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_customer_score
+    ]]>
+		<include refid="CustomerScore.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.CustomerScore.findPage" resultMap="RM.CustomerScore">
+    	select <include refid="CustomerScore.columns"/>	    
+	        from t_customer_score 	   
+		<include refid="CustomerScore.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="CustomerScore.findPage" resultMap="RM.CustomerScore">
+    	select <include refid="CustomerScore.columns"/>	    
+	        from t_customer_score where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       yscoreid 
+	   not in(select $notTop$ 
+       yscoreid 
+	   from t_customer_score <include refid="CustomerScore.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CustomerScore.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+     <select id="Organ.CustomerScore.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+      	from t_customer_score
+        left join t_organization on t_customer_score.finnerid = t_organization.finnerid
+        left join t_bloc on t_customer_score.blocid = t_bloc.blocid 
+        where t_customer_score.finnerid in(
+		select finnerid from t_org_orggorup where groupid in (select groupid from t_admin_orggroup where adminId=#queryAdminId#))
+    ]]>
+		<include refid="CustomerScore.findPage.and"/>    
+    </select>
+    <select id="Organ.CustomerScore.findPage" resultMap="RM.CustomerScore.Organ">
+    select t_organization.finnerid,fname,uplimit,contracts,areaname,provincename,blocname,<include refid="CustomerScore.columns"/> 
+    from t_customer_score,t_organization left join t_area on t_organization.areaid=t_area.areaid
+	left join t_province on t_organization.provinceid=t_province.provinceid left join t_bloc on t_organization.blocid=t_bloc.blocid 
+	where t_organization.finnerid=t_customer_score.finnerid
+	and t_customer_score.finnerid in(
+		select finnerid from t_org_orggorup where groupid in (select groupid from t_admin_orggroup where adminId=#queryAdminId#))
+	<isNotEmpty property="notTop">  and   yscoreid  not in(select $notTop$  yscoreid 
+	   from t_customer_score <include refid="CustomerScore.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CustomerScore.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="CustomerScore.findByFinnerIdAndYear" resultClass="java.lang.Long">
+    	SELECT t_customer_score.yscoreid FROM t_customer_score where fyear=$fyear$ and finnerid in ($finnerid$) 
+    </select>
+	<delete id="CustomerScore.deleteMultipleByfid">
+    <![CDATA[
+        DELETE FROM 
+        	t_customer_score 
+        WHERE
+       yscoreid in ($yscoreid$) 
+    ]]>
+    </delete>
+    <select id="CustomerScore.CrmContact.list" resultMap="RM.CustomerScore.CrmContact.list">
+	
+		select t_crm_contact.contactid,t_crm_contact.finnerid,t_crm_contact.departid,t_crm_contact.contactname,
+			t_crm_contact.telphone,t_crm_contact.mobile	,t_crm_contact.email,t_cdepartment.departname
+			
+		from t_crm_contact
+				    left join t_organization on t_crm_contact.finnerid = t_organization.finnerid 
+					left join t_cdepartment on t_crm_contact.departid = t_cdepartment.departid
+		where  t_organization.finnerid = #finnerid#
+			
+	</select>
+	<select id="CustomerScore.SurEntry.list" resultMap="RM.CustomerScore.SurEntry.list">
+		select 
+        	t_surveys_entry.gwid ,
+        	t_surveys_entry.fyear ,
+        	t_surveys_entry.gwval ,
+        	t_surveys_entry.money ,
+        	t_surveys_entry.finnerid ,
+        	t_surveys_entry.notes
+		from t_surveys_entry
+		where  t_surveys_entry.finnerid = #finnerid# and t_surveys_entry.fyear=#fyear#
+			
+	</select>
+	<update id="CustomerScore.updateByFinnerIdAndYear" parameterClass="com.terrence.crm.dol.bean.CustomerScore">         
+        UPDATE t_customer_score 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="areaid">
+	        	areaid = #areaid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="provinceid">
+	        	provinceid = #provinceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="blocid">
+	        	blocid = #blocid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="customername">
+	        	customername = #customername# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid1">
+	        	gwid1 = #gwid1# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="contacts">
+	        	contacts = #contacts# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="contactlimit">
+	        	contactlimit = #contactlimit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid2">
+	        	gwid2 = #gwid2# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid3">
+	        	gwid3 = #gwid3# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid4">
+	        	gwid4 = #gwid4# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid5">
+	        	gwid5 = #gwid5# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="payterms">
+	        	payterms = #payterms# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid6">
+	        	gwid6 = #gwid6# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid7">
+	        	gwid7 = #gwid7# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid8">
+	        	gwid8 = #gwid8# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stanamount">
+	        	stanamount = #stanamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid9">
+	        	gwid9 = #gwid9# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="saleval">
+	        	saleval = #saleval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid10">
+	        	gwid10 = #gwid10# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="retamount">
+	        	retamount = #retamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid11">
+	        	gwid11 = #gwid11# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lurkamount">
+	        	lurkamount = #lurkamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwid12">
+	        	gwid12 = #gwid12# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="average">
+	        	average = #average# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="closestatus">
+	        	closestatus = #closestatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="finnerid">
+	        	finnerid = #finnerid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fyear = #fyear# 
+	        and finnerid = #finnerid# 
+    </update>
+</sqlMap>

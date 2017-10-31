@@ -1,0 +1,273 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.OrderItem;
+import com.terrence.crm.dol.bean.Po;
+import com.terrence.crm.dol.bean.ProdPlan;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.dao.IOrderItemDao;
+import com.terrence.crm.dol.dao.IPoDao;
+import com.terrence.crm.dol.dao.IProdPlanDao;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.query.PoQuery;
+import com.terrence.crm.dol.service.IPoService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class PoService extends BaseService implements IPoService {
+	protected static Logger logger = LoggerFactory.getLogger(PoService.class);
+	@Autowired
+	@Qualifier("poDao")
+	private IPoDao poDao;
+	@Autowired
+	@Qualifier("orderItemDao")
+	private IOrderItemDao orderItemDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("inventoryDao")
+	private IInventoryDao inventoryDao;
+	
+	@Autowired
+	@Qualifier("prodPlanDao")
+	private IProdPlanDao prodPlanDao;
+	
+	@Autowired
+	@Qualifier("prodPlanDetailDao")
+	private IProdPlanDetailDao prodPlanDetailDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Po";
+	}
+	@Transactional(readOnly=true)
+	public Po getById(java.lang.Long id) throws ServiceException
+	{
+		return poDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Po entity) throws ServiceException
+	{
+		poDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Po entity) throws ServiceException
+	{
+		OrderItem orderItem=orderItemDao.getByProperty("fnumber", entity.getItemcode());
+		entity.setItemname(orderItem.getFname());
+		entity.setItemmode(orderItem.getFmodel());
+		entity.setUnitname(orderItem.getUnitname());
+		entity.setStatus(0);
+		entity.setIssend(0);
+		Long adId = poDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Po entity) throws ServiceException
+	{
+		Integer returnValue =  poDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = poDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = poDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PoQuery query = new PoQuery();
+		try {
+			return poDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Po> findPage(Page<Po> page, PoQuery query) throws ServiceException
+	{
+		return poDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Po> findPage(Page<Po> page,String statement, PoQuery query) throws ServiceException
+	{
+		return poDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Po> findList(PoQuery query) throws ServiceException
+	{
+		return poDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Po> findList(PoQuery query,Integer pageSize) throws ServiceException
+	{
+		return poDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Po> findList(PoQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return poDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Po> findAllList() throws ServiceException
+	{
+		return poDao.findAllList();
+	}
+	@Override
+	public Integer updateByMultipleId(List<Long> idList, Po entity)
+			throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = poDao.updateByMultipleId(delIds,entity);
+		return null;
+	}
+	@Override
+	public List<Po> findList(PoQuery query, String statement)
+			throws ServiceException {
+		return poDao.findList(statement, query);
+	}
+	@Override
+	public void saveBuyPlan(Po entity) throws ServiceException{
+		 String[] buycodelist=null;
+		 Long[] detailidlist=null;
+		 Double[] buynumlist=null;
+		 buycodelist=entity.getBuycodelist();
+		 detailidlist = entity.getDetailidlist();
+		 buynumlist=entity.getBuynumlist();
+		 Double []plannums=entity.getPlannums();
+		 Po po=new Po();
+		 po.setRta(entity.getRta());//要求到货时间
+		 po.setStatus(0);//采购状态0:未采购,1: 采购中2:完成
+		 po.setIssend(0);//邮件0:未发,1:已发
+
+		 BaseItem baseitem=new BaseItem();
+		 int codelength = buycodelist.length;
+		 if(codelength<1){
+			 return ;
+		 }
+		 ProdPlanDetail pDetail=new ProdPlanDetail();
+		 for(int i=0;i<codelength;i++){
+			 if(null!=buynumlist[i]&&buynumlist[i].doubleValue()>0){//只取数量不为空且大于0的
+				 baseitem = baseItemDao.getByProperty("itemcode", buycodelist[i]);
+				 //System.out.println("==========buycodelist[i]:"+buycodelist[i]);
+				 po.setItemcode(buycodelist[i]);
+				 po.setItemname(baseitem.getItemname());
+				 po.setItemmode(baseitem.getFormatno());//规格型号
+				 po.setAmount(buynumlist[i]);//数量
+				 po.setUnitname(baseitem.getUnitname());//单位
+				 poDao.save(po);
+				 
+				 pDetail.setPlandetailid(detailidlist[i]);
+				 pDetail.setInnum(buynumlist[i]);
+				 
+				 prodPlanDetailDao.update(pDetail);
+				 baseitem.setExistdemand(baseitem.getExistdemand()+plannums[i]);
+				 baseItemDao.update(baseitem);
+			 }
+		 }
+		 
+		 ProdPlan plan = prodPlanDao.getById(prodPlanDetailDao.getById(detailidlist[0]).getPlanid());//通过plandetail获取planid
+		 //prodPlanDao.
+		 plan.setPushstatus2(1);//零部件下推状态0未下推,1已下推
+		 prodPlanDao.update(plan);
+	}
+	/**原材料外购
+	 * 
+	 */
+	@Override
+	public void saveSrcBuy(Po entity) throws ServiceException {
+
+		 String[] buycodelist=null;
+		 Long[] detailidlist=null;
+		 Double[] buynumlist=null;
+		 String[] rtalist=null;
+		 Double []plannums=entity.getPlannums();
+		 buycodelist=entity.getBuycodelist();
+		 detailidlist = entity.getDetailidlist();
+		 buynumlist=entity.getBuynumlist();
+		 rtalist=entity.getRtalist();
+		 
+		 Po po=new Po();
+	//	 po.setRta(entity.getRta());//要求到货时间
+		 po.setStatus(0);//采购状态0:未采购,1: 采购中2:完成
+		 po.setIssend(0);//邮件0:未发,1:已发
+
+		 BaseItem baseitem=new BaseItem();
+		 int codelength = buycodelist.length;
+		 if(codelength<1){
+			 return ;
+		 }
+		 ProdPlanDetail pDetail=new ProdPlanDetail();
+		 for(int i=0;i<codelength;i++){
+			 if(null!=buynumlist[i]&&buynumlist[i].doubleValue()>0){//只取数量不为空且大于0的
+				 baseitem = baseItemDao.getByProperty("itemcode", buycodelist[i]);
+				 //System.out.println("==========buycodelist[i]:"+buycodelist[i]);
+				 po.setItemcode(buycodelist[i]);
+				 po.setItemname(baseitem.getItemname());
+				 po.setItemmode(baseitem.getFormatno());//规格型号
+				 po.setAmount(buynumlist[i]);//数量
+				 po.setUnitname(baseitem.getUnitname());//单位
+				 po.setRta(DateUtils.GetDate2(rtalist[i], "yyyy-MM-dd"));//要求到货时间--
+				 poDao.save(po);
+				 
+				 pDetail.setPlandetailid(detailidlist[i]);
+				 pDetail.setInnum(buynumlist[i]);
+				 pDetail.setMacenddate(DateUtils.GetDate2(rtalist[i],"yyyy-MM-dd"));
+				 
+				 prodPlanDetailDao.update(pDetail);
+				 baseitem.setExistdemand(baseitem.getExistdemand()+plannums[i]);
+				 baseItemDao.update(baseitem);
+			 }
+		 }
+		 
+		 ProdPlan plan = prodPlanDao.getById(prodPlanDetailDao.getById(detailidlist[0]).getPlanid());//通过plandetail获取planid
+		 //prodPlanDao.
+		 plan.setPushstatus3(1);//原材料下推状态0未下推,1已下推
+		 prodPlanDao.update(plan);
+		
+	}
+
+}

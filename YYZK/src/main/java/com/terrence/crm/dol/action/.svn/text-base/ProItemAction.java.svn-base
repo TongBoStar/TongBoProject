@@ -1,0 +1,632 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IProItemService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.bean.ProItem;
+import com.terrence.crm.dol.query.ProItemQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/proItem")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "proItem." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ProItemAction extends CrudActionSupport<ProItem>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("proItemService")
+	private IProItemService proItemService;
+	
+	
+	private ProItem entity;
+
+	private ProItemQuery proItemQuery;
+	
+	
+	private java.lang.Long proItemId;
+	
+	/** 分页器 */
+	private Page<ProItem> page = new Page<ProItem>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ProItem> proItemList;
+	
+	private List<ProItem> proItems = new ArrayList<ProItem>();
+	private String xlsfile;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (proItemId != null ) {
+			entity = proItemService.getById(proItemId);
+		} else {
+			entity = new ProItem();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			proItemService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(proItemQuery == null) {
+			proItemQuery = new ProItemQuery();
+		}
+		
+		try {
+			proItemList = proItemService.findList(proItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listTop()throws Exception
+	{
+		if(proItemQuery == null) {
+			proItemQuery = new ProItemQuery();
+		}
+		
+		try {
+			proItemList = proItemService.findListTop20(proItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("aid");
+			page.setOrder(Page.DESC);
+		}
+		if(proItemQuery == null) {
+			proItemQuery = new ProItemQuery();
+		}
+		
+		try {
+			page = proItemService.findPage(page, proItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			if(this.proItems!=null&&this.proItems.size()>0){
+				for(int i=0;i<this.proItems.size();i++){
+					proItemService.saveOrUpdate(proItems.get(i));
+				}
+			}else{
+				proItemService.saveOrUpdate(entity);
+			}
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = proItemService.getById(proItemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			proItemList = proItemService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String listItemEntity()throws Exception
+	{
+		if(this.proItemQuery == null) {
+			proItemQuery = new ProItemQuery();
+		}
+		
+		try {
+			entity= proItemService.getByProperty("itemcode", proItemQuery.getItemcode());
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ProItem getModel() {
+		return entity;
+	}
+	public String insertProItem() throws Exception {
+		try{
+			proItemService.saveProItem();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+	
+	/*@Action("/excel/exportProItem")
+	public String exportProItem() throws Exception{
+		HttpServletResponse response = ServletActionContext.getResponse();
+		String filename="项目信息"+DateUtils.FormatDateTime(DateUtils.GetDateTime(),"yyyyMMddHHmmss")+".xls";
+		setResponseHeader(response, filename);
+		    try {
+		    	
+		    		projectService.findProjectDetailXls(response,this.entity,this.bomList,getRequest().getRealPath("/"));
+		    		response.getOutputStream().flush();
+				    response.getOutputStream().close();
+		    	if(proItemQuery == null) {
+					proItemQuery = new ProItemQuery();
+				}
+				
+				try {
+					proItemList = proItemService.findList(proItemQuery);
+					proItemService.proItemXls(response,this.proItemList);
+					resultInfo[0] = "0";
+					resultInfo[1] = "查询列表成功";
+				} catch(ServiceException e) {
+					logger.error(e.getMessage());
+					
+					resultInfo[0] = "-1";
+					resultInfo[1] = e.getMessage();
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+					
+					resultInfo[0] = "-1";
+					resultInfo[1] = "查询列表失败";
+				}
+					resultInfo[0] = "0";
+					resultInfo[1] = "导出成功";
+			}catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return null;
+		    
+	}
+	*//** 设置响应头 *//*
+	public void setResponseHeader(HttpServletResponse response, String fileName) {
+		try {
+			response.setContentType("application/msexcel;charset=UTF-8");
+			//两种方法都可以
+			//response.setContentType("application/octet-stream;charset=iso-8859-1");
+			response.setHeader("Content-Disposition", "attachment;filename="
+					+ new String(fileName.getBytes("UTF-8"),"iso-8859-1"));
+			// 客户端不缓存
+			response.addHeader("Pargam", "no-cache");
+			response.addHeader("Cache-Control", "no-cache");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}*/
+	@Action("/excel/exportProItem")
+	public String exportAllitem(){
+		    try {
+		    	if(proItemQuery == null) {
+					proItemQuery = new ProItemQuery();
+				}
+				String fileName = proItemService.proItemXls(getRequest().getRealPath("/"),proItemQuery,checkedIdList);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	
+	@Action("/excel/saveExportProItem")
+	public void saveExport(){
+		String filename=getRequest().getParameter("filename");
+		HSSFWorkbook wb = null;
+		try {
+			wb = new HSSFWorkbook(new FileInputStream(getRequest().getRealPath("/")+filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+			HttpServletResponse response = getResponse();
+			response.setContentType("application/vnd.ms-excel");
+			try {
+				
+					String filenameStr = DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"物料表.xls";
+					response.setHeader("Content-disposition","attachment; filename=" + new String( filenameStr.getBytes("gb2312"), "ISO8859-1" ) );					
+			
+					OutputStream ouputStream = response.getOutputStream(); 
+					 wb.write(ouputStream);  
+					 ouputStream.flush();  
+					 ouputStream.close();
+					 new File(getRequest().getRealPath("/")+filename).delete();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	
+	public String importItemxls(){
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().
+		getContextClassLoader().getResourceAsStream("application.properties");
+        
+		try
+		{
+			prop.load(inputStream);
+	     	String importPlmPath = prop.getProperty("upload.bashPath").trim();
+			proItemService.saveOrUpdateItemXlsData(importPlmPath+"/"+xlsfile);
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "导入失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ProItemQuery getProItemQuery() {
+		return proItemQuery;
+	}
+
+	
+	public void setProItemQuery(ProItemQuery proItemQuery) {
+		this.proItemQuery = proItemQuery;
+	}
+
+	public void setProItemId(java.lang.Long proItemId) {
+		this.proItemId = proItemId;
+	}
+	
+	
+	public java.lang.Long getProItemId() {
+		return this.proItemId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ProItem> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ProItem> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ProItem> getProItemList() {
+		return proItemList;
+	}
+
+	public List<ProItem> getProItems() {
+		return proItems;
+	}
+
+	public void setProItems(List<ProItem> proItems) {
+		this.proItems = proItems;
+	}
+
+	public String getXlsfile() {
+		return xlsfile;
+	}
+
+	public void setXlsfile(String xlsfile) {
+		this.xlsfile = xlsfile;
+	}
+	
+	
+}

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Rpcontractentry;
+import com.terrence.crm.dol.query.RpcontractentryQuery;
+import com.terrence.crm.dol.dao.IRpcontractentryDao;
+import com.terrence.crm.dol.service.IRpcontractentryService;
+
+@Service
+@Transactional
+public class RpcontractentryService extends BaseService implements IRpcontractentryService {
+	protected static Logger logger = LoggerFactory.getLogger(RpcontractentryService.class);
+	@Autowired
+	@Qualifier("rpcontractentryDao")
+	private IRpcontractentryDao rpcontractentryDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Rpcontractentry";
+	}
+	@Transactional(readOnly=true)
+	public Rpcontractentry getById(java.lang.Long id) throws ServiceException
+	{
+		return rpcontractentryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Rpcontractentry entity) throws ServiceException
+	{
+		rpcontractentryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Rpcontractentry entity) throws ServiceException
+	{
+		Long adId = rpcontractentryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Rpcontractentry entity) throws ServiceException
+	{
+		Integer returnValue =  rpcontractentryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = rpcontractentryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = rpcontractentryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		RpcontractentryQuery query = new RpcontractentryQuery();
+		try {
+			return rpcontractentryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Rpcontractentry> findPage(Page<Rpcontractentry> page, RpcontractentryQuery query) throws ServiceException
+	{
+		return rpcontractentryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Rpcontractentry> findPage(Page<Rpcontractentry> page,String statement, RpcontractentryQuery query) throws ServiceException
+	{
+		return rpcontractentryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Rpcontractentry> findList(RpcontractentryQuery query) throws ServiceException
+	{
+		return rpcontractentryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Rpcontractentry> findList(RpcontractentryQuery query,Integer pageSize) throws ServiceException
+	{
+		return rpcontractentryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Rpcontractentry> findList(RpcontractentryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return rpcontractentryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Rpcontractentry> findAllList() throws ServiceException
+	{
+		return rpcontractentryDao.findAllList();
+	}
+
+}

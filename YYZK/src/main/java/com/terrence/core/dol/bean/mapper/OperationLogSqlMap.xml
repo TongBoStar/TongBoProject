@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+	<resultMap id="RM.OperationLog" class="com.terrence.core.dol.bean.OperationLog">
+		<result property="id" column="id"/>
+		<result property="empId" column="empId"/>
+		<result property="empUserName" column="empUserName"/>
+		<result property="moduleName" column="moduleName"/>
+		<result property="ip" column="ip"/>
+		<result property="machineName" column="machineName"/>
+		<result property="operateDate" column="operateDate"/>
+		<result property="empLoginName" column="empLoginName"/>
+		<result property="operateType" column="operateType"/>
+		<result property="operateDescription" column="operateDescription"/>
+	</resultMap>
+
+	<sql id="OperationLog.columns">
+		<![CDATA[
+		id,
+		empId,
+		empUserName,
+		moduleName,
+		ip,
+		machineName,
+		operateDate,
+		empLoginName,
+		operateType,
+		operateDescription
+		]]>
+	</sql>
+
+
+	<insert id="OperationLog.insert" >
+		<![CDATA[
+		INSERT INTO core_operation_log
+		(
+		empId,
+		empUserName,
+		moduleName,
+		ip,
+		machineName,
+		operateDate,
+		empLoginName,
+		operateType,
+		operateDescription
+		)
+		VALUES
+		(
+		#empId#,
+		#empUserName#,
+		#moduleName#,
+		#ip#,
+		#machineName#,
+		#operateDate#,
+		#empLoginName#,
+		#operateType#,
+		#operateDescription#
+		)
+		]]>
+		<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+			SELECT  @@identity
+		</selectKey>
+	</insert>
+
+	<update id="OperationLog.update" >
+		UPDATE core_operation_log 
+		<dynamic prepend="SET">
+			<isNotEmpty prepend="," property="empId">
+			empId = #empId# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="empUserName">
+			empUserName = #empUserName# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="moduleName">
+			moduleName = #moduleName# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="ip">
+			ip = #ip# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="machineName">
+			machineName = #machineName# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="operateDate">
+			operateDate = #operateDate# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="empLoginName">
+			empLoginName = #empLoginName# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="operateType">
+			operateType = #operateType# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="operateDescription">
+			operateDescription = #operateDescription# 
+			</isNotEmpty>
+		</dynamic>	
+		WHERE id = #id# 
+	</update>
+
+	<delete id="OperationLog.delete">
+		<![CDATA[
+		DELETE FROM core_operation_log WHERE id = #id# 
+		]]>
+	</delete>
+
+	<select id="OperationLog.getById" resultMap="RM.OperationLog">
+		SELECT <include refid="OperationLog.columns"/>
+		<![CDATA[
+		FROM core_operation_log
+		WHERE id = #id#
+		]]>
+	</select>
+   
+	<sql id="OperationLog.findPage.where">
+		<isNotEmpty prepend="AND" property="empId">
+		empId = #empId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="empUserName">
+		empUserName like ('%$empUserName$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleName">
+		moduleName like ('%$moduleName$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="ip">
+		ip  like ('%$ip$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="machineName">
+		machineName like ('%$machineName$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operateDate">
+		operateDate = #operateDate# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="startDate">
+		operateDate &gt;= #startDate# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="endDate">
+		operateDate &lt;= #endDate# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="empLoginName">
+		empLoginName like ('%$empLoginName$%')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operateType">
+		operateType = #operateType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operateDescription">
+		operateDescription = #operateDescription# 
+		</isNotEmpty>
+	</sql>
+
+	<select id="OperationLog.findPage.count" resultClass="long">
+		SELECT count(*) FROM core_operation_log where 1=1 <include refid="OperationLog.findPage.where"/>
+	</select>
+
+	<select id="OperationLog.findPage" resultMap="RM.OperationLog">
+		SELECT <include refid="OperationLog.columns"/> 
+		FROM core_operation_log where 1=1 <include refid="OperationLog.findPage.where"/>
+		<isNotEmpty property="notTop"> and
+		id not in(select $notTop$ id from core_operation_log where 1=1 <include refid="OperationLog.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>) 
+		</isNotEmpty>  
+		<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+	<select id="OperationLog.findList" resultMap="RM.OperationLog">
+		SELECT <include refid="OperationLog.columns"/> 
+		FROM core_operation_log where 1=1 <include refid="OperationLog.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+</sqlMap>

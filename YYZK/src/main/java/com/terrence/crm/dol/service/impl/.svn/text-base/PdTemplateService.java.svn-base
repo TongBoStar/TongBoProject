@@ -1,0 +1,128 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdTemplate;
+import com.terrence.crm.dol.query.PdTemplateQuery;
+import com.terrence.crm.dol.dao.IPdTemplateDao;
+import com.terrence.crm.dol.dao.ITemplateFlowDao;
+import com.terrence.crm.dol.service.IPdTemplateService;
+
+@Service
+@Transactional
+public class PdTemplateService extends BaseService implements IPdTemplateService {
+	protected static Logger logger = LoggerFactory.getLogger(PdTemplateService.class);
+	@Autowired
+	@Qualifier("pdTemplateDao")
+	private IPdTemplateDao pdTemplateDao;
+	@Autowired
+	@Qualifier("templateFlowDao")
+	private ITemplateFlowDao templateFlowDao;
+	public String getIbatisSqlMapNamespace() {
+		return "PdTemplate";
+	}
+	@Transactional(readOnly=true)
+	public PdTemplate getById(java.lang.Long id) throws ServiceException
+	{
+		return pdTemplateDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdTemplate entity) throws ServiceException
+	{
+		pdTemplateDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdTemplate entity) throws ServiceException
+	{
+		Long adId = pdTemplateDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdTemplate entity) throws ServiceException
+	{
+		Integer returnValue =  pdTemplateDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdTemplateDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		templateFlowDao.deleteByTemplate(delIds);
+		Integer returnValue = pdTemplateDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdTemplateQuery query = new PdTemplateQuery();
+		try {
+			return pdTemplateDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdTemplate> findPage(Page<PdTemplate> page, PdTemplateQuery query) throws ServiceException
+	{
+		return pdTemplateDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdTemplate> findPage(Page<PdTemplate> page,String statement, PdTemplateQuery query) throws ServiceException
+	{
+		return pdTemplateDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTemplate> findList(PdTemplateQuery query) throws ServiceException
+	{
+		return pdTemplateDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTemplate> findList(PdTemplateQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdTemplateDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdTemplate> findList(PdTemplateQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdTemplateDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTemplate> findAllList() throws ServiceException
+	{
+		return pdTemplateDao.findAllList();
+	}
+
+}

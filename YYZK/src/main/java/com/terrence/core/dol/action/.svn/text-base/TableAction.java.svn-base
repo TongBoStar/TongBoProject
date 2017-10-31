@@ -1,0 +1,268 @@
+package com.terrence.core.dol.action;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+
+import com.base.BaseAction;
+import com.base.util.JsonUtil;
+//import com.base.util.ResultEntity;
+import com.terrence.core.dol.bean.TableField;
+import com.terrence.core.dol.bean.TableInfo;
+import com.terrence.core.dol.query.TableFieldQuery;
+import com.terrence.core.dol.query.TableInfoQuery;
+import com.terrence.core.dol.service.ITableFieldService;
+import com.terrence.core.dol.service.ITableInfoService;
+import com.terrence.crm.dol.base.core.Page;
+
+@Scope("prototype")
+@Namespace("/table")
+public class TableAction extends BaseAction{
+	private static final long serialVersionUID = -9034482031688777828L;
+	
+	@Autowired
+	@Qualifier("tableInfoService")
+	private ITableInfoService tableInfoService;
+	@Autowired
+	@Qualifier("tableFieldService")
+	private ITableFieldService tableFieldService;
+	
+	private TableInfo tableInfo;
+	private TableInfoQuery tableInfoQuery;
+	private java.lang.Long tableId;
+	private Page<TableInfo> tableInfoPage = new Page<TableInfo>();
+	private TableField tableField;
+	private TableFieldQuery tableFieldQuery;
+	private Integer page;
+	private Integer rows;
+	@Action(value="/pageList")
+	public void infoPageList() throws IOException{
+		if(null==tableInfoQuery){
+			tableInfoQuery = new TableInfoQuery();
+		}
+		tableInfoPage.setPageNo(page.equals(0)?0:this.getPage());
+		tableInfoPage.setPageSize(rows.equals(0)?0:this.getRows());
+		tableInfoPage = tableInfoService.findPage(tableInfoPage, tableInfoQuery);
+		response.getWriter().print(toTableInfoGridPageJson(tableInfoPage.getTotalCount() ,tableInfoPage.getResult()));
+	}
+	
+	public void fieldList() throws NumberFormatException, IOException{
+		if(null==tableFieldQuery){
+			tableFieldQuery = new TableFieldQuery();
+		}
+		tableFieldQuery.setSortColumns(" sort asc ");
+		List<TableField> list =tableFieldService.findList(tableFieldQuery);
+		response.getWriter().print(toTableFieldGridPageJson(Long.parseLong(list.size()+""),list));
+	}
+	
+	@Action(value="infoIndex",results = { @Result(name = "success", location = "/WEB-INF/content/core/table/add.jsp") })
+	public String infoIndex(){
+		
+		return SUCCESS;
+	}
+	
+	public void deleteToJson() throws IOException{
+		if(tableId!=null){
+			tableInfoService.deleteById(tableId);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "del");
+			resultMsg.put("msg", "删除表信息成功！");
+		}
+		response.getWriter().print(JsonUtil.getResultJson(resultMsg));
+
+	}
+	
+
+	@Action(value="fieldIndex",results = { @Result(name = "success", location = "/WEB-INF/content/core/table/filedadd.jsp") })
+	public String fieldIndex(){
+		if(null!=tableField && tableField.getId()>0){
+			tableField = tableFieldService.getById( tableField.getId());
+		}
+		return SUCCESS;
+	}
+	//@Action(value="/add")
+	public void infoSave() throws IOException{
+		if(null!=tableInfo){
+			Long l=tableInfoService.save(tableInfo);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "add");
+			resultMsg.put("msg", "新增表信息成功！");
+			//resultEntity.setData(l);
+		}else{
+			tableInfoService.update(tableInfo);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "edit");
+			resultMsg.put("msg", "修改表信息成功！");
+		}
+		response.getWriter().print(JsonUtil.getResultJson(resultMsg));
+	/*	Object result = this.returnResult(request, resultEntity);
+		return result;*/
+	}
+	@Action(value="update_table",results = { @Result(name = "success", location = "/WEB-INF/content/core/table/update.jsp") })
+	public String update(){
+		tableInfo=new TableInfo();
+		String id=request.getParameter("id");
+		Long id1= Long.parseLong(id);
+		if(null!=tableInfo && id1>0){
+			tableInfo = tableInfoService.getById(id1);
+			
+			request.setAttribute("tableInfo", tableInfo);
+		}
+		return SUCCESS;
+	}
+	@Action(value="/update")
+	public void updatetable() throws IOException{
+		if(tableInfo.getId()!=null){
+			tableInfoService.update(tableInfo);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "edit");
+			resultMsg.put("msg", "修改表信息成功！");
+		}	
+		response.getWriter().print(JsonUtil.getResultJson(resultMsg));
+	}
+	public void fieldSave() throws IOException{
+		if(null!=tableField && null == tableField.getId()){
+			tableFieldService.save(tableField);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "add");
+			resultMsg.put("msg", "新增表字段信息成功！");
+		}else{
+			tableFieldService.update(tableField);
+			resultMsg.put("success", "true");
+			resultMsg.put("type", "edit");
+			resultMsg.put("msg", "修改表字段信息成功！");
+		}
+		response.getWriter().print(JsonUtil.getResultJson(resultMsg));
+	}
+	
+	public String toTableFieldGridPageJson(Long totalCount,List<TableField> list){
+		StringBuffer sbResult = new StringBuffer();
+		sbResult.append("{\"total\":").append(totalCount).append(",");
+		sbResult.append("\"rows\":[");
+		int listSize = list.size();
+		for(int i=0;i<listSize;i++){
+			TableField tableFieldEntity = list.get(i);
+			sbResult.append("{");
+			sbResult.append("\"id\":").append(tableFieldEntity.getId()).append(",");
+			sbResult.append("\"tableName\":\"").append(tableFieldEntity.getTableName()).append("\",");
+			sbResult.append("\"name\":\"").append(tableFieldEntity.getName()).append("\",");
+			sbResult.append("\"dataType\":\"").append(tableFieldEntity.getDataType()).append("\",");
+			sbResult.append("\"length\":\"").append(tableFieldEntity.getLength()).append("\",");
+			sbResult.append("\"isPrimaryKey\":").append(tableFieldEntity.getIsPrimaryKey()).append(",");
+			sbResult.append("\"description\":\"").append(tableFieldEntity.getDescription()).append("\",");
+			sbResult.append("\"sort\":").append(tableFieldEntity.getSort()).append(",");
+			sbResult.append("\"title\":\"").append(tableFieldEntity.getTitle()).append("\",");
+			sbResult.append("\"isForm\":").append(tableFieldEntity.getIsForm()).append(",");
+			sbResult.append("\"isList\":").append(tableFieldEntity.getIsList()).append(",");
+			sbResult.append("\"isBean\":").append(tableFieldEntity.getIsBean()).append(",");
+			sbResult.append("\"validform\":\"").append((null==tableFieldEntity.getValidform())?"":tableFieldEntity.getValidform().replace("\"", "\\\"")).append("\",");
+			sbResult.append("\"inputType\":\"").append(tableFieldEntity.getInputType()).append("\"");
+			
+			if(i==(listSize-1)){
+				sbResult.append("}");
+			}else{
+				sbResult.append("},");
+			}
+		}
+		sbResult.append("]");
+		sbResult.append("}");
+		return sbResult.toString();
+	}
+	
+	public String toTableInfoGridPageJson(Long totalCount,List<TableInfo> list){
+		StringBuffer sbResult = new StringBuffer();
+		sbResult.append("{\"total\":").append(totalCount).append(",");
+		sbResult.append("\"rows\":[");
+		int listSize = list.size();
+		for(int i=0;i<listSize;i++){
+			TableInfo tableInfoEntity = list.get(i);
+			sbResult.append("{");
+			sbResult.append("\"id\":").append(tableInfoEntity.getId()).append(",");
+			sbResult.append("\"name\":\"").append(tableInfoEntity.getName()).append("\",");
+			sbResult.append("\"packageName\":\"").append(tableInfoEntity.getPackageName()).append("\",");
+			sbResult.append("\"lowerName\":\"").append(tableInfoEntity.getLowerName()).append("\",");
+			sbResult.append("\"upperName\":\"").append(tableInfoEntity.getUpperName()).append("\"");
+			
+			if(i==(listSize-1)){
+				sbResult.append("}");
+			}else{
+				sbResult.append("},");
+			}
+		}
+		sbResult.append("]");
+		sbResult.append("}");
+		return sbResult.toString();
+	}
+	
+	public java.lang.Long getTableId() {
+		return tableId;
+	}
+
+	public void setTableId(java.lang.Long tableId) {
+		this.tableId = tableId;
+	}
+
+	public TableInfoQuery getTableInfoQuery() {
+		return tableInfoQuery;
+	}
+
+	public void setTableInfoQuery(TableInfoQuery tableInfoQuery) {
+		this.tableInfoQuery = tableInfoQuery;
+	}
+
+	public Page<TableInfo> getTableInfoPage() {
+		return tableInfoPage;
+	}
+
+	public void setTableInfoPage(Page<TableInfo> tableInfoPage) {
+		this.tableInfoPage = tableInfoPage;
+	}
+
+	public Integer getPage() {
+		return page;
+	}
+
+	public void setPage(Integer page) {
+		this.page = page;
+	}
+
+	public Integer getRows() {
+		return rows;
+	}
+
+	public void setRows(Integer rows) {
+		this.rows = rows;
+	}
+
+	public TableFieldQuery getTableFieldQuery() {
+		return tableFieldQuery;
+	}
+
+	public void setTableFieldQuery(TableFieldQuery tableFieldQuery) {
+		this.tableFieldQuery = tableFieldQuery;
+	}
+
+	public TableInfo getTableInfo() {
+		return tableInfo;
+	}
+
+	public void setTableInfo(TableInfo tableInfo) {
+		this.tableInfo = tableInfo;
+	}
+
+	public TableField getTableField() {
+		return tableField;
+	}
+
+	public void setTableField(TableField tableField) {
+		this.tableField = tableField;
+	}
+}

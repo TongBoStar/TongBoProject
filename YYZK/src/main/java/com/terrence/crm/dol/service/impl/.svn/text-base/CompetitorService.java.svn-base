@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Competitor;
+import com.terrence.crm.dol.query.CompetitorQuery;
+import com.terrence.crm.dol.dao.ICompetitorDao;
+import com.terrence.crm.dol.service.ICompetitorService;
+
+@Service
+@Transactional
+public class CompetitorService extends BaseService implements ICompetitorService {
+	protected static Logger logger = LoggerFactory.getLogger(CompetitorService.class);
+	@Autowired
+	@Qualifier("competitorDao")
+	private ICompetitorDao competitorDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Competitor";
+	}
+	@Transactional(readOnly=true)
+	public Competitor getById(java.lang.Long id) throws ServiceException
+	{
+		return competitorDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Competitor entity) throws ServiceException
+	{
+		competitorDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Competitor entity) throws ServiceException
+	{
+		Long adId = competitorDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Competitor entity) throws ServiceException
+	{
+		Integer returnValue =  competitorDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = competitorDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = competitorDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CompetitorQuery query = new CompetitorQuery();
+		try {
+			return competitorDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Competitor> findPage(Page<Competitor> page, CompetitorQuery query) throws ServiceException
+	{
+		return competitorDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Competitor> findPage(Page<Competitor> page,String statement, CompetitorQuery query) throws ServiceException
+	{
+		return competitorDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Competitor> findList(CompetitorQuery query) throws ServiceException
+	{
+		return competitorDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Competitor> findList(CompetitorQuery query,Integer pageSize) throws ServiceException
+	{
+		return competitorDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Competitor> findList(CompetitorQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return competitorDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Competitor> findAllList() throws ServiceException
+	{
+		return competitorDao.findAllList();
+	}
+
+}

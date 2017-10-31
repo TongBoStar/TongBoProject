@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AreaPd">
+
+        
+	<resultMap id="RM.AreaPd" class="com.terrence.crm.dol.bean.AreaPd">
+        <result property="apid" column="apid"/>
+        <result property="baseitemid" column="baseitemid"/>
+        <result property="areaid" column="areaid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AreaPd.columns">
+	    <![CDATA[
+        	t_area_pd.apid ,
+        	t_area_pd.baseitemid ,
+        	t_area_pd.areaid 
+	    ]]>
+	</sql>
+	
+   <insert id="AreaPd.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_area_pd (
+        	baseitemid ,
+        	areaid 
+        ) VALUES (
+        	#baseitemid# ,
+        	#areaid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="apid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AreaPd.update" parameterClass="com.terrence.crm.dol.bean.AreaPd">         
+        UPDATE t_area_pd 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="baseitemid">
+	        	baseitemid = #baseitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areaid">
+	        	areaid = #areaid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        apid = #apid# 
+    </update>
+    
+	<delete id="AreaPd.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_area_pd where
+       apid = #apid# 
+    ]]>
+    </delete>
+    
+    <delete id="AreaPd.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_area_pd 
+        WHERE
+       apid in ($apid$) 
+    ]]>
+    </delete>
+    
+    <select id="AreaPd.getById" resultMap="RM.AreaPd">
+	    select <include refid="AreaPd.columns"/>
+	    
+	        from t_area_pd 
+	        where 
+		        apid = #apid# 
+	    
+    </select>
+    
+	<select id="AreaPd.getByProperty" resultMap="RM.AreaPd">
+		select <include refid="AreaPd.columns"/> from t_area_pd where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AreaPd.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="apid">
+	             t_area_pd.apid = #apid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_area_pd.baseitemid = #baseitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_area_pd.areaid = #areaid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AreaPd.findPage.and">
+			<isNotEmpty prepend="AND" property="apid">
+	             t_area_pd.apid = #apid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_area_pd.baseitemid = #baseitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_area_pd.areaid = #areaid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AreaPd.Entity" resultMap="RM.AreaPd">
+    	SELECT 	<include refid="AreaPd.columns"/> FROM t_area_pd <include refid="AreaPd.findPage.where"/>
+    </select>
+    
+    <select id="AreaPd.findList" resultMap="RM.AreaPd">
+    	SELECT 
+    		<include refid="AreaPd.columns"/> 
+    	FROM 
+    		t_area_pd
+		<include refid="AreaPd.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AreaPd.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_area_pd
+    ]]>
+		<include refid="AreaPd.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AreaPd.findPage" resultMap="RM.AreaPd">
+    	select <include refid="AreaPd.columns"/>	    
+	        from t_area_pd 	   
+		<include refid="AreaPd.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AreaPd.findPage" resultMap="RM.AreaPd">
+    	select <include refid="AreaPd.columns"/>	    
+	        from t_area_pd where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       apid 
+	   not in(select $notTop$ 
+       apid 
+	   from t_area_pd <include refid="AreaPd.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AreaPd.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+    
+    <select id="AreaPd.find.apdList.data" resultMap="RM.AreaPd">
+    	SELECT 
+    		<include refid="AreaPd.columns"/> 
+    	FROM 
+    		t_area_pd
+		<include refid="AreaPd.findPage.where"/>
+		
+    </select>
+	
+</sqlMap>

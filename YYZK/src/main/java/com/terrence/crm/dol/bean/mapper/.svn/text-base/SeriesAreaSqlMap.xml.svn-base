@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SeriesArea">
+
+        
+	<resultMap id="RM.SeriesArea" class="com.terrence.crm.dol.bean.SeriesArea">
+        <result property="id" column="id"/>
+        <result property="seriesid" column="seriesid"/>
+        <result property="areaid" column="areaid"/>
+        <result property="teamid" column="teamid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="SeriesArea.columns">
+	    <![CDATA[
+        	t_series_area.id ,
+        	t_series_area.seriesid ,
+        	t_series_area.areaid ,
+        	t_series_area.teamid 
+	    ]]>
+	</sql>
+	
+   <insert id="SeriesArea.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_series_area (
+        	seriesid ,
+        	areaid ,
+        	teamid 
+        ) VALUES (
+        	#seriesid# ,
+        	#areaid# ,
+        	#teamid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="SeriesArea.update" parameterClass="com.terrence.crm.dol.bean.SeriesArea">         
+        UPDATE t_series_area 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seriesid">
+	        	seriesid = #seriesid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areaid">
+	        	areaid = #areaid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="SeriesArea.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_series_area where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="SeriesArea.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_series_area 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="SeriesArea.getById" resultMap="RM.SeriesArea">
+	    select <include refid="SeriesArea.columns"/>
+	    
+	        from t_series_area 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="SeriesArea.getByProperty" resultMap="RM.SeriesArea">
+		select <include refid="SeriesArea.columns"/> from t_series_area where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="SeriesArea.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_series_area.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seriesid">
+	             t_series_area.seriesid = #seriesid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_series_area.areaid = #areaid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_series_area.teamid = #teamid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="SeriesArea.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_series_area.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seriesid">
+	             t_series_area.seriesid = #seriesid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_series_area.areaid = #areaid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_series_area.teamid = #teamid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="SeriesArea.findList" resultMap="RM.SeriesArea">
+    	SELECT 
+    		<include refid="SeriesArea.columns"/> 
+    	FROM 
+    		t_series_area
+		<include refid="SeriesArea.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SeriesArea.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_series_area
+    ]]>
+		<include refid="SeriesArea.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="SeriesArea.findPage" resultMap="RM.SeriesArea">
+    	select <include refid="SeriesArea.columns"/>	    
+	        from t_series_area 	   
+		<include refid="SeriesArea.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.SeriesArea.findPage" resultMap="RM.SeriesArea">
+    	select <include refid="SeriesArea.columns"/>	    
+	        from t_series_area where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_series_area <include refid="SeriesArea.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="SeriesArea.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

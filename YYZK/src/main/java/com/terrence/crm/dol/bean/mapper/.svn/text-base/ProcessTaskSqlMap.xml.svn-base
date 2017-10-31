@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProcessTask">
+
+<resultMap id="RM.ProcessTask" class="com.terrence.crm.dol.bean.ProcessTask">
+	<result property="id" column="id"/>
+	<result property="taskName" column="taskName"/>
+	<result property="taskCode" column="taskCode"/>
+	<result property="processIds" column="processIds"/>
+	<result property="processName" column="processName"/>
+	<result property="taskMark" column="taskMark"/>
+	<result property="createrName" column="createrName"/>
+	<result property="createrId" column="createrId"/>
+</resultMap>
+<resultMap id="RM.ProcessTaskCode" class="com.terrence.crm.dol.bean.ProcessTask">
+	<result property="id" column="id"/>
+	<result property="taskCode" column="taskCode"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ProcessTask.columns">
+	<![CDATA[
+		t_process_task.id ,
+		t_process_task.taskName ,
+		t_process_task.taskCode ,
+		t_process_task.processIds ,
+		t_process_task.taskMark ,
+		t_process_task.createrName ,
+		t_process_task.createrId
+	]]>
+</sql>
+
+<insert id="ProcessTask.insert" >
+	<![CDATA[
+	INSERT INTO t_process_task (
+		taskName,
+		taskCode,
+		processIds,
+		taskMark,
+		createrName,
+		createrId
+	) VALUES (
+		#taskName#,
+		#taskCode#,
+		#processIds#,
+		#taskMark#,
+		#createrName#,
+		#createrId#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ProcessTask.update" parameterClass="com.terrence.crm.dol.bean.ProcessTask"> 
+	UPDATE t_process_task 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="taskName">
+			taskName = #taskName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="taskCode">
+			taskCode = #taskCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="processIds">
+			processIds = #processIds# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="taskMark">
+			taskMark = #taskMark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrName">
+			createrName = #createrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrId">
+			createrId = #createrId# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ProcessTask.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_process_task.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskName">
+			t_process_task.taskName like ('%$taskName$%' )
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskCode">
+			t_process_task.taskCode = #taskCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="processIds">
+			t_process_task.processIds = #processIds# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskMark">
+			t_process_task.taskMark = #taskMark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrName">
+			t_process_task.createrName = #createrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrId">
+			t_process_task.createrId = #createrId# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ProcessTask.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_process_task.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskName">
+		t_process_task.taskName like ('%$taskName$%' )
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskCode">
+		t_process_task.taskCode = #taskCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="processIds">
+		t_process_task.processIds = #processIds# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskMark">
+		t_process_task.taskMark = #taskMark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrName">
+		t_process_task.createrName = #createrName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrId">
+		t_process_task.createrId = #createrId# 
+	</isNotEmpty>
+</sql>
+
+<select id="ProcessTask.getById" resultMap="RM.ProcessTask">
+	select <include refid="ProcessTask.columns"/>,t_process_define.processName processName from t_process_task 
+	left join t_process_define on t_process_task.processIds = t_process_define.id 
+	where t_process_task.id=#id#
+</select>
+
+<select id="ProcessTask.getByProperty" resultMap="RM.ProcessTask">
+	select <include refid="ProcessTask.columns"/>,t_process_define.processName processName from t_process_task 
+	left join t_process_define on t_process_task.processIds = t_process_define.id where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ProcessTask.delete">
+	<![CDATA[
+		DELETE FROM t_process_task WHERE t_process_task.id=#id#
+	]]>
+</delete>
+<delete id="ProcessTask.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_process_task WHERE t_process_task.id in ($id$)
+	]]>
+</delete>
+
+<select id="ProcessTask.findPage.count" resultClass="long">
+	select count(*) from t_process_task <include refid="ProcessTask.findPage.where"/>
+</select>
+
+<select id="ProcessTask.findPage" resultMap="RM.ProcessTask">
+	select <include refid="ProcessTask.columns"/>,t_process_define.processName processName from t_process_task 
+	left join t_process_define on t_process_task.processIds = t_process_define.id 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and t_process_task.id not in(
+			select $notTop$ t_process_task.id from t_process_task <include refid="ProcessTask.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="ProcessTask.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ProcessTask.findList" resultMap="RM.ProcessTask">
+	SELECT <include refid="ProcessTask.columns"/>,t_process_define.processName processName from t_process_task 
+	left join t_process_define on t_process_task.processIds = t_process_define.id 
+	<include refid="ProcessTask.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<insert id="ProcessTask.saveTwoDimCode" >
+	<![CDATA[
+	INSERT INTO t_scan_temp (
+		code
+	) VALUES (
+		#taskCode#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+<select id="ProcessTask.findScanCode" resultMap="RM.ProcessTaskCode">
+	select id,code taskCode from t_scan_temp where id = (select max(id) id from t_scan_temp)
+</select>
+</sqlMap>

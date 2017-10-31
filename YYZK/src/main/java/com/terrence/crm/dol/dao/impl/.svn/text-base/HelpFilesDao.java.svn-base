@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.HelpFiles;
+import com.terrence.crm.dol.dao.IHelpFilesDao;
+@Repository
+public class HelpFilesDao extends BaseIbatisDao<HelpFiles,java.lang.Long> implements IHelpFilesDao{
+	public String getIbatisSqlMapNamespace() {
+		return "HelpFiles"; 
+	}
+	public void saveOrUpdate(HelpFiles entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public HelpFiles getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (HelpFiles)this.getSqlMapClientTemplate().queryForObject("HelpFiles.getByProperty", map);
+	}
+}

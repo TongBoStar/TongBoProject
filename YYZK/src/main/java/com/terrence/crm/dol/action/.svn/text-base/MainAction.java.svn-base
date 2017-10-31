@@ -1,0 +1,132 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.opensymphony.xwork2.ActionContext;
+import com.opensymphony.xwork2.ActionSupport;
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Authority;
+import com.terrence.crm.dol.bean.Teams;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.TeamsQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.ITeamsService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
+/**
+ * 后台登陆
+ * 
+ * @version 1.0
+ */
+@Namespace("/")
+public class MainAction extends ActionSupport {
+	private static Logger logger = LoggerFactory.getLogger(MainAction.class);
+	private Admin admin;
+	private Template template;
+	
+	private String mainMenu;
+	
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	@Autowired
+	@Qualifier("teamsService")
+	private ITeamsService teamsService;
+	@Autowired
+	private Configuration freemarkerConfiguration;
+	Long []activityCount;
+	Long []supplierCount;
+	public Long[] getSupplierCount() {
+		return supplierCount;
+	}
+
+	public void setSupplierCount(Long[] supplierCount) {
+		this.supplierCount = supplierCount;
+	}
+
+	public String execute() throws Exception {
+		AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+		admin = adminSession.getAdmin();
+		
+		/*更新最后登录时间*/
+		Admin updateAdmin = new Admin();
+		updateAdmin.setAdminId(admin.getAdminId());
+		updateAdmin.setLastLoginTime(DateConvertUtils.getCurrentDateTime());
+		adminService.updateLastTime(updateAdmin);
+		
+		
+		initMenu(admin.getMenuOperateList());
+        return SUCCESS;
+    }
+	
+	public void setFreemarkerConfiguration(Configuration freemarkerConfiguration) throws IOException {
+		//根据freemarkerConfiguration的templateLoaderPath载入文件.
+		this.freemarkerConfiguration=freemarkerConfiguration;
+		
+	}
+	
+	private void initMenu(List<MenuOperate> authorityList) {
+		Map<String, String> paramMap = new HashMap<String, String>();
+		for(MenuOperate authority: authorityList) {
+			paramMap.put(authority.getKeywords(), authority.getName());
+		}
+		TeamsQuery query=new TeamsQuery();
+		List<Teams> listteam=teamsService.findList(query);
+		Map teammap=new HashMap();
+		/*for(Teams team:listteam)
+		{
+			//teammap.put(team.getTeamid().toString(), team.getTeamname());
+			paramMap.put("team"+team.getTeamid(), team.getTeamname());
+		}*/
+		//ServletActionContext.getRequest().setAttribute("teammap", listteam);
+		
+		try {
+			template = this.freemarkerConfiguration.getTemplate("template/mainMenuTemplate.ftl", "utf-8");
+			mainMenu = FreeMarkerTemplateUtils.processTemplateIntoString(template, paramMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("构造菜单失败");
+		}
+			
+			
+	}
+	
+	public Admin getAdmin() {
+		return admin;
+	}
+
+	public String getMainMenu() {
+		return mainMenu;
+	}
+
+	public Long[] getActivityCount() {
+		return activityCount;
+	}
+
+	public void setActivityCount(Long[] activityCount) {
+		this.activityCount = activityCount;
+	}
+
+	
+	
+}

@@ -1,0 +1,145 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Sdari;
+import com.terrence.crm.dol.bean.SdariEngineer;
+import com.terrence.crm.dol.dao.ISdariDao;
+import com.terrence.crm.dol.dao.ISdariEngineerDao;
+import com.terrence.crm.dol.query.SdariQuery;
+import com.terrence.crm.dol.service.ISdariService;
+
+@Service
+@Transactional
+public class SdariService extends BaseService implements ISdariService {
+	protected static Logger logger = LoggerFactory.getLogger(SdariService.class);
+	@Autowired
+	@Qualifier("sdariDao")
+	private ISdariDao sdariDao;
+	@Autowired
+	@Qualifier("sdariEngineerDao")
+	private ISdariEngineerDao sdariEngineerDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Sdari";
+	}
+	@Transactional(readOnly=true)
+	public Sdari getById(java.lang.Long id) throws ServiceException
+	{
+		return sdariDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Sdari entity) throws ServiceException
+	{
+		sdariDao.saveOrUpdate(entity);
+		List<Long> ids=entity.getEngineerids();
+		List<String> names=entity.getEngnames();
+		for(int i=0;i<names.size();i++)
+		{
+			SdariEngineer engineer=null;
+			if(names.get(i).length()>0)
+			{
+				engineer=new SdariEngineer();
+				engineer.setEngname(names.get(i));
+				engineer.setFinterid(entity.getFinterid());
+				if(null!=ids&&ids.get(i)!=null)
+				{
+					engineer.setEngineerid(ids.get(i));
+				}
+				sdariEngineerDao.saveOrUpdate(engineer);
+			}
+		}
+	}
+	
+	public java.lang.Long save(Sdari entity) throws ServiceException
+	{
+		Long adId = sdariDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Sdari entity) throws ServiceException
+	{
+		Integer returnValue =  sdariDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = sdariDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = sdariDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SdariQuery query = new SdariQuery();
+		try {
+			return sdariDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Sdari> findPage(Page<Sdari> page, SdariQuery query) throws ServiceException
+	{
+		return sdariDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Sdari> findPage(Page<Sdari> page,String statement, SdariQuery query) throws ServiceException
+	{
+		return sdariDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Sdari> findList(SdariQuery query) throws ServiceException
+	{
+		return sdariDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Sdari> findList(SdariQuery query,Integer pageSize) throws ServiceException
+	{
+		return sdariDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Sdari> findList(SdariQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return sdariDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Sdari> findAllList() throws ServiceException
+	{
+		return sdariDao.findAllList();
+	}
+
+}

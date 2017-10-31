@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.query.ProdPlanDetailQuery;
+
+@Repository
+public class ProdPlanDetailDao extends BaseIbatisDao<ProdPlanDetail,java.lang.Long> implements IProdPlanDetailDao{
+
+		
+	public void saveOrUpdate(ProdPlanDetail entity) {
+		if(entity.getPlandetailid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ProdPlanDetail";
+	}
+	public ProdPlanDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProdPlanDetail)this.getSqlMapClientTemplate().queryForObject("ProdPlanDetail.getByProperty", map);		
+	}
+
+	@Override
+	public ProdPlanDetail getProdPlanDetail(String statement,
+			ProdPlanDetailQuery query) {
+		return (ProdPlanDetail)this.getSqlMapClientTemplate().queryForObject(statement, query);
+	}
+
+}

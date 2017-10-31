@@ -1,0 +1,774 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.apache.struts2.json.annotations.JSON;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import com.terrence.crm.common.util.PropertiesUtils;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IBomDrawTitleService;
+import com.terrence.crm.dol.utils.PropertiesUtil;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.BomDrawTitle;
+import com.terrence.crm.dol.query.BomDrawTitleQuery;
+import com.terrence.crm.dol.query.FileInfo;
+import com.terrence.crm.dol.query.FileType;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/bomDrawTitle")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "bomDrawTitle." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class BomDrawTitleAction extends CrudActionSupport<BomDrawTitle>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("bomDrawTitleService")
+	private IBomDrawTitleService bomDrawTitleService;
+	
+	private String qqfile;
+	private File uploadFile;
+	private String uploadFileFileName;
+	private String type;
+	private String srcfilename;
+	private String success;
+	private String filename;
+	private String swfpath;
+	private String isrelative;
+	private BomDrawTitle entity;
+	private String userId;
+	private String userName;
+	private BomDrawTitleQuery bomDrawTitleQuery;
+	private Long designassistId;
+	private String tabType;
+	private String modelMark;
+	private java.lang.Long bomDrawTitleId;
+	
+	/** 分页器 */
+	private Page<BomDrawTitle> page = new Page<BomDrawTitle>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<BomDrawTitle> bomDrawTitleList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (bomDrawTitleId != null ) {
+			entity = bomDrawTitleService.getById(bomDrawTitleId);
+		} else {
+			entity = new BomDrawTitle();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			bomDrawTitleService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(bomDrawTitleQuery == null) {
+			bomDrawTitleQuery = new BomDrawTitleQuery();
+		}
+		
+		try {
+			bomDrawTitleList = bomDrawTitleService.findList("BomDrawTitle.findByDesignAssistId.maxversion.bomdraw",bomDrawTitleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("bomDrawTitleId");
+			page.setOrder(Page.DESC);
+		}
+		if(bomDrawTitleQuery == null) {
+			bomDrawTitleQuery = new BomDrawTitleQuery();
+		}
+		
+		try {
+			page = bomDrawTitleService.findPage(page, bomDrawTitleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			bomDrawTitleService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = bomDrawTitleService.getById(bomDrawTitleId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			bomDrawTitleList = bomDrawTitleService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public String checkout(){
+		Map<String,Object> map = bomDrawTitleService.findUseStatus(bomDrawTitleQuery,isrelative);
+		Struts2Utils.renderJson(map);
+		return JSON;
+	}
+	@Action("/common/fileupload")
+	public String uploadFile() throws Exception {
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		Admin admin = new Admin();
+		admin.setAdminId(Long.valueOf(userId));
+		admin.setAdminName(userName);
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			bomDrawTitleService.findAllList();
+			FileInfo fileInfo = bomDrawTitleService.upload(in, uploadFileName, getFileType(type));
+			success = "true";
+			filename = fileInfo.getFileUrl();
+			srcfilename=uploadFileFileName;
+			swfpath=fileInfo.getSwffileurl();
+			//调用dll的方法执行读取操作
+			Runtime rn = Runtime.getRuntime();
+			Process p=null;
+			try {
+				//"D:\\Program Files (x86)\\AutoCAD 2010\\Terrence.CadForm.exe"
+				p = rn.exec("E:\\terrence\\cad-info\\ZWCAD\\ZwCadexe\\Terrence.CadForm.exe");
+				while(p.waitFor()==0){
+					System.out.println("调用exe结束;");
+					break;
+				}
+				System.out.println("开始进行操作!");
+			} catch (Exception e) {
+				System.out.println("Error exec!"+e.getMessage());
+			}
+			//ConnectToCad();
+			//调用结束后去临时表中取数据，并进行校验
+			bomDrawTitleService.updateall(filename,designassistId,modelMark,admin,uploadFileFileName);
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功!";
+		}catch(Exception e){
+			System.out.println(e.getMessage());
+			success = "false";
+			resultInfo[0] = "1";
+			resultInfo[1] = e.getMessage();
+		}finally{
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawlist", null);
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawtitle", null);
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawfilepath", null);
+		}
+		return JSON;
+	}
+	@Action("/common/fileuploadall")
+	public String uploadFileAll() throws Exception {
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		Admin admin = new Admin();
+		admin.setAdminId(Long.valueOf(userId));
+		admin.setAdminName(userName);
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			bomDrawTitleService.findAllList();
+			FileInfo fileInfo = bomDrawTitleService.upload(in, uploadFileName, getFileType(type));
+			success = "true";
+			filename = fileInfo.getFileUrl();
+			srcfilename=uploadFileFileName;
+			swfpath=fileInfo.getSwffileurl();
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功!";
+		}catch(Exception e){
+			System.out.println(e.getMessage());
+			success = "false";
+			resultInfo[0] = "1";
+			resultInfo[1] = e.getMessage();
+		}
+		return JSON;
+	}
+	public void prepareHandleFileAll() throws Exception {
+		prepareModel();
+	}
+	public String handleFileAll() throws Exception {
+		bomDrawTitleService.saveToPath(filename);
+		Runtime rn = Runtime.getRuntime();
+		Process p=null;
+		try {
+			//"D:\\Program Files (x86)\\AutoCAD 2010\\Terrence.CadForm.exe"
+			p = rn.exec(PropertiesUtil.getPropertyValue("cadpath")+"Terrence.CadForm.exe");
+			while(p.waitFor()==0){
+				System.out.println("调用exe结束;");
+				break;
+			}
+			System.out.println("开始进行操作!");
+			//调用结束后去临时表中取数据，并进行校验
+			bomDrawTitleService.handleall(filename,srcfilename,entity);
+			//bomDrawTitleService.countDifAfter(entity.getDesignassistId());
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功!";
+		} catch (Exception e) {
+			resultInfo[0] = "1";
+			resultInfo[1] = "操作失败:"+e.getMessage();
+			System.out.println("Error exec!"+e.getMessage());
+		}finally{
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawlist", null);
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawtitle", null);
+			bomDrawTitleService.deleteByMultipleId("BomDrawTitle.delete.bomdrawfilepath", null);
+		}
+		return JSON;
+	}
+	public String countDifAfter()throws Exception{
+		try{
+			bomDrawTitleService.countDifAfter(bomDrawTitleQuery.getDesignassistId());
+			resultInfo[0] = "0";
+			resultInfo[1] = "校验成功!";
+		}catch (Exception e) {
+			resultInfo[0] = "1";
+			resultInfo[1] = "校验失败:"+e.getMessage();
+			System.out.println("Error exec!"+e.getMessage());
+		}
+		return JSON;
+	}
+	public String loadFiles()throws Exception
+	{
+		BomDrawTitleQuery bdtqQuery = new BomDrawTitleQuery();
+		bdtqQuery.setDesignassistId(designassistId);
+		bdtqQuery.setTabType(tabType);
+		List<BomDrawTitle> bomDrawTitles = bomDrawTitleService.findList(bdtqQuery);
+		if(null!=bomDrawTitles&&bomDrawTitles.size()>0){
+			entity = bomDrawTitles.get(0);
+		}else{
+			throw new ServiceException("图纸下载失败:没有对应的图纸!");
+		}
+		HttpServletResponse response = ServletActionContext.getResponse();
+		//String filename=entity.getFileName()+entity.getFilePath().substring(entity.getFilePath().indexOf('.'),entity.getFilePath().length());
+		String filename=entity.getFileName();
+		setResponseHeader(response, filename);
+		try {
+			bomDrawTitleService.downLoadFiles(response,entity.getFilepath());
+			response.getOutputStream().flush();
+		    response.getOutputStream().close();
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return null;
+	}
+	public String downLoadBomDraw()throws Exception
+	{
+		BomDrawTitle bomDrawTitle = bomDrawTitleService.getById(bomDrawTitleId);
+		if(null==bomDrawTitle){
+			throw new ServiceException("图纸下载失败:没有对应的图纸!");
+		}
+		HttpServletResponse response = ServletActionContext.getResponse();
+		//String filename=entity.getFileName()+entity.getFilePath().substring(entity.getFilePath().indexOf('.'),entity.getFilePath().length());
+		String filename=bomDrawTitle.getFileName();
+		setResponseHeader(response, filename);
+		try {
+			bomDrawTitleService.downLoadFiles(response,bomDrawTitle.getFilepath());
+			response.getOutputStream().flush();
+		    response.getOutputStream().close();
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			System.out.println("------------------"+e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			System.out.println("================="+e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return null;
+	}
+	/** 设置响应头 */
+	public void setResponseHeader(HttpServletResponse response, String fileName) {
+		try {
+			response.setContentType("application/msexcel;charset=UTF-8");
+			//两种方法都可以
+			//response.setContentType("application/octet-stream;charset=iso-8859-1");
+			response.setHeader("Content-Disposition", "attachment;filename="
+					+ new String(fileName.getBytes("UTF-8"),"iso-8859-1"));
+			// 客户端不缓存
+			response.addHeader("Pargam", "no-cache");
+			response.addHeader("Cache-Control", "no-cache");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	public String loadFileList(){
+		try {
+			bomDrawTitleList = bomDrawTitleService.loadFileList(bomDrawTitleQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (ServiceException e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	synchronized public native int ConnectToCad() throws Exception;
+	/**
+     * 对应枚举类
+     * @param type
+     * @return
+     */
+	@JSON(serialize=false)
+    private FileType getFileType(String type){
+    	FileType rnt = null;
+    	if(type!=null&&!type.trim().equals("")){
+    		rnt = FileType.valueOf(type.toUpperCase());
+    	}
+    	return rnt;
+    }
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public BomDrawTitle getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public BomDrawTitleQuery getBomDrawTitleQuery() {
+		return bomDrawTitleQuery;
+	}
+
+	
+	public void setBomDrawTitleQuery(BomDrawTitleQuery bomDrawTitleQuery) {
+		this.bomDrawTitleQuery = bomDrawTitleQuery;
+	}
+
+	public void setForderinstockId(java.lang.Long bomDrawTitleId) {
+		this.bomDrawTitleId = bomDrawTitleId;
+	}
+	
+	
+	public java.lang.Long getForderinstockId() {
+		return this.bomDrawTitleId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<BomDrawTitle> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<BomDrawTitle> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<BomDrawTitle> getBomDrawTitleList() {
+		return bomDrawTitleList;
+	}
+
+	public String getQqfile() {
+		return qqfile;
+	}
+
+	public void setQqfile(String qqfile) {
+		this.qqfile = qqfile;
+	}
+
+	public File getUploadFile() {
+		return uploadFile;
+	}
+
+	public void setUploadFile(File uploadFile) {
+		this.uploadFile = uploadFile;
+	}
+
+	public String getUploadFileFileName() {
+		return uploadFileFileName;
+	}
+
+	public void setUploadFileFileName(String uploadFileFileName) {
+		this.uploadFileFileName = uploadFileFileName;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getSrcfilename() {
+		return srcfilename;
+	}
+
+	public void setSrcfilename(String srcfilename) {
+		this.srcfilename = srcfilename;
+	}
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+
+	public String getSwfpath() {
+		return swfpath;
+	}
+
+	public void setSwfpath(String swfpath) {
+		this.swfpath = swfpath;
+	}
+
+	public String getSuccess() {
+		return success;
+	}
+
+	public void setSuccess(String success) {
+		this.success = success;
+	}
+
+	public java.lang.Long getBomDrawTitleId() {
+		return bomDrawTitleId;
+	}
+
+	public void setBomDrawTitleId(java.lang.Long bomDrawTitleId) {
+		this.bomDrawTitleId = bomDrawTitleId;
+	}
+
+	public void setBomDrawTitleList(List<BomDrawTitle> bomDrawTitleList) {
+		this.bomDrawTitleList = bomDrawTitleList;
+	}
+
+	public String getIsrelative() {
+		return isrelative;
+	}
+
+	public void setIsrelative(String isrelative) {
+		this.isrelative = isrelative;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public Long getDesignassistId() {
+		return designassistId;
+	}
+
+	public void setDesignassistId(Long designassistId) {
+		this.designassistId = designassistId;
+	}
+
+	public String getModelMark() {
+		return modelMark;
+	}
+
+	public void setModelMark(String modelMark) {
+		this.modelMark = modelMark;
+	}
+
+	public String getTabType() {
+		return tabType;
+	}
+
+	public void setTabType(String tabType) {
+		this.tabType = tabType;
+	}
+	
+}

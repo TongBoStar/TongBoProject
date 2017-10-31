@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckDataDetail">
+	<resultMap id="RM.CheckDataDetail" class="com.terrence.crm.dol.bean.CheckDataDetail">
+        <result property="cddid" column="cddid"/>
+        <result property="checkid" column="checkid"/>
+        <result property="fdatetime" column="fdatetime"/>
+        <result property="inpress" column="inpress"/>
+        <result property="outPress" column="outPress"/>
+        <result property="flow" column="flow"/>
+        <result property="degree" column="degree"/>
+        <result property="processtime" column="processtime"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckDataDetail.columns">
+	    <![CDATA[
+        	t_checkdata_detail.cddid ,
+        	t_checkdata_detail.checkid ,
+        	t_checkdata_detail.fdatetime ,
+        	t_checkdata_detail.inpress, 
+        	t_checkdata_detail.outPress,
+        	t_checkdata_detail.flow,
+        	t_checkdata_detail.degree,
+        	t_checkdata_detail.processtime
+	    ]]>
+	</sql>
+	
+   <insert id="CheckDataDetail.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_checkdata_detail (
+        	checkid,
+        	fdatetime ,
+        	inpress,
+        	outPress,
+        	flow,
+        	degree,
+        	processtime
+        ) VALUES (
+        	#checkid#,
+        	#fdatetime# ,
+        	#inpress#,
+        	#outPress#,
+        	#flow#,
+        	#degree#,
+        	#processtime#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="cddid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <select id="CheckDataDetail.findList" resultMap="RM.CheckDataDetail">
+    	select <include refid="CheckDataDetail.columns"/>	    
+	        from t_checkdata_detail where checkid = #checkid#
+    </select>
+	
+</sqlMap>

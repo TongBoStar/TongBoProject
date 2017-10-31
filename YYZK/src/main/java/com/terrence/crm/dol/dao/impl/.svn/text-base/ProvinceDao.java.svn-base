@@ -1,0 +1,61 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.dao.IProvinceDao;
+import com.terrence.crm.dol.query.ProvinceQuery;
+
+@Repository
+public class ProvinceDao extends BaseIbatisDao<Province,java.lang.Long> implements IProvinceDao{
+
+		
+	public void saveOrUpdate(Province entity) {
+		if(entity.getProvinceid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Province";
+	}
+	public Province getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Province)this.getSqlMapClientTemplate().queryForObject("Province.getByProperty", map);		
+	}
+
+	@Override
+	public Integer updateProvince(Province entity) {
+		return this.getSqlMapClientTemplate().update("Province.updateProvince", entity);
+	}
+
+	@Override
+	public Integer findempty(ProvinceQuery provinceQuery) {
+		return this.getSqlMapClientTemplate().update("Province.update.findempty", provinceQuery);
+	}
+
+	@Override
+	public List<Province> findProList(ProvinceQuery provinceQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Province.findProList.for.data", provinceQuery);
+	}
+
+	@Override
+	public void findProviceERP() {
+		this.getSqlMapClientTemplate().queryForObject("Province.for.ERP.data");
+	}
+
+}

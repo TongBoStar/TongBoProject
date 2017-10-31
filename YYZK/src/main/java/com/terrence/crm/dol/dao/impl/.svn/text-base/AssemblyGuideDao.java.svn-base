@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyGuide;
+import com.terrence.crm.dol.dao.IAssemblyGuideDao;
+import com.terrence.crm.dol.query.AssemblyGuideQuery;
+
+@Repository
+public class AssemblyGuideDao extends BaseIbatisDao<AssemblyGuide,java.lang.Long> implements IAssemblyGuideDao{
+
+		
+	public void saveOrUpdate(AssemblyGuide entity) {
+		if(entity.getGuideid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyGuide";
+	}
+	public AssemblyGuide getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyGuide)this.getSqlMapClientTemplate().queryForObject("AssemblyGuide.getByProperty", map);		
+	}
+
+	@Override
+	public AssemblyGuide findData(AssemblyGuide guide) {
+		return (AssemblyGuide) this.getSqlMapClientTemplate().queryForObject("AssemblyGuide.find.detail.data",guide);
+	}
+
+	@Override
+	public List<AssemblyGuide> findGuide(AssemblyGuideQuery assemblyGuideQuery) {
+		return this.getSqlMapClientTemplate().queryForList("AssemblyGuide.find.use.guide", assemblyGuideQuery);
+	}
+
+}

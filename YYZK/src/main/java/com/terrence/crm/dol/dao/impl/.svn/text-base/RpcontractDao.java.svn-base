@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Rpcontract;
+import com.terrence.crm.dol.dao.IRpcontractDao;
+
+@Repository
+public class RpcontractDao extends BaseIbatisDao<Rpcontract,java.lang.Long> implements IRpcontractDao{
+
+		
+	public void saveOrUpdate(Rpcontract entity) {
+		if(entity.getContractid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Rpcontract";
+	}
+	public Rpcontract getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Rpcontract)this.getSqlMapClientTemplate().queryForObject("Rpcontract.getByProperty", map);		
+	}
+
+}

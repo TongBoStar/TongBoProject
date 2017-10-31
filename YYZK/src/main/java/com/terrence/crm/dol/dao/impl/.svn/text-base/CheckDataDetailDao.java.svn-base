@@ -1,0 +1,177 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckDataDetail;
+import com.terrence.crm.dol.dao.ICheckDataDetailDao;
+@Repository
+public class CheckDataDetailDao extends BaseIbatisDao<CheckDataDetail,java.lang.Long> implements ICheckDataDetailDao{
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckDataDetail";
+	}
+
+	@Override
+	public void saveOrUpdate(CheckDataDetail entity) throws DataAccessException {
+		if(null==entity.getCddid()){
+			save(entity);
+		}else{
+			update(entity);
+		}
+	}
+
+	@Override
+	public Map<String,List<String>> findChartDataInfos() {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String,List<String>> map = new HashMap<String, List<String>>();
+		List<String> list = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery("select * from t_check_gchart");
+			ResultSetMetaData rsmd=rs.getMetaData();
+			Integer columnCount = rsmd.getColumnCount();//查询出有多少个列
+			int num = 0;
+			while (rs.next()) {
+				list = new ArrayList<String>();
+				for (int i = 1; i <= columnCount; i++) {
+					list.add(rs.getString(i));
+				}
+				map.put((++num)+"", list);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+		return map;
+	}
+	@Override
+	public Map<String,Object> findChartColumns() {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Map<String,Object> map = new HashMap<String, Object>();
+		List<String> list = new ArrayList<String>();
+		StringBuffer sb = new StringBuffer();
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery("select fkey,fseqno from t_check_gchartfield order by fseqno asc");
+			while (rs.next()) {
+				sb.append(rs.getString(1)).append(",");
+				list.add(rs.getString(2));
+			}
+			sb.deleteCharAt(sb.length()-1);
+			map.put("keys", sb.toString());
+			map.put("seqnos", list);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+		return map;
+	}
+	public void updateChartColumns(String fieldName) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			stmt.execute("alter table t_checkdata_detail add "+fieldName+" nvarchar(max) null");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+	}
+	public Map<String, Object> findChartColumns(Long modelid) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs = stmt.executeQuery("select * from t_checkdata_detail where tplid="+modelid);
+			ResultSetMetaData rsmd=rs.getMetaData();
+			Integer columnCount = rsmd.getColumnCount();//查询出有多少个列
+			String head;
+			while (rs.next()) {
+				for (int i = 1; i <= columnCount; i++) {
+					head = rsmd.getColumnName(i);//取出表头
+					map.put(head, rs.getObject(head));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return map;
+	}
+
+	@Override
+	public void saveData(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			stmt.execute(sql);
+			con.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+	}
+}

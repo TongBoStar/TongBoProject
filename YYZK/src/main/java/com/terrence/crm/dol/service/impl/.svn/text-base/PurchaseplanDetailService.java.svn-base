@@ -1,0 +1,371 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.PurchasePlan;
+import com.terrence.crm.dol.bean.PurchaseplanDetail;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.dao.IPurchasePlanDao;
+import com.terrence.crm.dol.dao.IPurchaseplanDetailDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.PurchaseplanDetailQuery;
+import com.terrence.crm.dol.service.IPurchaseplanDetailService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class PurchaseplanDetailService extends BaseService implements IPurchaseplanDetailService {
+	@Autowired
+	@Qualifier("purchaseplanDetailDao")
+	private IPurchaseplanDetailDao purchaseplanDetailDao;
+	@Autowired
+	@Qualifier("purchasePlanDao")
+	private IPurchasePlanDao purchasePlanDao;
+	
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	
+	@Autowired
+	@Qualifier("porequestentryDao")
+	private IPorequestentryDao porequestentryDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Override
+	public PurchaseplanDetail getById(Long id) throws ServiceException {
+		return purchaseplanDetailDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(PurchaseplanDetail entity) throws ServiceException {
+		purchaseplanDetailDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(PurchaseplanDetail entity) throws ServiceException {
+		return purchaseplanDetailDao.save(entity);
+	}
+	@Override
+	public Integer update(PurchaseplanDetail entity) throws ServiceException {
+		return purchaseplanDetailDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return purchaseplanDetailDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = purchaseplanDetailDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<PurchaseplanDetail> findPage(Page<PurchaseplanDetail> page, PurchaseplanDetailQuery query) throws ServiceException{
+		return purchaseplanDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PurchaseplanDetail> findPage(Page<PurchaseplanDetail> page,String statement, PurchaseplanDetailQuery query) throws ServiceException{
+		return purchaseplanDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchaseplanDetail> findList(PurchaseplanDetailQuery query) throws ServiceException{
+		return purchaseplanDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchaseplanDetail> findList(PurchaseplanDetailQuery query,Integer pageSize) throws ServiceException{
+		return purchaseplanDetailDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchaseplanDetail> findList(PurchaseplanDetailQuery query,String statement,Integer pageSize) throws ServiceException{
+		return purchaseplanDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchaseplanDetail> findAllList() throws ServiceException{
+		return purchaseplanDetailDao.findAllList();
+	}
+	@Override
+	public void saveSrcBuy(PurchaseplanDetail entity, List<Long> checkedIdList) throws ServiceException{
+		Long planId=null;
+		//1将计划单状态改为0已保存
+		if(entity.getPlandetailids()!=null&&entity.getPlandetailids().get(0)!=null){
+			PurchaseplanDetail detail1 =this.purchaseplanDetailDao.getById(entity.getPlandetailids().get(0));
+			PurchasePlan plan = this.purchasePlanDao.getById(detail1.getPlanid());
+			plan.setFstatus(0);
+			planId = plan.getId();
+			this.purchasePlanDao.update(plan);
+		}
+		
+		//2更新计划详单数据
+		List<Long> plandetailids=null;
+		List<Double> realnums=null;
+		List<String> planenddates=null;
+		List<Double> fqtys=null;
+		List<Double> makingnumss=null;//实时的在途数量
+		List<Double> existednumss=null;//实时的已有需求
+		List<Double> planednums=null;//实时的已有计划
+		List<java.lang.Double> youtputs=null;//实时年产量
+		List<Double> amounts=null;//总需求
+		List<Double> innums=null;//建议下单数量
+		plandetailids = entity.getPlandetailids();
+		realnums = entity.getRealnums();
+		planenddates = entity.getPlanenddates();
+		fqtys = entity.getFqtys();
+		
+		makingnumss = entity.getMakingnumss();
+		existednumss = entity.getExistednumss();
+		planednums = entity.getPlanednums();
+		youtputs = entity.getYoutputs();
+		amounts = entity.getAmounts();
+		innums = entity.getInnums();
+		int size = plandetailids.size();
+		for(int i=0;i<size;i++){
+			PurchaseplanDetail detail = new PurchaseplanDetail();
+			detail.setPlandetailid(plandetailids.get(i));
+			if(realnums!=null&&realnums.size()>0&&realnums.get(i)!=null){
+				detail.setRealnum(realnums.get(i));
+			}
+			if(planenddates!=null&&planenddates.size()>0&&planenddates.get(i)!=null){
+				detail.setPlanenddate(planenddates.get(i));
+			}
+			if(fqtys!=null&&fqtys.size()>0&&fqtys.get(i)!=null){
+				detail.setFqty(fqtys.get(i));
+			}
+			
+			if(makingnumss!=null&&makingnumss.size()>0&&makingnumss.get(i)!=null){
+				detail.setMakingnums(makingnumss.get(i));
+			}
+			if(existednumss!=null&&existednumss.size()>0&&existednumss.get(i)!=null){
+				detail.setExistednums(existednumss.get(i));
+			}
+			if(planednums!=null&&planednums.size()>0&&planednums.get(i)!=null){
+				detail.setPlanednum(planednums.get(i));
+			}
+			if(youtputs!=null&&youtputs.size()>0&&youtputs.get(i)!=null){
+				detail.setYoutput(youtputs.get(i));
+			}
+			if(amounts!=null&&amounts.size()>0&&amounts.get(i)!=null){
+				detail.setAmount(amounts.get(i));
+			}
+			if(innums!=null&&innums.size()>0&&innums.get(i)!=null){
+				detail.setInnum(innums.get(i));
+			}
+			this.purchaseplanDetailDao.saveOrUpdate(detail);
+		}
+		if(planId!=null){
+			operationLogDao.save(ConfigTerrence.MODEL_PURCHASEPLAN, ConfigTerrence.OPT_EDIT, "主键为："+planId+"的采购计划修改成功");
+		}
+	}
+	@Override
+	public void pushDate(List<Long> checkedIdList) throws ServiceException{
+		//2在已选的ids中下推实际下单量大于0的
+		if(checkedIdList!=null&&checkedIdList.size()>0){
+			//下推采购计划表数据-》采购申请单
+			PurchaseplanDetail pdeatil = this.purchaseplanDetailDao.getById(checkedIdList.get(0));
+			PurchasePlan plan = new PurchasePlan();
+			plan = this.purchasePlanDao.getById(pdeatil.getPlanid());
+			Long porequestId = null;
+			if(plan!=null){
+				//===================查询单据编号===================
+				 IcbillnoQuery icbillnoQuery= new IcbillnoQuery();
+				 icbillnoQuery.setFpreletter("POREQ");
+				 Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);
+				 String sssy = "";
+				 Integer ay = icbillno.getFcurno();
+				 String sy = ay.toString();
+				 String ssy = "";
+				 if((icbillno.getFlength()-sy.length())>0){
+					for(int y = 0;y<(icbillno.getFlength()-sy.length());y++){
+						ssy+="0";
+					}
+					sssy=icbillno.getFpreletter()+ssy + sy;
+				 }else{
+					sssy= icbillno.getFpreletter() + sy;
+				 }
+				 Icbillno icq = new Icbillno();//查询完加1
+				 icq.setFcurno(icbillno.getFcurno()+1);
+				 icq.setFbillid(icbillno.getFbillid());
+				 icq.setFpreletter(icbillno.getFpreletter());
+				 icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+				 Porequest porequest = new Porequest();
+//				 porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());//获得当前制单人的id
+//				 porequest.setFbillno(sssy);
+//				 porequest.setFdeptid( Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门，默认当前登录人的部门
+//				 porequest.setFcomment(null);//摘要
+//				 porequest.setFnote(null);//备注
+//				 porequest.setFseltrantype(82);//源单类型：0空 81销售订单 82采购计划单
+//				 porequest.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统时间
+//				 porequest.setFsource(2);//1:手动添加，2:下推
+//				 porequest.setFstatus(0);//审核标志，0：未审核
+//				 porequest.setFclosed(0);//关闭状态，0：未关闭
+//				 porequest.setIcmofbillno(plan.getPlanCode());//生产任务单号
+				 porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());//获得当前制单人的id
+				 porequest.setFbillno(sssy);
+				 porequest.setFcomment("");
+				 porequest.setFnote("");
+				 porequest.setFseltrantype(0);//源单类型
+				 porequest.setFsource(1);//1:手动添加，2:下推
+				 porequest.setFstatus(0);//审核标志，0：未审核
+				 porequest.setFclosed(0);//关闭状态，0：未关闭
+				 porequest.setFheadselfp0128("");//项目名称
+				 porequest.setFbiztype(12510);//业务类型：12510外购入库类型；12511订单委外类型
+				 porequest.setFtrantype(70);//单据类型：70采购申请单
+				 porequest.setFmrp(0);//MRP类型 0
+				 porequest.setFmrpautoclosed(1);//MRP自动关闭标志 1
+				 porequest.setFmrpclosed(0);//业务关闭状态:0未关闭；1关闭 0
+				 porequest.setFchildren(0);//关联标识 0
+				 porequest.setFgeneratepurbudqty(0.0);//关联下推采购预算数量0
+				 porequest.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+				 porequest.setFdeptid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门
+				 porequest.setIcmofbillno(null);//生产任务单号
+				 
+				 porequest.setSourceCode(plan.getSourceCode());//下推单的编号:暂时取源单的code
+				 porequest.setSourceId(plan.getSourceId());//下推单的id:咱去源单的id
+				 porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());//获得当前制单人的id
+				 porequest.setCreaterName(SpringSecurityUtils.getCurrentRealName());//制单人姓名
+				 porequest.setAddStatus(1);//下推or添加状态：0自己添加；1：采购任务下推
+				 porequestId = porequestDao.save(porequest, "Porequest.insert.PQ");
+				 //修改状态：
+				 /*plan.setFstatus(100);//已下推
+				 this.purchasePlanDao.update(plan);*/
+			}
+			String detailIds = "";
+			//下推采购计划表详单数据-》采购申请分录表数据
+			for(int j=0;j<checkedIdList.size();j++){
+				Long detailid = checkedIdList.get(j);
+				PurchaseplanDetail deatil = this.purchaseplanDetailDao.getById(detailid);
+				if(deatil.getRealnum()!=0){
+					detailIds = detailid+",";
+					BaseItem item = new BaseItem();
+					BaseItemQuery query = new BaseItemQuery();
+					query.setItemcode(deatil.getItemcode());
+					item = this.baseItemDao.finditemforPorequest(query).get(0);
+					Porequestentry porequestentry = new Porequestentry();
+					porequestentry.setFinterid(porequestId);
+					porequestentry.setItemcode(item.getItemcode());
+					porequestentry.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统日期
+					porequestentry.setItemname(item.getItemname());
+					porequestentry.setItemmode(item.getFormatno());
+					porequestentry.setUnitname(item.getUnitname());
+					porequestentry.setRta(DateUtils.GetDate2(deatil.getPlanenddate(),"yyyy-MM-dd"));
+					porequestentry.setAta(DateUtils.GetDate2(deatil.getPlanenddate(),"yyyy-MM-dd"));
+					porequestentry.setF101(item.getF101());
+					porequestentry.setF102(item.getF102());
+					porequestentry.setAmount(deatil.getRealnum());
+					porequestentry.setEmpid(item.getAdmin()==null?null:item.getAdmin().getAdminId());
+					porequestentry.setSupplyid(item.getSupplier()==null?null:item.getSupplier().getSupplierid());
+					porequestentry.setDeptid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门，默认当前登录人所在部门
+					porequestentry.setFcomment("");
+					porequestentry.setInventoryid(null);
+					porequestentry.setPutstore(0);//未入库
+					
+					//辅助属性
+					porequestentry.setFauxpropid(0);
+					//辅助审批数量
+					porequestentry.setFauxcommitqty(0.0);
+					//辅助单价
+					porequestentry.setFauxprice(0.0);
+					//fauxqty	Unchecked	辅助申请数量：同数量
+					porequestentry.setFauxqty(deatil.getRealnum());
+					//fbominterid	Unchecked	客户bom：0
+					porequestentry.setFbominterid(0);
+					//fbrno	Unchecked	公司机构内码：0	
+					porequestentry.setFbrno("0");
+					//fcommitqty	Unchecked	审批数量：0	
+					porequestentry.setFcommitqty(0.0);
+					//fentryid	Unchecked	分录号（排序）
+					porequestentry.setFentryid(j+1);
+					//fentryselfp0129	Checked	制令号
+					//porequestentry.setFentryselfp0129("");
+					String str="";
+					if(plan!=null&&plan.getMakeNumberCode()!=null){
+						str = plan.getMakeNumberCode();
+					}
+					porequestentry.setFentryselfp0129(str);
+					//fentryselfp0130	Checked	备注制令号
+					porequestentry.setFentryselfp0130("");
+					//fentryselfp0133	Checked	技术部数量	
+					porequestentry.setFentryselfp0133(0.0);
+					//fentryselfp0135	Checked	单重
+					porequestentry.setFentryselfp0135(0.0);
+					//fentryselfp0136	Checked	计量量
+					porequestentry.setFentryselfp0136(0.0);
+					//fentryselfp0137	Checked	总计量量
+					porequestentry.setFentryselfp0137(0.0);
+					//fentryselfp0138	Checked	总重
+					porequestentry.setFentryselfp0138(0.0);
+					//fentryselfp0140	Checked	制令号NEY	
+					porequestentry.setFentryselfp0140(null);
+					//fmrpautoclosed	Checked	MRP自动关闭标志	1
+					porequestentry.setFmrpautoclosed(1);
+					//fmrplockflag	Unchecked	锁单标识	0
+					porequestentry.setFmrplockflag(0);
+					//fmtono	Unchecked	计划跟踪号	为空
+					porequestentry.setFmtono("");
+					//forderqty	Unchecked	基本单位业务执行数量	0
+					porequestentry.setForderqty(0.0);
+					//fplanmode	Unchecked	计划模式	14036
+					porequestentry.setFplanmode(14036);
+					//fplanorderinterid	Unchecked	计划订单号	0（暂时）
+					porequestentry.setFplanorderinterid(0);
+					//fprice	Unchecked	单价	0
+					porequestentry.setFprice(0.0);
+					//fseccoefficient	Unchecked	换算率	0
+					porequestentry.setFseccoefficient(0.0);
+					//fseccommitqty	Unchecked	辅助执行数量	0
+					porequestentry.setFseccommitqty(0.0);
+					//fsecqty	Unchecked	辅助数量	0
+					porequestentry.setFsecqty(0.0);
+					//fsourcebillno	Unchecked	源单单号	外部推过来的
+					porequestentry.setFsourcebillno("");
+					//fsourceentryid	Unchecked	原分录号	外部推过来的
+					porequestentry.setFsourceentryid(0);
+					//fsourceinterid	Unchecked	原单内码	外部推过来的
+					porequestentry.setFsourceinterid(0);
+					//fsourcetrantype	Unchecked	原单类型	外部推过来的（销售订单推过来的为81）
+					porequestentry.setFsourcetrantype(0);
+					//fsupplyid	Checked	供应商内码
+					porequestentry.setFsupplyid(0);
+					//fuse	Checked	用途	
+					porequestentry.setFuse("");
+					porequestentryDao.save(porequestentry, "Po.insert.PorequestPo");
+					//==============================================
+					//更新原来的数据
+					//deatil.setMakingnums((deatil.getRealnum()==null?0:deatil.getRealnum())+(deatil.getMakingnums()==null?0:deatil.getMakingnums()));
+					deatil.setRealnum(0.0);//更新实际下单数量：0
+					deatil.setPlannum(0.0);//下推完成后就将本次计划置为0
+					purchaseplanDetailDao.update(deatil);
+					
+				}
+				
+			}
+			if(detailIds.endsWith(",")){
+				detailIds = detailIds.substring(0, detailIds.length()-1);
+			}
+			operationLogDao.save(ConfigTerrence.MODEL_PURCHASEAPPLY, ConfigTerrence.OPT_ADD, "主键为："+porequestId+"的采购申请单添加成功");
+			operationLogDao.save(ConfigTerrence.MODEL_PURCHASEPLAN, ConfigTerrence.OPT_PUSH, "主键为："+plan.getId()+"并且详单主键为"+detailIds+"采购计划下推成功");
+		}
+		
+	}
+}

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailPdStepQualVar">
+
+        
+	<resultMap id="RM.TrailPdStepQualVar" class="com.terrence.crm.dol.bean.TrailPdStepQualVar">
+        <result property="varid" column="varid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="varname" column="varname"/>
+        <result property="cnname" column="cnname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailPdStepQualVar.columns">
+	    <![CDATA[
+        	t_trail_pd_step_qual_var.varid ,
+        	t_trail_pd_step_qual_var.stepid ,
+        	t_trail_pd_step_qual_var.varname ,
+        	t_trail_pd_step_qual_var.cnname 
+	    ]]>
+	</sql>
+	
+   <insert id="TrailPdStepQualVar.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_trail_pd_step_qual_var (
+        	stepid ,
+        	varname ,
+        	cnname 
+        ) VALUES (
+        	#stepid# ,
+        	#varname# ,
+        	#cnname# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="varid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailPdStepQualVar.update" parameterClass="com.terrence.crm.dol.bean.TrailPdStepQualVar">         
+        UPDATE t_trail_pd_step_qual_var 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="stepid">
+	        	stepid = #stepid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="varname">
+	        	varname = #varname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="cnname">
+	        	cnname = #cnname# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        varid = #varid# 
+    </update>
+    
+	<delete id="TrailPdStepQualVar.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_pd_step_qual_var where
+       varid = #varid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrailPdStepQualVar.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_pd_step_qual_var 
+        WHERE
+       varid in ($varid$) 
+    ]]>
+    </delete>
+    
+    
+    
+    <delete id="TrailPdStepQualVar.deletebystepid">
+        DELETE FROM 
+        	t_trail_pd_step_qual_var 
+        WHERE
+       stepid =#stepid# 
+    </delete>
+    
+    
+    <select id="TrailPdStepQualVar.getById" resultMap="RM.TrailPdStepQualVar">
+	    select <include refid="TrailPdStepQualVar.columns"/>
+	    
+	        from t_trail_pd_step_qual_var 
+	        where 
+		        varid = #varid# 
+	    
+    </select>
+    
+	<select id="TrailPdStepQualVar.getByProperty" resultMap="RM.TrailPdStepQualVar">
+		select <include refid="TrailPdStepQualVar.columns"/> from t_trail_pd_step_qual_var where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailPdStepQualVar.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="varid">
+	             t_trail_pd_step_qual_var.varid = #varid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_step_qual_var.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="varname">
+	             t_trail_pd_step_qual_var.varname = #varname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="cnname">
+	             t_trail_pd_step_qual_var.cnname = #cnname#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailPdStepQualVar.findPage.and">
+			<isNotEmpty prepend="AND" property="varid">
+	             t_trail_pd_step_qual_var.varid = #varid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_step_qual_var.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="varname">
+	             t_trail_pd_step_qual_var.varname = #varname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="cnname">
+	             t_trail_pd_step_qual_var.cnname = #cnname#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrailPdStepQualVar.Entity" resultMap="RM.TrailPdStepQualVar">
+    	SELECT 	<include refid="TrailPdStepQualVar.columns"/> FROM t_trail_pd_step_qual_var <include refid="TrailPdStepQualVar.findPage.where"/>
+    </select>
+    
+    <select id="TrailPdStepQualVar.findList" resultMap="RM.TrailPdStepQualVar">
+    	SELECT 
+    		<include refid="TrailPdStepQualVar.columns"/> 
+    	FROM 
+    		t_trail_pd_step_qual_var
+		<include refid="TrailPdStepQualVar.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailPdStepQualVar.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_pd_step_qual_var
+    ]]>
+		<include refid="TrailPdStepQualVar.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailPdStepQualVar.findPage" resultMap="RM.TrailPdStepQualVar">
+    	select <include refid="TrailPdStepQualVar.columns"/>	    
+	        from t_trail_pd_step_qual_var 	   
+		<include refid="TrailPdStepQualVar.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailPdStepQualVar.findPage" resultMap="RM.TrailPdStepQualVar">
+    	select <include refid="TrailPdStepQualVar.columns"/>	    
+	        from t_trail_pd_step_qual_var where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       varid 
+	   not in(select $notTop$ 
+       varid 
+	   from t_trail_pd_step_qual_var <include refid="TrailPdStepQualVar.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailPdStepQualVar.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+    <insert id="TrailPdStepQualVar.update.copy"><!-- 合格变量复制 -->
+			insert into t_trail_pd_step_qual_var(stepid,varname,cnname)
+			select  #newstepid#,varname,cnname
+			from t_trail_pd_step_qual_var where t_trail_pd_step_qual_var.stepid=#stepid#
+	</insert>
+    
+    
+    
+    
+    
+	
+</sqlMap>

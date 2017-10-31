@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Helpvideo">
+
+<resultMap id="RM.Helpvideo" class="com.terrence.crm.dol.bean.Helpvideo">
+	<result property="id" column="id"/>
+	<result property="videoName" column="videoName"/>
+	<result property="videoUrl" column="videoUrl"/>
+	<result property="videoDetail" column="videoDetail"/>
+	<result property="fmark" column="fmark"/>
+	<result property="fseq" column="fseq"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Helpvideo.columns">
+	<![CDATA[
+		t_helpvideo.id ,
+		t_helpvideo.videoName ,
+		t_helpvideo.videoUrl ,
+		t_helpvideo.videoDetail ,
+		t_helpvideo.fmark ,
+		t_helpvideo.fseq
+	]]>
+</sql>
+
+<insert id="Helpvideo.insert" >
+	<![CDATA[
+	INSERT INTO t_helpvideo (
+		videoName,
+		videoUrl,
+		videoDetail,
+		fmark,
+		fseq
+	) VALUES (
+		#videoName#,
+		#videoUrl#,
+		#videoDetail#,
+		#fmark#,
+		#fseq#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Helpvideo.update" parameterClass="com.terrence.crm.dol.bean.Helpvideo"> 
+	UPDATE t_helpvideo 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="videoName">
+			videoName = #videoName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="videoUrl">
+			videoUrl = #videoUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="videoDetail">
+			videoDetail = #videoDetail# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fseq">
+			fseq = #fseq# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Helpvideo.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_helpvideo.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="videoName">
+			t_helpvideo.videoName = #videoName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="videoUrl">
+			t_helpvideo.videoUrl = #videoUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="videoDetail">
+			t_helpvideo.videoDetail = #videoDetail# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_helpvideo.fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fseq">
+			t_helpvideo.fseq = #fseq# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Helpvideo.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_helpvideo.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="videoName">
+		t_helpvideo.videoName = #videoName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="videoUrl">
+		t_helpvideo.videoUrl = #videoUrl# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="videoDetail">
+		t_helpvideo.videoDetail = #videoDetail# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_helpvideo.fmark = #fmark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fseq">
+		t_helpvideo.fseq = #fseq# 
+	</isNotEmpty>
+</sql>
+
+<select id="Helpvideo.getById" resultMap="RM.Helpvideo">
+	select <include refid="Helpvideo.columns"/> from t_helpvideo where id=#id#
+</select>
+
+<select id="Helpvideo.getByProperty" resultMap="RM.Helpvideo">
+	select <include refid="Helpvideo.columns"/> from t_helpvideo where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Helpvideo.delete">
+	<![CDATA[
+		DELETE FROM t_helpvideo WHERE id=#id#
+	]]>
+</delete>
+<delete id="Helpvideo.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_helpvideo WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Helpvideo.findPage.count" resultClass="long">
+	select count(*) from t_helpvideo <include refid="Helpvideo.findPage.where"/>
+</select>
+
+<select id="Helpvideo.findPage" resultMap="RM.Helpvideo">
+	select <include refid="Helpvideo.columns"/> 
+		from t_helpvideo 
+	<include refid="Helpvideo.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Helpvideo.findList" resultMap="RM.Helpvideo">
+	SELECT <include refid="Helpvideo.columns"/> FROM t_helpvideo
+	<include refid="Helpvideo.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

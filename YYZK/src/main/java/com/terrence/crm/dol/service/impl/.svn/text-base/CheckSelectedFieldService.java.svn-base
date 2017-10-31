@@ -1,0 +1,151 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckDataDetail;
+import com.terrence.crm.dol.bean.CheckField;
+import com.terrence.crm.dol.bean.CheckSelectedField;
+import com.terrence.crm.dol.dao.ICheckDataDetailDao;
+import com.terrence.crm.dol.dao.ICheckFieldDao;
+import com.terrence.crm.dol.dao.ICheckSelectedFieldDao;
+import com.terrence.crm.dol.query.CheckFieldQuery;
+import com.terrence.crm.dol.query.CheckSelectedFieldQuery;
+import com.terrence.crm.dol.service.ICheckFieldService;
+import com.terrence.crm.dol.service.ICheckSelectedFieldService;
+@Service
+@Transactional
+public class CheckSelectedFieldService implements ICheckSelectedFieldService {
+	@Autowired
+	@Qualifier("checkSelectedFieldDao")
+	private ICheckSelectedFieldDao checkSelectedFieldDao;
+	@Autowired
+	@Qualifier("checkFieldDao")
+	private ICheckFieldDao checkFieldDao;
+	@Autowired
+	@Qualifier("checkDataDetailDao")
+	private ICheckDataDetailDao checkDataDetailDao;
+	@Override
+	public CheckSelectedField getById(Long id) throws ServiceException {
+		return checkSelectedFieldDao.getById(id);
+	}
+
+	@Override
+	public void saveOrUpdate(CheckSelectedField entity,String params) throws ServiceException {
+		if(null==params||params.length()==0){
+			checkSelectedFieldDao.saveOrUpdate(entity);
+			CheckField cf = new CheckField();
+			cf.setFname(entity.getFname());
+			cf.setFkey(entity.getFkey());
+			cf.setIsuse(1);
+			checkFieldDao.update(cf);
+			checkDataDetailDao.updateChartColumns(entity.getFkey());
+		}else{
+			parseParams(entity,params);
+		}
+	}
+
+	private void parseParams(CheckSelectedField entity, String params) {
+		String[] strs = null;
+		String[] tmps = null;
+		CheckSelectedField csf = null;
+		CheckSelectedFieldQuery query = new CheckSelectedFieldQuery();
+		query.setModelid(entity.getModelid());
+		List<String> list = checkSelectedFieldDao.findListBymkey("CheckSelectedField.findListBymfkey", query);
+		if(null!=params&&params.length()>0){
+			strs = params.split("\\|");
+			for(String str:strs){
+				tmps = str.split(",");
+				csf = new CheckSelectedField();
+				csf.setModelid(entity.getModelid());
+				csf.setFkey(tmps[0].trim());
+				csf.setFseqno(Integer.valueOf(tmps[1]));
+				//System.out.println(csf.getFkey()+"------");
+				//System.out.println(list.get(0)+"========"+list.get(1)+"=======");
+				if(null!=list&&list.size()>0&&list.contains(csf.getFkey())){
+					checkSelectedFieldDao.update(csf);
+					list.remove(csf.getFkey());
+				}else{
+					checkSelectedFieldDao.save(csf);
+				}
+			}
+			if(list.size()>0){
+				CheckSelectedFieldQuery temp = null;
+				for(String cs:list){
+					temp = new CheckSelectedFieldQuery();
+					temp.setModelid(entity.getModelid());
+					temp.setFkey(cs);
+					checkSelectedFieldDao.deleteByMKey(temp);
+				}
+			}
+		}
+	}
+
+	@Override
+	public Long save(CheckSelectedField entity) throws ServiceException {
+		return checkSelectedFieldDao.save(entity);
+	}
+
+	@Override
+	public Integer update(CheckSelectedField entity) throws ServiceException {
+		return checkSelectedFieldDao.update(entity);
+	}
+
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return checkSelectedFieldDao.deleteById(id);
+	}
+
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Page<CheckSelectedField> findPage(Page<CheckSelectedField> page,
+			CheckSelectedFieldQuery query) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<CheckSelectedField> findList(CheckSelectedFieldQuery query)
+			throws ServiceException {
+		return checkSelectedFieldDao.findList(query);
+	}
+
+	@Override
+	public List<CheckSelectedField> findList(CheckFieldQuery query, Integer pageSize)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<CheckSelectedField> findAllList() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> findListBymkey(String string,
+			CheckSelectedFieldQuery checkSelectedFieldQuery) {
+		return checkSelectedFieldDao.findListBymkey(string, checkSelectedFieldQuery);
+	}
+	
+}

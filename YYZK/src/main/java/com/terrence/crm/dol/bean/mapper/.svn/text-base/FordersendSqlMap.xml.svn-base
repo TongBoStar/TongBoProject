@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Fordersend">
+
+        
+	<resultMap id="RM.Fordersend" class="com.terrence.crm.dol.bean.Fordersend">
+        <result property="sendid" column="sendid"/>
+        <result property="receivableid" column="receivableid"/>
+        <result property="forderno" column="forderno"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fnum" column="fnum"/>
+        <result property="famount" column="famount"/>
+    </resultMap>
+	<resultMap id="RM.Fordersend.findDataFromK3" class="com.terrence.crm.dol.bean.Fordersend">
+        <result property="fdate" column="fdate"/>
+        <result property="fnum" column="fnum"/>
+        <result property="famount" column="famount"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Fordersend.columns">
+	    <![CDATA[
+        	t_fordersend.sendid ,
+        	t_fordersend.receivableid ,
+        	t_fordersend.forderno ,
+        	t_fordersend.fdate ,
+        	t_fordersend.fnum ,
+        	t_fordersend.famount 
+	    ]]>
+	</sql>
+	
+   <insert id="Fordersend.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_fordersend (
+        	receivableid ,
+        	forderno ,
+        	fdate ,
+        	fnum ,
+        	famount 
+        ) VALUES (
+        	#receivableid# ,
+        	#forderno# ,
+        	#fdate# ,
+        	#fnum# ,
+        	#famount# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="sendid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Fordersend.update" parameterClass="com.terrence.crm.dol.bean.Fordersend">         
+        UPDATE t_fordersend 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="receivableid">
+	        	receivableid = #receivableid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderno">
+	        	forderno = #forderno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnum">
+	        	fnum = #fnum# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="famount">
+	        	famount = #famount# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        sendid = #sendid# 
+    </update>
+    
+	<delete id="Fordersend.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_fordersend where
+       sendid = #sendid# 
+    ]]>
+    </delete>
+    
+    <delete id="Fordersend.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_fordersend 
+        WHERE
+       sendid in ($sendid$) 
+    ]]>
+    </delete>
+    
+    <select id="Fordersend.getById" resultMap="RM.Fordersend">
+	    select <include refid="Fordersend.columns"/>
+	    
+	        from t_fordersend 
+	        where 
+		        sendid = #sendid# 
+	    
+    </select>
+    
+	<select id="Fordersend.getByProperty" resultMap="RM.Fordersend">
+		select <include refid="Fordersend.columns"/> from t_fordersend where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Fordersend.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="sendid">
+	             t_fordersend.sendid = #sendid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_fordersend.receivableid = #receivableid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_fordersend.forderno = #forderno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_fordersend.fdate = #fdate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnum">
+	             t_fordersend.fnum = #fnum#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="famount">
+	             t_fordersend.famount = #famount#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Fordersend.findPage.and">
+			<isNotEmpty prepend="AND" property="sendid">
+	             t_fordersend.sendid = #sendid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_fordersend.receivableid = #receivableid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_fordersend.forderno = #forderno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_fordersend.fdate = #fdate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnum">
+	             t_fordersend.fnum = #fnum#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="famount">
+	             t_fordersend.famount = #famount#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Fordersend.Entity" resultMap="RM.Fordersend">
+    	SELECT 	<include refid="Fordersend.columns"/> FROM t_fordersend <include refid="Fordersend.findPage.where"/>
+    </select>
+    
+    <select id="Fordersend.findList" resultMap="RM.Fordersend">
+    	SELECT 
+    		<include refid="Fordersend.columns"/> 
+    	FROM 
+    		t_fordersend
+		<include refid="Fordersend.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Fordersend.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_fordersend
+    ]]>
+		<include refid="Fordersend.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Fordersend.findPage" resultMap="RM.Fordersend">
+    	select <include refid="Fordersend.columns"/>	    
+	        from t_fordersend 	   
+		<include refid="Fordersend.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Fordersend.findPage" resultMap="RM.Fordersend">
+    	select <include refid="Fordersend.columns"/>	    
+	        from t_fordersend where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       sendid 
+	   not in(select $notTop$ 
+       sendid 
+	   from t_fordersend <include refid="Fordersend.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Fordersend.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="Fordersend.findDataFromK3" resultMap="RM.Fordersend.findDataFromK3">
+    	 select 
+			t.FDate fdate,
+			t1.Famount famount,
+			t1.Fauxqty fnum,
+			t1.FEntrySelfB0159 
+		 from K33.AIS20120813194456.dbo.ICStockBill t 
+		 INNER JOIN 
+		 K33.AIS20120813194456.dbo.ICStockBillEntry t1 ON t1.FInterID = t.FInterID
+		 where t.FTranType=21 and t1.FEntrySelfB0159 = #forderno# 
+    </select>
+    <select id="Fordersend.findByMakeNumberCode" resultMap="RM.Fordersend.findDataFromK3">
+    	 <![CDATA[
+    	 select 
+			t.FDate fdate,
+			t1.Famount famount,
+			t1.Fauxqty fnum,
+			t1.FEntrySelfB0159 
+		 from AIS20120813194456.dbo.ICStockBill t 
+		 INNER JOIN 
+		 AIS20120813194456.dbo.ICStockBillEntry t1 ON t1.FInterID = t.FInterID
+		 where t.FTranType=21 
+		 and ( t1.FEntrySelfB0159 >= '$startCode$' 
+		   and t1.FEntrySelfB0159 <= '$endCode$' or t1.FEntrySelfB0159 = '$makeNumberCode$' )
+		   and t1.Fauxqty>0
+		  ]]>
+    </select>
+</sqlMap>

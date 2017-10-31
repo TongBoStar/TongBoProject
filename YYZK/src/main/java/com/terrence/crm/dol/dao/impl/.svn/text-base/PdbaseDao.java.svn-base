@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Pdbase;
+import com.terrence.crm.dol.dao.IPdbaseDao;
+import com.terrence.crm.dol.query.PdbaseQuery;
+
+@Repository
+public class PdbaseDao extends BaseIbatisDao<Pdbase,java.lang.Long> implements IPdbaseDao{
+
+		
+	public void saveOrUpdate(Pdbase entity) {
+		if(entity.getPdbaseid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Pdbase";
+	}
+	public Pdbase getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Pdbase)this.getSqlMapClientTemplate().queryForObject("Pdbase.getByProperty", map);		
+	}
+
+	@Override
+	public Pdbase findEntity(PdbaseQuery pdbaseQuery) {
+		return (Pdbase) this.getSqlMapClientTemplate().queryForObject("Pdbase.find.entity.data", pdbaseQuery);
+	}
+
+	@Override
+	public List<Pdbase> findJieSuan(PdbaseQuery pdbaseQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Pdbase.find.JieSuan.table.data",pdbaseQuery);
+	}
+
+}

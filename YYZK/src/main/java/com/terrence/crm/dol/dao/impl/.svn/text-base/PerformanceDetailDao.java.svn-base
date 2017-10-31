@@ -1,0 +1,33 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PerformanceDetail;
+import com.terrence.crm.dol.dao.IPerformanceDetailDao;
+@Repository
+public class PerformanceDetailDao extends BaseIbatisDao<PerformanceDetail,java.lang.Long> implements IPerformanceDetailDao{
+	public String getIbatisSqlMapNamespace() {
+		return "PerformanceDetail"; 
+	}
+	public void saveOrUpdate(PerformanceDetail entity) {
+		if(entity.getDetailid() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public PerformanceDetail getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PerformanceDetail)this.getSqlMapClientTemplate().queryForObject("PerformanceDetail.getByProperty", map);
+	}
+	@Override
+	public void deleteByMultipleId(String statement, Integer fyear,
+			Integer fquarter) {
+		Map map=new HashMap();
+		map.put("fyear", fyear);
+		map.put("fquarter", fquarter);
+		this.getSqlMapClientTemplate().delete(statement, map);
+	}
+}

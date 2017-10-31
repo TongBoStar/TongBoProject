@@ -1,0 +1,148 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Sortcodefir;
+import com.terrence.crm.dol.query.SortcodefirQuery;
+import com.terrence.crm.dol.dao.ISortcodefirDao;
+import com.terrence.crm.dol.service.ISortcodefirService;
+
+@Service
+@Transactional
+public class SortcodefirService extends BaseService implements ISortcodefirService {
+	protected static Logger logger = LoggerFactory.getLogger(SortcodefirService.class);
+	@Autowired
+	@Qualifier("sortcodefirDao")
+	private ISortcodefirDao sortcodefirDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Sortcodefir";
+	}
+	@Transactional(readOnly=true)
+	public Sortcodefir getById(java.lang.Long id) throws ServiceException
+	{
+		return sortcodefirDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Sortcodefir entity) throws ServiceException
+	{
+		sortcodefirDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Sortcodefir entity) throws ServiceException
+	{
+		Long adId = sortcodefirDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Sortcodefir entity) throws ServiceException
+	{
+		Integer returnValue =  sortcodefirDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = sortcodefirDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = sortcodefirDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SortcodefirQuery query = new SortcodefirQuery();
+		try {
+			return sortcodefirDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Sortcodefir> findPage(Page<Sortcodefir> page, SortcodefirQuery query) throws ServiceException
+	{
+		return sortcodefirDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Sortcodefir> findPage(Page<Sortcodefir> page,String statement, SortcodefirQuery query) throws ServiceException
+	{
+		return sortcodefirDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Sortcodefir> findList(SortcodefirQuery query) throws ServiceException
+	{
+		return sortcodefirDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Sortcodefir> findList(SortcodefirQuery query,Integer pageSize) throws ServiceException
+	{
+		return sortcodefirDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Sortcodefir> findList(SortcodefirQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return sortcodefirDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Sortcodefir> findAllList() throws ServiceException
+	{
+		return sortcodefirDao.findAllList();
+	}
+	@Override
+	public Sortcodefir findSortCode(SortcodefirQuery sortcodefirQuery)
+			throws ServiceException {
+		return sortcodefirDao.findSortCode(sortcodefirQuery);
+	}
+	public Sortcodefir getByIdincludeParent(String statement,java.lang.Long id) throws ServiceException
+	{
+		return sortcodefirDao.getById(statement, id);
+	}
+	public Sortcodefir getByProperty(String propertyName,Object propertyValue) throws ServiceException
+	{
+		return sortcodefirDao.getByProperty(propertyName, propertyValue);
+	}
+	
+	@Override
+	public Sortcodefir firSortCode(SortcodefirQuery sortcodefirQuery)
+			throws ServiceException {
+		return  sortcodefirDao.firSortCode(sortcodefirQuery);
+	}
+	@Override
+	public Sortcodefir findlistfirSec(SortcodefirQuery sortcodefirQuery)
+			throws ServiceException {
+		return sortcodefirDao.findlistfirSec(sortcodefirQuery);
+	}
+	
+}

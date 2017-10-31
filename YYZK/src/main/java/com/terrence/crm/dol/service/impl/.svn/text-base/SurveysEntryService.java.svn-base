@@ -1,0 +1,140 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import sun.print.resources.serviceui;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.SurveysEntry;
+import com.terrence.crm.dol.query.SurveysEntryQuery;
+import com.terrence.crm.dol.dao.ISurveysEntryDao;
+import com.terrence.crm.dol.service.ISurveysEntryService;
+
+@Service
+@Transactional
+public class SurveysEntryService extends BaseService implements ISurveysEntryService {
+	protected static Logger logger = LoggerFactory.getLogger(SurveysEntryService.class);
+	@Autowired
+	@Qualifier("surveysEntryDao")
+	private ISurveysEntryDao surveysEntryDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "SurveysEntry";
+	}
+	@Transactional(readOnly=true)
+	public SurveysEntry getById(java.lang.Long id) throws ServiceException
+	{
+		return surveysEntryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(SurveysEntry entity) throws ServiceException
+	{
+		surveysEntryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(SurveysEntry entity) throws ServiceException
+	{
+		Long adId = surveysEntryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(SurveysEntry entity) throws ServiceException
+	{
+		Integer returnValue =  surveysEntryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = surveysEntryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = surveysEntryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SurveysEntryQuery query = new SurveysEntryQuery();
+		try {
+			return surveysEntryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<SurveysEntry> findPage(Page<SurveysEntry> page, SurveysEntryQuery query) throws ServiceException
+	{
+		return surveysEntryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<SurveysEntry> findPage(Page<SurveysEntry> page,String statement, SurveysEntryQuery query) throws ServiceException
+	{
+		return surveysEntryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<SurveysEntry> findList(SurveysEntryQuery query) throws ServiceException
+	{
+		return surveysEntryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<SurveysEntry> findList(SurveysEntryQuery query,Integer pageSize) throws ServiceException
+	{
+		return surveysEntryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<SurveysEntry> findList(SurveysEntryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return surveysEntryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<SurveysEntry> findAllList() throws ServiceException
+	{
+		return surveysEntryDao.findAllList();
+	}
+	@Override
+	public void updateAmounts(String amounts) {
+		String[] arrs = amounts.split("\\|");
+		SurveysEntry se = null;
+		for(String str:arrs){
+			se = new SurveysEntry();
+			String[] ps = str.split(",");
+			se.setFyear(ps[0]);
+			se.setSurveysid(Long.valueOf(ps[3]));
+			se.setGwid(Long.valueOf(ps[2]));
+			se.setMoney(ps[1].trim().equals("")?null:Double.valueOf(ps[1]));
+			surveysEntryDao.update("SurveysEntry.updateByYearAndOrg",se);
+		}
+	}
+
+}

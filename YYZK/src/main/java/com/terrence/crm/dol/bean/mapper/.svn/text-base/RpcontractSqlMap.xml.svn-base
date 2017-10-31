@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Rpcontract">
+
+        
+	<resultMap id="RM.Rpcontract" class="com.terrence.crm.dol.bean.Rpcontract">
+        <result property="contractid" column="contractid"/>
+        <result property="fcontractid" column="fcontractid"/>
+        <result property="fcontractname" column="fcontractname"/>
+        <result property="fcontractno" column="fcontractno"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fdepartment" column="fdepartment"/>
+        <result property="ftext" column="ftext"/>
+        <result property="ftotalamount" column="ftotalamount"/>
+        <result property="ftotalamountfor" column="ftotalamountfor"/>
+        <result property="fexplanation" column="fexplanation"/>
+        <result property="fstatus" column="fstatus"/>
+        <result property="fcheckdate" column="fcheckdate"/>
+        <result property="fcustomer" column="fcustomer"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Rpcontract.columns">
+	    <![CDATA[
+        	t_rpcontract.contractid ,
+        	t_rpcontract.fcontractid ,
+        	t_rpcontract.fcontractname ,
+        	t_rpcontract.fcontractno ,
+        	t_rpcontract.fdate ,
+        	t_rpcontract.fdepartment ,
+        	t_rpcontract.ftext ,
+        	t_rpcontract.ftotalamount ,
+        	t_rpcontract.ftotalamountfor ,
+        	t_rpcontract.fexplanation ,
+        	t_rpcontract.fstatus ,
+        	t_rpcontract.fcheckdate ,
+        	t_rpcontract.fcustomer 
+	    ]]>
+	</sql>
+	
+   <insert id="Rpcontract.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_rpcontract (
+        	contractid ,
+        	fcontractid ,
+        	fcontractname ,
+        	fcontractno ,
+        	fdate ,
+        	fdepartment ,
+        	ftext ,
+        	ftotalamount ,
+        	ftotalamountfor ,
+        	fexplanation ,
+        	fstatus ,
+        	fcheckdate ,
+        	fcustomer 
+        ) VALUES (
+        	#contractid# ,
+        	#fcontractid# ,
+        	#fcontractname# ,
+        	#fcontractno# ,
+        	#fdate# ,
+        	#fdepartment# ,
+        	#ftext# ,
+        	#ftotalamount# ,
+        	#ftotalamountfor# ,
+        	#fexplanation# ,
+        	#fstatus# ,
+        	#fcheckdate# ,
+        	#fcustomer# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="contractid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Rpcontract.update" parameterClass="com.terrence.crm.dol.bean.Rpcontract">         
+        UPDATE t_rpcontract 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fcontractid">
+	        	fcontractid = #fcontractid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcontractname">
+	        	fcontractname = #fcontractname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcontractno">
+	        	fcontractno = #fcontractno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdepartment">
+	        	fdepartment = #fdepartment# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftext">
+	        	ftext = #ftext# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftotalamount">
+	        	ftotalamount = #ftotalamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftotalamountfor">
+	        	ftotalamountfor = #ftotalamountfor# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexplanation">
+	        	fexplanation = #fexplanation# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fstatus">
+	        	fstatus = #fstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcheckdate">
+	        	fcheckdate = #fcheckdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcustomer">
+	        	fcustomer = #fcustomer# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        contractid = #contractid# 
+    </update>
+    
+	<delete id="Rpcontract.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_rpcontract where
+       contractid = #contractid# 
+    ]]>
+    </delete>
+    
+    <delete id="Rpcontract.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_rpcontract 
+        WHERE
+       contractid in ($contractid$) 
+    ]]>
+    </delete>
+    
+    <select id="Rpcontract.getById" resultMap="RM.Rpcontract">
+	    select <include refid="Rpcontract.columns"/>
+	    
+	        from t_rpcontract 
+	        where 
+		        contractid = #contractid# 
+	    
+    </select>
+    
+	<select id="Rpcontract.getByProperty" resultMap="RM.Rpcontract">
+		select <include refid="Rpcontract.columns"/> from t_rpcontract where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Rpcontract.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="contractid">
+	             t_rpcontract.contractid = #contractid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcontractid">
+	             t_rpcontract.fcontractid = #fcontractid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcontractname">
+	             t_rpcontract.fcontractname = #fcontractname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rpcontract.fcontractno = #fcontractno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rpcontract.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rpcontract.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdepartment">
+	             t_rpcontract.fdepartment = #fdepartment#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftext">
+	             t_rpcontract.ftext = #ftext#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftotalamount">
+	             t_rpcontract.ftotalamount = #ftotalamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftotalamountfor">
+	             t_rpcontract.ftotalamountfor = #ftotalamountfor#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fexplanation">
+	             t_rpcontract.fexplanation = #fexplanation#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rpcontract.fstatus = #fstatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcheckdateBegin">
+	             t_rpcontract.fcheckdate &gt;= #fcheckdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fcheckdateEnd">
+	             t_rpcontract.fcheckdate &lt;= #fcheckdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcustomer">
+	             t_rpcontract.fcustomer = #fcustomer#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Rpcontract.findPage.and">
+			<isNotEmpty prepend="AND" property="contractid">
+	             t_rpcontract.contractid = #contractid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcontractid">
+	             t_rpcontract.fcontractid = #fcontractid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcontractname">
+	             t_rpcontract.fcontractname = #fcontractname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rpcontract.fcontractno = #fcontractno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rpcontract.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rpcontract.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdepartment">
+	             t_rpcontract.fdepartment = #fdepartment#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftext">
+	             t_rpcontract.ftext = #ftext#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftotalamount">
+	             t_rpcontract.ftotalamount = #ftotalamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftotalamountfor">
+	             t_rpcontract.ftotalamountfor = #ftotalamountfor#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexplanation">
+	             t_rpcontract.fexplanation = #fexplanation#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rpcontract.fstatus = #fstatus#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcheckdateBegin">
+	             t_rpcontract.fcheckdate &gt;= #fcheckdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fcheckdateEnd">
+	             t_rpcontract.fcheckdate &lt;= #fcheckdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcustomer">
+	             t_rpcontract.fcustomer = #fcustomer#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Rpcontract.findList" resultMap="RM.Rpcontract">
+    	SELECT 
+    		<include refid="Rpcontract.columns"/> 
+    	FROM 
+    		t_rpcontract
+		<include refid="Rpcontract.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Rpcontract.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_rpcontract
+    ]]>
+		<include refid="Rpcontract.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Rpcontract.findPage" resultMap="RM.Rpcontract">
+    	select <include refid="Rpcontract.columns"/>	    
+	        from t_rpcontract 	   
+		<include refid="Rpcontract.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.Rpcontract.findPage" resultMap="RM.Rpcontract">
+    	select <include refid="Rpcontract.columns"/>	    
+	        from t_rpcontract where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       contractid 
+	   not in(select $notTop$ 
+       contractid 
+	   from t_rpcontract <include refid="Rpcontract.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Rpcontract.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

@@ -1,0 +1,708 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.dao.IPoorderentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.IcserialQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.PutstorageentityQuery;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.service.IPutstorageentityService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class PutstorageentityService extends BaseService implements IPutstorageentityService {
+	protected static Logger logger = LoggerFactory.getLogger(PutstorageentityService.class);
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	@Autowired
+	@Qualifier("poorderentryDao")
+	private IPoorderentryDao poorderentryDao;
+	
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+		
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Putstorageentity";
+	}
+	@Transactional(readOnly=true)
+	public Putstorageentity getById(java.lang.Long id) throws ServiceException
+	{
+		return putstorageentityDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Putstorageentity entity) throws ServiceException
+	{
+		putstorageentityDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Putstorageentity entity) throws ServiceException
+	{
+		Long adId = putstorageentityDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Putstorageentity entity) throws ServiceException
+	{
+		Integer returnValue =  putstorageentityDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = putstorageentityDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = putstorageentityDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PutstorageentityQuery query = new PutstorageentityQuery();
+		try {
+			return putstorageentityDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Putstorageentity> findPage(Page<Putstorageentity> page, PutstorageentityQuery query) throws ServiceException
+	{
+		return putstorageentityDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Putstorageentity> findPage(Page<Putstorageentity> page,String statement, PutstorageentityQuery query) throws ServiceException
+	{
+		return putstorageentityDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorageentity> findList(PutstorageentityQuery query) throws ServiceException
+	{
+		return putstorageentityDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorageentity> findList(PutstorageentityQuery query,Integer pageSize) throws ServiceException
+	{
+		return putstorageentityDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Putstorageentity> findList(PutstorageentityQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return putstorageentityDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Putstorageentity> findAllList() throws ServiceException
+	{
+		return putstorageentityDao.findAllList();
+	}
+	@Override
+	public void updatedataxiugai(Putstorageentity entity)
+			throws ServiceException {
+		if(entity.getOldentityid()!=null){//退货数修改
+			Putstorageentity put = new Putstorageentity();
+			put.setEntityid(entity.getOldentityid());
+			put.setFcommitqy(entity.getFqty());
+			putstorageentityDao.update(put);
+			
+			entity.setFqty(0-entity.getFqty());
+		}
+		putstorageentityDao.updatedataxiugai(entity);
+		
+	}
+	@Override
+	public void deletePut(PutstorageentityQuery putstorageentityQuery)
+			throws ServiceException {
+		Putstorageentity pk = putstorageentityDao.getById(putstorageentityQuery.getEntityid());
+		if(putstorageentityQuery.getOldentityid()!=null && pk.getFqty()<0){//修改退货单提交数量
+			Putstorageentity pentity = putstorageentityDao.getById(putstorageentityQuery.getOldentityid());
+			BaseItem baseitem = baseItemDao.getByProperty("itemcode", pentity.getItemcode());
+			
+			if(baseitem.getFissnmanager()!=null && baseitem.getFissnmanager()==1){//退货，是序列号管理的修改序列号状态
+				IcserialQuery iq = new IcserialQuery();
+				iq.setItemcode(pk.getItemcode());
+				iq.setFstockid(pk.getStorageid().intValue());
+				iq.setDb(pk.getFxmark());
+				iq.setFtrantypeid(1L);
+				iq.setFinterid(pk.getOrderid());
+				iq.setFsnlistid(putstorageentityQuery.getEntityid());
+				iq.setFstatus(0);
+				iq.setFvalid(0);
+				List<Icserial> ilist = icserialDao.findList("Icserial.find.icdata.for.del", iq);
+				
+				if(ilist.size()>0){
+					for(int tt3=0;tt3<ilist.size();tt3++){
+						Icserial icser = new Icserial();
+						icser.setSerialid(ilist.get(tt3).getSerialid());
+						icser.setFstatus(1);
+						icser.setFvalid(1);
+						icser.setFtrantypeid(71L);
+						
+						icserialDao.update("Icserial.udpate.return.zhuangtai", icser);
+					}
+				}				
+			}
+			
+			Putstorageentity p = putstorageentityDao.getById(putstorageentityQuery.getEntityid());
+			Putstorageentity putentity = new Putstorageentity();
+			putentity.setEntityid(putstorageentityQuery.getOldentityid());
+			putentity.setFcommitqy(pentity.getFcommitqy() + p.getFqty());
+			putstorageentityDao.update(putentity);
+		}
+		
+		
+		Putstorageentity putstorageentity  = new Putstorageentity();
+		putstorageentity.setEntityid(putstorageentityQuery.getEntityid());
+		Putstorageentity storageentity = putstorageentityDao.findPutstorageentity(putstorageentity);
+		putstorageentityDao.deleteById(putstorageentityQuery.getEntityid());//删除入库单明细
+		
+		if(storageentity.getPoorderno().substring(0,5).equals("JiJia")){//机加入库的是序列号管理的删除相关序列号
+			BaseItem baseitem = baseItemDao.getByProperty("itemcode", storageentity.getItemcode());
+			if(baseitem.getFissnmanager()!=null && baseitem.getFissnmanager()==1){
+				Putstorage puts = putstorageDao.getById(storageentity.getFinterid());
+				IcserialQuery iq = new IcserialQuery();
+				iq.setItemcode(storageentity.getItemcode());
+				iq.setFstockid(storageentity.getStorageid().intValue());
+				iq.setDb(storageentity.getFxmark());
+				iq.setFtrantypeid(puts.getSrctype());//最后操作单据类型
+				iq.setFinterid(storageentity.getEntityid());//最后操作单据内码----待入库单明细id
+				iq.setFsnlistid(putstorageentityQuery.getEntityid());//最后操作流转id-----待入库单明细id
+				iq.setFstatus(0);
+				iq.setFvalid(0);
+				List<Icserial> ilist = icserialDao.findList("Icserial.find.icdata.for.del", iq);
+				if(ilist.size()>0){
+					for(int sq=0;sq<ilist.size();sq++){
+						icserialDao.deleteById(ilist.get(sq).getSerialid());
+						
+					}
+				}
+			}
+		}
+//		//==================================================
+//		if(storageentity.getPoorderno().substring(0, 3).equals("JOB")){//删除待入库单明细
+//			String sumno = storageentity.getFbatchno();
+//			PdQm pdqm = new PdQm();
+//			pdqm.setFseqno(sumno);
+//			pdqm.setFstatus("3");//作废的不算数
+//			//pdQmDao.updateStatusData(pdqm);//之前用的2014-10-28
+//			pdQmDao.update("PdQm.update.entity.data.fstatus", pdqm);
+//		}
+//		//==================================================
+	
+		Putstorageentity put = new Putstorageentity();
+		put.setFinterid(storageentity.getFinterid());
+		List<Putstorageentity> putList = putstorageentityDao.findlistPutstorageentity(put);
+		
+		if(putList.size() == 0){
+			putstorageDao.deleteById(storageentity.getFinterid());//明细全部删除后将入库单数据删除
+
+			AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+			operationLogDao.save(ConfigTerrence.MODEL_GODOWN, ConfigTerrence.OPT_DEL, "主键为："+storageentity.getFinterid()+"的入库单删除成功，操作人为"+admin.getAdmin().getAdminName());
+		}
+		
+		if(putstorageentityQuery.getOrderid() != null && putstorageentityQuery.getOldentityid()==null){
+			Integer i = 0;
+			ItemWait itemWait = new ItemWait();
+			if(pk.getWaitid() != null && !pk.getWaitid().equals("")){
+				itemWait.setWaitid(pk.getWaitid());
+			}else{
+				itemWait.setOrderid(putstorageentityQuery.getOrderid());
+			}
+			
+			itemWait.setIsclose(0);
+			
+			if(pk.getWaitid() != null && !pk.getWaitid().equals("")){//后来加的字段waitid防止之前没值的数据做删除
+				i = itemWaitDao.update("ItemWait.update", itemWait);
+			}else{
+				i = itemWaitDao.updateItemWait(itemWait);//修改待检物资状态
+			}
+			
+			
+			if(i != 1){
+				Poorderentry poorderentry = new Poorderentry();
+				poorderentry.setOrderid(putstorageentityQuery.getOrderid());
+			    Poorderentry pry = 	(Poorderentry) poorderentryDao.findentity(poorderentry);
+
+			    poorderentry.setBought(pry.getBought() - storageentity.getFqty());
+			    poorderentry.setIspush(0);
+				poorderentryDao.update("Poorderentry.update.data.new", poorderentry);
+			}
+			
+		}
+		
+		
+		
+	}
+	@Override
+	public List<Putstorageentity> finRreturnGoods(PutstorageentityQuery putstorageentityQuery)
+			throws ServiceException {
+		
+		List<Putstorageentity> list = putstorageentityDao.finRreturnGoods(putstorageentityQuery);
+		return list;
+	}
+	@Override
+	public void saveReturnGoods(Putstorageentity entity)
+			throws ServiceException {
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		
+		 //===============查询单据编号======================
+		 IcbillnoQuery icbillnoQuery= new IcbillnoQuery();
+		 icbillnoQuery.setFpreletter("WINPC");
+		 Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);
+		 
+		 Icbillno icq = new Icbillno();
+		icq.setFcurno(icbillno.getFcurno()+1);
+		icq.setFbillid(icbillno.getFbillid());
+		icq.setFpreletter(icbillno.getFpreletter());
+		icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		 
+		 String sssy = "";
+			Integer ay = icbillno.getFcurno();
+			String sy = ay.toString();
+			String ssy = "";
+			if((icbillno.getFlength()-sy.length())>0){
+				for(int y = 0;y<(icbillno.getFlength()-sy.length());y++){
+					ssy+="0";
+				}
+				sssy=icbillno.getFpreletter()+ssy + sy;
+			}else{
+				sssy= icbillno.getFpreletter() + sy;
+			}
+			
+		 //=============保存表头========================
+		List<Long> suppliers = entity.getSuppliers();
+		List<Long> empids= entity.getEmpids();	
+		Putstorage ptge = new Putstorage();
+		ptge.setFbillno(sssy);
+		ptge.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		ptge.setIsclose(0);
+		String handlers = "";
+		ProcessDetail processDetail = processDetails.get(0);
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		ptge.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		ptge.setStatus(processDetail.getNodeSeq());//0：未审核 1：已审核
+		ptge.setSupplier(suppliers.get(0));
+		ptge.setEmpid(empids.get(0));
+		ptge.setMaker(SpringSecurityUtils.getCurrentUserId());
+		ptge.setSrctype(71L);
+		ptge.setIsreturn(1);//退货的单据
+		ptge.setTeamid(SpringSecurityUtils.getCurrentTeamid().longValue());//当前登录人部门
+		
+		Long id = putstorageDao.save(ptge, "Putstorage.insert.returnGoods.data");
+		
+		List<String> itemcodes = entity.getItemcodes();
+		List<Long> storageids = entity.getStorageids();
+		List<Long> unitids = entity.getUnitids();
+		List<Double> fcommitqys = entity.getFcommitqys();
+		List<String> fbatchnos = entity.getFbatchnos();
+		List<Integer> fmarks = entity.getFmarks();
+		List<String> fbillnos = entity.getFbillnos();
+		List<String> remarkss = entity.getRemarkss();
+		List<Long> entitys = entity.getEntitys();
+		List<Long> orderids = entity.getOrderids();
+		List<String> poordernos = entity.getPoordernos();
+		
+		for(int tt=0;tt<itemcodes.size();tt++){
+			Putstorageentity putentity = new Putstorageentity();
+			
+			if(itemcodes.get(tt)!=null && !itemcodes.get(tt).equals("")){
+				putentity.setItemcode(itemcodes.get(tt));
+			}else{
+				break;
+			}
+			putentity.setFinterid(id);
+			
+			if(storageids.get(tt)!=null && !storageids.get(tt).equals("")){
+				putentity.setStorageid(storageids.get(tt));
+								
+			}
+			putentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+			putentity.setUnitid(unitids.get(tt));
+			putentity.setFqty(0-fcommitqys.get(tt));
+			if(fbatchnos.get(tt)!=null && !fbatchnos.get(tt).equals("")&& !fbatchnos.get(tt).equals("null")){
+				putentity.setFbatchno(fbatchnos.get(tt));
+			}
+			putentity.setPoorderno(poordernos.get(tt));
+			putentity.setFsourcewin(fbillnos.get(tt));
+			putentity.setFxmark(fmarks.get(tt));
+			
+			if(remarkss.get(tt)!=null && !remarkss.get(tt).equals("")){
+				putentity.setRemarks(remarkss.get(tt));
+			}
+			if(entitys.get(tt)!=null && !entitys.get(tt).equals("")){
+				
+				putentity.setOldentityid(entitys.get(tt));//原订单的明细id
+			}
+			if(orderids.get(tt)!=null && !orderids.get(tt).equals("")){
+				
+				putentity.setOrderid(orderids.get(tt));//原订单的明细id
+			}
+			
+			
+			putstorageentityDao.save(putentity, "Putstorageentity.insert.returnGoods.new.data");
+			
+			Putstorageentity putstora = putstorageentityDao.getById(entitys.get(tt)); 
+			
+			
+			Putstorageentity put = new Putstorageentity();
+			put.setEntityid(entitys.get(tt));
+			if(putstora.getFcommitqy()!=null && !putstora.getFcommitqy().equals("")&& !putstora.getFcommitqy().equals("null")){
+				put.setFcommitqy(fcommitqys.get(tt)+putstora.getFcommitqy());//提交数累加
+				System.out.println("fcommitqys.get(tt)+putstora.getFcommitqy()==="+(fcommitqys.get(tt)+putstora.getFcommitqy()));
+			}else{
+				put.setFcommitqy(fcommitqys.get(tt));
+				System.out.println("fcommitqys.get(tt)==="+fcommitqys.get(tt));
+			}
+			
+			putstorageentityDao.update(put);//更新提交数
+			
+			InventoryBatch ibatch = new InventoryBatch();
+			if(fbatchnos.get(tt)!=null && !fbatchnos.get(tt).equals("")&& !fbatchnos.get(tt).equals("null")){
+				ibatch.setBatchno(fbatchnos.get(tt));
+			}
+			
+			ibatch.setItemcode(itemcodes.get(tt));//物料编码
+			ibatch.setFitemid(storageids.get(tt).intValue());//库房
+			ibatch.setDbno(fmarks.get(tt));//帐套
+			
+			InventoryBatch ib = inventoryBatchDao.findEntity(ibatch);
+			
+			if(fmarks.get(tt)==3){
+				if((ib.getFqty() - fcommitqys.get(tt)) < 0){
+					throw new ServiceException("物料"+itemcodes.get(tt)+"在仓库"+storageids.get(tt).intValue()+"的库存量小于要退货数量，请核实后做相关处理再做退货操作","-1");
+				}
+			}else if(fmarks.get(tt)==4){
+				if((ib.getFqty2() - fcommitqys.get(tt)) < 0){
+					throw new ServiceException("物料"+itemcodes.get(tt)+"在仓库"+storageids.get(tt).intValue()+"的库存量小于要退货数量，请核实后做相关处理再做退货操作","-1");
+				}
+				
+			}
+			
+		}
+		Putstorage entityTmp = putstorageDao.getById(id);
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(entity.getFbillno());
+		processHistask.setSourceId(entityTmp.getFinterid());
+		processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processExetask.setSourceCode(entity.getFbillno());
+		processExetask.setSourceId(entityTmp.getFinterid());
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+	}
+	@Override
+	public List<Putstorageentity> findList(String statement,
+			PutstorageentityQuery putstorageentityQuery)
+			throws ServiceException {
+		return putstorageentityDao.findList(statement, putstorageentityQuery);
+		
+	}
+	@Override
+	public String findputstorageAll(String realPath,
+			PutstorageentityQuery putstorageentityQuery,
+			List<Long> checkedIdList) throws ServiceException {
+		String idss = StringUtils.join(checkedIdList, ",");
+		Putstorageentity putentity = new Putstorageentity();
+		putentity.setFinterids(idss);
+		
+		List<Putstorageentity> putlist = new ArrayList<Putstorageentity>();
+		putlist = putstorageentityDao.findExcelData(putentity);
+		
+		
+		
+		//==================================
+		  HSSFWorkbook wb = new HSSFWorkbook();
+		  HSSFSheet sheet = wb.createSheet("new sheet");
+		  HSSFCellStyle cellstyle=wb.createCellStyle();
+		  cellstyle.setWrapText(true);//自动换行
+		  creatSheetHead(sheet,wb);//创建表头
+		  
+		  int i=1;
+		  short cellNumbers=0;
+		  HSSFRow rows =null;
+		  for(Putstorageentity entity:putlist){
+			  
+			  rows = sheet.createRow(i);
+				cellNumbers=0;
+				
+				
+				if(entity.getPoorderno()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getPoorderno());//订单编号
+				}
+				if(entity.getSuppername()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getSuppername());//供应商
+				}
+				if(entity.getPutstorage().getFbillno()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getPutstorage().getFbillno());//入库单号
+				}
+				if(entity.getItemcode()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getItemcode());//物料编码
+				}
+				if(entity.getBaseitem().getItemname()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getBaseitem().getItemname());//物料名称
+				}
+				if(entity.getBaseitem().getFormatno()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getBaseitem().getFormatno());//规格型号
+				}
+				
+				if(entity.getBaseitem().getF102()==null || entity.getBaseitem().getF102().equals("") || entity.getBaseitem().getF102().equals("null")){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getBaseitem().getF102());//材质
+				}
+				if(entity.getPoorderentry().getF101()==null || entity.getPoorderentry().getF101().equals("") || entity.getPoorderentry().getF101().equals("null")){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getPoorderentry().getF101());//执行标准
+				}
+				
+				if(entity.getFqty()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getFqty());//入库数量
+				}
+				
+				if(entity.getBaseitem().getUnitname()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getBaseitem().getUnitname());//单位
+				}
+				
+				if(entity.getStname()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getStname());//库房
+				}
+				
+				if(entity.getPutstorage().getCheckdate()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getPutstorage().getCheckdateString());//入库时间,入库单审核时间
+				}
+				if(entity.getPoorderentry().getFtaxprice()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getPoorderentry().getFtaxprice());//含税单价
+				}
+				if(entity.getTeamname()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					rows.createCell(cellNumbers++).setCellValue(entity.getTeamname());//使用部门
+				}
+				if(entity.getFxmark()==null){
+					rows.createCell(cellNumbers++).setCellValue("");
+				}else{
+					if(entity.getFxmark()==4){
+						rows.createCell(cellNumbers++).setCellValue("B");//标记
+					}else{
+						rows.createCell(cellNumbers++).setCellValue("A");//标记
+					}
+					
+				}
+				
+				i++;
+			  
+		  }
+		  
+		
+			
+		  String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"work.xls";
+		  try {
+				FileOutputStream outputStream=new FileOutputStream(new File(realPath+fileName));
+				wb.write(outputStream);
+				outputStream.flush();
+				outputStream.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		return fileName;
+		
+		//=================================
+	}
+	
+	private void creatSheetHead(HSSFSheet sheet, HSSFWorkbook wb) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+		  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+		  font.setFontHeightInPoints((short) 12);//设置字体大小
+		  cellstyl.setFont(font);
+		  sheet.setDefaultColumnWidth((short) 20);//列宽
+		  HSSFRow firstrow = sheet.createRow(0);
+		  HSSFRow secondRow = sheet.createRow(1);
+		  sheet.createFreezePane( 0, 1, 0, 1 );//冻结首行 
+		  firstrow.createCell((short) 0).setCellValue("订单编号");
+		  firstrow.createCell((short) 1).setCellValue("供应商");
+		  firstrow.createCell((short) 2).setCellValue("出库单号");
+		  firstrow.createCell((short) 3).setCellValue("物料编号");
+		  firstrow.createCell((short) 4).setCellValue("物料名称");
+		  firstrow.createCell((short) 5).setCellValue("规格型号");
+		  firstrow.createCell((short) 6).setCellValue("材质");
+		  firstrow.createCell((short) 7).setCellValue("执行标准");
+		  firstrow.createCell((short) 8).setCellValue("入库数量");
+		  firstrow.createCell((short) 9).setCellValue("单位");
+		  firstrow.createCell((short) 10).setCellValue("入库房");
+		  firstrow.createCell((short) 11).setCellValue("入库时间");
+		  firstrow.createCell((short) 12).setCellValue("含税单价");
+		  firstrow.createCell((short) 13).setCellValue("使用部门");
+		  firstrow.createCell((short) 14).setCellValue("标记");
+	}
+	@Override
+	public List<Putstorageentity> findPutstraPutentity(
+			PutstorageentityQuery query)
+			throws ServiceException {
+		return putstorageentityDao.findList("Putstorageentity.select.data.for.saleOut", query);
+	}
+	@Override
+	public List<Putstorageentity> findSaleOut(
+			PutstorageentityQuery query)
+			throws ServiceException {
+		return putstorageentityDao.findList("Putstorageentity.find.saleout.data.for.addtable", query);
+	}
+	@Override
+	public Boolean exeProcess(Putstorageentity entity,
+			ProcessExetask processExetask) {return true;}
+
+}

@@ -1,0 +1,144 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ibatis.sqlmap.client.SqlMapClient;
+import com.sun.star.uno.Exception;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Item;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.dao.ISysOrderDao;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.SysOrderQuery;
+
+/**
+ * 系统订单数据处理实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:38:56
+ */
+@Repository
+public class SysOrderDao extends BaseIbatisDao<SysOrder, java.lang.Long> implements ISysOrderDao {
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		return "SysOrder";
+	}
+
+	@Override
+	public void saveOrUpdate(SysOrder entity) throws DataAccessException {
+		
+	}
+	@Override
+	public Long saveSysOrderList(List<SysOrder>  sysOrderList) throws DataAccessException{
+		return (Long) this.getSqlMapClientTemplate().insert("BaseItem.insert.bantch",sysOrderList);
+		
+	}
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void create(List<SysOrder> sysOrderList) throws  SQLException {  
+		 
+        // 注意使用同一个SqlMapClient会话  
+        SqlMapClient sqlMapClient =this.getSqlMapClientTemplate().getSqlMapClient();  
+  
+        try {  
+            // 开始事务  
+            sqlMapClient.startTransaction();  
+            // 开始批处理  
+            sqlMapClient.startBatch(); 
+             
+            for (SysOrder sysOrder : sysOrderList) {  
+                // 插入操作  
+                sqlMapClient.insert("SysOrder.insert", sysOrder);  
+            }  
+  
+            // 执行批处理  
+            sqlMapClient.executeBatch();  
+            // 提交事务交由spring  
+            sqlMapClient.commitTransaction();  
+  
+        } finally {    
+                 try {  
+		                // 结束事务  
+		                sqlMapClient.endTransaction();  
+                    } catch (SQLException e) {  
+                            // e.printStackTrace(); 
+                             throw new RuntimeException();
+                    }  
+        		}    
+		} 
+	/**
+	 * 查询系统订单
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> listSysOrders(SysOrderQuery  sysorderQuery ) {
+		return (List<SysOrder>)this.getSqlMapClientTemplate()
+		.queryForList("Order.listSysOrders", sysorderQuery);
+	}
+	/**
+	 * 查询系统订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findlistBySysOrderCodes(SysOrderQuery  sysorderQuery ) {
+		return (List<SysOrder>)this.getSqlMapClientTemplate()
+		.queryForList("Order.findlistBySysOrderCodes", sysorderQuery);
+	}
+	/**
+	 * 通过系统订单编号查询系统订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findlistBySysOrderCode(SysOrderQuery  sysorderQuery ) {
+		return (List<SysOrder>)this.getSqlMapClientTemplate()
+		.queryForList("Order.findlistBySysOrderCode", sysorderQuery);
+	}
+	/**
+	 * 查找系统订单通过条件
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findListQuery(SysOrderQuery  sysorderQuery ) {
+		return (List<SysOrder>)this.getSqlMapClientTemplate()
+		.queryForList("SysOrder.Query.findList", sysorderQuery);
+	}
+	/**
+	 * 查找系统订单的关联产品信息通过条件
+	 * @param order
+	 * @return
+	 */
+	public List<Product> findProductQueryList(ProductQuery  productQuery ) {
+		return (List<Product>)this.getSqlMapClientTemplate()
+		.queryForList("SysOrder.productQuery.findList", productQuery);
+	}
+
+	@Override
+	public SysOrder getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SysOrder)this.getSqlMapClientTemplate().queryForObject("SysOrder.getByProperty", map);		
+
+	}
+	public Double getCountBySaleA(String sql,SysOrderQuery orderQuery) throws SQLException{
+		return (Double)this.getSqlMapClient().queryForObject(sql, orderQuery);
+	}
+
+	@Override
+	public List<SysOrder> findCheckedList(SysOrderQuery sysOrderQuery) {
+		return (List<SysOrder>)this.getSqlMapClientTemplate()
+				.queryForList("SysOrder.Query.findCheckedList", sysOrderQuery);
+	}
+
+
+}

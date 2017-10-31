@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.dao.IIcitemDesignDao;
+
+@Repository
+public class IcitemDesignDao extends BaseIbatisDao<IcitemDesign,java.lang.Long> implements IIcitemDesignDao{
+
+		
+	public void saveOrUpdate(IcitemDesign entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "IcitemDesign";
+	}
+	public IcitemDesign getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (IcitemDesign)this.getSqlMapClientTemplate().queryForObject("IcitemDesign.getByProperty", map);		
+	}
+
+	@Override
+	public IcitemDesign findentity(IcitemDesign designItem) {
+		return (IcitemDesign) this.getSqlMapClientTemplate().queryForObject("IcitemDesign.find.entity.data", designItem);
+	}
+	
+	@Override
+	public Integer updateinfo(IcitemDesign  entity) throws DataAccessException{
+		return  this.getSqlMapClientTemplate().update("IcitemDesign.updateByBaseitemid",entity);
+		
+	}
+
+}

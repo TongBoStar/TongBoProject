@@ -1,0 +1,48 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Icitem;
+import com.terrence.crm.dol.bean.Icitems;
+import com.terrence.crm.dol.dao.IItemBasicDao;
+
+@Repository
+public class ItemBasicDao extends BaseIbatisDao<Icitems,java.lang.Long> implements IItemBasicDao{
+
+		
+	public void saveOrUpdate(Icitems entity) {
+		if(1==entity.getOptType()) //保存
+			save(entity);
+		else if(2==entity.getOptType()){//更新
+			update(entity);
+		}
+			
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemBasic";
+	}
+	public Icitems getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Icitems)this.getSqlMapClientTemplate().queryForObject("ItemBasic.getByProperty", map);		
+	}
+	
+
+	@Override
+	public List<Icitems> findVernameList() {
+		// TODO Auto-generated method stub
+		return this.getSqlMapClientTemplate().queryForList("ItemBasic.findVernameList");
+	}
+
+}

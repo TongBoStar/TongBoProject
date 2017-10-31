@@ -1,0 +1,160 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Procedure;
+import com.terrence.crm.dol.query.ProcedureQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.service.IProcedureService;
+
+@Service
+@Transactional
+public class ProcedureService extends BaseService implements IProcedureService {
+	protected static Logger logger = LoggerFactory.getLogger(ProcedureService.class);
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Procedure";
+	}
+	@Transactional(readOnly=true)
+	public Procedure getById(java.lang.Long id) throws ServiceException
+	{
+		return procedureDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Procedure entity) throws ServiceException
+	{
+		procedureDao.saveOrUpdate(entity);
+//		if(entity.getProcedurerid()!=null)
+//		{
+//			checkDao.updateByprocessid(entity.getProcedurerid(), entity.getPrice());
+//			checkRecordDao.updateByprocessid(entity.getProcedurerid(), entity.getPrice());
+//		}
+	}
+	
+	public java.lang.Long save(Procedure entity) throws ServiceException
+	{
+		Long adId = procedureDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Procedure entity) throws ServiceException
+	{
+		Integer returnValue =  procedureDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = procedureDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = procedureDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProcedureQuery query = new ProcedureQuery();
+		try {
+			return procedureDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Procedure> findPage(Page<Procedure> page, ProcedureQuery query) throws ServiceException
+	{
+		return procedureDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Procedure> findPage(Page<Procedure> page,String statement, ProcedureQuery query) throws ServiceException
+	{
+		return procedureDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Procedure> findList(ProcedureQuery query) throws ServiceException
+	{
+		return procedureDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Procedure> findList(ProcedureQuery query,Integer pageSize) throws ServiceException
+	{
+		return procedureDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Procedure> findList(ProcedureQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return procedureDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Procedure> findAllList() throws ServiceException
+	{
+		return procedureDao.findAllList();
+	}
+	@Override
+	public List<Procedure> findByItemcode(Procedure entity) {
+
+		//System.out.println("icmoid:"+entity.getIcmoid());
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", icmoDao.getById(entity.getIcmoid()).getItemcode());
+		List<Procedure> list=new ArrayList<Procedure>();
+		list=procedureDao.findByItemId(baseitem.getBaseitemid());
+		if(list.size()>0){
+			return list;	
+		}else{
+			return null;	
+		}
+		
+	}
+
+}

@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.List;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.dao.IOrderDao;
+import com.terrence.crm.dol.query.OrderQuery;
+
+/**
+ * 订单数据处理实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:38:56
+ */
+@Repository
+public class OrderDao extends BaseIbatisDao<Order, java.lang.Long> implements IOrderDao {
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		return "Order";
+	}
+
+	@Override
+	public void saveOrUpdate(Order entity) throws DataAccessException {
+		
+	}
+	/**
+	 * 通过多个id 查询基本订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<Order> findListByOrderCodes(OrderQuery  orderQuery ) {
+		return (List<Order>)this.getSqlMapClientTemplate().queryForList("Order.findlistByOrderCodes", orderQuery);
+	}
+	/**
+	 * 查询基本订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<Order> findListAll(OrderQuery  orderQuery ) {
+		return (List<Order>)this.getSqlMapClientTemplate().queryForList("Order.findListAll", orderQuery);
+	}
+    public void updateOrderStatus(Order entity) throws DataAccessException {
+	   this.getSqlMapClientTemplate().update("Order.updateOrderStatus", entity);
+	}
+
+}

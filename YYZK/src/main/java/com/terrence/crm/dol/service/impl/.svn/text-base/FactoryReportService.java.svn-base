@@ -1,0 +1,157 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.FactoryReport;
+import com.terrence.crm.dol.query.FactoryReportQuery;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.service.IFactoryReportService;
+
+@Service
+@Transactional
+public class FactoryReportService extends BaseService implements IFactoryReportService {
+	protected static Logger logger = LoggerFactory.getLogger(FactoryReportService.class);
+	private SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	@Autowired
+	@Qualifier("factoryReportDao")
+	private IFactoryReportDao factoryReportDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "FactoryReport";
+	}
+	@Transactional(readOnly=true)
+	public FactoryReport getById(java.lang.Long id) throws ServiceException
+	{
+		return factoryReportDao.getById(id);
+	}
+	
+	public void saveOrUpdate(FactoryReport entity) throws ServiceException
+	{
+		if(entity.getReportdate().equals("1")){
+			entity.setReportdate(formt.format(new Date()));
+		}
+		factoryReportDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(FactoryReport entity) throws ServiceException
+	{
+		Long adId = factoryReportDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(FactoryReport entity) throws ServiceException
+	{
+		Integer returnValue =  factoryReportDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = factoryReportDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = factoryReportDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		FactoryReportQuery query = new FactoryReportQuery();
+		try {
+			return factoryReportDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<FactoryReport> findPage(Page<FactoryReport> page, FactoryReportQuery query) throws ServiceException
+	{
+		return factoryReportDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<FactoryReport> findPage(Page<FactoryReport> page,String statement, FactoryReportQuery query) throws ServiceException
+	{
+		return factoryReportDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<FactoryReport> findList(FactoryReportQuery query) throws ServiceException
+	{
+		return factoryReportDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<FactoryReport> findList(FactoryReportQuery query,Integer pageSize) throws ServiceException
+	{
+		return factoryReportDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<FactoryReport> findList(FactoryReportQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return factoryReportDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<FactoryReport> findAllList() throws ServiceException
+	{
+		return factoryReportDao.findAllList();
+	}
+	@Override
+	public void saveOrUpdateReport(FactoryReport entity)
+			throws ServiceException {
+		factoryReportDao.saveOrUpdateReport(entity);
+		
+	}
+
+	@Override
+	public FactoryReport getByEntity(String statement,
+			FactoryReportQuery factoryReportQuery) throws ServiceException {
+		
+		return factoryReportDao.getByEntity(statement, factoryReportQuery);
+	}
+	
+
+	@Override
+	public FactoryReport findvalve(FactoryReportQuery factoryReportQuery)
+			throws ServiceException {
+		return factoryReportDao.findvalve(factoryReportQuery);
+	}
+	@Override
+	public FactoryReport findentity(FactoryReportQuery factoryReportQuery)
+			throws ServiceException {
+
+
+		return factoryReportDao.findentity(factoryReportQuery);
+	}
+
+}

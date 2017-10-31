@@ -1,0 +1,103 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.base.util.DateUtil;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Callslip;
+import com.terrence.crm.dol.bean.CallslipDetail;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.ICallslipDao;
+import com.terrence.crm.dol.dao.ICallslipDetailDao;
+import com.terrence.crm.dol.query.CallslipDetailQuery;
+import com.terrence.crm.dol.service.ICallslipDetailService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+@Service
+@Transactional
+public class CallslipDetailService extends BaseService implements ICallslipDetailService {
+	@Autowired
+	@Qualifier("callslipDetailDao")
+	private ICallslipDetailDao callslipDetailDao;
+	@Autowired
+	@Qualifier("callslipDao")
+	private ICallslipDao callslipDao;
+	@Override
+	public CallslipDetail getById(Long id) throws ServiceException {
+		return callslipDetailDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(CallslipDetail entity) throws ServiceException {
+		callslipDetailDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(CallslipDetail entity) throws ServiceException {
+		return callslipDetailDao.save(entity);
+	}
+	@Override
+	public Integer update(CallslipDetail entity) throws ServiceException {
+		return callslipDetailDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return callslipDetailDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = callslipDetailDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<CallslipDetail> findPage(Page<CallslipDetail> page, CallslipDetailQuery query) throws ServiceException{
+		return callslipDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CallslipDetail> findPage(Page<CallslipDetail> page,String statement, CallslipDetailQuery query) throws ServiceException{
+		return callslipDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CallslipDetail> findList(CallslipDetailQuery query) throws ServiceException{
+		return callslipDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CallslipDetail> findList(CallslipDetailQuery query,Integer pageSize) throws ServiceException{
+		return callslipDetailDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CallslipDetail> findList(CallslipDetailQuery query,String statement,Integer pageSize) throws ServiceException{
+		return callslipDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CallslipDetail> findAllList() throws ServiceException{
+		return callslipDetailDao.findAllList();
+	}
+	@Override
+	public void save(List<CallslipDetail> callslipDetailList) throws Exception {
+		if(null!=callslipDetailList&&callslipDetailList.size()!=0){
+			for(CallslipDetail cd:callslipDetailList){
+				if(cd!=null){
+					if(cd.getId()==null){
+						cd.setCreateTime(DateUtil.DateToStr("yyyy-MM-dd", new Date()));
+					}
+					callslipDetailDao.saveOrUpdate(cd);
+				}
+			}
+		}
+		Callslip callslip = new Callslip();
+		callslip.setId(callslipDetailList.get(0).getCallslipId());
+		callslip.setFstatus(0);//已保存
+		callslip.setFstatusDesc("已保存");
+		callslipDao.update(callslip);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_CALLSLIP, ConfigTerrence.OPT_EDIT, "主键为："+callslipDetailList.get(0).getCallslipId()+"的投料单修改成功，操作人为"+admin.getAdmin().getAdminName());
+	}
+}

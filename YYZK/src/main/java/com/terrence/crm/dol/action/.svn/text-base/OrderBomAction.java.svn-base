@@ -1,0 +1,1166 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.OrderLack;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.bean.ShortageTemp;
+import com.terrence.crm.dol.query.InventoryQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.OrderLackQuery;
+import com.terrence.crm.dol.query.OrdersProductQuery;
+import com.terrence.crm.dol.query.ShortageTempQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IInventoryService;
+import com.terrence.crm.dol.service.IOrderBomService;
+import com.terrence.crm.dol.service.IOrderLackService;
+import com.terrence.crm.dol.service.IOrdersProductService;
+import com.terrence.crm.dol.service.IShortageTempService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/orderBom")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "orderBom." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class OrderBomAction extends CrudActionSupport<OrderBom>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("orderBomService")
+	private IOrderBomService orderBomService;
+	
+	@Autowired
+	@Qualifier("ordersProductService")
+	private IOrdersProductService ordersProductService;
+	
+	@Autowired
+	@Qualifier("orderLackService")
+	private IOrderLackService orderLackService;
+	
+	@Autowired
+	@Qualifier("shortageTempService")
+	private IShortageTempService shortageTempService;
+	
+	@Autowired
+	@Qualifier("inventoryService")
+	private IInventoryService inventoryService;
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	
+	private OrderBom entity;
+
+	private OrderBomQuery orderBomQuery;
+	
+	private OrderLackQuery orderLackQuery;
+	
+	private java.lang.Long orderBomId;
+	
+	/** 分页器 */
+	private Page<OrderBom> page = new Page<OrderBom>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	private OrderLack orderlack;
+	private ApplicationContext ctx;
+	
+	private List<OrderBom> orderBomList=new ArrayList<OrderBom>();
+	
+	private List<ShortageTemp> shortageTempList;
+	
+	private List<java.lang.String> checkedCodeList;
+	
+	private Object []obj;
+	
+	/***订单产品ID**/
+	private Long productid;
+	
+	private Double amount;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (orderBomId != null ) {
+			entity = orderBomService.getById(orderBomId);
+		} else {
+			entity = new OrderBom();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			orderBomService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	@Action("/assemble/bomQuery")
+	public String bomQuery()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery,"OrderBom.Inventory.findList");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	@Action("/system/loadbatch")
+	public String listToBatch()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList=orderBomService.findList(orderBomQuery, "OrderBom.findlist.batch");
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+			e.printStackTrace();
+		}
+		
+		return JSON;
+	}
+	public String listToBomItem()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery,"OrderBom.Item.findList");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		
+		return JSON;
+	}
+	public String listToBomSubItem()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery,"OrderBom.SubItem.findList");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		
+		return JSON;
+	}
+	public String listToQuery()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToPcode()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery, "OrderBom.findlist.listToPcode");
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.DESC);
+		}
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			page = orderBomService.findPage(page, orderBomQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String showpositionBycode() throws Exception {
+		if(orderLackQuery == null) {
+			orderLackQuery = new OrderLackQuery();
+		}
+		
+		try {
+			//orderBomList=orderBomService.findList(orderBomQuery, "OrderBom.findlist.positionlist");
+			orderBomList=orderBomService.findList(orderBomQuery, "OrderBom.findlist.positionlistNew");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listOutOfItem()
+	{
+		if(orderLackQuery == null) {
+			orderLackQuery = new OrderLackQuery();
+		}
+		try {
+			OrdersProduct product=ordersProductService.getById(productid);
+			orderLackQuery.setFbillno(product.getFbillno());
+			orderLackQuery.setDeleverydate(product.getDeleverydate());
+			orderLackQuery.setItemcode(product.getItemcode());
+			orderLackQuery.setPriority(product.getPriority());
+			List<OrderLack> orderLackList=orderLackService.findList(orderLackQuery, "Order.Product.Inventory");
+			orderlack=orderLackList.get(0);
+			Double amount=orderlack.getNeedqty()+orderlack.getAssigned()-orderlack.getFqty()-orderlack.getFqty2();
+			if(amount<0)
+			{
+				amount=0.0;
+			}
+			orderlack.setAmount(amount);
+			
+		} catch (ServiceException e) {
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/**
+	 * 多级显示
+	 * @return
+	 */
+	public String listMoreLevel()
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			OrdersProduct product=ordersProductService.getById(productid);
+			ShortageTempQuery satempquery=new ShortageTempQuery();
+			satempquery.setUserid(SpringSecurityUtils.getCurrentUserId());
+			satempquery.setProductid(product.getId());
+			shortageTempService.deleteUseridProductid(satempquery);
+			
+			orderBomQuery.setItemcode(product.getItemcode());
+			orderBomQuery.setParentqty(amount);
+			orderBomQuery.setFbillno(product.getFbillno());
+			orderBomQuery.setId(product.getId());
+			orderBomQuery.setDeleverydate(product.getDeleverydate());
+			List<OrderBom> list=orderBomService.findList(orderBomQuery, "OrdersProduct.Bom.Inventory.findList");
+			orderBomList=new ArrayList<OrderBom>();
+			/**查其它订单产品**/
+			List<OrdersProduct> producelist=null;//queryorderproduct(product);
+			moreBom(list,product,1,producelist);
+		} catch (ServiceException e) {
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public List<OrderBom> moreBom(List<OrderBom> list,OrdersProduct product,int level,List<OrdersProduct> producelist)
+	{
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		for(OrderBom bom:list)
+		{
+			bom.setLevel(level);
+			orderBomList.add(bom);
+			
+			orderBomQuery.setItemcode(bom.getParentcode());
+			orderBomQuery.setFbillno(product.getFbillno());
+			orderBomQuery.setId(product.getId());
+			orderBomQuery.setDeleverydate(product.getDeleverydate());
+			orderBomQuery.setParentqty(bom.getParentqty()-(bom.getFqty()+bom.getFqty2()));
+			if(orderBomQuery.getParentqty()<0)
+				orderBomQuery.setParentqty(0.0);
+			moreBom(orderBomService.findList(orderBomQuery, "OrdersProduct.Bom.Inventory.findList"),product,level+1,producelist);
+			
+		}
+		return list;
+	}
+	/**
+	 * 反查BOM
+	 * @return
+	 */
+	public String listPeggingBom()
+	{
+		try {
+			if(orderBomQuery == null) {
+				orderBomQuery = new OrderBomQuery();
+			}
+			List<OrderBom> list=orderBomService.findList(orderBomQuery, "OrderBom.BaseItem.findList.Pegging");
+			Integer showlevel=orderBomQuery.getLevels();
+			if(showlevel==null)showlevel=5;
+			listParentBom(list,1,showlevel);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public List<OrderBom> listParentBom(List<OrderBom> list,int level,int showlevel)
+	{
+		if(showlevel>=level)
+		{
+			for(OrderBom bom:list)
+			{
+				if(bom.getBaseItem().getYoutput()>0)
+				{
+				bom.setLevel(level);
+				orderBomList.add(bom);
+				OrderBomQuery bomquery =new OrderBomQuery();
+				bomquery.setItemcode(bom.getItemcode());
+				List<OrderBom> listbom=orderBomService.findList(bomquery, "OrderBom.BaseItem.findList.Pegging");
+				listParentBom(listbom,level+1,showlevel);
+				}
+			}
+		}
+		return list;
+	}
+	/***
+	 * 物料年需求量by bom
+	 * @return
+	 */
+	public String listBomYoutput()
+	{
+		try {
+			if(orderBomQuery == null) {
+				orderBomQuery = new OrderBomQuery();
+			}
+			List<OrderBom> list=orderBomService.findList(orderBomQuery, "OrderBom.BaseItem.findList.bom");
+			
+			listYoutput(list,1,orderBomQuery.getYoutput());
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public List<OrderBom> listYoutput(List<OrderBom> list,int level,Double youtput)
+	{
+		for(OrderBom bom:list)
+		{
+			bom.setLevel(level);
+			orderBomList.add(bom);
+			OrderBomQuery bomquery =new OrderBomQuery();
+			bomquery.setItemcode(bom.getParentcode());
+			//bomquery.setYoutput(youtput*bom.getParentqty());
+			if(bom.getItemproperty().intValue()==2)
+			{
+			List<OrderBom> sumlist=orderBomService.findList(bomquery, "OrderBom.BaseItem.findList.bom");
+			listYoutput(sumlist,level+1,null);
+			}
+		}
+		return list;
+	}
+	/**
+	 * 
+	 * @return
+	 */
+	@Action("/assemble/order/listBom")
+	public String listBom()
+	{
+		try {
+			obj=new Object[2];
+			
+			OrdersProduct product=ordersProductService.getById(productid);
+			InventoryQuery query=new InventoryQuery();
+			query.setItemcode(product.getItemcode());
+			Inventory inventory=inventoryService.getByItemcode(query);
+			inventory.setAssigned(product.getAmount());
+			obj[0]=inventory;
+			OrderBomQuery bomquery=new OrderBomQuery();
+			bomquery.setAssigned(product.getAmount());
+			bomquery.setItemcode(product.getItemcode());
+			obj[1]=orderBomService.findList(bomquery, "OrdersProduct.Bom.Inventory.findList");
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public List<OrderBom> listsubbom(List<OrderBom> list)
+	{
+		for(OrderBom bom:list)
+		{
+			orderBomList.add(bom);
+			if(bom.getItemcode().startsWith("081"))
+			{
+				OrderBomQuery bomquery=new OrderBomQuery();
+				bomquery.setAssigned(bom.getAssigned());
+				bomquery.setItemcode(bom.getParentcode());
+				listsubbom(orderBomService.findList(bomquery, "OrdersProduct.Bom.Inventory.findList"));
+			}
+			
+		}
+		return orderBomList;
+	}
+	/**分5步
+	 * step 1
+	 * 以BOM查库存缺料
+	 * @return
+	 */
+	public String listOutOfInventory()
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			OrdersProduct product=ordersProductService.getById(productid);
+			ShortageTempQuery satempquery=new ShortageTempQuery();
+			satempquery.setUserid(SpringSecurityUtils.getCurrentUserId());
+			satempquery.setProductid(product.getId());
+			shortageTempService.deleteUseridProductid(satempquery);
+			
+			orderBomQuery.setItemcode(product.getItemcode());
+			orderBomQuery.setParentqty(amount);
+			orderBomQuery.setFbillno(product.getFbillno());
+			orderBomQuery.setId(product.getId());
+			orderBomQuery.setDeleverydate(product.getDeleverydate());
+			List<OrderBom> list=orderBomService.findList(orderBomQuery, "OrdersProduct.Bom.Inventory.findList");
+			orderBomList=new ArrayList<OrderBom>();
+			/**查其它订单产品**/
+			List<OrdersProduct> producelist=null;//queryorderproduct(product);
+			listBom(list,product,1,producelist);
+			satempquery.setSortColumns(" lack desc,itemcode ");
+			shortageTempList=shortageTempService.findList(satempquery);
+			//ComparatorShortAge comparator=new ComparatorShortAge();
+			//Collections.sort(orderBomList,comparator);
+		} catch (ServiceException e) {
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/***
+	 * step 3
+	 * @param list
+	 * @param product
+	 * @param level
+	 * @param producelist
+	 * @return
+	 */
+	public List<OrderBom> listBom(List<OrderBom> list,OrdersProduct product,int level,List<OrdersProduct> producelist)
+	{
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		Double assigned=0.0;
+		int i=0;
+		ShortageTemp shortage=null;
+		for(OrderBom bom:list)
+		{
+			bom.setLevel(level);
+			shortage=new ShortageTemp();
+			shortage.setAssigned(bom.getAssigned());
+			shortage.setFqty(bom.getFqty());
+			shortage.setFqty2(bom.getFqty2());
+			shortage.setItemcode(bom.getParentcode());
+			shortage.setItemname(bom.getParentname());
+			shortage.setNeedfqty(bom.getParentqty());
+			shortage.setParentunitname(bom.getParentunitname());
+			shortage.setUserid(SpringSecurityUtils.getCurrentUserId());
+			shortage.setProductid(product.getId());
+			if(bom.getParentqty()!=0&&(bom.getParentqty()+bom.getAssigned())>(bom.getFqty()+bom.getFqty2()))
+				shortage.setLack(1);
+			else
+				shortage.setLack(0);
+			shortage.setItemproperty(bom.getItemproperty());
+			shortageTempService.save(shortage);
+			//orderBomList.add(bom);
+			orderBomQuery.setItemcode(bom.getParentcode());
+			orderBomQuery.setFbillno(product.getFbillno());
+			orderBomQuery.setId(product.getId());
+			orderBomQuery.setDeleverydate(product.getDeleverydate());
+			orderBomQuery.setParentqty(bom.getParentqty()-(bom.getFqty()+bom.getFqty2()));
+			if(orderBomQuery.getParentqty()<0)
+				orderBomQuery.setParentqty(0.0);
+			/*if((bom.getParentqty()+bom.getAssigned())<=(bom.getFqty()+bom.getFqty2()))
+			{
+				orderBomQuery.setParentqty(0.0);
+			}
+			else
+			{
+				orderBomQuery.setParentqty(bom.getParentqty()-(bom.getFqty()+bom.getFqty2()));
+			}*/
+			orderBomQuery.setUserid(SpringSecurityUtils.getCurrentUserId());
+			//UserContextHolder.get().getId();
+			listBom(orderBomService.findList(orderBomQuery, "OrdersProduct.Bom.Inventory.findList"),product,level+1,producelist);
+			
+		}
+		return list;
+	}
+	/****
+	 * step 4
+	 * 查物料代码是itemcoder的已分配量
+	 * @param itemcode
+	 * @param productlist
+	 * @return
+	 */
+	public Double queryassigned(Double assigned,String itemcode,List<OrdersProduct> productlist)
+	{
+		for(OrdersProduct pd:productlist)
+		{
+			if(pd.getItemcode().equals(itemcode))
+			{
+				assigned+= pd.getAmount();
+			}
+			else
+			{
+				orderBomQuery.setItemcode(pd.getItemcode());
+				orderBomQuery.setParentqty(pd.getAmount());
+				//System.out.println(orderBomQuery);
+				assigned+= listOtherBom(assigned,itemcode,orderBomService.findList(orderBomQuery,"OrdersProduct.assigned.Bom.Inventory.findList"));
+			}
+		}
+		return assigned;
+	}
+	/**
+	 * step 5
+	 * @param assigned
+	 * @param itemcode
+	 * @param list
+	 * @return
+	 */
+	public Double listOtherBom(Double assigned,String itemcode,List<OrderBom> list)
+	{
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		Double assig=0.0;
+		for(OrderBom bom:list)
+		{
+			if(bom.getParentcode().equals(itemcode))
+			{
+				assig+= bom.getParentqty();
+			}
+			else
+			{
+			orderBomQuery.setItemcode(bom.getParentcode());
+			orderBomQuery.setParentqty(bom.getParentqty());
+			//System.out.println(orderBomQuery);
+			assig+= listOtherBom(assigned,itemcode,orderBomService.findList(orderBomQuery,"OrdersProduct.assigned.Bom.Inventory.findList"));
+			}
+		}
+		return assig;
+	}
+	/**
+	 * step 2
+	 * 查询已分配物料
+	 * @param product
+	 * @return itemcoe,amount 集合
+	 */
+	public List<OrdersProduct> queryorderproduct(OrdersProduct product)
+	{
+		List<OrdersProduct> list=null;
+		try {
+			OrdersProductQuery query=new OrdersProductQuery();
+			query.setItemcode(product.getItemcode());
+			query.setFbillno(product.getFbillno());
+			query.setDeleverydate(product.getDeleverydate());
+			query.setPriority(product.getPriority());
+			//System.out.println(query);
+			list = ordersProductService.findList(query, "OrdersProduct.Priority.Delevery.findList");
+		} catch (ServiceException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+		return list;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			orderBomService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String syncToErp() throws Exception {
+		
+		try {
+			orderBomService.syncToErp(orderBomQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = orderBomService.getById(orderBomId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	public String listToQueryBycode()throws Exception
+	{
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			orderBomList = orderBomService.findList(orderBomQuery, "OrderBom.findListIncludeformatno");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			orderBomList = orderBomService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	/**
+	 * 批量查询物料bom
+	 */
+	public String findBom() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("orderBomId");
+			page.setOrder(Page.DESC);
+		}
+		if(orderBomQuery == null) {
+			orderBomQuery = new OrderBomQuery();
+		}
+		
+		try {
+			String delcodes = "\'";
+			
+			for(String cc:checkedCodeList){
+				delcodes+=cc+"\',\'";
+			}
+			delcodes=delcodes.substring(0,delcodes.length()-2);
+			
+			orderBomQuery.setItemcodes(delcodes);
+			page = orderBomService.findPage(page, "OrderBom.find.Page.data.NewFind", orderBomQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String bomIntegrity(){
+		try{
+			orderBomQuery = new OrderBomQuery();
+			StringBuffer sb = new StringBuffer();
+			if(null!=checkedIdList&&checkedIdList.size()>0){
+				for(Long lo:checkedIdList){
+					sb.append(lo).append(",");
+				}
+			}
+			String itemcodes = sb.toString();
+			if(itemcodes.length()>1){//有筛选的物料
+				itemcodes = itemcodes.substring(0, sb.length()-1);
+				orderBomQuery.setItemcodes(itemcodes);
+				orderBomQuery.setItemproperty(2);
+			}else{
+				orderBomQuery.setItemproperty(2);
+			}
+			List<OrderBom> list=orderBomService.findList(orderBomQuery, "OrderBom.CheckBom.findList");
+			List<OrderBom> bomList=null;
+			BaseItem baseItem = new BaseItem();
+			boolean flag = true;
+			for (OrderBom bom:list) {
+				orderBomQuery.setItemproperty(null);
+				orderBomQuery.setItemcode(bom.getItemcode());
+				orderBomQuery.setItemcodes(null);
+				bomList = orderBomService.findList(orderBomQuery);
+				if(null!=bomList&&bomList.size()>0){
+					for(OrderBom orderBom:bomList){
+						if(orderBom.getItemproperty()!=2){
+							continue;
+						}else {
+							if(bomIsIntegrity(orderBom)){
+								continue;
+							}else {
+								flag = false;
+								break;
+							}
+						}
+					}
+					if(flag){//bom是完整的
+						baseItem.setBomStatus(1);
+						baseItem.setItemcode(bom.getItemcode());
+						baseItemService.update("BaseItem.update.ByItemcode", baseItem);
+					}else {//bom不完整
+						baseItem.setBomStatus(2);
+						baseItem.setItemcode(bom.getItemcode());
+						baseItemService.update("BaseItem.update.ByItemcode", baseItem);
+					}
+					flag = true;
+				}else{//是自制件，但是下面没bom，所以不完整
+					baseItem.setBomStatus(2);
+					baseItem.setItemcode(bom.getItemcode());
+					baseItemService.update("BaseItem.update.ByItemcode", baseItem);
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "校验成功";
+		}catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "1";
+			resultInfo[1] = "校验失败:"+e.getMessage();
+		}
+		return JSON;
+	}
+	public boolean bomIsIntegrity(OrderBom orderBom){
+		boolean flag = true;
+		orderBomQuery = new OrderBomQuery();
+		orderBomQuery.setItemcode(orderBom.getParentcode());
+		List<OrderBom> list=orderBomService.findList(orderBomQuery);
+		if(null!=list&&list.size()>0){
+			for (OrderBom bom:list) {
+				if(bom.getItemproperty().intValue()==2){
+					bomIsIntegrity(bom);
+				}else {
+					continue;
+				}
+			}
+		}else {
+			flag = false;
+		}
+		return flag;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public OrderBom getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public OrderBomQuery getOrderBomQuery() {
+		return orderBomQuery;
+	}
+
+	
+	public void setOrderBomQuery(OrderBomQuery orderBomQuery) {
+		this.orderBomQuery = orderBomQuery;
+	}
+
+	public void setOrderBomId(java.lang.Long orderBomId) {
+		this.orderBomId = orderBomId;
+	}
+	
+	
+	public java.lang.Long getOrderBomId() {
+		return this.orderBomId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<OrderBom> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<OrderBom> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<OrderBom> getOrderBomList() {
+		return orderBomList;
+	}
+
+	public Long getProductid() {
+		return productid;
+	}
+
+	public void setProductid(Long productid) {
+		this.productid = productid;
+	}
+
+	public OrderLack getOrderlack() {
+		return orderlack;
+	}
+
+	public void setOrderlack(OrderLack orderlack) {
+		this.orderlack = orderlack;
+	}
+
+	public Double getAmount() {
+		return amount;
+	}
+
+	public void setAmount(Double amount) {
+		this.amount = amount;
+	}
+
+	public List<ShortageTemp> getShortageTempList() {
+		return shortageTempList;
+	}
+
+	public void setShortageTempList(List<ShortageTemp> shortageTempList) {
+		this.shortageTempList = shortageTempList;
+	}
+
+	public Object[] getObj() {
+		return obj;
+	}
+
+	public void setObj(Object[] obj) {
+		this.obj = obj;
+	}
+
+	public List<java.lang.String> getCheckedCodeList() {
+		return checkedCodeList;
+	}
+
+	public void setCheckedCodeList(List<java.lang.String> checkedCodeList) {
+		this.checkedCodeList = checkedCodeList;
+	}
+
+	
+	
+}

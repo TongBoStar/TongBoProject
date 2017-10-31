@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+
+<!-- 不使用namespace是由于sql搜索定位会比较方便 -->
+<sqlMap>
+
+    <resultMap id="RM.AdminRole" class="com.terrence.crm.dol.bean.AdminRole">
+        <result property="id" column="id"/>
+        <result property="adminId" column="adminId"/>
+        <result property="roleId" column="roleId"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AdminRole.columns">
+	    <![CDATA[
+        id ,adminId ,roleId 
+	    ]]>
+	</sql>
+	
+    <insert id="AdminRole.insert" >
+    <![CDATA[
+        INSERT INTO t_admin_role (
+       	 	adminId ,
+       	 	roleId 
+        ) VALUES (
+        	#adminId# ,
+        	#roleId# 
+        )
+    ]]>
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+    <update id="AdminRole.update" >
+        UPDATE t_admin_role 
+        	<dynamic prepend="SET">
+	        		<isNotEmpty prepend="," property="adminId">
+	        			adminId = #adminId# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="roleId">
+	        			roleId = #roleId# 
+	        		 </isNotEmpty>
+	        </dynamic>	
+        WHERE 
+	        id = #id# 
+    </update>
+
+    <delete id="AdminRole.delete">
+    <![CDATA[
+        DELETE FROM t_admin_role WHERE
+        id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="AdminRole.deleteMultiple">
+    <![CDATA[
+        DELETE FROM t_admin_role WHERE
+        id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="AdminRole.getById" resultMap="RM.AdminRole">
+	    SELECT <include refid="AdminRole.columns"/>
+	    <![CDATA[
+	        FROM t_admin_role 
+	        WHERE 
+		        id = #id# 
+	    ]]>
+    </select>
+
+	
+	
+	<sql id="AdminRole.findPage.where">
+	    <dynamic prepend="WHERE">
+		       <isNotEmpty prepend="AND" property="id">
+		             id = #id#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="adminId">
+		             adminId = #adminId#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="roleId">
+		             roleId = #roleId#
+		       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <select id="AdminRole.findPage.count" resultClass="long">
+        SELECT count(*) FROM t_admin_role <include refid="AdminRole.findPage.where"/>    
+    </select>
+    
+   
+    <select id="AdminRole.findPage" resultMap="RM.AdminRole">
+    	SELECT <include refid="AdminRole.columns"/> FROM t_admin_role 
+		<include refid="AdminRole.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AdminRole.findList" resultMap="RM.AdminRole">
+    	SELECT <include refid="AdminRole.columns"/> FROM t_admin_role 
+		<include refid="AdminRole.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+
+	<select id="AdminRole.findByRoleId" resultMap="RM.AdminRole">
+    	SELECT <include refid="AdminRole.columns"/> FROM t_admin_role 
+    	WHERE
+		 roleId in ($roleId$)
+    </select>
+    
+    <delete id="AdminRole.deleteMultipleByAdminId">
+    <![CDATA[
+        DELETE FROM t_admin_role WHERE
+        adminId in ($adminId$) 
+    ]]>
+    </delete>
+</sqlMap>
+

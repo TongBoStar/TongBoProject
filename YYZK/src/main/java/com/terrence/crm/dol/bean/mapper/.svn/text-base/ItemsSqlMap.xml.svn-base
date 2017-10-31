@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Items">
+
+        
+	<resultMap id="RM.Items" class="com.terrence.crm.dol.bean.Items">
+        <result property="itemid" column="itemid"/>
+        <result property="classid" column="classid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemmodel" column="itemmodel"/>
+        <result property="parentid" column="parentid"/>
+        <result property="fnumber" column="fnumber"/>
+    </resultMap>
+    
+    <resultMap id="RM.Items.findlist.Detail.list" class="com.terrence.crm.dol.bean.Items">
+        <result property="itemid" column="itemid"/>
+        <result property="classid" column="classid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemmodel" column="itemmodel"/>
+        <result property="parentid" column="parentid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="code" column="itemid" select="Items.findList.ItemDetail"/>
+    </resultMap>
+	<resultMap id="RM.Items.detail.itemcode" class="com.terrence.crm.dol.bean.Items">
+        <result property="itemcode" column="itemcode"/>
+    </resultMap>
+    
+    <resultMap id="RM.Items.Parent.itemcode" class="com.terrence.crm.dol.bean.Items">
+        <result property="itemname" column="itemname"/>
+         <result property="itemcode" column="itemcode"/>
+        <result property="itemmodel" column="itemmodel"/>
+        <result property="parentid" column="parentid"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Items.columns">
+	    <![CDATA[
+        	t_items.itemid ,
+        	t_items.classid ,
+        	t_items.itemname ,
+        	t_items.itemcode ,
+        	t_items.itemmodel ,
+        	t_items.parentid ,
+        	t_items.fnumber 
+	    ]]>
+	</sql>
+	
+   <insert id="Items.insert" >
+    
+        INSERT INTO
+        t_items (
+        	classid 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemname">itemname</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemcode">itemcode</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemmodel">itemmodel</isNotEmpty>
+        		<isNotEmpty prepend="," property="parentid">parentid</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">fnumber</isNotEmpty>
+        		<isNotEmpty prepend="," property="deleted">deleted</isNotEmpty>
+        	</dynamic>
+        	
+        ) VALUES (
+        	#classid# 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemname">#itemname#</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemcode">#itemcode#</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemmodel">#itemmodel#</isNotEmpty>
+        		<isNotEmpty prepend="," property="parentid">#parentid#</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">#fnumber#</isNotEmpty>
+        		<isNotEmpty prepend="," property="deleted">#deleted#</isNotEmpty>
+        	</dynamic>
+        	 
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="itemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	
+	
+	<update id="Items.updatechildinfo" parameterClass="com.terrence.crm.dol.bean.Items">         
+        UPDATE t_items 
+	    set fnumber=replace (fnumber,#oldpfnumber#+'.',#pfnumber#+'.' )
+           where parentid=#parentid# and parentid is not null
+    </update>
+    
+	<update id="Items.update" parameterClass="com.terrence.crm.dol.bean.Items">         
+        UPDATE t_items 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="classid">
+	        	classid = #classid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmodel">
+	        	itemmodel = #itemmodel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="deleted">
+	        	deleted = #deleted# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        itemid = #itemid# 
+    </update>
+    
+	<delete id="Items.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_items where
+       itemid = #itemid# 
+    ]]>
+    </delete>
+    
+    <delete id="Items.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_items 
+        WHERE
+       itemid in ($itemid$) 
+    ]]>
+    </delete>
+    
+    <select id="Items.getById" resultMap="RM.Items">
+	    select <include refid="Items.columns"/>
+	    
+	        from t_items 
+	        where 
+		        itemid = #itemid# 
+	    
+    </select>
+    
+	<select id="Items.getByProperty" resultMap="RM.Items">
+		select <include refid="Items.columns"/> from t_items where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Items.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_items.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="classid">
+	             t_items.classid = #classid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_items.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_items.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmodel">
+	             t_items.itemmodel = #itemmodel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_items.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_items.fnumber = #fnumber#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="deleted">
+	             t_items.deleted = #deleted#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Items.findPage.and">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_items.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="classid">
+	             t_items.classid = #classid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_items.itemname = #itemname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_items.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemmodel">
+	             t_items.itemmodel = #itemmodel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_items.parentid = #parentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_items.fnumber = #fnumber#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Items.Entity" resultMap="RM.Items">
+    	SELECT 	<include refid="Items.columns"/> FROM t_items <include refid="Items.findPage.where"/>
+    </select>
+    
+    <select id="Items.findList" resultMap="RM.Items">
+    	SELECT 
+    		<include refid="Items.columns"/> 
+    	FROM 
+    		t_items
+		<include refid="Items.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Items.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_items
+    ]]>
+		<include refid="Items.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Items.findPage" resultMap="RM.Items">
+    	select <include refid="Items.columns"/>	    
+	        from t_items 	   
+		<include refid="Items.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Items.findPage" resultMap="RM.Items">
+    	select <include refid="Items.columns"/>	    
+	        from t_items where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       itemid 
+	   not in(select $notTop$ 
+       itemid 
+	   from t_items <include refid="Items.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Items.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+     <select id="Items.findlist.Detail.list" resultMap="RM.Items.findlist.Detail.list"><!-- 2013/11/11 -->
+    	SELECT 
+    		<include refid="Items.columns"/> 
+    	FROM 
+    		t_items
+		<include refid="Items.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Items.findList.ItemDetail" resultMap="RM.Items.detail.itemcode">
+    	select itemcode from t_items where itemid in (select parentid from t_items where itemid = #itemid# ) 
+    </select>
+    
+    <select id="Items.findParent.Code" resultMap="RM.Items.Parent.itemcode"><!-- 2013/11/12查询父节点的code -->
+    	select itemname,itemcode,itemmodel,parentid  from t_items where itemid = #itemid#
+    </select>
+    
+    <!-- 根据子节点查找 二级节点（root节点为一级节点）-->
+    <select id="Items.findRootItems" resultMap="RM.Items">
+    	with tab as
+		(
+		 select itemid,classid,itemname,itemcode,itemmodel,parentid,fnumber,deleted from t_items where itemid=#itemid#
+		 union all
+		 select b.itemid,b.classid,b.itemname,b.itemcode,b.itemmodel,b.parentid,b.fnumber,b.deleted 
+		 from
+		  tab a,
+		  t_items b 
+		 where a.parentid=b.itemid 
+		 and b.parentid=1 
+		)
+		select itemid,classid,itemname,itemcode,itemmodel,parentid,fnumber from tab where parentid=1 and deleted=0;
+    </select>
+	
+</sqlMap>

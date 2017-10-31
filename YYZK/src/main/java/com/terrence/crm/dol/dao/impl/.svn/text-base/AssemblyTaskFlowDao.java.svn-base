@@ -1,0 +1,52 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyTaskFlow;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.query.AssemblyTaskFlowQuery;
+
+@Repository
+public class AssemblyTaskFlowDao extends BaseIbatisDao<AssemblyTaskFlow,java.lang.Long> implements IAssemblyTaskFlowDao{
+
+		
+	public void saveOrUpdate(AssemblyTaskFlow entity) {
+		if(entity.getFlowid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyTaskFlow";
+	}
+	public AssemblyTaskFlow getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyTaskFlow)this.getSqlMapClientTemplate().queryForObject("AssemblyTaskFlow.getByProperty", map);		
+	}
+
+	@Override
+	public AssemblyTaskFlow findstatus(
+			AssemblyTaskFlowQuery assemblyTaskFlowQuery) {
+		return (AssemblyTaskFlow) this.getSqlMapClientTemplate().queryForObject("AssemblyTaskFlow.find.entity.status", assemblyTaskFlowQuery);
+	}
+
+	@Override
+	public List<String> findlistByseqcode(AssemblyTaskFlowQuery assemblyTaskFlowQuery) {
+		Map map=new HashMap();
+		map.put("seqcode", assemblyTaskFlowQuery.getSeqcode());
+		return (List<String>)this.getSqlMapClientTemplate().queryForList("AssemblyTaskFlow.findlistByseqcode", map);		
+	}
+
+}

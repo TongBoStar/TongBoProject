@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailOutVar;
+import com.terrence.crm.dol.query.TrailOutVarQuery;
+import com.terrence.crm.dol.dao.ITrailOutVarDao;
+import com.terrence.crm.dol.service.ITrailOutVarService;
+
+@Service
+@Transactional
+public class TrailOutVarService extends BaseService implements ITrailOutVarService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailOutVarService.class);
+	@Autowired
+	@Qualifier("trailOutVarDao")
+	private ITrailOutVarDao trailOutVarDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailOutVar";
+	}
+	@Transactional(readOnly=true)
+	public TrailOutVar getById(java.lang.Long id) throws ServiceException
+	{
+		return trailOutVarDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailOutVar entity) throws ServiceException
+	{
+		trailOutVarDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailOutVar entity) throws ServiceException
+	{
+		Long adId = trailOutVarDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailOutVar entity) throws ServiceException
+	{
+		Integer returnValue =  trailOutVarDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailOutVarDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailOutVarDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailOutVarQuery query = new TrailOutVarQuery();
+		try {
+			return trailOutVarDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailOutVar> findPage(Page<TrailOutVar> page, TrailOutVarQuery query) throws ServiceException
+	{
+		return trailOutVarDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailOutVar> findPage(Page<TrailOutVar> page,String statement, TrailOutVarQuery query) throws ServiceException
+	{
+		return trailOutVarDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailOutVar> findList(TrailOutVarQuery query) throws ServiceException
+	{
+		return trailOutVarDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailOutVar> findList(TrailOutVarQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailOutVarDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailOutVar> findList(TrailOutVarQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailOutVarDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailOutVar> findAllList() throws ServiceException
+	{
+		return trailOutVarDao.findAllList();
+	}
+
+}

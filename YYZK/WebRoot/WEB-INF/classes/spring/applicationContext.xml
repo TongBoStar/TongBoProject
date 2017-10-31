@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd"
+	   default-autowire="byName" default-lazy-init="false">
+
+    <!-- 国际化,并且可以批定文件编码,可以使用classpath: 或者WEB-INF/ 前缀 -->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+    	<property name="basenames">
+    		<list>
+    			<value>classpath:i18n/messages</value>
+    		</list>
+    	</property>
+    	<property name="defaultEncoding" value="UTF-8"/>
+    	<property name="cacheSeconds" value="60"/>
+    </bean>
+    
+	<!-- 属性文件读入,使用rapid中的JdbcPlaceholderConfigurer则可以从数据库读取配置信息 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:application.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<context:component-scan base-package="com.**.service,com.**.dao,com.**.event" />
+	<!--  激活 @Required @Autowired,JSR 250's @PostConstruct, @PreDestroy and @Resource 等标注 
+	<context:annotation-config />
+	-->
+		
+	<aop:aspectj-autoproxy/>
+	
+
+	<!-- 以 @Transactional 标注来定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+	<bean id="applicationEventMulticaster" class="org.springframework.context.event.SimpleApplicationEventMulticaster">
+		<property name="taskExecutor" ref="taskExecutor"/>
+	</bean>
+	<bean id="taskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
+		<property name="concurrencyLimit" value="40"></property>
+	</bean>
+	
+	
+	
+	<bean id="freemarkerConfiguration" class="org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean">
+		<property name="templateLoaderPath" value="classpath:/" />
+	</bean>
+	<bean class="com.terrence.crm.dol.base.DaoSaveOrUpdateAspect"/>
+	<!-- <bean id="fileService" class="com.terrence.crm.dol.service.impl.FileService">
+		<property name="basePath" value="${upload.bashPath}"/>
+		<property name="defaultFileTypePath" value="/files/pic/"/>
+		<property name="fileTypeMap">
+			<map>
+				<entry key="PIC" value="/files/pic"/>
+				<entry key="XLS" value="/files/xls"/>
+			</map>
+		</property>
+	</bean> -->
+</beans>

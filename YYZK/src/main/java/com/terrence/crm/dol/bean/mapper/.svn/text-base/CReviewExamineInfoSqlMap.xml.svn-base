@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap>
+    <resultMap id="RM.CReviewExamineInfo" class="com.terrence.crm.dol.bean.CReviewExamineInfo">
+        <result property="examineInfoId" column="examineInfoId"/>
+        <result property="contractReviewId" column="contractReviewId"/>
+        <result property="orderCode" column="orderCode"/>
+        <result property="userName" column="userName"/>
+        <result property="userId" column="userId"/>
+        <result property="department" column="department"/>
+        <result property="departmentId" column="departmentId"/>
+        <result property="roleName" column="roleName"/>
+        <result property="examineAdvice" column="examineAdvice"/>
+        <result property="examineStatus" column="examineStatus"/>
+        <result property="examineTime" column="examineTime"/>
+    </resultMap>
+    <resultMap id="RM.CReviewExamineInfoEmail" class="com.terrence.crm.dol.bean.CReviewExamineInfo">
+        <result property="examineAdvice" column="examineAdvice"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CReviewExamineInfo.columns">
+	    <![CDATA[
+        examineInfoId ,contractReviewId,orderCode, userName,userId ,department ,departmentId,roleName,examineAdvice,examineStatus,examineTime
+	    ]]>
+	</sql>
+    <insert id="CReviewExamineInfo.insert" >
+        INSERT INTO t_creviewexinfo (
+        	orderCode
+			<dynamic prepend="">
+	        	<isNotEmpty prepend="," property="contractReviewId">contractReviewId</isNotEmpty>
+	        	<isNotEmpty prepend="," property="userName">userName</isNotEmpty>
+	        	<isNotEmpty prepend="," property="userId">userId</isNotEmpty>
+	        	<isNotEmpty prepend="," property="department">department</isNotEmpty>
+	        	<isNotEmpty prepend="," property="departmentId">departmentId</isNotEmpty>
+	        	<isNotEmpty prepend="," property="roleName">roleName</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineStatus">examineStatus</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineStatus">examineStatus</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineTime">examineTime</isNotEmpty>
+			</dynamic>
+        ) VALUES (
+        	#orderCode#
+	        <dynamic prepend="">
+	        	<isNotEmpty prepend="," property="contractReviewId">#contractReviewId#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="userName">#userName#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="userId">#userId#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="department">#department#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="departmentId">#departmentId#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="roleName">#roleName#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineAdvice">#examineAdvice#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineStatus">#examineStatus#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="examineTime">#examineTime#</isNotEmpty>
+			</dynamic>
+        )
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="examineInfoId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+    <update id="CReviewExamineInfo.update" >
+        UPDATE t_creviewexinfo
+        	<dynamic prepend="SET">
+       			<isNotEmpty prepend="," property="orderCode">
+        			orderCode = #orderCode# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="userName">
+        			userName = #userName# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="userId">
+        			userId = #userId# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="department">
+        			department = #department# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="departmentId">
+        			departmentId = #departmentId# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="roleName">
+        			roleName = #roleName# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="examineAdvice">
+        			examineAdvice = #examineAdvice# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="examineStatus">
+        			examineStatus = #examineStatus# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="examineTime">
+        			examineTime = #examineTime# 
+        		</isNotEmpty>
+	        </dynamic>
+        WHERE 
+	        orderCode = #orderCode# and userName = #userName#
+    </update>
+
+    <delete id="CReviewExamineInfo.delete">
+    <![CDATA[
+        DELETE FROM t_creviewexinfo WHERE
+        examineInfoId = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="CReviewExamineInfo.deleteCInfoByReviewId">
+    <![CDATA[
+        DELETE FROM t_creviewexinfo WHERE
+        contractReviewId in ($id$) 
+    ]]>
+    </delete>
+    
+    <delete id="CReviewExamineInfo.deleteMultiple">
+    <![CDATA[
+        DELETE FROM t_creviewexinfo WHERE
+        examineInfoId in ($id$) 
+    ]]>
+    </delete>
+    
+    <delete id="CReviewExamineInfo.deleteOrderByOrderCode">
+    <![CDATA[
+        DELETE FROM t_creviewexinfo WHERE
+        examineInfoId in ($id$) 
+    ]]>
+    </delete>
+    <select id="CReviewExamineInfo.getById" resultMap="RM.CReviewExamineInfo">
+	    SELECT <include refid="CReviewExamineInfo.columns"/>
+	    <![CDATA[
+	        FROM t_creviewexinfo
+	        WHERE 
+		        examineInfoId = #id# 
+	    ]]>
+    </select>
+	
+	<sql id="CReviewExamineInfo.findPage.where">
+	    <dynamic prepend="WHERE">
+	       <isNotEmpty prepend="AND" property="examineInfoId">
+	             examineInfoId = #examineInfoId#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="orderCode">
+	             orderCode = #orderCode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="contractReviewId">
+	             contractReviewId = #contractReviewId#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	<sql id="CReviewExamineInfo.findPage.and">
+	    <dynamic prepend="and">
+	       <isNotEmpty prepend="AND" property="examineInfoId">
+	             examineInfoId = #examineInfoId#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	
+    <select id="CReviewExamineInfo.findPage.count" resultClass="long">
+        SELECT count(*) FROM t_contractchange <include refid="CReviewExamineInfo.findPage.where"/>    
+    </select>
+   
+    <select id="CReviewExamineInfo.findPage" resultMap="RM.CReviewExamineInfo">
+    	SELECT <include refid="CReviewExamineInfo.columns"/> FROM t_creviewexinfo where 1=1 
+    	<isNotEmpty property="notTop">  and 
+       examineInfoId not in(select $notTop$ examineInfoId from t_creviewexinfo <include refid="CReviewExamineInfo.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>  
+	   	<include refid="CReviewExamineInfo.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+   
+    <select id="CReviewExamineInfo.findList" resultMap="RM.CReviewExamineInfo">
+    	SELECT <include refid="CReviewExamineInfo.columns"/> FROM t_creviewexinfo
+		<include refid="CReviewExamineInfo.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="CReviewExamineInfo.findEmailFromEInfos" resultMap="RM.CReviewExamineInfoEmail">
+    	SELECT ta1.email examineAdvice 
+    	FROM t_creviewexinfo tc 
+    	left join t_admin ta1 on tc.userId = ta1.adminId
+		<include refid="CReviewExamineInfo.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+</sqlMap>

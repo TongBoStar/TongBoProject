@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TecPro;
+import com.terrence.crm.dol.dao.ITecProDao;
+
+@Repository
+public class TecProDao extends BaseIbatisDao<TecPro,java.lang.Long> implements ITecProDao{
+
+		
+	public void saveOrUpdate(TecPro entity) {
+		if(entity.getProid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TecPro";
+	}
+	public TecPro getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TecPro)this.getSqlMapClientTemplate().queryForObject("TecPro.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrialPd">
+
+        
+	<resultMap id="RM.TrialPd" class="com.terrence.crm.dol.bean.TrialPd">
+        <result property="tplid" column="tplid"/>
+        <result property="tplname" column="tplname"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fdescription" column="fdescription"/>
+        <result property="trialid" column="trialid"/>
+        <result property="linecode" column="linecode"/>
+    </resultMap>
+	
+	<resultMap id="RM.TrialPd.getModelDetail" class="com.terrence.crm.dol.bean.TrialPd">
+        <result property="tplid" column="tplid"/>
+        <result property="tplname" column="tplname"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fdescription" column="fdescription"/>
+        <result property="linecode" column="linecode"/>
+        <result property="pdSteplist" column="tplid" select="TrialPd.find.pdSteplist"/>
+    </resultMap>
+
+
+	<resultMap id="RM.TrialPd.pdstep" class="com.terrence.crm.dol.bean.TrailPdStep">
+        <result property="stepid" column="stepid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="stepname" column="stepname"/>
+        <result property="forder" column="forder"/>
+        <result property="criterion" column="criterion"/>
+        <result property="fcomment" column="fcomment"/>
+        <result property="qualvar" column="qualvar"/>
+        
+        
+        <result property="pdGrouplist" column="stepid" select="TrialPd.find.pdGrouplist"/>
+        <result property="varlist" column="stepid" select="TrialPd.findlist.varlist"/>
+        
+        
+        
+    </resultMap>
+
+
+	<resultMap id="RM.TrialPd.pdGrouplist" class="com.terrence.crm.dol.bean.TrailPdGroup">
+        <result property="gid" column="gid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="gname" column="gname"/>
+        <result property="forder" column="forder"/>
+        
+        <result property="recSetlist" column="gid" select="TrialPd.find.recSetlist"/>
+        
+    </resultMap>
+	
+	<resultMap id="RM.TrialPd.recSetlist" class="com.terrence.crm.dol.bean.TrailRecSet">
+        <result property="recid" column="recid"/>
+        <result property="gid" column="gid"/>
+        
+        <result property="coltitle" column="coltitle"/>
+        <result property="fename" column="fename"/>
+        <result property="fcol" column="fcol"/>
+        <result property="frow" column="frow"/>
+        <result property="fcnname" column="fcnname"/>
+        
+        
+    </resultMap>
+
+
+	<resultMap id="RM.TrialPd.findlist.varlist" class="com.terrence.crm.dol.bean.TrailPdStepQualVar">
+        <result property="varid" column="varid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="varname" column="varname"/>
+        <result property="cnname" column="cnname"/>
+    </resultMap>
+
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrialPd.columns">
+	    <![CDATA[
+        	t_trial_pd.tplid ,
+        	t_trial_pd.tplname ,
+        	t_trial_pd.createdate ,
+        	t_trial_pd.fdescription, 
+        	t_trial_pd.trialid,
+        	t_trial_pd.linecode
+	    ]]>
+	</sql>
+	
+   <insert id="TrialPd.insert" >
+    
+        INSERT INTO
+        t_trial_pd (
+        	tplname ,
+			linecode,
+       		createdate
+	        <isNotEmpty prepend="," property="fdescription">
+	        	fdescription
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="trialid">
+	        	trialid
+	        </isNotEmpty>
+
+        ) VALUES (
+
+        	#tplname#,
+        	#linecode#,
+	        getdate()
+	        <isNotEmpty prepend="," property="fdescription">
+	        	#fdescription#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="trialid">
+	        	#trialid#
+	        </isNotEmpty>
+
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="tplid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrialPd.update" parameterClass="com.terrence.crm.dol.bean.TrialPd">         
+        UPDATE t_trial_pd 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="tplname">
+	        	tplname = #tplname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdescription">
+	        	fdescription = #fdescription# 
+	        </isNotEmpty>
+
+	        <isNotEmpty prepend="," property="trialid">
+	        	trialid=#trialid#
+	        </isNotEmpty>
+			<isNotEmpty prepend="," property="linecode">
+	        	linecode=#linecode#
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        tplid = #tplid# 
+    </update>
+    
+	<delete id="TrialPd.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trial_pd where
+       tplid = #tplid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrialPd.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trial_pd 
+        WHERE
+       tplid in ($tplid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrialPd.getById" resultMap="RM.TrialPd">
+	    select <include refid="TrialPd.columns"/>
+	    
+	        from t_trial_pd 
+	        where 
+		        tplid = #tplid# 
+	    
+    </select>
+    
+	<select id="TrialPd.getByProperty" resultMap="RM.TrialPd">
+		select <include refid="TrialPd.columns"/> from t_trial_pd where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrialPd.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trial_pd.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tplname">
+	             t_trial_pd.tplname = #tplname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_trial_pd.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_trial_pd.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdescription">
+	             t_trial_pd.fdescription = #fdescription#
+	       </isNotEmpty>
+
+	       <isNotEmpty prepend="AND" property="trialid">
+	             t_trial_pd.trialid= #trialid#
+	       </isNotEmpty>
+	       
+	       
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrialPd.findPage.and">
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trial_pd.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplname">
+	             t_trial_pd.tplname = #tplname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_trial_pd.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_trial_pd.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdescription">
+	             t_trial_pd.fdescription = #fdescription#
+	       </isNotEmpty>
+
+	       <isNotEmpty prepend="AND" property="fdescription">
+	             t_trial_pd.fdescription = #fdescription#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="trialid">
+	             t_trial_pd.trialid= #trialid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrialPd.Entity" resultMap="RM.TrialPd">
+    	SELECT 	<include refid="TrialPd.columns"/> FROM t_trial_pd <include refid="TrialPd.findPage.where"/>
+    </select>
+    
+    <select id="TrialPd.findList" resultMap="RM.TrialPd">
+    	SELECT 
+    		<include refid="TrialPd.columns"/> 
+    	FROM 
+    		t_trial_pd
+		<include refid="TrialPd.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrialPd.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trial_pd
+    ]]>
+		<include refid="TrialPd.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrialPd.findPage" resultMap="RM.TrialPd">
+    	select <include refid="TrialPd.columns"/>	    
+	        from t_trial_pd 	   
+		<include refid="TrialPd.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrialPd.findPage" resultMap="RM.TrialPd">
+    	select <include refid="TrialPd.columns"/>	    
+	        from t_trial_pd where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       tplid 
+	   not in(select $notTop$ 
+       tplid 
+	   from t_trial_pd <include refid="TrialPd.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrialPd.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	
+	
+	<select id="TrialPd.getModelDetail" resultMap="RM.TrialPd.getModelDetail">
+			select 
+				t_trial_pd.tplid ,
+	        	t_trial_pd.tplname ,
+	        	t_trial_pd.createdate ,
+	        	t_trial_pd.linecode ,
+	        	t_trial_pd.fdescription  
+        	from 
+        		t_trial_pd
+        	where
+        		t_trial_pd.tplid=#tplid#  
+        	
+	</select>
+
+	<select id="TrialPd.find.pdSteplist" resultMap="RM.TrialPd.pdstep">
+			select 
+				t_trail_pd_step.stepid ,
+	        	t_trail_pd_step.tplid ,
+	        	t_trail_pd_step.stepname ,
+	        	t_trail_pd_step.forder ,
+	        	t_trail_pd_step.criterion,
+	        	t_trail_pd_step.fcomment,	
+	        	t_trail_pd_step.qualvar	
+	        	
+        	from 
+        		t_trail_pd_step where tplid=#tplid#
+        		order by t_trail_pd_step.forder 
+        	
+	</select>
+
+
+	<select id="TrialPd.find.pdGrouplist" resultMap="RM.TrialPd.pdGrouplist">
+			select 
+				t_trail_pd_group.gid ,
+	        	t_trail_pd_group.stepid ,
+	        	t_trail_pd_group.gname ,
+	        	t_trail_pd_group.forder 
+        	from 
+        		t_trail_pd_group where stepid=#stepid#
+        		order by t_trail_pd_group.forder
+	</select>
+	
+
+	<select id="TrialPd.find.recSetlist" resultMap="RM.TrialPd.recSetlist">
+			
+			select 
+				t_trail_rec_set.recid ,
+	        	t_trail_rec_set.gid ,
+	        	t_trail_rec_set.fcnname coltitle ,
+	        	t_trial_device.divicename fename ,
+	        	t_trail_rec_set.fcol ,
+	        	t_trail_rec_set.frow ,
+	        	t_trail_rec_set.coltitle fcnname
+        	from
+        		t_trail_rec_set
+        		left join 
+        			t_trail_use_col 
+        			on t_trail_rec_set.colid=t_trail_use_col.colid
+        		left join 
+        			t_trial_device 
+        			on t_trial_device.did=t_trail_use_col.did 
+        			 
+        		 where gid =#gid#
+        	
+	</select>
+
+
+	<select id="TrialPd.findlist.varlist" resultMap="RM.TrialPd.findlist.varlist">
+		select 
+			t_trail_pd_step_qual_var.varid ,
+        	t_trail_pd_step_qual_var.stepid ,
+        	t_trail_pd_step_qual_var.varname ,
+        	t_trail_pd_step_qual_var.cnname 
+		from 
+			t_trail_pd_step_qual_var	
+		where stepid=#stepid#
+		
+	</select>
+
+
+
+
+	<insert id="TrialPd.update.Copy"><!-- 模板复制 -->
+			insert into t_trial_Pd(trialid,tplname,createdate
+			<isNotEmpty property="fdescription">
+			,fdescription
+			</isNotEmpty>
+			)
+			select trialid,#tplname#,getdate()
+			<isNotEmpty property="fdescription">
+			,#fdescription#
+			</isNotEmpty> 
+			from t_trial_Pd 
+			where 
+			t_trial_Pd.tplid=#tplid#
+		<selectKey resultClass="java.lang.Long" type="post" keyProperty="tplid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+	</insert>
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+</sqlMap>

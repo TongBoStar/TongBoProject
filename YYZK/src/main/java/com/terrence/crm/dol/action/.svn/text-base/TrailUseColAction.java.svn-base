@@ -1,0 +1,571 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.ITrailUseColService;
+import com.terrence.crm.dol.bean.TrailUseCol;
+import com.terrence.crm.dol.query.TrailUseColQuery;
+
+/**
+ * 
+ * 试验设备已用元数据字段记录表
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/trailUseCol")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "trailUseCol." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class TrailUseColAction extends CrudActionSupport<TrailUseCol>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("trailUseColService")
+	private ITrailUseColService trailUseColService;
+	
+	
+	private TrailUseCol entity;
+
+	private TrailUseColQuery trailUseColQuery;
+	
+	
+	private java.lang.Long trailUseColId;
+	
+	/** 分页器 */
+	private Page<TrailUseCol> page = new Page<TrailUseCol>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<TrailUseCol> trailUseColList;
+	private List<String> cloumnList;
+	private Integer columnType;//0表示去实时列，1表示取瞬时列
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (trailUseColId != null ) {
+			entity = trailUseColService.getById(trailUseColId);
+		} else {
+			entity = new TrailUseCol();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			trailUseColService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	@Action("/trailusercol/deletecol")
+	public String deleteTrailUseCol(){
+		try {
+			trailUseColService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			resultInfo[2] = "为什么呢？";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(trailUseColQuery == null) {
+			trailUseColQuery = new TrailUseColQuery();
+		}
+		
+		try {
+			trailUseColList = trailUseColService.findList(trailUseColQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToEzn()throws Exception
+	{
+		if(trailUseColQuery == null) {
+			trailUseColQuery = new TrailUseColQuery();
+		}
+		
+		try {
+			trailUseColList = trailUseColService.findList(trailUseColQuery);
+			Map<String, String> map = new HashMap<String, String>();
+			for(TrailUseCol tuc:trailUseColList){
+				map.put(tuc.getFrealvar(), tuc.getFvarname());
+				map.put(tuc.getFcolumn(), tuc.getFrealvar());
+			}
+			Struts2Utils.renderJson(map);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToQueryDetail()throws Exception
+	{
+		if(trailUseColQuery == null) {
+			trailUseColQuery = new TrailUseColQuery();
+		}
+		
+		try {
+			trailUseColList = trailUseColService.findListDevice(trailUseColQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("trailUseColId");
+			page.setOrder(Page.DESC);
+		}
+		if(trailUseColQuery == null) {
+			trailUseColQuery = new TrailUseColQuery();
+		}
+		
+		try {
+			page = trailUseColService.findPage(page, trailUseColQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	/**
+	 *<p>查询瞬时数据列表<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-24上午10:31:14
+	 * @return
+	 */
+	public String findColumn(){
+		try {
+			if(columnType==1){
+				cloumnList = trailUseColService.findUnColumn(null,"t_trail_tab_record");
+			}else {
+				cloumnList = trailUseColService.findUnColumn(trailUseColQuery,"t_trail_tab_record");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] =e.getMessage() ;
+		}
+		return JSON;
+	}
+	/**
+	 *<p>取出实时数据列表<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-24上午10:34:34
+	 * @return
+	 */
+	public String findTrainRecordColumn(){
+		try {
+			if(columnType==1){
+				cloumnList = trailUseColService.findUnColumn(null,"t_train_record");
+			}else {
+				cloumnList = trailUseColService.findUnColumn(trailUseColQuery,"t_train_record");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] =e.getMessage() ;
+		}
+		return JSON;
+	}
+	public void prepareSaveGlobarOut() throws Exception{
+		prepareModel();
+	}
+	/**
+	 *<p>保存全局输出变量<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-26上午9:54:55
+	 * @return
+	 */
+	public String saveGlobarOut(){
+		try {
+			trailUseColService.saveGlobarOut(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getLocalizedMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			trailUseColService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = trailUseColService.getById(trailUseColId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			trailUseColList = trailUseColService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public TrailUseCol getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public TrailUseColQuery getTrailUseColQuery() {
+		return trailUseColQuery;
+	}
+
+	
+	public void setTrailUseColQuery(TrailUseColQuery trailUseColQuery) {
+		this.trailUseColQuery = trailUseColQuery;
+	}
+
+	public void setTrailUseColId(java.lang.Long trailUseColId) {
+		this.trailUseColId = trailUseColId;
+	}
+	
+	
+	public java.lang.Long getTrailUseColId() {
+		return this.trailUseColId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<TrailUseCol> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<TrailUseCol> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<TrailUseCol> getTrailUseColList() {
+		return trailUseColList;
+	}
+
+	public List<String> getCloumnList() {
+		return cloumnList;
+	}
+
+	public void setCloumnList(List<String> cloumnList) {
+		this.cloumnList = cloumnList;
+	}
+
+	public Integer getColumnType() {
+		return columnType;
+	}
+
+	public void setColumnType(Integer columnType) {
+		this.columnType = columnType;
+	}
+	
+	
+}

@@ -1,0 +1,70 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.dao.IProcessHandleDao;
+import com.terrence.crm.dol.query.ProcessHandleQuery;
+import com.terrence.crm.dol.service.IProcessHandleService;
+@Service
+@Transactional
+public class ProcessHandleService implements IProcessHandleService {
+	@Autowired
+	@Qualifier("processHandleDao")
+	private IProcessHandleDao processHandleDao;
+	@Override
+	public ProcessHandle getById(Long id) throws ServiceException {
+		return processHandleDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProcessHandle entity) throws ServiceException {
+		processHandleDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(ProcessHandle entity) throws ServiceException {
+		return processHandleDao.save(entity);
+	}
+	@Override
+	public Integer update(ProcessHandle entity) throws ServiceException {
+		return processHandleDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return processHandleDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = processHandleDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessHandle> findPage(Page<ProcessHandle> page, ProcessHandleQuery query) throws ServiceException{
+		return processHandleDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessHandle> findPage(Page<ProcessHandle> page,String statement, ProcessHandleQuery query) throws ServiceException{
+		return processHandleDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessHandle> findList(ProcessHandleQuery query) throws ServiceException{
+		return processHandleDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessHandle> findList(ProcessHandleQuery query,Integer pageSize) throws ServiceException{
+		return processHandleDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessHandle> findList(ProcessHandleQuery query,String statement,Integer pageSize) throws ServiceException{
+		return processHandleDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessHandle> findAllList() throws ServiceException{
+		return processHandleDao.findAllList();
+	}
+}

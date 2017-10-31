@@ -1,0 +1,545 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.Sortcodesec;
+import com.terrence.crm.dol.bean.TopicItemVal;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.dao.IPoorderentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.ISortcodefirDao;
+import com.terrence.crm.dol.dao.ISortcodesecDao;
+import com.terrence.crm.dol.dao.ITopicItemValDao;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.ItemWaitQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.SortcodefirQuery;
+import com.terrence.crm.dol.query.SortcodesecQuery;
+import com.terrence.crm.dol.service.IItemWaitService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class ItemWaitService extends BaseService implements IItemWaitService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemWaitService.class);
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	@Autowired
+	@Qualifier("topicItemValDao")
+	private ITopicItemValDao topicItemValDao;
+	@Autowired
+	@Qualifier("sortcodefirDao")
+	private ISortcodefirDao sortcodefirDao;
+	@Autowired
+	@Qualifier("sortcodesecDao")
+	private ISortcodesecDao sortcodesecDao;
+//	@Autowired
+//	@Qualifier("itemSizeValDao")
+//	private ItemSizeValDao itemSizeValDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	@Autowired
+	@Qualifier("poorderentryDao")
+	private IPoorderentryDao poorderentryDao;
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+//	@Autowired
+//	@Qualifier("sizeLogDao")
+//	private ISizeLogDao sizeLogDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemWait";
+	}
+	@Transactional(readOnly=true)
+	public ItemWait getById(java.lang.Long id) throws ServiceException
+	{
+		return itemWaitDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemWait entity) throws ServiceException
+	{
+		Date date=new Date();
+		String ym=DateUtils.GetFormatDate("yyyyMM");
+		if(entity.getWaitid()==null)
+		{
+			SortcodefirQuery query=new SortcodefirQuery();
+			//query.setFircode(TerrcnceConstants.CHECK_SEQ);
+			query.setFircode("CHECK_SEQ");
+			Long firid=sortcodefirDao.getByEntity("Sortcodefir.Entity", query).getFirid();
+			SortcodesecQuery secQuery=new SortcodesecQuery();
+			secQuery.setFirid(firid);
+			secQuery.setSecname(ym);
+			Sortcodesec sortcodesec=sortcodesecDao.getByEntity("Sortcodesec.Entity", secQuery);
+			if(sortcodesec!=null)
+			{
+				//entity.setReportno(TerrcnceConstants.ITEM_ICQ+ym+sortcodesec.getSeccode());
+				entity.setReportno("ICQ"+ym+sortcodesec.getSeccode());
+				sortcodesec.setSeccode(String.valueOf((Integer.parseInt(sortcodesec.getSeccode())+1)));
+				sortcodesecDao.update(sortcodesec);
+			}
+			else
+			{
+				sortcodesec=new Sortcodesec();
+				sortcodesec.setSecname(ym);
+				sortcodesec.setSeccode("1");
+				sortcodesec.setFirid(firid);
+				sortcodesecDao.save(sortcodesec);
+				//entity.setReportno(TerrcnceConstants.ITEM_ICQ+sortcodesec.getSecname()+sortcodesec.getSeccode());
+				entity.setReportno("ICQ"+sortcodesec.getSecname()+sortcodesec.getSeccode());
+			}
+		}
+		
+		entity.setEmpid(SpringSecurityUtils.getCurrentUserId());//添加物料的人ID
+		itemWaitDao.saveOrUpdate(entity);
+	}
+	
+	
+	
+	public void savePush(ItemWait entity) throws ServiceException//保存订单下推的待检物料
+	{
+		Date date=new Date();
+		String ym=DateUtils.GetFormatDate("yyyyMM");
+		if(entity.getWaitid()==null)
+		{
+			SortcodefirQuery query=new SortcodefirQuery();
+			//query.setFircode(TerrcnceConstants.CHECK_SEQ);
+			query.setFircode("CHECK_SEQ");
+			Long firid=sortcodefirDao.getByEntity("Sortcodefir.Entity", query).getFirid();
+			SortcodesecQuery secQuery=new SortcodesecQuery();
+			secQuery.setFirid(firid);
+			secQuery.setSecname(ym);
+			Sortcodesec sortcodesec=sortcodesecDao.getByEntity("Sortcodesec.Entity", secQuery);
+			if(sortcodesec!=null)
+			{
+				//entity.setReportno(TerrcnceConstants.ITEM_ICQ+ym+sortcodesec.getSeccode());
+				entity.setReportno("ICQ"+ym+sortcodesec.getSeccode());
+				sortcodesec.setSeccode(String.valueOf((Integer.parseInt(sortcodesec.getSeccode())+1)));
+				sortcodesecDao.update(sortcodesec);
+			}
+			else
+			{
+				sortcodesec=new Sortcodesec();
+				sortcodesec.setSecname(ym);
+				sortcodesec.setSeccode("1");
+				sortcodesec.setFirid(firid);
+				sortcodesecDao.save(sortcodesec);
+				//entity.setReportno(TerrcnceConstants.ITEM_ICQ+sortcodesec.getSecname()+sortcodesec.getSeccode());
+				entity.setReportno("ICQ"+sortcodesec.getSecname()+sortcodesec.getSeccode());
+			}
+		}
+		
+		//itemWaitDao.saveOrUpdate(entity);
+		itemWaitDao.save(entity, "ItemWait.save.poorderentry.push");
+	}
+	
+	public void saveOrSize(ItemWait entity)throws ServiceException
+	{
+		if(entity.getNopassfqty() > 0){//不合格数大于零设置不合格处理状态为未处理
+			entity.setProcstatus(1);//1:未处理:2:已处理
+		}
+		itemWaitDao.saveOrUpdate(entity);
+		
+	}
+	public java.lang.Long save(ItemWait entity) throws ServiceException
+	{
+		Long adId = itemWaitDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemWait entity) throws ServiceException
+	{
+		Integer returnValue =  itemWaitDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemWaitDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemWaitDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemWaitQuery query = new ItemWaitQuery();
+		try {
+			return itemWaitDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemWait> findPage(Page<ItemWait> page, ItemWaitQuery query) throws ServiceException
+	{
+		return itemWaitDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemWait> findPage(Page<ItemWait> page,String statement, ItemWaitQuery query) throws ServiceException
+	{
+		return itemWaitDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemWait> findList(ItemWaitQuery query) throws ServiceException
+	{
+		return itemWaitDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemWait> findList(ItemWaitQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemWaitDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemWait> findList(ItemWaitQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemWaitDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemWait> findAllList() throws ServiceException
+	{
+		return itemWaitDao.findAllList();
+	}
+	@Override
+	public void saveToItemwait(ItemWait entity) throws ServiceException {
+		entity.setChecker1(SpringSecurityUtils.getCurrentRealName());
+		itemWaitDao.saveOrUpdate(entity);
+	
+	}
+	@Override
+	public ItemWait findModel(Long itemWaitId) throws ServiceException {
+		
+		return itemWaitDao.findModel(itemWaitId);
+	}
+	@Override
+	public List<ItemWait> findList(ItemWaitQuery query, String statement)
+			throws ServiceException {
+		return itemWaitDao.findList(statement, query);
+	}
+	@Override
+	public Integer updateStatus(ItemWait entity) throws ServiceException {
+		return itemWaitDao.updateStatus(entity);
+	}
+	@Override
+	public void saveWaitPush(List<Long> checkedIdList) throws ServiceException {
+		
+		String delIds = StringUtils.join(checkedIdList, ",");
+		ItemWait itemWait = new ItemWait();
+		itemWait.setWaitids(delIds);
+		List<ItemWait> waitlist = itemWaitDao.saveWaitPush(itemWait);
+		if(waitlist.size()>0){
+			
+			IcbillnoQuery icbillnoQuery = new IcbillnoQuery();
+			String sss = "WINPC";
+			icbillnoQuery.setFpreletter(sss);
+			Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);//查询当前入库单号
+			
+			Integer sun = icbillno.getFcurno();//当前编号
+			Integer l = icbillno.getFlength();//编号长度
+			Long fbid = icbillno.getFbillid();//编号类型id
+			
+			//=====================================================
+			
+				Icbillno icq = new Icbillno();
+				icq.setFcurno(icbillno.getFcurno()+1);
+				icq.setFbillid(icbillno.getFbillid());
+				icq.setFpreletter(icbillno.getFpreletter());
+				icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+			//}
+			//=====================================================
+			Poorder derpoor = new Poorder();
+			derpoor.setFbillno(waitlist.get(0).getPoorderno());
+			Poorder p = poorderDao.findPooderEntity(derpoor);
+			
+			List<Poorderentry> listP = new ArrayList<Poorderentry>();
+			Poorderentry ppp = new Poorderentry();
+			ppp.setFinterid(p.getFinterid());
+			listP = poorderentryDao.findListXi(ppp);
+			
+			Putstorage putstorage = new Putstorage();
+			putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+			putstorage.setIsclose(0);//0:未关闭  1：已关闭
+			ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+			ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+			processDetailQuery.setProcessId(processTask.getProcessIds());
+			List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+			String handlers = "";
+			ProcessDetail processDetail = processDetails.get(0);
+			for(ProcessHandle ph:processDetail.getProcessHandleList()){
+				handlers += ph.getHandlerName()+" ";
+			}
+			putstorage.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+			putstorage.setStatus(processDetail.getNodeSeq());//0：未审核 1：已审核
+			putstorage.setSrctype(71L);//源单类型
+			
+			if(!listP.get(0).getEmpid().equals("") && listP.get(0).getEmpid() != null){
+				putstorage.setEmpid(listP.get(0).getEmpid());//负责人
+			}else{
+				putstorage.setEmpid(waitlist.get(0).getEmpid());//待检物料的申请人
+			}
+			
+			if(waitlist.get(0).getSuppler() != null){
+				putstorage.setSupplier(waitlist.get(0).getSuppler());//供应商
+			}
+			
+			putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());//制单人
+			putstorage.setTeamid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//交货部门====制单人所在部门
+			
+			//Integer fno = sun + 1;//每次保存编号加1
+			Integer fno = sun + 1;//先加1再用
+			Integer s2= fno.toString().length();
+			if((l - s2)>0){
+				for(int i = 0;i<(l-s2);i++){
+					sss+='0';
+				}
+				sss+=fno.toString();
+			}else{
+				sss+=fno.toString();
+			}
+			putstorage.setFbillno(sss);//入库单号
+			Long ptid = putstorageDao.save(putstorage, "Putstorage.insert.in.poorderentry");//保存入库单
+			for(int i = 0;i<waitlist.size();i++){
+				
+				Putstorageentity putstorageentity = new Putstorageentity();
+				putstorageentity.setFinterid(ptid);
+				putstorageentity.setItemcode(waitlist.get(i).getItemcode());
+				if(waitlist.get(i).getAcceptfqty() != null){
+					putstorageentity.setFqty(waitlist.get(i).getAcceptfqty());//数量------合格数
+				}
+				if(waitlist.get(i).getUnit() != null){
+					putstorageentity.setUnitid(Long.valueOf(waitlist.get(i).getUnit()));//单位
+				}
+				
+				if(waitlist.get(i).getOrderid() != null){
+					putstorageentity.setOrderid(waitlist.get(i).getOrderid());//订单明细id
+				}
+				putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+				putstorageentity.setPoorderno(waitlist.get(i).getPoorderno());//订单号
+				putstorageentity.setStorageid(waitlist.get(i).getFitemid());//库房
+				if(waitlist.get(i).getFxmark() != null){//帐套
+					putstorageentity.setFxmark(waitlist.get(i).getFxmark());
+				}
+				
+				if(waitlist.get(i).getBatchno() != null){
+					putstorageentity.setFbatchno(waitlist.get(i).getBatchno());
+				}
+				putstorageentity.setWaitid(waitlist.get(i).getWaitid());
+				
+				putstorageentityDao.save(putstorageentity, "Putstorageentity.insert.in.poorderentry");//保存入库单明细
+				
+				
+				ItemWait waititem = new ItemWait();
+				waititem.setWaitid(waitlist.get(i).getWaitid());
+				waititem.setIsclose(1);//1：关闭
+				itemWaitDao.update("ItemWait.update", waititem);//关闭，关闭后不可再下推
+				
+			}
+			ProcessHistask processHistask = new ProcessHistask();
+			processHistask.setSourceCode("");
+			processHistask.setSourceId(ptid);
+			processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+			processHistask.setExamineStatus(null);
+			processHistask.setFmark("");
+			processHistask.setNodeSeq(0);
+			processHistask.setNodeName("提交单据!");
+			processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+			processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+			processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			processHistaskDao.save(processHistask);
+			
+			ProcessExetask processExetask = new ProcessExetask();
+			processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+			processExetask.setSourceCode("");
+			processExetask.setSourceId(ptid);
+			processExetask.setNodeName(processDetail.getNodeName());
+			processExetask.setNodeSeq(processDetail.getNodeSeq());
+			processExetask.setHandlers(handlers);
+			processExetaskDao.save(processExetask);
+		/*	Integer ffno = fno;//使用触发器更新
+			Icbillno icbno = new Icbillno();
+			icbno.setFbillid(fbid);
+			//icbno.setFcurno(fno);
+			icbno.setFcurno(ffno);
+			icbillnoDao.updatefcurno(icbno);//都保存成功后更新当前编码*/
+		}
+	}
+	@Override
+	public List<ItemWait> findcheckBatchno(ItemWaitQuery itemWaitQuery)
+			throws ServiceException {
+		return itemWaitDao.findcheckBatchno(itemWaitQuery);
+	}
+	@Override
+	public Integer  deleteWait(ItemWaitQuery itemWaitQuery) throws ServiceException {
+			
+		
+		if(itemWaitQuery.getOrderid() != null){
+			ItemWait itwait = new ItemWait();
+			itwait.setWaitid(itemWaitQuery.getWaitid());
+			ItemWait waitit = itemWaitDao.findItemWait(itwait);
+			Double fqty1 = waitit.getFqty();//进料数
+			
+			Poorderentry poor = new Poorderentry();
+			poor.setOrderid(itemWaitQuery.getOrderid());
+			Poorderentry  entrypoorder = poorderentryDao.findentrypoorder(poor);
+			Double fqty2 = entrypoorder.getBought();//已购数量
+			
+			Double fqty = fqty2 - fqty1;
+			Poorderentry entrypoor = new Poorderentry();
+			entrypoor.setBought(fqty);
+			entrypoor.setOrderid(itemWaitQuery.getOrderid());
+			entrypoor.setIspush(0);
+			poorderentryDao.update("Poorderentry.update.entrypoor", entrypoor);
+			
+		}
+		ItemWait itemwait = new ItemWait();
+		itemwait.setWaitid(itemWaitQuery.getWaitid());
+		Integer returnValue = itemWaitDao.deleteWait(itemwait);
+		return returnValue;
+		
+	}
+	@Override
+	public void updateAuditUN(List<Long> checkedIdList) throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		ItemWait itemwait = new ItemWait();
+		itemwait.setWaitids(delIds);
+		itemwait.setReviewstatus1(4);
+		itemwait.setReviewstatus2(4);
+		itemWaitDao.update("ItemWait.update.auditUN", itemwait);
+		
+	}
+	@Override
+	public List<ItemWait> findItemWait(ItemWaitQuery itemWaitQuery)
+			throws ServiceException {
+		List<ItemWait> iwlist = itemWaitDao.findList(itemWaitQuery);
+		
+		if(iwlist.size()>1){
+			throw new ServiceException("所查待检物资数据为多条，不是唯一的数据","-1");
+		}
+		
+		return iwlist;
+	}
+	@Override
+	public void saveWaitNew(ItemWait entity) throws ServiceException {
+		
+		entity.setChecker1(SpringSecurityUtils.getCurrentRealName());
+		itemWaitDao.saveOrUpdate(entity);		
+	}
+	@Override
+	public ItemWait findModelNew(ItemWait itemWait) throws ServiceException {
+
+		return  itemWaitDao.findModelNew(itemWait);
+		
+	}
+	@Override
+	public void saveItemTopic(ItemWait entity) throws ServiceException {
+		List<Long> secids=entity.getSecids();
+		List<Long> testitemids=entity.getTestitemids();
+		
+		List<String> filepaths=entity.getFilepaths();
+		List<String> filenames=entity.getFilenames();
+		
+		List<Long> valids=entity.getValids().size()>0?entity.getValids():null;
+		for(int i=0;i<testitemids.size();i++)
+		{
+			TopicItemVal val=new TopicItemVal();
+			val.setWaitid(entity.getWaitid());
+			val.setTopicid(entity.getTopicid());
+			if(valids!=null&&valids.get(i)!=null&&!valids.get(i).equals(""))
+			{
+				val.setValid(valids.get(i));
+			}
+			val.setTestitemid(testitemids.get(i));
+		
+			if(!filenames.get(i).equals(""))
+			{
+				val.setFfilename(filenames.get(i));
+			}
+			if(!filepaths.get(i).equals(""))
+			{
+				val.setFilepath(filepaths.get(i));
+			}
+		
+			val.setSecid(secids.get(i));
+			topicItemValDao.saveOrUpdate(val);
+		}
+		entity.setIsnew(0);
+		itemWaitDao.saveOrUpdate(entity);
+		
+	}
+	@Override
+	public void updateNew(ItemWait entity) throws ServiceException {
+		itemWaitDao.update("itemwait.updateNew.data.reviewstatus", entity);
+	}
+	
+	
+}

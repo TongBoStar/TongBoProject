@@ -1,0 +1,130 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailStepExpl;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.query.TrailStepExplQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.dao.ITrailStepExplDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.service.ITrailStepExplService;
+
+@Service
+@Transactional
+public class TrailStepExplService extends BaseService implements ITrailStepExplService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailStepExplService.class);
+	@Autowired
+	@Qualifier("trailStepExplDao")
+	private ITrailStepExplDao trailStepExplDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailStepExpl";
+	}
+	@Transactional(readOnly=true)
+	public TrailStepExpl getById(java.lang.Long id) throws ServiceException
+	{
+		return trailStepExplDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailStepExpl entity) throws ServiceException
+	{
+		trailStepExplDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailStepExpl entity) throws ServiceException
+	{
+		Long adId = trailStepExplDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailStepExpl entity) throws ServiceException
+	{
+		Integer returnValue =  trailStepExplDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailStepExplDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailStepExplDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailStepExplQuery query = new TrailStepExplQuery();
+		try {
+			return trailStepExplDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailStepExpl> findPage(Page<TrailStepExpl> page, TrailStepExplQuery query) throws ServiceException
+	{
+		return trailStepExplDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailStepExpl> findPage(Page<TrailStepExpl> page,String statement, TrailStepExplQuery query) throws ServiceException
+	{
+		return trailStepExplDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailStepExpl> findList(TrailStepExplQuery query) throws ServiceException
+	{
+		return trailStepExplDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailStepExpl> findList(TrailStepExplQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailStepExplDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailStepExpl> findList(TrailStepExplQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailStepExplDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailStepExpl> findAllList() throws ServiceException
+	{
+		return trailStepExplDao.findAllList();
+	}
+
+}

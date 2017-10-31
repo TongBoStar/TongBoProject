@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Agents;
+import com.terrence.crm.dol.dao.IAgentsDao;
+import com.terrence.crm.dol.query.AgentsQuery;
+
+@Repository
+public class AgentsDao extends BaseIbatisDao<Agents,java.lang.Long> implements IAgentsDao{
+
+		
+	public void saveOrUpdate(Agents entity) {
+		if(entity.getAid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Agents";
+	}
+	public Agents getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Agents)this.getSqlMapClientTemplate().queryForObject("Agents.getByProperty", map);		
+	}
+
+	@Override
+	public Agents findAgents(AgentsQuery agentsQuery) {
+		return (Agents) this.getSqlMapClientTemplate().queryForObject("Agents.select.get.entityData", agentsQuery);
+	}
+
+}

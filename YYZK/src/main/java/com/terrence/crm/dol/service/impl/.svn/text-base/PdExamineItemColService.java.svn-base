@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdExamineItemCol;
+import com.terrence.crm.dol.query.PdExamineItemColQuery;
+import com.terrence.crm.dol.dao.IPdExamineItemColDao;
+import com.terrence.crm.dol.service.IPdExamineItemColService;
+
+@Service
+@Transactional
+public class PdExamineItemColService extends BaseService implements IPdExamineItemColService {
+	protected static Logger logger = LoggerFactory.getLogger(PdExamineItemColService.class);
+	@Autowired
+	@Qualifier("pdExamineItemColDao")
+	private IPdExamineItemColDao pdExamineItemColDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdExamineItemCol";
+	}
+	@Transactional(readOnly=true)
+	public PdExamineItemCol getById(java.lang.Long id) throws ServiceException
+	{
+		return pdExamineItemColDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdExamineItemCol entity) throws ServiceException
+	{
+		pdExamineItemColDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdExamineItemCol entity) throws ServiceException
+	{
+		Long adId = pdExamineItemColDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdExamineItemCol entity) throws ServiceException
+	{
+		Integer returnValue =  pdExamineItemColDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdExamineItemColDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdExamineItemColDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdExamineItemColQuery query = new PdExamineItemColQuery();
+		try {
+			return pdExamineItemColDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItemCol> findPage(Page<PdExamineItemCol> page, PdExamineItemColQuery query) throws ServiceException
+	{
+		return pdExamineItemColDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItemCol> findPage(Page<PdExamineItemCol> page,String statement, PdExamineItemColQuery query) throws ServiceException
+	{
+		return pdExamineItemColDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemCol> findList(PdExamineItemColQuery query) throws ServiceException
+	{
+		return pdExamineItemColDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemCol> findList(PdExamineItemColQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemColDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdExamineItemCol> findList(PdExamineItemColQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemColDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemCol> findAllList() throws ServiceException
+	{
+		return pdExamineItemColDao.findAllList();
+	}
+
+}

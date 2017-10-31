@@ -1,0 +1,165 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Salestype;
+import com.terrence.crm.dol.query.SalestypeQuery;
+import com.terrence.crm.dol.dao.ISalestypeDao;
+import com.terrence.crm.dol.service.ISalestypeService;
+
+@Service
+@Transactional
+public class SalestypeService extends BaseService implements ISalestypeService {
+	protected static Logger logger = LoggerFactory.getLogger(SalestypeService.class);
+	@Autowired
+	@Qualifier("salestypeDao")
+	private ISalestypeDao salestypeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Salestype";
+	}
+	@Transactional(readOnly=true)
+	public Salestype getById(java.lang.Long id) throws ServiceException
+	{
+		return salestypeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Salestype entity) throws ServiceException
+	{
+		salestypeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Salestype entity) throws ServiceException
+	{
+		Long adId = salestypeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Salestype entity) throws ServiceException
+	{
+		Integer returnValue =  salestypeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = salestypeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = salestypeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SalestypeQuery query = new SalestypeQuery();
+		try {
+			return salestypeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Salestype> findPage(Page<Salestype> page, SalestypeQuery query) throws ServiceException
+	{
+		return salestypeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Salestype> findPage(Page<Salestype> page,String statement, SalestypeQuery query) throws ServiceException
+	{
+		return salestypeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Salestype> findList(SalestypeQuery query) throws ServiceException
+	{
+		return salestypeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Salestype> findList(SalestypeQuery query,Integer pageSize) throws ServiceException
+	{
+		return salestypeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Salestype> findList(SalestypeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return salestypeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Salestype> findAllList() throws ServiceException
+	{
+		return salestypeDao.findAllList();
+	}
+
+	public void temp()
+	{
+		String type="BZ";
+		double m=300d,m1=600d;//(合同额-服务费)
+		double p1=200,p2=500;//列表价
+		double bonus=0;
+		String sales="张双建";//(FB60%+500BZ30%) 
+		if(type.equalsIgnoreCase("FB"))
+		{
+			if(m<=200)
+			{
+				bonus=(m/p1-0.6)*0.3;
+			}
+			else if(m>200&&m<500)
+			{
+				bonus=(m/p1-0.6)*0.25;
+			}
+			else if(m>500)
+			{
+				bonus=(m/p1-0.6)*0.2;
+			}
+		}
+		else if(type.equalsIgnoreCase("BZ"))
+		{
+			
+		}
+		
+		if(type.equalsIgnoreCase("FB"))
+		{
+			bonus=bonus*0.6;
+		}
+		else if(type.equalsIgnoreCase("BZ"))
+		{
+			
+		}
+		System.out.println("张双建奖"+bonus);
+	}
+	@Override
+	public void salestypeTongERP() throws ServiceException {
+		salestypeDao.findSalestypeData();
+	}
+}

@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Productpl;
+import com.terrence.crm.dol.dao.IProductplDao;
+import com.terrence.crm.dol.query.ProductplQuery;
+
+@Repository
+public class ProductplDao extends BaseIbatisDao<Productpl,java.lang.Long> implements IProductplDao{
+
+		
+	public void saveOrUpdate(Productpl entity) {
+		if(entity.getPdplid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Productpl";
+	}
+	public Productpl getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Productpl)this.getSqlMapClientTemplate().queryForObject("Productpl.getByProperty", map);		
+	}
+	/**
+	 * 通过ProductId查找PL产品
+	 * @param adminQuery
+	 * @return
+	 */
+	public List<Productpl> findProductplId(ProductplQuery  productplQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Productpl.getByProductId",productplQuery);
+		
+	}
+}

@@ -1,0 +1,2471 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgentSellratio;
+import com.terrence.crm.dol.bean.Forderinstock;
+import com.terrence.crm.dol.bean.Forderinvoice;
+import com.terrence.crm.dol.bean.Forderrefund;
+import com.terrence.crm.dol.bean.Fordersend;
+import com.terrence.crm.dol.bean.Performance;
+import com.terrence.crm.dol.bean.PerformanceDetail;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.RecePl;
+import com.terrence.crm.dol.bean.Receivable;
+import com.terrence.crm.dol.bean.SalesBratio;
+import com.terrence.crm.dol.query.AgentSellratioQuery;
+import com.terrence.crm.dol.query.ForderinstockQuery;
+import com.terrence.crm.dol.query.ForderinvoiceQuery;
+import com.terrence.crm.dol.query.ForderrefundQuery;
+import com.terrence.crm.dol.query.FordersendQuery;
+import com.terrence.crm.dol.query.PerformanceDetailQuery;
+import com.terrence.crm.dol.query.PerformanceQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.ReceivableQuery;
+import com.terrence.crm.dol.query.SalesBratioQuery;
+import com.terrence.crm.dol.dao.IAgentSellratioDao;
+import com.terrence.crm.dol.dao.IForderinstockDao;
+import com.terrence.crm.dol.dao.IForderinvoiceDao;
+import com.terrence.crm.dol.dao.IForderrefundDao;
+import com.terrence.crm.dol.dao.IFordersendDao;
+import com.terrence.crm.dol.dao.IPerformanceDao;
+import com.terrence.crm.dol.dao.IPerformanceDetailDao;
+import com.terrence.crm.dol.dao.IProductDao;
+import com.terrence.crm.dol.dao.IRecePlDao;
+import com.terrence.crm.dol.dao.IReceivableDao;
+import com.terrence.crm.dol.dao.ISalesBratioDao;
+import com.terrence.crm.dol.service.IReceivableService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.PropertiesUtil;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class ReceivableService extends BaseService implements IReceivableService {
+	protected static Logger logger = LoggerFactory.getLogger(ReceivableService.class);
+	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private SimpleDateFormat shortSdf;
+	@Autowired
+	@Qualifier("receivableDao")
+	private IReceivableDao receivableDao;
+	@Autowired
+	@Qualifier("recePlDao")
+	private IRecePlDao recePlDao;
+	@Autowired
+	@Qualifier("fordersendDao")
+	private IFordersendDao fordersendDao;
+	@Autowired
+	@Qualifier("forderinvoiceDao")
+	private IForderinvoiceDao forderinvoiceDao;
+	@Autowired
+	@Qualifier("forderrefundDao")
+	private IForderrefundDao forderrefundDao;
+	@Autowired
+	@Qualifier("forderinstockDao")
+	private IForderinstockDao forderinstockDao;
+	@Autowired
+	@Qualifier("productDao")
+	private IProductDao productDao;
+	@Autowired
+	@Qualifier("performanceDao")
+	private IPerformanceDao performanceDao;
+	@Autowired
+	@Qualifier("performanceDetailDao")
+	private IPerformanceDetailDao performanceDetailDao;
+	@Autowired
+	@Qualifier("salesBratioDao")
+	private ISalesBratioDao salesBratioDao;
+	@Autowired
+	@Qualifier("agentSellratioDao")
+	private IAgentSellratioDao agentSellratioDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Receivable";
+	}
+	@Transactional(readOnly=true)
+	public Receivable getById(java.lang.Long id) throws ServiceException
+	{
+		return receivableDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Receivable entity) throws ServiceException
+	{
+		receivableDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Receivable entity) throws ServiceException
+	{
+		Long adId = receivableDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Receivable entity) throws ServiceException
+	{
+		Integer returnValue =  receivableDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = receivableDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = receivableDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ReceivableQuery query = new ReceivableQuery();
+		try {
+			return receivableDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Receivable> findPage(Page<Receivable> page, ReceivableQuery query) throws ServiceException
+	{
+		return receivableDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Receivable> findPage(Page<Receivable> page,String statement, ReceivableQuery query) throws ServiceException
+	{
+		return receivableDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Receivable> findList(ReceivableQuery query) throws ServiceException
+	{
+		return receivableDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Receivable> findList(ReceivableQuery query,Integer pageSize) throws ServiceException
+	{
+		return receivableDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Receivable> findList(ReceivableQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return receivableDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Receivable> findAllList() throws ServiceException
+	{
+		return receivableDao.findAllList();
+	}
+	@Override
+	public void saveAll(Receivable entity, List<RecePl> receplList,
+			List<Fordersend> fordersendList,
+			List<Forderinstock> forderinstockList,
+			List<Forderinvoice> forderinvoiceList,
+			List<Forderrefund> forderrefundList) {
+		if(null!=entity.getReceivableid()){
+			receivableDao.update(entity);
+			updateOther(entity,entity.getReceivableid(),receplList,fordersendList,forderinstockList,forderinvoiceList,forderrefundList);
+		}else{
+			Long id = receivableDao.save(entity);
+			updateOther(entity,id,receplList,fordersendList,forderinstockList,forderinvoiceList,forderrefundList);
+		}
+	}
+	public void updateOther(Receivable entity,Long id,List<RecePl> receplList,
+			List<Fordersend> fordersendList,
+			List<Forderinstock> forderinstockList,
+			List<Forderinvoice> forderinvoiceList,
+			List<Forderrefund> forderrefundList){
+		if(null!=fordersendList&&fordersendList.size()>0){
+			for(Fordersend tmp:fordersendList){
+				if(null==tmp) continue;
+				if(null!=tmp.getSendid()){
+					fordersendDao.update(tmp);
+				}else{
+					tmp.setReceivableid(id);
+					tmp.setForderno(entity.getForderno());
+					fordersendDao.save(tmp);
+				}
+			}
+		}
+		if(null!=receplList&&receplList.size()>0){
+			for(RecePl tmp:receplList){
+				if(null==tmp) continue;
+				if(null!=tmp.getFentryid()){
+					recePlDao.update(tmp);
+				}else{
+					tmp.setReceivableid(id);
+					recePlDao.save(tmp);
+				}
+			}
+		}
+		if(null!=forderinstockList&&forderinstockList.size()>0){
+			for(Forderinstock tmp:forderinstockList){
+				if(null==tmp) continue;
+				if(null!=tmp.getFentryid()){
+					forderinstockDao.update(tmp);
+				}else{
+					tmp.setReceivableid(id);
+					tmp.setForderno(entity.getForderno());
+					forderinstockDao.save(tmp);
+				}
+			}
+		}
+		if(null!=forderinvoiceList&&forderinvoiceList.size()>0){
+			for(Forderinvoice tmp:forderinvoiceList){
+				if(null==tmp) continue;
+				if(null!=tmp.getInvoiceid()){
+					forderinvoiceDao.update(tmp);
+				}else{
+					tmp.setReceivableid(id);
+					tmp.setForderno(entity.getForderno());
+					forderinvoiceDao.save(tmp);
+				}
+			}
+		}
+		if(null!=forderrefundList&&forderrefundList.size()>0){
+			for(Forderrefund tmp:forderrefundList){
+				if(null==tmp) continue;
+				if(null!=tmp.getRefundid()){
+					forderrefundDao.update(tmp);
+				}else{
+					tmp.setReceivableid(id);
+					tmp.setForderno(entity.getForderno());
+					Long refunid = forderrefundDao.save(tmp);
+					tmp.setRefundid(refunid);
+					//countRewards(entity,tmp,forderinvoiceList,forderrefundList);//根据奖励政策计算奖励
+				}
+			}
+		}
+	}
+	/**
+	private void countRewards(Receivable entity, Forderrefund forderrefund,List<Forderinvoice> forderinvoiceList,List<Forderrefund> forderrefundList) {
+		countServiceFee(entity,forderrefund,forderinvoiceList,forderrefundList);//计算业务费
+		countAchrewards(entity,forderrefund,forderinvoiceList,forderrefundList);//计算业绩奖励
+		countExcrewards(entity,forderrefund,forderinvoiceList,forderrefundList);//计算超额奖励
+	}
+	private void countExcrewards(Receivable entity, Forderrefund forderrefund,List<Forderinvoice> forderinvoiceList,List<Forderrefund> forderrefundList) {
+		Double abalanceRate = 0D;
+		PerformanceDetail performanceDetail = new PerformanceDetail();
+		if(entity.getFclass().equals("A")){
+			//业务费比例1%
+			Double busamount = productDao.findByQuarter(getCurrentQuarterStartTime(),getCurrentQuarterEndTime(),SpringSecurityUtils.getCurrentUserId(),"A");
+			if(busamount<=30000000){//第一档基数
+				abalanceRate = 1D;
+			}else if(busamount>30000000&&busamount<=60000000){//第二档基数
+				abalanceRate = 2D;
+			}else{//第三档基数
+				abalanceRate = 4D;
+			}
+			//--回款额----开始
+			ForderrefundQuery forderrefundQuery = new ForderrefundQuery();
+			forderrefundQuery.setForderno(entity.getForderno());
+			forderrefundQuery.setReceivableid(entity.getReceivableid());
+			List<Forderrefund> forderrefunds = forderrefundDao.findList(forderrefundQuery);
+			Double countAmount1 = 0D;//产品回款额(已录入)
+			Double countAmount2 = 0D;//产品合同额(新录入)
+			Double countAmount3 = 0D;//产品合同总额(总和)
+			for(Forderrefund tmp:forderrefunds){
+				countAmount1 += tmp.getFamount();
+			}
+			for(Forderrefund tmp:forderrefundList){
+				countAmount2 += tmp.getFamount();
+			}
+			countAmount3 = countAmount1+countAmount2;
+			//销售开票结算奖励的50%+全额回款后结算奖励的50%（对应奖励比例），每季度月末结算。
+			if(forderinvoiceList.size()>0&&countAmount3<entity.getFamount()){//开票结算但是未全部回款
+				performanceDetail.setAchrewardamount(forderrefund.getFamount()*abalanceRate/100*0.5);
+			}else if(forderinvoiceList.size()>0&&countAmount3==entity.getFamount()){//销售开票且全部回款
+				performanceDetail.setAchrewardamount(countAmount1*abalanceRate/100*0.5+countAmount2*abalanceRate/100);
+			}else{
+				
+			}
+		}else{//B、C、D、E类产品
+			Double bbalanceRate = 0D;//奖励系数
+			Double sbalanceRate = 0D;//业务费系数
+			//----求算单笔合同的总额-----开始
+			ProductQuery productQuery = new ProductQuery();
+			productQuery.setOrderCode(entity.getForderno());
+			List<Product> products = productDao.findList(productQuery);
+			Double countAmount = 0D;//单笔合同总额
+			for(Product product:products){
+				countAmount += product.getPriceTaxTotalRM();
+			}
+			//----求算单笔合同的总额-----结束
+			if(countAmount<2000000){//单笔合同金额小于200万元
+				bbalanceRate = 0.8;
+				sbalanceRate = 0.8;
+			}else if(countAmount>2000000&&countAmount<=5000000){//单笔合同金额大于200万元小于500万元
+				bbalanceRate = 0.6;
+				sbalanceRate = 0.6;
+			}else{//单笔合同金额大于500万元
+				bbalanceRate = 0.5;
+				sbalanceRate = 0.5;
+			}
+			//计算业务费
+			performanceDetail.setServicefeeamount(countAmount*sbalanceRate);
+			//--求单笔合同额的回款----开始
+			ForderrefundQuery forderrefundQuery = new ForderrefundQuery();
+			forderrefundQuery.setForderno(entity.getForderno());
+			List<Forderrefund> forderrefunds = forderrefundDao.findList(forderrefundQuery);
+			Double countSingleAmount1 = 0D;//单笔合同总额(已录入)
+			Double countSingleAmount2 = 0D;//单笔合同总额(新录入)
+			Double countSingleAmount3 = 0D;//单笔合同总额(总和)
+			for(Forderrefund tmp:forderrefunds){//之前保存过的数据
+				countSingleAmount1 += tmp.getFamount();
+			}
+			for(Forderrefund tmp:forderrefundList){//新添加的数据
+				if(null==tmp.getRefundid()){
+					countSingleAmount2 += tmp.getFamount();
+				}
+			}
+			countSingleAmount3 = countSingleAmount1+countSingleAmount2;
+			//--求单笔合同额的回款----结束
+			//单笔合同额的回款超过50%时结算60%的奖励，单笔合同全款回到公司时结算余下40%的奖励，每季度月末结算。
+			if((countSingleAmount3/countAmount)*100>50&&(countSingleAmount3/countAmount)*100<100){
+				performanceDetail.setAchrewardamount(countAmount*bbalanceRate*60/100);
+			}else if((countSingleAmount3/countAmount)*100==100){//全部回款
+				performanceDetail.setAchrewardamount(countSingleAmount1*bbalanceRate*40/100+countSingleAmount2*bbalanceRate);
+			}else{//回款低于50%
+				//无操作
+			}
+			Double plrewards = 0D;//PL奖
+			Double pl3000 = 0D;//PL3000金额
+			Double pl4200 = 0D;//PL4200金额
+			Double pl2000 = 0D;//PL2000金额
+			for(RecePl recePl: entity.getRecePls()){
+				pl3000 += recePl.getPl3000finalpricesum();
+				pl4200 += recePl.getPl4200listpricesum();
+				pl2000 += recePl.getPl2000finalpricesum();
+			}
+			plrewards = (pl3000+pl4200)*3/100+pl2000*1/100;
+			performanceDetail.setPlamount(plrewards);//PL奖
+		}
+	}*/
+	/**
+     * 当前季度的开始时间
+     * 
+     * @return
+     */
+    public String getCurrentQuarterStartTime() {
+        Calendar c = Calendar.getInstance();
+        int currentMonth = c.get(Calendar.MONTH) + 1;
+        //Date now = null;
+        try {
+            if (currentMonth >= 1 && currentMonth <= 3)
+                c.set(Calendar.MONTH, 0);
+            else if (currentMonth >= 4 && currentMonth <= 6)
+                c.set(Calendar.MONTH, 3);
+            else if (currentMonth >= 7 && currentMonth <= 9)
+                c.set(Calendar.MONTH, 4);
+            else if (currentMonth >= 10 && currentMonth <= 12)
+                c.set(Calendar.MONTH, 9);
+            c.set(Calendar.DATE, 1);
+            //now = longSdf.parse(shortSdf.format(c.getTime()) + " 00:00:00");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return shortSdf.format(c.getTime());
+    }
+
+    /**
+     * 当前季度的结束时间，即2015-06-31 23:59:59
+     * 
+     * @return
+     */
+    public String getCurrentQuarterEndTime() {
+        Calendar c = Calendar.getInstance();
+        int currentMonth = c.get(Calendar.MONTH) + 1;
+        //Date now = null;
+        try {
+            if (currentMonth >= 1 && currentMonth <= 3) {
+                c.set(Calendar.MONTH, 2);
+                c.set(Calendar.DATE, 31);
+            } else if (currentMonth >= 4 && currentMonth <= 6) {
+                c.set(Calendar.MONTH, 5);
+                c.set(Calendar.DATE, 30);
+            } else if (currentMonth >= 7 && currentMonth <= 9) {
+                c.set(Calendar.MONTH, 8);
+                c.set(Calendar.DATE, 30);
+            } else if (currentMonth >= 10 && currentMonth <= 12) {
+                c.set(Calendar.MONTH, 11);
+                c.set(Calendar.DATE, 31);
+            }
+            //now = longSdf.parse(shortSdf.format(c.getTime()) + " 23:59:59");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return shortSdf.format(c.getTime());
+    }
+    public String getQuarterStartTime(Integer fyear,Integer quarter){
+    	String startTime = "";
+    	if(quarter==1){
+    		startTime = fyear+"-01-01 00:00:00";
+    	}else if(quarter==2){
+    		startTime = fyear+"-04-01 00:00:00";
+    	}else if(quarter==3){
+    		startTime = fyear+"-07-01 00:00:00";
+    	}else{
+    		startTime = fyear+"-10-01 00:00:00";
+    	}
+    	return startTime;
+    }
+    public String getQuarterEndTime(Integer fyear,Integer quarter){
+    	String endTime = "";
+    	if(quarter==1){
+    		endTime = fyear+"-03-31 23:59:59";
+    	}else if(quarter==2){
+    		endTime = fyear+"-06-30 23:59:59";
+    	}else if(quarter==3){
+    		endTime = fyear+"-09-30 23:59:59";
+    	}else{
+    		endTime = fyear+"-12-31 23:59:59";
+    	}
+    	return endTime;
+    }
+	@Transactional(readOnly=true)
+	public Receivable findrkhfkp(ReceivableQuery receivableQuery) throws ServiceException{
+		ForderinstockQuery query1 = new ForderinstockQuery();
+		query1.setForderno(receivableQuery.getFmocode());
+		List<Forderinstock> forderinstocks = forderinstockDao.findList("Forderinstock.findDataFromK3",query1);
+		FordersendQuery query2 = new FordersendQuery();
+		query2.setForderno(receivableQuery.getFmocode());
+		List<Fordersend> fordersends = fordersendDao.findList("Fordersend.findDataFromK3",query2);
+		ForderinvoiceQuery query3 = new ForderinvoiceQuery();
+		query3.setForderno(receivableQuery.getFmocode());
+		List<Forderinvoice> forderinvoices = forderinvoiceDao.findList("Forderinvoice.findDataFromK3",query3);
+		Receivable receivable = new Receivable();
+		receivable.setForderinstocks(forderinstocks);
+		receivable.setForderinvoices(forderinvoices);
+		receivable.setFordersends(fordersends);
+		return receivable;
+	}
+	
+	public void balanceRewardsByQuarter(PerformanceDetailQuery performanceDetailQuery) throws Exception{
+		performanceDetailDao.findAllList();
+		blanceatype(performanceDetailQuery);
+		//checkcomplete();
+		/*PerformanceQuery performanceQuery = new PerformanceQuery();
+		performanceQuery.setSalesman(performanceDetailQuery.getSalerid());
+		List<Performance> performanceAs = performanceDao.findList("find.uncomplicate.performance.A", performanceQuery);
+		//blanceatype(performanceAs,performanceDetailQuery);//计算A类产品的奖励
+		//获取所有包含有BCDE类产品的奖励单据的订单号
+		List<Performance> performanceBCDEList = performanceDao.findList("find.ordercode.performance.BCDE", performanceQuery);
+		List<Performance> performanceBCDEs;//一个订单内所有的BCDE类产品的奖励
+		PerformanceQuery performanceQueryParam = null;
+		for(Performance performance:performanceBCDEList){
+			performanceQueryParam = new PerformanceQuery();
+			performanceQueryParam.setOrdercode(performance.getOrdercode());
+			performanceBCDEs = performanceDao.findList("find.uncomplicate.performance.BCDE", performanceQueryParam);
+			blancebcdetype(performanceBCDEs,performanceDetailQuery);
+		}*/
+	}
+	/**
+	 * 按照季度结算A类产品的奖励
+	 * @param performanceAs
+	 */
+	public void blanceatype1(List<Performance> performanceAs,PerformanceDetailQuery performanceDetailQuery){
+		List<Forderrefund> forderrefunds = null;
+		List<Forderinvoice> forderinvoices = null;
+		List<Forderinstock> forderinstocks = null;
+		List<Fordersend> fordersends = null;
+		List<Receivable> receivables = null;
+		PerformanceDetail performanceDetail = new PerformanceDetail();
+		ReceivableQuery receivableQuery = new ReceivableQuery();
+		String endTime = getQuarterEndTime(performanceDetailQuery.getFyear(), performanceDetailQuery.getFquarter());//季度结束时间
+		for(Performance performance:performanceAs){
+			receivableQuery.setProductid(performance.getProductId());
+			receivables = receivableDao.findList(receivableQuery);
+			if(null!=receivables&&receivables.size()>0){
+				Double refunds = 0D;//回款金额
+				Double invoices = 0D;//开票金额
+				Double refund12s = 0D;//超过12个月的回款额
+				Double refund18s = 0D;//超过18个月的回款额
+				Integer monthinterval = 0;//应收款间隔
+				forderrefunds = receivables.get(0).getForderrefunds();//A类产品回款列表
+				forderinvoices = receivables.get(0).getForderinvoices();//A类产品开票列表
+				forderinstocks = receivables.get(0).getForderinstocks();//产品入库信息列表
+				fordersends = receivables.get(0).getFordersends();//产品发货信息列表
+				Double instocks = 0D;//入库数量
+				Double sends = 0D;//发货数量
+				//开始计算入库数量
+				if(null!=forderinstocks&&forderinstocks.size()>0){
+					for(Forderinstock forderinstock:forderinstocks){
+						
+					}
+				}
+				//开始计算发货数量
+				if(null!=fordersends&&fordersends.size()>0){
+					for(Fordersend fordersend:fordersends){
+						
+					}
+				}
+				//开始计算开票金额
+				if(null!=forderinvoices&&forderinvoices.size()>0){
+					for(Forderinvoice forderinvoice:forderinvoices){
+						if(DateUtils.DateDiff(forderinvoice.getFdate(), endTime, 2)>0){
+							invoices += forderinvoice.getFamount();
+						}
+					}
+				}
+				//开始计算回款金额
+				if(null!=forderrefunds&&forderrefunds.size()>0){
+					for(Forderrefund forderrefund:forderrefunds){
+						if(DateUtils.DateDiff(forderrefund.getFdate(), endTime, 2)>0){
+							refunds += forderrefund.getFamount();//计算回款金额
+							monthinterval = DateUtils.getMonth(endTime) - DateUtils.getMonth(forderrefund.getFdate());
+							if(monthinterval>12){//计算超过12个月回款的金额
+								refund12s += forderrefund.getFamount();
+							}
+							if(monthinterval>18){//计算超过18个月回款的金额
+								refund18s += forderrefund.getFamount();
+							}
+						}
+					}
+				}
+				if(monthinterval>=3){//如果超过3个月说明上个季度已经扣钱了，这次只扣这一季度的
+					monthinterval = 3;
+				}
+				if(refund18s>0){
+					//超过18个月的回款额没有奖励，并且要承担相应应收款额银行贷款利息（按4%的年息计）的10%
+					performanceDetail.setDebitamounta(refund18s*0.04/10/12*monthinterval);
+					performanceDetail.setIsdebita(1);//超过18个月回款的扣款
+				}
+				if(performance.getBlancestatus()==null||3!=performance.getBlancestatus()){//业绩奖没有结算完毕
+					if(performance.getBlancestatus()!=null&&performance.getBlancestatus()==2){//已经全额回款，但是没有全额开票
+						if(invoices==performance.getBalanceprice()){//如果全额开票 结算50%
+							performanceDetail.setAchrewardamounta(performance.getBlancea()*0.5);//结算50%A类业绩奖
+							performanceDetail.setServicefeeamounta(performance.getOutlaya()*0.5);//结算50%A类业务费
+							performance.setBlancestatus(3);//业绩奖结算完毕
+							performance.setOutlaystatus(3);//业务费结算完毕
+							performanceDetail.setAchrewardtypea(1);//全额开票
+						}
+					}else if(performance.getBlancestatus()!=null&&1==performance.getBlancestatus()){//已经全额开票，但是没有全额回款
+						if(refunds==performance.getBalanceprice()){//如果全额回款 结算50%
+							//结算50%A类业绩奖 并且超过12个月的回款额没有奖励
+							performanceDetail.setAchrewardamounta((1-refund12s/performance.getBalanceprice())*performance.getBlancea()*0.5);
+							performanceDetail.setServicefeeamounta(performance.getOutlaya()*0.5);//结算50%A类业务费
+							performance.setBlancestatus(3);//业绩奖结算完毕
+							performance.setOutlaystatus(3);//业务费结算完毕
+							performanceDetail.setAchrewardtypea(2);//全额回款
+						}
+					}else{//没有全额开票也没有全额回款
+						if(invoices==performance.getBalanceprice()){//如果全额开票 结算50%
+							performance.setBlancestatus(1);//业绩奖全额开票
+							performance.setOutlaystatus(1);//业务费全额开票
+						}
+						if(refunds==performance.getBalanceprice()){//如果全额回款 结算50%
+							if(performance.getBlancestatus()==1){//已经全额开票
+								performance.setBlancestatus(3);//业绩奖结算完毕
+								performance.setOutlaystatus(3);//业务费结算完毕
+								performanceDetail.setAchrewardamounta((1-refund12s/performance.getBalanceprice())*performance.getBlancea());//结算50%A类业绩奖
+								performanceDetail.setServicefeeamounta(performance.getOutlaya());//结算50%A类业务费
+							}else{//没有全额开票，现在只是全额回款
+								performance.setBlancestatus(2);//只全额回款
+								performanceDetail.setAchrewardamounta((1-refund12s/performance.getBalanceprice())*performance.getBlancea()*0.5);//结算50%A类业绩奖
+								performanceDetail.setServicefeeamounta(performance.getOutlaya()*0.5);//结算50%A类业务费
+							}
+						}
+					}
+				}
+				performanceDetail.setCreatetime(format.format(new Date()));//创建时间
+				performanceDetail.setForderno(performance.getOrdercode());//订单编号
+				performanceDetail.setFcontractno(performance.getContractcode());//合同编号
+				performanceDetail.setSalerid(performance.getSalesman());//业务员
+				performanceDetail.setBelongsaleid(performance.getOperator());//归属业务员
+				performanceDetail.setFquarter(performanceDetailQuery.getFquarter());//季度
+				performanceDetail.setFyear(performanceDetailQuery.getFyear());//年
+				performanceDetailDao.save(performanceDetail);
+				performanceDao.update(performance);
+			}
+		}
+	}
+	/**
+	 * 按照季度结算BCDE类产品的奖励
+	 * @param performanceBCDEs
+	 */
+	public void blancebcdetype(List<Performance> performanceBCDEs,PerformanceDetailQuery performanceDetailQuery){
+		ReceivableQuery receivableQuery = new ReceivableQuery();
+		List<Receivable> receivables = null;
+		PerformanceDetail performanceDetail = new PerformanceDetail();
+		Double refunds = 0D;
+		Double refund24s = 0D;//超过24个月的回款额
+		Double refund30s = 0D;//超过30个月的回款额
+		Integer monthinterval = 0;
+		Double overwards = 0D;//超额奖
+		Double plwards = 0D;//pl奖
+		Integer plorover = 0;
+		String endTime = getQuarterEndTime(performanceDetailQuery.getFyear(), performanceDetailQuery.getFquarter());//季度结束时间
+		for(Performance performance:performanceBCDEs){
+			//计算超额奖
+			overwards += performance.getOverb()+performance.getOverc()+performance.getOverd()+performance.getOvere();
+			plwards += performance.getPlbonus();//计算pl奖
+			receivableQuery.setForderno(performance.getOrdercode());
+			receivableQuery.setProductid(performance.getProductId());
+			receivables = receivableDao.findList(receivableQuery);
+			if(null!=receivables&&receivables.size()>0){
+				for(Receivable receivable:receivables){//计算非A类产品的回款总额
+					if(null!=receivable&&null!=receivable.getForderrefunds()&&!receivable.getFclass().equals("A")
+							&&receivable.getForderrefunds().size()>0){
+						for(Forderrefund forderrefund:receivable.getForderrefunds()){
+							if(DateUtils.DateDiff(forderrefund.getFdate(), endTime, 2)>0){
+								refunds += forderrefund.getFamount();
+								monthinterval = DateUtils.getMonth(getQuarterEndTime(performanceDetailQuery.getFyear(), performanceDetailQuery.getFquarter())) - DateUtils.getMonth(forderrefund.getFdate());
+								if(monthinterval>24){
+									refund24s += forderrefund.getFamount();
+								}
+								if(monthinterval>30){
+									refund30s += forderrefund.getFamount();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if(overwards>=plwards){//如果超额奖大于等于pl奖 则取超额奖
+			plorover = 1;
+		}else{//取pl奖
+			plorover = 2;
+		}
+		Performance performance = performanceBCDEs.get(0);
+		if(monthinterval>=3){//如果超过3个月说明上个季度已经扣钱了，这次只扣这一季度的
+			monthinterval = 3;
+		}
+		if(refund30s>0){
+			//超过30个月的回款额没有奖励，并且要承担相应应收款额银行贷款利息（按4%的年息计）的5%
+			performanceDetail.setDebitamounta(refund30s*0.04*0.05/24*monthinterval);
+			performanceDetail.setIsdebita(1);
+		}
+		if(performance.getBlancestatus()!=null&&1==performance.getBlancestatus()){//上次计算时单笔合同回款额已超过50%
+			if(refunds==performance.getBalanceprice()){//如果全额回款 结算40%
+				performance.setBlancestatus(2);//业绩奖结算完毕
+				performance.setOutlaystatus(2);//业务费结算完毕
+				performance.setPloroverstatus(2);//超额奖结算完毕
+				//结算40%业绩奖 并且超过24个月的回款额没有奖励
+				performanceDetail.setAchrewardamounta((1-refund24s/performance.getBalanceprice())*performance.getBlancea()*0.4);
+				performanceDetail.setServicefeeamountbcde(performance.getOutlaya()*0.4);//结算40%A类业务费
+				if(plorover==1){//取超额奖
+					performanceDetail.setExcrewardtype(1);
+					performanceDetail.setExcrewardamount(overwards*0.4);
+				}else if(plorover==2){//取pl奖
+					performanceDetail.setExcrewardtype(0);
+					performanceDetail.setPlamount(plwards*0.4);
+				}
+			}
+		}else if(performance.getBlancestatus()==null||0==performance.getBlancestatus()){//上次计算时单笔合同回款额未超过50%
+			if(refunds>=performance.getBalanceprice()/2&&refunds<performance.getBalanceprice()/2){//回款50% 结算60%的奖励
+				performance.setBlancestatus(1);//业绩奖结算60%的奖励
+				performance.setOutlaystatus(1);//业务费结算60%的奖励
+				performance.setPloroverstatus(1);//超额奖结算60%的奖励
+				//结算60%业绩奖 并且超过24个月的回款额没有奖励
+				performanceDetail.setAchrewardamounta((1-refund24s/performance.getBalanceprice())*performance.getBlancea()*0.6);
+				performanceDetail.setServicefeeamountbcde(performance.getOutlaya()*0.6);//结算40%A类业务费
+				if(plorover==1){//取超额奖
+					performanceDetail.setExcrewardtype(1);
+					performanceDetail.setExcrewardamount(overwards*0.6);
+				}else if(plorover==2){//取pl奖
+					performanceDetail.setExcrewardtype(0);
+					performanceDetail.setPlamount(plwards*0.6);
+				}
+			}
+		}else{}
+		performanceDetail.setCreatetime(format.format(new Date()));//创建时间
+		performanceDetail.setForderno(performance.getOrdercode());//订单编号
+		performanceDetail.setFcontractno(performance.getContractcode());//合同编号
+		performanceDetail.setSalerid(performance.getSalesman());//业务员
+		performanceDetail.setBelongsaleid(performance.getOperator());//归属业务员
+		performanceDetail.setFquarter(performanceDetailQuery.getFquarter());//季度
+		performanceDetail.setFyear(performanceDetailQuery.getFyear());//年
+		performanceDetailDao.save(performanceDetail);
+		performanceDao.update("Performance.update.exludeA",performance);
+	}
+	/**
+	 * 按照季度结算A类产品的奖励
+	 * @param performanceAs
+	 */
+	public void blanceatype(PerformanceDetailQuery performanceDetailQuery) throws Exception{
+		//贵州和西藏的单据
+		List<String> gxlist = new ArrayList<String>();
+		gxlist.add("XSHT004426-1");
+		gxlist.add("XSHT006849");
+		gxlist.add("XSHT006854");
+		gxlist.add("XSHT006862");
+		gxlist.add("XSHT006933");
+		gxlist.add("XSHT006975");
+		gxlist.add("XSHT006976");
+		gxlist.add("XSHT007009");
+		gxlist.add("XSHT007010");
+		gxlist.add("XSHT007048");
+		gxlist.add("XSHT007081");
+		gxlist.add("XSHT007102");
+		gxlist.add("XSHT007196");
+		gxlist.add("XSHT007315");
+		gxlist.add("XSHT007391");
+		gxlist.add("XSHT007457");
+		gxlist.add("XSHT007643");
+		gxlist.add("XSHT007690");
+		salesBratioDao.findAllList();
+		Map<String, Double> amountAMap = new HashMap<String, Double>();
+		Map<String, Double> completeAMap = new HashMap<String, Double>();
+		Map<String, Double> completeAAllMap = new HashMap<String, Double>();
+		Map<String, Double> awardsAMap = new HashMap<String, Double>();
+		List<Receivable> receivables = new ArrayList<Receivable>();
+		Double awardsAll = 0D;
+		Double awardsA = 0D;//A类产品奖励金额
+		Double awardARate = 0D;//A类产品奖励比例
+		Double serviceARate = 0D;//A类产品业务费比例
+		Double serviceA = 0D;//A类产品业务费
+		Double awardsBCDE = 0D;//BCDE类产品奖励金额
+		Double awardBCDERate = 0D;//BCDE类产品奖励比例
+		Double serviceBCDERate = 0D;//BCDE类产品业务费比例
+		Double serviceBCDE = 0D;//BCDE类产品业务费
+		Double saleAmountBCDE = 0D;//BCDE类单笔合同额(奖励用)
+		Double saleAmountBCDE1 = 0D;//BCDE类单笔合同额(业务费用)
+		Double refundBCDEAmount = 0D;//BCDE类回款总金额
+		Double extraAmount = 0D;//BCDE类超额奖
+		Double extraAmount_this = 0D;//本次得到的BCDE类超额奖
+		Double plAmount = 0D;//PL奖
+		PerformanceDetail performanceDetail = null;
+		Double amountA = null;//某个业务员A类产品4月之后总额
+		ReceivableQuery rquery = new ReceivableQuery();
+		Integer fyear = Integer.valueOf(performanceDetailQuery.getFdate().substring(0, 4));
+		Integer fquarter = Integer.valueOf(performanceDetailQuery.getFdate().substring(6, 8));
+		rquery.setStartTime(getQuarterStartTime(fyear,fquarter));
+		rquery.setEndTime(getQuarterEndTime(fyear,fquarter));
+		performanceDetailDao.deleteByMultipleId("PerformanceDetail.deleteByYearAndQuarter", fyear,fquarter);
+		rquery.setSortColumns("t_receivable.forderno");
+		List<Receivable> receivableList = receivableDao.findList(rquery);
+		SalesBratioQuery sbrqQuery = new SalesBratioQuery();
+		String ordercode = null;
+		String contractcode = null;
+		Long salerId = null;
+		String saler = null;
+		String awardssaler = null;
+		List<SalesBratio> salesBratioLists = salesBratioDao.findList(null);
+		Map<String,SalesBratio> salesBratios = new HashMap<String, SalesBratio>();
+		for(SalesBratio sb:salesBratioLists){
+			salesBratios.put(sb.getSaleName(), sb);
+		}
+		//此季度所有A类产品的有效回款额对应的奖励完毕
+		List<AgentSellratio> agentSellratioLists = agentSellratioDao.findList(null);
+		Map<String, AgentSellratio> agentSellratios = new HashMap<String, AgentSellratio>();
+		for(AgentSellratio as:agentSellratioLists){
+			agentSellratios.put(as.getBlanceproject(), as);
+		}
+		//每个人的有效回款额统计开始 以供后面使用 先查询此季度所有A类产品的有效回款额
+		ReceivableQuery completeAQuery = new ReceivableQuery();
+		if(fquarter.intValue()>2){
+			completeAQuery.setStartTime(getQuarterStartTime(fyear,2));
+			completeAQuery.setEndTime(getQuarterEndTime(fyear,fquarter-1));
+		}else{
+			if(fquarter.intValue()==1){
+				completeAQuery.setStartTime(null);
+				completeAQuery.setEndTime(null);
+			}else{
+				completeAQuery.setStartTime(getQuarterStartTime(fyear,fquarter-1));
+				completeAQuery.setEndTime(getQuarterEndTime(fyear,fquarter-1));
+			}
+		}
+		/*List<Receivable> completeAQuarterList = receivableDao.findList("Receivable.countAtypeByQuarter", completeAQuery);
+		for(Receivable receivable:completeAQuarterList){
+			if(receivable.getSaler().equals(receivable.getAwardsalerName())&&completeAMap.containsKey(receivable.getSaler())){//业务员与奖励人员是一致的
+				double completeamount= completeAMap.get(receivable.getSaler())+receivable.getServicefinalpricesum();
+				completeAMap.put(receivable.getSaler(), completeamount);
+			}else if(!receivable.getSaler().equals(receivable.getAwardsalerName())&&completeAMap.containsKey(receivable.getAwardsalerName())){//业务员与奖励人员是不一致的
+				double dispatchrate = null==agentSellratios.get(receivable.getSaler())?0:agentSellratios.get(receivable.getSaler()).getAwardRatio().doubleValue();
+				double completeamount= completeAMap.get(receivable.getAwardsalerName())+receivable.getServicefinalpricesum()*dispatchrate/100;
+				completeAMap.put(receivable.getAwardsalerName(), completeamount);
+			}else if(receivable.getSaler().equals(receivable.getAwardsalerName())&&!completeAMap.containsKey(receivable.getSaler())){
+				completeAMap.put(receivable.getSaler(), receivable.getServicefinalpricesum());
+			}else if(!receivable.getSaler().equals(receivable.getAwardsalerName())&&!completeAMap.containsKey(receivable.getAwardsalerName())){
+				double dispatchrate = null==agentSellratios.get(receivable.getSaler())?0:agentSellratios.get(receivable.getSaler()).getAwardRatio().doubleValue();
+				completeAMap.put(receivable.getAwardsalerName(), receivable.getServicefinalpricesum()*dispatchrate);
+			}else{
+				
+			}
+		}*/
+		/**每个人的有效回款额统计结束 以供后面使用
+		for(Entry<String, Double> entry:completeAMap.entrySet()){
+			if(!completeAAllMap.containsKey(entry.getKey())){
+				completeAQuery.setStartTime("2015-04-01");
+				completeAQuery.setEndTime(getQuarterEndTime(fyear,fquarter));
+				completeAAllMap.put(entry.getKey(), receivableDao.countAtypeBySaler(completeAQuery,entry.getKey()));
+				double alla = completeAAllMap.get(entry.getKey()).doubleValue();
+				double allbztarget = 3000000;
+				if(null==salesBratios.get(entry.getKey())||null==salesBratios.get(entry.getKey()).getBztarget()){
+					allbztarget = 3000000;
+				}else{
+					allbztarget = salesBratios.get(entry.getKey()).getBztarget().doubleValue();
+				}
+				double allq = completeAMap.get(entry.getKey()).doubleValue();
+				double awardatemp = 0D;
+				if(alla<allbztarget){//处于第一档
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					if(gxlist.contains(ordercode)){
+						tempdata = 100;
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(), entry.getValue()*0.01*tempdata/100);
+				}else if(alla>=allbztarget&&alla<allbztarget*2){//第二档
+					if(alla-allq>=allbztarget){//说明此季度的回款额均在第二档内
+						awardatemp = allq * 0.02 ;
+					}else{//说明此季度的回款额一部分第一档另一部分第二档内
+						awardatemp = (allbztarget-(alla-allq)) * 0.01 + (alla-allbztarget) * 0.02;
+					}
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(), awardatemp*tempdata/100);
+				}else{//处于第三档
+					if(alla-allq>=allbztarget*3){//说明此季度的回款额均在第三档内
+						awardatemp = allq * 0.04 ;
+					}else if(alla-allq>=allbztarget*2&&alla-allq<allbztarget*3){//说明此季度的回款额一部分第二档另一部分第三档内
+						awardatemp = (allbztarget*3-(alla-allq)) * 0.02 + (alla-allbztarget*3) * 0.04;
+					}else if(alla-allq<allbztarget){//跨越了3档
+						awardatemp = allbztarget*0.01+allbztarget*2* 0.02 + (allq-allbztarget*3) * 0.04;
+					}
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(), awardatemp*tempdata/100);
+				}
+			}else{
+				double alla = completeAAllMap.get(entry.getKey()).doubleValue();
+				double allbztarget = 3000000;
+				if(null==salesBratios.get(entry.getKey())||null==salesBratios.get(entry.getKey()).getBztarget()){
+					allbztarget = 3000000;
+				}else{
+					allbztarget = salesBratios.get(entry.getKey()).getBztarget().doubleValue();
+				}
+				double allq = completeAMap.get(entry.getKey()).doubleValue();
+				double awardatemp = 0D;
+				if(alla<allbztarget){//处于第一档
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(), awardsAMap.get(entry.getKey())+allq*0.01*tempdata/100);
+				}else if(alla>=allbztarget&&alla<allbztarget*2){//第二档
+					if(alla-allq>=allbztarget){//说明此季度的回款额均在第二档内
+						awardatemp = allq * 0.02 ;
+					}else{//说明此季度的回款额一部分第一档另一部分第二档内
+						awardatemp = (allbztarget-(alla-allq)) * 0.01 + (alla-allbztarget) * 0.02;
+					}
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(),  awardsAMap.get(entry.getKey())+awardatemp*tempdata/100);
+				}else{//处于第三档
+					if(alla-allq>=allbztarget*3){//说明此季度的回款额均在第三档内
+						awardatemp = allq * 0.04 ;
+					}else if(alla-allq>=allbztarget*2&&alla-allq<allbztarget*3){//说明此季度的回款额一部分第二档另一部分第三档内
+						awardatemp = (allbztarget*3-(alla-allq)) * 0.02 + (alla-allbztarget*3) * 0.04;
+					}else if(alla-allq<allbztarget){//跨越了3档
+						awardatemp = allbztarget*0.01+allbztarget*2* 0.02 + (allq-allbztarget*3) * 0.04;
+					}
+					double tempdata = 0;
+					if(null==salesBratios.get(entry.getKey())){
+						tempdata = 0;
+					}else{
+						tempdata = salesBratios.get(entry.getKey()).getBzselfratio();
+					}
+					serviceARate = 0.01;
+					awardsAMap.put(entry.getKey(),  awardsAMap.get(entry.getKey())+awardatemp*tempdata/100);
+				}
+			}
+		}*/
+		int crs = 0;
+		List<Double> dlist = new ArrayList<Double>();
+		for(Receivable receivableTemp:receivableList){
+			crs++;
+			if(crs==receivableList.size()){
+				System.out.println("=============================");
+			}
+			if(null==ordercode||receivableTemp.getForderno().equals(ordercode)){
+				receivables.add(receivableTemp);
+				ordercode = receivableTemp.getForderno();
+				contractcode = receivableTemp.getFcontractno();
+				if(!receivableTemp.getSaler().equals(receivableTemp.getAwardsalerName())){
+					salerId = receivableTemp.getAwardsalerId();
+					saler = receivableTemp.getAwardsalerName();
+					awardssaler = receivableTemp.getSaler();
+				}else{
+					salerId = receivableTemp.getSalerId();
+					saler = receivableTemp.getSaler();
+					awardssaler = saler;
+				}
+				if(crs!=receivableList.size()){
+					continue;
+				}
+			}//else{//同一个订单完毕
+				for(Receivable receivable:receivables){
+					if(receivable.getFclass().equals("A")){
+						/*if(amountAMap.containsKey(saler)){//已经计算过此业务员A类产品的总值
+							amountA = amountAMap.get(saler);
+						}else{
+							rquery.setSaler(saler);
+							amountA = receivableDao.countAtypeBySaler(rquery,saler);
+							amountAMap.put(receivable.getSaler(), amountA);
+						}
+						if(amountA<salesBratios.get(saler).getBztarget().doubleValue()){//一级
+							awardARate = 0.01;
+							serviceARate = 0.01;
+						}else if(amountA>=salesBratios.get(saler).getBztarget().doubleValue() && amountA<=salesBratios.get(saler).getBztarget().doubleValue()*2){//二级
+							awardARate = 0.02;
+							serviceARate = 0.01;
+						}else{//三级
+							awardARate = 0.04;
+							serviceARate = 0.01;
+						}*/
+						if("XSHT008662".equals(receivable.getForderno())){
+							System.out.println("====================");
+						}
+						serviceA += replaceNull(receivable.getServicefinalpricesum())*0.01;
+						/*Double invoiceAmount = 0D;
+						//计算是否全额开票
+						for(Forderinvoice invoice:receivable.getForderinvoices()){
+							invoiceAmount += replaceNull(invoice.getFamount());
+						}
+						if(replaceNull(invoiceAmount).doubleValue() == replaceNull(receivable.getFamount()).doubleValue()){//全额开票
+							awardsA += replaceNull(receivable.getFamount())*awardARate*0.5;
+						}*/
+						//计算是否全额回款 
+						Double refundAAmount = 0D;
+						if(null!=receivable.getCompleteA()){
+							//计算回款金额
+							for(Forderrefund refund:receivable.getForderrefunds()){
+								refundAAmount += replaceNull(refund.getFamount());
+								if(receivable.getAwardsalerName().equals("李建军")){
+									dlist.add(refund.getFamount());
+								}
+							}
+							if(null==awardsAMap.get(receivable.getAwardsalerName())){
+								if(null==completeAQuery.getStartTime()){
+									awardsAMap.put(receivable.getAwardsalerName(), replaceNull(receivable.getServicefinalpricesum()));//receivable.getServicefinalpricesum()
+								}else{
+									awardsAMap.put(receivable.getAwardsalerName(), replaceNull(receivable.getServicefinalpricesum())+receivableDao.countAtypeBySaler(completeAQuery,receivable.getAwardsalerName()));//receivable.getServicefinalpricesum()
+								}
+							}else{
+								awardsAMap.put(receivable.getAwardsalerName(), awardsAMap.get(receivable.getAwardsalerName())+replaceNull(receivable.getServicefinalpricesum()));//receivable.getServicefinalpricesum()--refundAAmount
+							}
+							//if(replaceNull(refundAAmount).doubleValue() >= replaceNull(receivable.getServicefinalpricesum()).doubleValue()){//全额回款
+								/*//awardsA += replaceNull(receivable.getFamount())*awardARate*0.5;
+								System.out.println(awardsAMap.get(saler)+"=="+replaceNull(receivable.getServicefinalpricesum()));
+								if(null!=completeAMap.get(saler)&&completeAMap.get(saler).doubleValue()!=0){
+									if(!receivable.getSaler().equals(receivable.getAwardsalerName())){
+										double dispatchrate = null==agentSellratios.get(receivable.getSaler())?0:agentSellratios.get(receivable.getSaler()).getAwardRatio().doubleValue();
+										Double taward = awardsAMap.get(saler)*(replaceNull(receivable.getServicefinalpricesum()*dispatchrate/100).doubleValue()/completeAMap.get(saler));
+										awardsA += (null==salesBratios.get(receivable.getAwardsalerName())?0:taward/(salesBratios.get(receivable.getAwardsalerName()).getBzselfratio()/100));
+									}else{
+										awardsA += awardsAMap.get(saler)*(replaceNull(receivable.getServicefinalpricesum()).doubleValue()/completeAMap.get(saler));
+									}
+								}*/
+								/*if(receivable.getForderno().equals("XSHT006904")){
+									System.out.println("========");
+								}*/
+								if(!receivable.getSaler().equals(receivable.getAwardsalerName())){//是代理商下的单
+									double quaterA = replaceNull(awardsAMap.get(receivable.getAwardsalerName())).doubleValue();//截止到此单本季度总回款额
+									System.out.println("=============="+receivable.getAwardsalerName());
+									double targetA = replaceNull(salesBratios.get(receivable.getAwardsalerName()).getBztarget());//标准产品销售指标
+									if(quaterA<=targetA){
+										awardsA += /**replaceNull(receivable.getServicefinalpricesum())*/replaceNull(receivable.getServicefinalpricesum())*0.01;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+									}else if(quaterA>targetA&&quaterA<=2*targetA){
+										if(quaterA-replaceNull(receivable.getServicefinalpricesum())>targetA){//不是此单超出的
+											awardsA += replaceNull(receivable.getServicefinalpricesum())*0.02;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+										}else{//是此单超出的
+											awardsA += (replaceNull(receivable.getServicefinalpricesum())-(quaterA-targetA))*0.01;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+											awardsA += (quaterA-targetA)*0.02;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+										}
+									}else{
+										if(quaterA-replaceNull(receivable.getServicefinalpricesum())>targetA*2){//不是此单超出的
+											awardsA += replaceNull(receivable.getServicefinalpricesum())*0.04;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+										}else{//是此单超出的
+											awardsA += (replaceNull(receivable.getServicefinalpricesum())-(quaterA-2*targetA))*0.02;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+											awardsA += (quaterA-2*targetA)*0.04;//*replaceNull(agentSellratios.get(receivable.getSaler()).getAwardRatio())/100
+										}
+									}
+								}
+								if(receivable.getSaler().equals(receivable.getAwardsalerName())){//不是代理商下的单
+									double quaterA = replaceNull(awardsAMap.get(receivable.getSaler())).doubleValue();//截止到此单本季度总回款额
+									double targetA = 10000000;//标准产品销售指标
+									if(null!=salesBratios.get(receivable.getSaler())){
+										targetA = replaceNull(salesBratios.get(receivable.getSaler()).getBztarget());
+									}
+									if(quaterA<=targetA){
+										awardsA += replaceNull(receivable.getServicefinalpricesum())*0.01;
+									}else if(quaterA>targetA&&quaterA<=2*targetA){
+										if(quaterA-replaceNull(receivable.getServicefinalpricesum())>targetA){//不是此单超出的
+											awardsA += replaceNull(receivable.getServicefinalpricesum())*0.02;
+										}else{//是此单超出的
+											awardsA += (replaceNull(receivable.getServicefinalpricesum())-(quaterA-targetA))*0.01;
+											awardsA += (quaterA-targetA)*0.02;
+										}
+									}else{
+										if(quaterA-replaceNull(receivable.getServicefinalpricesum())>targetA*2){//不是此单超出的
+											awardsA += replaceNull(receivable.getServicefinalpricesum())*0.04;
+										}else{//是此单超出的
+											awardsA += (replaceNull(receivable.getServicefinalpricesum())-(quaterA-2*targetA))*0.02;
+											awardsA += (quaterA-2*targetA)*0.04;
+										}
+									}
+								}
+							//}
+						}
+						//计算是否有逾期扣款 
+					}else{//BCDE类
+						if("XSHT007590".equals(receivable.getForderno())){
+							System.out.println("====================");
+						}
+						//计算单笔合同金额
+						if(receivable.getFclass().equals("D")){//D类前21台不算单笔合同额
+							System.out.println("=========");
+							saleAmountBCDE1 += replaceNull(receivable.getServicefinalpricesum());//getServicefinalpricesum
+							saleAmountBCDE += replaceNull(receivable.getFamount());//getServicefinalpricesum
+							//extraAmount += receivable.getFnum()*40000;
+							for(Forderrefund refund:receivable.getForderrefunds()){
+								if(null!=refund.getReceivableid()&&refund.getReceivableid().longValue()==receivable.getReceivableid().longValue() 
+										&&(null!=refund.getFamount()&&null!=receivable.getLngmoneypre())
+										&& refund.getFamount().doubleValue()==replaceNull(receivable.getServicefinalpricesum()).doubleValue()
+										&&replaceNull(receivable.getServicefinalpricesum()).doubleValue()>0&&receivable.getFnum().doubleValue()>0){
+									extraAmount += replaceNull(receivable.getFnum())*40000;
+								}else if(null!=refund.getReceivableid()&&refund.getReceivableid().longValue()==receivable.getReceivableid().longValue() 
+										&&(null!=refund.getFamount()&&null!=receivable.getLngmoneypre())
+										&&  refund.getFamount().doubleValue()>=receivable.getLngmoneypre().doubleValue()
+										&&replaceNull(receivable.getServicefinalpricesum()).doubleValue()>0&&receivable.getFnum().doubleValue()>0){
+									extraAmount += replaceNull(receivable.getFnum())*20000;
+								}else{
+									
+								}
+							}
+						}else{
+							//if(!receivable.getSaler().equals(receivable.getAwardsalerName())){
+								//double dispatchrate = null==agentSellratios.get(receivable.getSaler())?0:agentSellratios.get(receivable.getSaler()).getAwardRatio().doubleValue();
+								//double dispatchrate1 = null==agentSellratios.get(receivable.getSaler())?0:agentSellratios.get(receivable.getSaler()).getServiceRatio().doubleValue();
+								saleAmountBCDE1 += replaceNull(receivable.getServicefinalpricesum());//getServicefinalpricesum
+								saleAmountBCDE += replaceNull(receivable.getFamount());//getServicefinalpricesum
+							//}else{
+								//saleAmountBCDE += replaceNull(receivable.getServicefinalpricesum());
+							//}
+							//计算回款金额
+							for(Forderrefund refund:receivable.getForderrefunds()){
+								//if(refund.getReceivableid()!=receivable.getReceivableid()){
+									refundBCDEAmount += replaceNull(refund.getFamount());
+								//}
+							}
+						}
+						if(receivable.getFclass().equals("E")&&replaceNull(receivable.getDiscountRate())>0.7){
+							if(null!=receivable.getServicelistpricesum()){
+								if(receivable.getServicelistpricesum()<2000000){
+									extraAmount += receivable.getServicelistpricesum()*(receivable.getDiscountRate()-0.7)*0.3;
+								}else if(receivable.getServicelistpricesum()>=2000000&&receivable.getServicelistpricesum()<=5000000){
+									extraAmount += 2000000*(receivable.getDiscountRate()-0.7)*0.3;
+									extraAmount += (receivable.getServicelistpricesum()-2000000)*(receivable.getDiscountRate()-0.7)*0.25;
+								}else{
+									extraAmount += 2000000*(receivable.getDiscountRate()-0.7)*0.3;
+									extraAmount += 3000000*(receivable.getDiscountRate()-0.7)*0.25;
+									extraAmount += (receivable.getServicelistpricesum()-5000000)*(receivable.getDiscountRate()-0.7)*0.2;
+								}
+							}
+						}else if(!receivable.getFclass().equals("E")&&replaceNull(receivable.getDiscountRate())>0.7){
+							if(null!=receivable.getServicelistpricesum()){
+								if(receivable.getServicelistpricesum()<2000000){
+									extraAmount += receivable.getServicelistpricesum()*(receivable.getDiscountRate()-0.7)*0.3;
+								}else if(receivable.getServicelistpricesum()>=2000000&&receivable.getServicelistpricesum()<=5000000){
+									extraAmount += 2000000*(receivable.getDiscountRate()-0.7)*0.3;
+									extraAmount += (receivable.getServicelistpricesum()-2000000)*(receivable.getDiscountRate()-0.7)*0.25;
+								}else{
+									extraAmount += 2000000*(receivable.getDiscountRate()-0.7)*0.3;
+									extraAmount += 3000000*(receivable.getDiscountRate()-0.7)*0.25;
+									extraAmount += (receivable.getServicelistpricesum()-5000000)*(receivable.getDiscountRate()-0.7)*0.2;
+								}
+							}
+						}
+						for(RecePl recePl:receivable.getRecePls()){
+							double v1 = (replaceNull(recePl.getPl2000finalprice())*100/(null==recePl.getPl2000listprice()?1000000000:recePl.getPl2000listprice()));
+							double v2 = (replaceNull(recePl.getPl3000finalprice())*100/(null==recePl.getPl3000listprice()?1000000000:recePl.getPl3000listprice()));
+							double v3 = (replaceNull(recePl.getPl4200finalprice())*100/(null==recePl.getPl4200listprice()?1000000000:recePl.getPl4200listprice()));
+							double v4 = (replaceNull(recePl.getSsv3500finalprice())*100/(null==recePl.getSsv3500listprice()?100000000:recePl.getSsv3500listprice()));
+							if(null!=recePl.getPl2000listprice()&&v1>45){
+								plAmount += recePl.getPl2000finalprice()*(null==recePl.getPl2000fnum()?1:recePl.getPl2000fnum())*0.01;
+							}
+							if(null!=recePl.getPl3000listprice()&&v2>45){
+								plAmount += recePl.getPl3000finalprice()*(null==recePl.getPl3000fnum()?1:recePl.getPl3000fnum())*0.03;
+							}
+							if(null!=recePl.getPl4200listprice()&&v3>45){
+								plAmount += recePl.getPl4200finalprice()*(null==recePl.getPl4200fnum()?1:recePl.getPl4200fnum())*0.03;
+							}
+							if(null!=recePl.getSsv3500listprice()&&v4>45){
+								plAmount += recePl.getSsv3500finalprice()*(null==recePl.getSsv3500fnum()?1:recePl.getSsv3500fnum())*0.03;
+							}
+						}
+					}
+				}
+				//保存一下订单的信息
+				if(replaceNull(saleAmountBCDE).doubleValue()<2000000){
+					awardBCDERate = 0.008;
+					serviceBCDERate = 0.008;
+					serviceBCDE += replaceNull(saleAmountBCDE1)*serviceBCDERate;
+				}else if(replaceNull(saleAmountBCDE).doubleValue()>=2000000&&replaceNull(saleAmountBCDE).doubleValue()<=5000000){
+					awardBCDERate = 0.006;
+					serviceBCDERate = 0.006;
+					serviceBCDE += 2000000*0.008 + replaceNull(saleAmountBCDE1-2000000)*serviceBCDERate;
+				}else{
+					awardBCDERate = 0.005;
+					serviceBCDERate = 0.005;
+					serviceBCDE += 2000000*0.008 + 3000000*0.006 + replaceNull(saleAmountBCDE1-5000000)*serviceBCDERate;
+				}
+				Double exrate = 0D;
+				if(replaceNull(refundBCDEAmount/saleAmountBCDE).doubleValue()>=0.5&&refundBCDEAmount/saleAmountBCDE<1){
+					if(replaceNull(saleAmountBCDE1).doubleValue()<2000000){
+						awardsBCDE += replaceNull(saleAmountBCDE1)*0.008*0.6;
+					}else if(replaceNull(saleAmountBCDE1).doubleValue()>=2000000&&replaceNull(saleAmountBCDE1).doubleValue()<=5000000){
+						awardsBCDE += (2000000*0.008+replaceNull(saleAmountBCDE1-2000000)*0.006)*0.6;
+					}else{
+						awardsBCDE += (2000000*0.008+3000000*0.006+replaceNull(saleAmountBCDE1-5000000)*0.005)*0.6;
+					}
+					exrate = 60D;
+				}else if(replaceNull(refundBCDEAmount/saleAmountBCDE).doubleValue()>=1){
+					if(replaceNull(saleAmountBCDE1).doubleValue()<2000000){
+						awardsBCDE += replaceNull(saleAmountBCDE1)*0.008;
+					}else if(replaceNull(saleAmountBCDE1).doubleValue()>=2000000&&replaceNull(saleAmountBCDE1).doubleValue()<=5000000){
+						awardsBCDE += 2000000*0.008+replaceNull(saleAmountBCDE1-2000000)*0.006;
+					}else{
+						awardsBCDE += 2000000*0.008+3000000*0.006+replaceNull(saleAmountBCDE1-5000000)*0.005;
+					}
+					exrate = 100D;
+				}else{}
+				performanceDetail = new PerformanceDetail();
+				performanceDetail.setForderno(ordercode);//订单编号
+				performanceDetail.setFcontractno(contractcode);//合同编号
+				performanceDetail.setFyear(fyear);//年份
+				performanceDetail.setFquarter(fquarter);//季度
+				performanceDetail.setAchrewardtypea(1);//标准类奖金状态
+				performanceDetail.setAchrewardtypebcde(1);//非标类奖金状态
+				if(null!=plAmount&&null!=extraAmount&&(plAmount>extraAmount)){//PL调压器奖与超额奖取大者
+					performanceDetail.setPlamount(plAmount*exrate/100);
+					performanceDetail.setExcrewardtype(1);//调压器奖
+				}else if(null!=extraAmount&&null!=plAmount&&(plAmount<=extraAmount)){
+					if(extraAmount.doubleValue()==20000||extraAmount.doubleValue()==40000){
+						performanceDetail.setExcrewardamount(extraAmount);
+					}else{
+						performanceDetail.setExcrewardamount(extraAmount* (null==salesBratios.get(saler)?1:(null==salesBratios.get(saler).getFbselfratio()?100:salesBratios.get(saler).getFbselfratio())/100)*exrate/100);
+					}
+					//performanceDetail.setExcrewardamount(extraAmount);//* (null==salesBratios.get(saler)?1:(null==salesBratios.get(saler).getFbselfratio()?100:salesBratios.get(saler).getFbselfratio())/100)*exrate/100
+					performanceDetail.setExcrewardtype(1);//超额奖
+				}else if(null!=extraAmount&&null==plAmount){
+					if(extraAmount.doubleValue()==20000||extraAmount.doubleValue()==40000){
+						performanceDetail.setExcrewardamount(extraAmount);
+					}else{
+						performanceDetail.setExcrewardamount(extraAmount* (null==salesBratios.get(saler)?1:(null==salesBratios.get(saler).getFbselfratio()?100:salesBratios.get(saler).getFbselfratio())/100)*exrate/100);
+					}
+					//performanceDetail.setExcrewardamount(extraAmount);//* (null==salesBratios.get(saler)?1:(null==salesBratios.get(saler).getFbselfratio()?100:salesBratios.get(saler).getFbselfratio())/100)*exrate/100
+					performanceDetail.setExcrewardtype(1);//超额奖
+				}else if(null==extraAmount&&null!=plAmount){
+					performanceDetail.setPlamount(plAmount*exrate/100);
+					performanceDetail.setExcrewardtype(1);//调压器奖
+				}else{
+					
+				}
+				performanceDetail.setSalerName(saler);//业务员
+				/*if(null==salesBratios.get(saler)||gxlist.contains(ordercode)){//如果没有比例分配或者是汪洋贵州和西藏的订单，则百分之百分配比例
+					performanceDetail.setAchrewardamounta(awardsA);
+					performanceDetail.setAchrewardamountbcde(awardsBCDE);
+				}else{
+					if(null==salesBratios.get(saler).getBzsmratio()){
+						performanceDetail.setAchrewardamounta(awardsA);
+						performanceDetail.setAchrewardamountbcde(awardsBCDE);
+					}else{
+						if(!awardssaler.equals(saler)){//是经销商下单，但是业绩计入归属的业务员，此时业务员有奖励但是没有业务费
+							performanceDetail.setServicefeeamounta(0D);//标准类业务费
+							performanceDetail.setServicefeeamountbcde(0D);//非标类业务费
+							performanceDetail.setBelongsaleName(awardssaler);//归属业务员
+							performanceDetail.setAchrewardamounta(awardsA * salesBratios.get(saler).getBzselfratio()* agentSellratios.get(awardssaler).getAwardRatio()/10000);
+							performanceDetail.setAchrewardamountbcde(awardsBCDE* salesBratios.get(saler).getFbselfratio()* agentSellratios.get(awardssaler).getAwardRatio()/10000);
+						}else{
+							performanceDetail.setAchrewardamounta(awardsA * salesBratios.get(saler).getBzselfratio()/100);
+							performanceDetail.setAchrewardamountbcde(awardsBCDE* salesBratios.get(saler).getFbselfratio()/100);
+						}
+					}
+				}*/
+				if(saler.equals(awardssaler)){
+					performanceDetail.setAchrewardamounta(awardsA*(null==salesBratios.get(awardssaler)?1:salesBratios.get(awardssaler).getBzselfratio()/100));
+					performanceDetail.setAchrewardamountbcde((null==salesBratios.get(saler)?1:salesBratios.get(saler).getFbselfratio()/100)*awardsBCDE);
+					performanceDetail.setServicefeeamounta(serviceA);//标准类业务费
+					performanceDetail.setServicefeeamountbcde(serviceBCDE);//非标类业务费
+				}else{
+					double dispatchrate = null==agentSellratios.get(awardssaler)?0:agentSellratios.get(awardssaler).getAwardRatio().doubleValue();
+					double dispatchrate1 = null==agentSellratios.get(awardssaler)?0:agentSellratios.get(awardssaler).getServiceRatio().doubleValue();
+					performanceDetail.setAchrewardamounta(awardsA*dispatchrate/100);//*(null==salesBratios.get(saler)?1:salesBratios.get(saler).getFbselfratio()/100)
+					performanceDetail.setAchrewardamountbcde(awardsBCDE*dispatchrate/100);//(null==salesBratios.get(saler)?1:salesBratios.get(saler).getFbselfratio()/100)*
+					performanceDetail.setServicefeeamounta(serviceA*dispatchrate1/100);//标准类业务费
+					performanceDetail.setServicefeeamountbcde(serviceBCDE*dispatchrate1/100);//非标类业务费
+				}
+				performanceDetail.setAwardall(replaceNull(performanceDetail.getAchrewardamounta())+replaceNull(performanceDetail.getAchrewardamountbcde())+replaceNull(performanceDetail.getPlamount())+replaceNull(performanceDetail.getExcrewardamount()));
+				performanceDetail.setDebitamounta(0D);//标准扣款
+				performanceDetail.setDebitamountbcde(0D);//非标扣款
+				performanceDetail.setIsexstockwards(0D);//库存超期扣款
+				performanceDetail.setBailwards(0D);//保证金
+				if((null==performanceDetail.getAchrewardamounta()||performanceDetail.getAchrewardamounta().doubleValue()==0)&&
+						(null==performanceDetail.getServicefeeamounta()||performanceDetail.getServicefeeamounta().doubleValue()==0)&&
+						(null==performanceDetail.getAchrewardamountbcde()||performanceDetail.getAchrewardamountbcde().doubleValue()==0)&&
+						(null==performanceDetail.getServicefeeamountbcde()||performanceDetail.getServicefeeamountbcde().doubleValue()==0)&&
+						(null==performanceDetail.getPlamount()||performanceDetail.getPlamount().doubleValue()==0)&&
+						(null==performanceDetail.getExcrewardamount()||performanceDetail.getExcrewardamount().doubleValue()==0)){
+					
+				}else{
+					performanceDetailDao.save(performanceDetail);
+				}
+				String smname = null;
+				String saname = null;
+				if(null!=salesBratios.get(saler)&&null!=salesBratios.get(saler).getSalemanagerName()&&null!=salesBratios.get(saler).getAreamanagerName()){
+					smname = salesBratios.get(saler).getSalemanagerName();
+					saname = salesBratios.get(saler).getAreamanagerName();
+				}else if(null!=salesBratios.get(saler)&&null!=salesBratios.get(saler).getSalemanagerName()){
+					smname = salesBratios.get(saler).getSalemanagerName();
+				}else if(null!=salesBratios.get(saler)&&null!=salesBratios.get(saler).getAreamanagerName()){
+					saname = salesBratios.get(saler).getAreamanagerName();
+				}else{
+					
+				}
+				if(awardssaler.equals(saler)){//代理商下单的不分给对应业务员的上级
+					if(null!=smname&&!smname.trim().equals("")){
+						performanceDetail = new PerformanceDetail();
+						performanceDetail.setForderno(ordercode);
+						performanceDetail.setFcontractno(contractcode);
+						performanceDetail.setFyear(fyear);
+						performanceDetail.setFquarter(fquarter);
+						performanceDetail.setSalerName(smname);
+						/*if(null==salesBratios.get(saler).getBzsmratio()){
+							performanceDetail.setAchrewardamounta(awardsA);
+							performanceDetail.setAchrewardamounta(awardsBCDE);
+						}else{
+							performanceDetail.setAchrewardamounta(awardsA * salesBratios.get(saler).getBzsmratio()/100);
+							performanceDetail.setAchrewardamountbcde(awardsBCDE * salesBratios.get(saler).getFbsmratio()/100);
+						}*/
+						performanceDetail.setAchrewardamounta(awardsA*(null==salesBratios.get(awardssaler)?1:salesBratios.get(awardssaler).getBzsmratio()/100));
+						performanceDetail.setAchrewardamountbcde((null==salesBratios.get(saler)?1:salesBratios.get(saler).getFbsmratio()/100)*awardsBCDE);
+						if(extraAmount.doubleValue()==20000||extraAmount.doubleValue()==40000){
+							performanceDetail.setExcrewardamount(null);
+						}else{
+							performanceDetail.setExcrewardamount(null==extraAmount?0:extraAmount* (null==salesBratios.get(saler).getFbsmratio()?0:salesBratios.get(saler).getFbsmratio())/100*exrate/100);
+						}
+						performanceDetail.setAchrewardtypea(1);
+						performanceDetail.setBelongsaleName(saler);
+						performanceDetail.setSalerName(smname);
+						performanceDetail.setDebitamounta(0D);//标准扣款
+						performanceDetail.setDebitamountbcde(0D);//非标扣款
+						performanceDetail.setIsexstockwards(0D);//库存超期扣款
+						performanceDetail.setBailwards(0D);//保证金
+						performanceDetail.setAwardall(replaceNull(performanceDetail.getAchrewardamounta())+replaceNull(performanceDetail.getAchrewardamountbcde())+replaceNull(performanceDetail.getPlamount())+replaceNull(performanceDetail.getExcrewardamount()));
+						if((null==performanceDetail.getAchrewardamounta()||performanceDetail.getAchrewardamounta().doubleValue()==0)&&
+								(null==performanceDetail.getServicefeeamounta()||performanceDetail.getServicefeeamounta().doubleValue()==0)&&
+								(null==performanceDetail.getAchrewardamountbcde()||performanceDetail.getAchrewardamountbcde().doubleValue()==0)&&
+								(null==performanceDetail.getServicefeeamountbcde()||performanceDetail.getServicefeeamountbcde().doubleValue()==0)&&
+								(null==performanceDetail.getPlamount()||performanceDetail.getPlamount().doubleValue()==0)&&
+								(null==performanceDetail.getExcrewardamount()||performanceDetail.getExcrewardamount().doubleValue()==0)){
+							
+						}else{
+							performanceDetailDao.save(performanceDetail);
+						}
+					}
+					
+					if(null!=saname&&!saname.trim().equals("")){
+						performanceDetail = new PerformanceDetail();
+						performanceDetail.setForderno(ordercode);
+						performanceDetail.setFcontractno(contractcode);
+						performanceDetail.setFyear(fyear);
+						performanceDetail.setFquarter(fquarter);
+						
+						performanceDetail.setAchrewardamounta(awardsA*(null==salesBratios.get(awardssaler)?1:salesBratios.get(awardssaler).getBzamratio()/100));
+						performanceDetail.setAchrewardamountbcde((null==salesBratios.get(saler)?1:salesBratios.get(saler).getFbamratio()/100)*awardsBCDE);
+						if(extraAmount.doubleValue()==20000||extraAmount.doubleValue()==40000){
+							performanceDetail.setExcrewardamount(null);
+						}else{
+							performanceDetail.setExcrewardamount(null==extraAmount?0:extraAmount* (null==salesBratios.get(saler).getFbamratio()?0:salesBratios.get(saler).getFbamratio())/100*exrate/100);
+						}
+						performanceDetail.setAchrewardtypea(1);
+						performanceDetail.setBelongsaleName(saler);
+						performanceDetail.setSalerName(saname);
+						performanceDetail.setDebitamounta(0D);//标准扣款
+						performanceDetail.setDebitamountbcde(0D);//非标扣款
+						performanceDetail.setIsexstockwards(0D);//库存超期扣款
+						performanceDetail.setBailwards(0D);//保证金
+						performanceDetail.setAwardall(replaceNull(performanceDetail.getAchrewardamounta())+replaceNull(performanceDetail.getAchrewardamountbcde())+replaceNull(performanceDetail.getPlamount())+replaceNull(performanceDetail.getExcrewardamount()));
+						if((null==performanceDetail.getAchrewardamounta()||performanceDetail.getAchrewardamounta().doubleValue()==0)&&
+								(null==performanceDetail.getServicefeeamounta()||performanceDetail.getServicefeeamounta().doubleValue()==0)&&
+								(null==performanceDetail.getAchrewardamountbcde()||performanceDetail.getAchrewardamountbcde().doubleValue()==0)&&
+								(null==performanceDetail.getServicefeeamountbcde()||performanceDetail.getServicefeeamountbcde().doubleValue()==0)&&
+								(null==performanceDetail.getPlamount()||performanceDetail.getPlamount().doubleValue()==0)&&
+								(null==performanceDetail.getExcrewardamount()||performanceDetail.getExcrewardamount().doubleValue()==0)){
+							
+						}else{
+							performanceDetailDao.save(performanceDetail);
+						}
+					}
+				}
+				/**-------------------------------------------------------------------------------------------------------*/
+				receivables = new ArrayList<Receivable>();
+				receivables.add(receivableTemp);
+				ordercode = receivableTemp.getForderno();
+				contractcode = receivableTemp.getFcontractno();
+				salerId = receivableTemp.getSalerId();
+				if(!receivableTemp.getSaler().equals(receivableTemp.getAwardsalerName())){
+					salerId = receivableTemp.getAwardsalerId();
+					saler = receivableTemp.getAwardsalerName();
+					awardssaler = receivableTemp.getSaler();
+				}else{
+					salerId = receivableTemp.getSalerId();
+					saler = receivableTemp.getSaler();
+					awardssaler = saler;
+				}
+				awardsA = 0D;//A类产品奖励金额
+				awardARate = 0D;//A类产品奖励比例
+				awardsBCDE = 0D;//BCDE类产品奖励金额
+				awardBCDERate = 0D;//BCDE类产品奖励比例
+				saleAmountBCDE = 0D;//BCDE类单笔合同额
+				saleAmountBCDE1 = 0D;
+				refundBCDEAmount = 0D;//BCDE类回款总金额
+				serviceA = 0D;//标准类业务费
+				serviceARate = 0D;//标准业务费比例
+				serviceBCDE = 0D;//非标业务费
+				serviceBCDERate = 0D;//非标业务费比例
+				extraAmount = 0D;//BCDE类超额奖
+				extraAmount_this = 0D;//本次得到的BCDE类超额奖
+				plAmount = 0D;//PL奖
+				awardsAll = 0D;//奖励总额
+				performanceDetail = null;
+				amountA = null;//某个业务员A类的总额
+				continue;
+			//}
+		}
+	}
+	public Double replaceNull(Object obj){
+		if(null==obj){
+			return 0D;
+		}else{
+			return (Double)obj;
+		}
+	}
+	@Override
+	public void parseXlsx(String filepath) throws Exception {
+		InputStream is = new FileInputStream(new File(PropertiesUtil.getPropertyValue("upload.bashPath")+filepath));
+		XSSFWorkbook xssfWorkbook = new XSSFWorkbook(is);
+        // 循环工作表Sheet
+        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+        // 循环行Row
+        String contractno;
+        //结算项目中与核算项目相同的要奖励给对应的业务员，并且销售额和回款额也按照比例分给相应的业务员
+        List<AgentSellratio> agentSellratioLists = agentSellratioDao.findList(null);
+		Map<String, AgentSellratio> agentSellratios = new HashMap<String, AgentSellratio>();
+		for(AgentSellratio as:agentSellratioLists){
+			agentSellratios.put(as.getAgentName(), as);
+		}
+        for(int i=4;i<1007;i++){
+        	XSSFRow xssfRow = xssfSheet.getRow(i);
+        	contractno = getValue2007(xssfRow.getCell(2),0);
+			Long receivableid = saveReceivable(xssfRow,agentSellratios);
+			saveReccePls(receivableid,xssfRow);
+			saveForderinstock(receivableid,xssfRow,contractno);
+			saveFordersend(receivableid,xssfRow,contractno);
+			saveForderinvoice(receivableid,xssfRow,contractno);
+			saveForderrefund(receivableid,xssfRow,contractno);
+        }
+	}
+	private Long saveReceivable(XSSFRow xssfRow,Map<String, AgentSellratio> agentSellratios){
+		Receivable receivable = new Receivable();
+		receivable.setFmocode(null);
+		receivable.setFnumber(null);
+		receivable.setContractDate(getValue2007(xssfRow.getCell(1),0));//合同时间
+		receivable.setForderno(getValue2007(xssfRow.getCell(2),0));//订单号
+		receivable.setFcontractno(getValue2007(xssfRow.getCell(2),0));//合同号
+		receivable.setCheckProject(getValue2007(xssfRow.getCell(3),0));//核算项目
+		receivable.setArea(getValue2007(xssfRow.getCell(4),0));//区域
+		receivable.setSaler(getValue2007(xssfRow.getCell(5),0));//业务员
+		receivable.setFnum(parseToDouble(getValue2007(xssfRow.getCell(6),0)));//数量
+		receivable.setFamount(parseToDouble(getValue2007(xssfRow.getCell(7),0)));//价税合计parseToDouble(getValue2007(xssfRow.getCell(7),0,xssfRow.getRowNum()))
+		receivable.setFitemname(getValue2007(xssfRow.getCell(8),0));//产品名称
+		receivable.setMakeNumberCode(getValue2007(xssfRow.getCell(9),0));//制令号
+		String fclass = getValue2007(xssfRow.getCell(10),0);
+		receivable.setFclass(fclass.substring(0, 1));//产品类别getValue2007(xssfRow.getCell(9),0,xssfRow.getRowNum())
+		receivable.setServiceprice(parseToDouble(getValue2007(xssfRow.getCell(27),0)));//服务、工程费单价
+		receivable.setServicelistprice(parseToDouble(getValue2007(xssfRow.getCell(28),0)));//服务、工程费列表单价
+		receivable.setServicefinalprice(parseToDouble(getValue2007(xssfRow.getCell(29),0)));//服务、工程费结算单价
+		if(null!=receivable.getServiceprice()&&null!=receivable.getFnum()){
+			receivable.setServicepricesum(receivable.getServiceprice()*receivable.getFnum());//服务、工程费总价
+		}
+		if(null!=receivable.getServicelistprice()&&null!=receivable.getFnum()){
+			receivable.setServicelistpricesum(receivable.getServicelistprice()*receivable.getFnum());//服务、工程费列表总价
+		}
+		//if(null!=receivable.getServicefinalprice()&&null!=receivable.getFnum()){
+			//receivable.setServicefinalpricesum(receivable.getServicefinalprice()*receivable.getFnum());//服务、工程费结算总价	
+		receivable.setServicefinalpricesum(replaceNull(receivable.getFamount())-replaceNull(receivable.getServiceprice())*receivable.getFnum());//服务、工程费结算总价	
+		//}
+		if(null!=receivable.getServicefinalpricesum()){
+			if(null!=receivable.getServicelistpricesum()&&0!=receivable.getServicelistpricesum().doubleValue()){
+				receivable.setDiscountRate((receivable.getServicefinalpricesum()*1000/receivable.getServicelistpricesum())/1000);//折扣率
+			}else{
+				receivable.setDiscountRate(0D);
+			}
+		}else{
+			receivable.setDiscountRate(0D);
+		}
+		if(receivable.getFclass().equals("A")&&null!=receivable.getServicefinalpricesum()&&receivable.getServicefinalpricesum().doubleValue()<=replaceNull(parseToDouble(getValue2007(xssfRow.getCell(53),0))).doubleValue()){//判断是否全额回款
+			receivable.setCompleteA(1);
+		}
+		if(agentSellratios.containsKey(receivable.getCheckProject())){//如果核算项目在结算项目列表中存在，则将奖励分给对应的业务员
+			receivable.setAwardsalerName(agentSellratios.get(receivable.getCheckProject()).getSaleUserName());
+		}else{
+			receivable.setAwardsalerName(receivable.getSaler());
+		}
+		receivable.setBalancedate(getValue2007(xssfRow.getCell(56),0));//结算时间
+		receivable.setServicehead(getValue2007(xssfRow.getCell(57),0));//服务费抬头
+		if(null!=receivable.getServicepricesum()){
+			receivable.setServiceinmount(receivable.getServicepricesum()*0.85);//服务费发票金额parseToDouble(getValue2007(xssfRow.getCell(57),0))
+		}
+		Long id = receivableDao.save(receivable);
+		return id;
+	}
+	private Double parseToDouble(String value){
+		Double tmp = null;
+		if(null!=value && !value.trim().equals("")){
+			tmp = Double.valueOf(value);
+		}
+		return tmp;
+	}
+	private Long saveReccePls(Long receivableId,XSSFRow xssfRow){
+		RecePl recePl = new RecePl();
+		recePl.setPl4200fmodel(getValue2007(xssfRow.getCell(11),0));//PL4200规格型号
+		recePl.setPl4200fnum(parseToDouble(getValue2007(xssfRow.getCell(12),0)));//PL4200数量
+		recePl.setPl4200listprice(parseToDouble(getValue2007(xssfRow.getCell(13),0)));//PL4200列表单价
+		recePl.setPl4200finalprice(parseToDouble(getValue2007(xssfRow.getCell(14),0)));//PL3000结算单价
+		recePl.setPl3000fmodel(getValue2007(xssfRow.getCell(15),0));//PL3000规格型号
+		recePl.setPl3000fnum(parseToDouble(getValue2007(xssfRow.getCell(16),0)));//PL3000数量
+		recePl.setPl3000listprice(parseToDouble(getValue2007(xssfRow.getCell(17),0)));//PL3000列表单价
+		recePl.setPl3000finalprice(parseToDouble(getValue2007(xssfRow.getCell(18),0)));//PL3000结算单价
+		recePl.setSsv3500fmodel(getValue2007(xssfRow.getCell(19),0));//SSV3500规格型号
+		recePl.setSsv3500fnum(parseToDouble(getValue2007(xssfRow.getCell(20),0)));//SSV3500数量
+		recePl.setSsv3500listprice(parseToDouble(getValue2007(xssfRow.getCell(21),0)));//SSV3500列表单价
+		recePl.setSsv3500finalprice(parseToDouble(getValue2007(xssfRow.getCell(22),0)));//SSV3500结算单价
+		recePl.setPl2000fmodel(getValue2007(xssfRow.getCell(23),0));//PL2000规格型号
+		recePl.setPl2000fnum(parseToDouble(getValue2007(xssfRow.getCell(24),0)));//PL2000数量
+		recePl.setPl2000listprice(parseToDouble(getValue2007(xssfRow.getCell(25),0)));//PL2000列表单价
+		recePl.setPl2000finalprice(parseToDouble(getValue2007(xssfRow.getCell(26),0)));//PL2000结算单价
+		recePl.setReceivableid(receivableId);
+		return recePlDao.save(recePl);
+	}
+	private String gendate(String year,String month){
+		String date = "";
+		if(null!=year&&!year.equals("")){
+			year = year.substring(0,year.length()-2);
+		}else{
+			year = "";
+		}
+		if(null!=month&&!month.equals("")){
+			month = month.substring(0,month.length()-2);
+		}else{
+			month = "";
+		}
+		if(year==null || month==null || year.equals("") || month.equals("")){
+			date = "";
+		}else{
+			date = year +"-"+ month;
+		}
+		return date;
+	}
+	private void saveForderrefund(Long receivableid,XSSFRow xssfRow,String orderCode){
+		Forderrefund tmp = new Forderrefund();
+		String year = getValue2007(xssfRow.getCell(51),0);
+		String month = getValue2007(xssfRow.getCell(52),0);
+		String date = gendate(year,month);
+		tmp.setFdate(date);
+		tmp.setFamount(parseToDouble(getValue2007(xssfRow.getCell(53),0)));
+		tmp.setReceivableid(receivableid);
+		tmp.setForderno(orderCode);
+		forderrefundDao.save(tmp);
+	}
+	private void saveForderinstock(Long receivableid,XSSFRow xssfRow,String orderCode){
+		Forderinstock tmp = new Forderinstock();
+		String year = getValue2007(xssfRow.getCell(42),0);
+		String month = getValue2007(xssfRow.getCell(43),0);
+		String date = gendate(year,month);
+		tmp.setFdate(date);
+		tmp.setReceivableid(receivableid);
+		tmp.setForderno(orderCode);
+		forderinstockDao.save(tmp);
+	}
+	private void saveFordersend(Long receivableid,XSSFRow xssfRow,String orderCode){
+		Fordersend tmp = new Fordersend();
+		String year = getValue2007(xssfRow.getCell(44),0);
+		String month = getValue2007(xssfRow.getCell(45),0);
+		tmp.setFamount(parseToDouble(getValue2007(xssfRow.getCell(45),0)));
+		String date = gendate(year,month);
+		tmp.setFdate(date);
+		tmp.setReceivableid(receivableid);
+		tmp.setForderno(orderCode);
+		fordersendDao.save(tmp);
+	}
+	private void saveForderinvoice(Long receivableid,XSSFRow xssfRow,String orderCode){
+		Forderinvoice tmp = new Forderinvoice();
+		String year = getValue2007(xssfRow.getCell(47),0);
+		String month = getValue2007(xssfRow.getCell(48),0);
+		tmp.setFamount(parseToDouble(getValue2007(xssfRow.getCell(49),0)));
+		tmp.setFinvoiceno(getValue2007(xssfRow.getCell(50),0));
+		String date = gendate(year,month);
+		tmp.setFdate(date);
+		tmp.setReceivableid(receivableid);
+		tmp.setForderno(orderCode);
+		forderinvoiceDao.save(tmp);
+	}
+	/**@Override
+	public void parseXlsx(String filepath) throws Exception {
+		List<String> lessNos = new ArrayList<String>();
+		List<String> emptyerpNos = new ArrayList<String>();
+		InputStream is = new FileInputStream(new File(PropertiesUtil.getPropertyValue("upload.bashPath")+filepath));
+		XSSFWorkbook xssfWorkbook = new XSSFWorkbook(is);
+        // 循环工作表Sheet
+        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+        // 循环行Row
+        String contractno;
+        List<Product> productList = null;
+        ProductQuery pq = null;
+        for(int i=4;i<301;i++){
+        	pq = new ProductQuery();
+        	XSSFRow xssfRow = xssfSheet.getRow(i);
+        	contractno = getValue2007(xssfRow.getCell(2),0,i);
+        	pq.setOrderCode(contractno);
+        	productList = productDao.findList(pq);
+        	if(null!=productList&&productList.size()>0){
+        		i = exeparse(productList,xssfSheet,xssfRow,i,contractno,lessNos,emptyerpNos);
+        	}else{//erp或者web端中没有此单号
+        		pq.setOrderCode(contractno+"N");
+        		productList = productDao.findList(pq);
+        		if(null!=productList&&productList.size()>0){
+        			i = exeparse(productList,xssfSheet,xssfRow,i,contractno,lessNos,emptyerpNos);
+        		}else{
+        			emptyerpNos.add(contractno); 
+        		}
+        	}
+        }
+        System.out.println(lessNos+"=="+emptyerpNos);
+	}
+	private int exeparse(List<Product> productList,XSSFSheet xssfSheet,XSSFRow xssfRow,int i,
+			String contractno,List<String> lessNos,List<String> emptyerpNos){
+		int len = productList.size();
+		boolean flag = true;
+		for(int j=i+1;j<i+len;j++){
+			xssfRow = xssfSheet.getRow(j);
+			if(!getValue2007(xssfRow.getCell(2),0,i).equals(contractno)){
+				flag = false;
+				i=j-1;
+				lessNos.add(contractno);
+				break;
+			}
+		}
+		if(flag){
+			int seq = 0;
+			//Map<String, String> mncodemap = new HashMap<String, String>();
+			for(int n=i;n<i+len;n++){
+    			xssfRow = xssfSheet.getRow(n);
+    			Long receivableid = saveReceivable(xssfRow,productList.get(seq));
+    			saveReccePls(receivableid,xssfRow);
+    			if(null!=productList.get(seq).getMakeNumberCode() && !productList.get(seq).getMakeNumberCode().equals("")){
+    				saveForderinstock(receivableid,productList.get(seq));
+        			saveFordersend(receivableid,productList.get(seq));
+        			saveForderinvoice(receivableid,productList.get(seq));
+        			saveForderrefund(receivableid,xssfRow,productList.get(seq));
+    			}
+    			seq++;
+    		}
+			i=i+len-1;
+		}
+		return i;
+	}
+	private Map<String,String> parseMakeNumberCode(String makeNumberCode,String orderCode){
+		Map<String,String> map = new HashMap<String, String>();
+		if(null!=makeNumberCode){
+			if(makeNumberCode.contains(" ")){
+				makeNumberCode = makeNumberCode.split(" ")[0];
+			}
+			if(makeNumberCode.contains("~")){
+				String[] codes = makeNumberCode.split("~");
+				if(null!=codes&&codes.length>1){
+					map.put("startCode", codes[0]);
+					String c1 = codes[0].substring(0,codes[0].length()-codes[1].length())+codes[1];
+					map.put("endCode", c1);
+				}else if(null!=codes&&codes.length==1){
+					map.put("startCode", codes[0]);
+					map.put("endCode", codes[0]);
+				}else{
+					map.put("startCode", null);
+					map.put("endCode", null);
+				}
+			}else if(makeNumberCode.contains("～")){
+				String[] codes = makeNumberCode.split("～");
+				if(null!=codes&&codes.length>1){
+					map.put("startCode", codes[0]);
+					String c1 = codes[0].substring(0,codes[0].length()-codes[1].length())+codes[1];
+					map.put("endCode", c1);
+				}else if(null!=codes&&codes.length==1){
+					map.put("startCode", codes[0]);
+					map.put("endCode", codes[0]);
+				}else{
+					map.put("startCode", null);
+					map.put("endCode", null);
+				}
+			}else{
+				map.put("startCode", makeNumberCode);
+				map.put("endCode", makeNumberCode);
+			}
+			map.put("makeNumberCode", makeNumberCode);
+		}else{
+			System.out.println(orderCode+"无制令号");
+		}
+		return map;
+	}
+	private void saveForderrefund(Long receivableid,XSSFRow xssfRow,Product product){
+		Forderrefund tmp = new Forderrefund();
+		String year = getValue2007(xssfRow.getCell(50),0,xssfRow.getRowNum());
+		String month = getValue2007(xssfRow.getCell(51),0,xssfRow.getRowNum());
+		String date = "";
+		if(null!=year&&!year.equals("")){
+			year = year.substring(0,year.length()-2);
+		}else{
+			year = "";
+		}
+		if(null!=month&&!month.equals("")){
+			month = month.substring(0,month.length()-2);
+		}else{
+			month = "";
+		}
+		if(year==null || month==null || year.equals("") || month.equals("")){
+			date = "";
+		}else{
+			date = year +"-"+ month;
+		}
+		tmp.setFdate(date);
+		tmp.setFamount(parseToDouble(getValue2007(xssfRow.getCell(52),0,xssfRow.getRowNum())));
+		tmp.setReceivableid(receivableid);
+		tmp.setForderno(product.getOrderCode());
+		forderrefundDao.save(tmp);
+	}
+	private void saveForderinstock(Long receivableid,Product product){
+		List<Forderinstock> forderinstocks = forderinstockDao.findByMakeNumberCode(parseMakeNumberCode(product.getMakeNumberCode(),product.getOrderCode()));
+		if(null!=forderinstocks&&forderinstocks.size()>0){
+			for(Forderinstock tmp:forderinstocks){
+				tmp.setReceivableid(receivableid);
+				tmp.setForderno(product.getOrderCode());
+				forderinstockDao.save(tmp);
+			}
+		}
+	}
+	private void saveFordersend(Long receivableid,Product product){
+		List<Fordersend> fordersends = fordersendDao.findByMakeNumberCode(parseMakeNumberCode(product.getMakeNumberCode(),product.getOrderCode()));
+		if(null!=fordersends&&fordersends.size()>0){
+			for(Fordersend tmp:fordersends){
+				tmp.setReceivableid(receivableid);
+				tmp.setForderno(product.getOrderCode());
+				fordersendDao.save(tmp);
+			}
+		}
+	}
+	private void saveForderinvoice(Long receivableid,Product product){
+		List<Forderinvoice> forderinvoices = forderinvoiceDao.findByMakeNumberCode(parseMakeNumberCode(product.getMakeNumberCode(),product.getOrderCode()));
+		if(null!=forderinvoices&&forderinvoices.size()>0){
+			for(Forderinvoice tmp:forderinvoices){
+				tmp.setReceivableid(receivableid);
+				tmp.setForderno(product.getOrderCode());
+				forderinvoiceDao.save(tmp);
+			}
+		}
+	}
+	private Long saveReceivable(XSSFRow xssfRow,Product product){
+		Receivable receivable = new Receivable();
+		receivable.setFmocode(product.getMakeNumberCode());
+		receivable.setFnumber(product.getProductCode());
+		receivable.setForderno(product.getOrderCode());
+		receivable.setContractDate(getValue2007(xssfRow.getCell(1),0,xssfRow.getRowNum()));//合同时间
+		receivable.setFcontractno(product.getOrderCode());//合同号
+		receivable.setCheckProject(getValue2007(xssfRow.getCell(3),0,xssfRow.getRowNum()));//核算项目
+		receivable.setArea(getValue2007(xssfRow.getCell(4),0,xssfRow.getRowNum()));//区域
+		receivable.setSaler(getValue2007(xssfRow.getCell(5),0,xssfRow.getRowNum()));//业务员
+		receivable.setFnum(parseToDouble(getValue2007(xssfRow.getCell(6),0,xssfRow.getRowNum())));//数量
+		receivable.setFamount(product.getPriceTaxTotalRM());//价税合计parseToDouble(getValue2007(xssfRow.getCell(7),0,xssfRow.getRowNum()))
+		receivable.setFitemname(getValue2007(xssfRow.getCell(8),0,xssfRow.getRowNum()));//产品名称
+		receivable.setFclass(product.getProductType());//产品类别getValue2007(xssfRow.getCell(9),0,xssfRow.getRowNum())
+		receivable.setMakeNumberCode(product.getMakeNumberCode());//制令号
+		receivable.setServiceprice(parseToDouble(getValue2007(xssfRow.getCell(26),0,xssfRow.getRowNum())));//服务、工程费单价
+		receivable.setServicelistprice(parseToDouble(getValue2007(xssfRow.getCell(27),0,xssfRow.getRowNum())));//服务、工程费列表单价
+		receivable.setServicefinalprice(parseToDouble(getValue2007(xssfRow.getCell(28),0,xssfRow.getRowNum())));//服务、工程费结算单价
+		if(null!=receivable.getServiceprice()&&null!=receivable.getFnum()){
+			receivable.setServicepricesum(receivable.getServiceprice()*receivable.getFnum());//服务、工程费总价
+		}
+		if(null!=receivable.getServicelistprice()&&null!=receivable.getFnum()){
+			receivable.setServicelistpricesum(receivable.getServicelistprice()*receivable.getFnum());//服务、工程费列表总价
+		}
+		if(null!=receivable.getServicefinalprice()&&null!=receivable.getFnum()){
+			receivable.setServicefinalpricesum(receivable.getServicefinalprice()*receivable.getFnum());//服务、工程费结算总价	
+		}
+		if(null!=receivable.getServicefinalpricesum()&&null!=receivable.getServicelistpricesum()){
+			receivable.setDiscountRate(receivable.getServicefinalpricesum()/receivable.getServicelistpricesum());//折扣率
+		}
+		receivable.setBalancedate(getValue2007(xssfRow.getCell(55),0,xssfRow.getRowNum()));//结算时间
+		receivable.setServicehead(getValue2007(xssfRow.getCell(56),0,xssfRow.getRowNum()));//服务费抬头
+		if(null!=receivable.getServicepricesum()){
+			receivable.setServiceinmount(receivable.getServicepricesum()*0.85);//服务费发票金额parseToDouble(getValue2007(xssfRow.getCell(57),0))
+		}
+		Long id = receivableDao.save(receivable);
+		return id;
+	}*/
+	public String haha(){/**
+		System.out.println(getValue2007(xssfRow.getCell(1),0));//合同日期
+    	System.out.println(getValue2007(xssfRow.getCell(2),0));//合同号
+    	System.out.println(getValue2007(xssfRow.getCell(3),0));//核算项目
+    	System.out.println(getValue2007(xssfRow.getCell(4),0));//区域
+    	System.out.println(getValue2007(xssfRow.getCell(5),0));//业务员
+    	System.out.println(getValue2007(xssfRow.getCell(6),0));//数量
+    	System.out.println(getValue2007(xssfRow.getCell(7),0));//价税合计
+    	System.out.println(getValue2007(xssfRow.getCell(8),0));//产品名称
+    	System.out.println(getValue2007(xssfRow.getCell(9),0));//产品类别
+    	contractno = getValue2007(xssfRow.getCell(2),0);
+    	if(orders.contains(contractno)){
+    		geshu += 1;
+    	}else{
+    		or ++;
+    		orders.add(contractno);
+    		pq.setOrderCode(contractno);
+        	productList = productDao.findList(pq);
+        	count += productList.size();
+        	if(geshu!=0){
+        		if(geshu!=tempgeshu){
+        			//throw new ServiceException("数据库中"+contractno+"的产品个数与Excel中的个数不相等");
+        			System.out.println("数据库中"+contractno+"的产品个数与Excel中的个数不相等");
+        		}
+        	}
+        	tempgeshu = productList.size();
+        	geshu = 1;
+    	}*/
+		return "";
+	}
+	 /**
+     * 得到Excel表中的值
+     * 
+     * @param hssfCell
+     *            Excel中的每一个格子
+     * @return Excel中每一个格子中的值
+     */
+    @SuppressWarnings("static-access")
+    private String getValue2007(XSSFCell xssfCell,int type) {
+    	if(null==xssfCell){
+    		return "";
+    	}
+    	System.out.println("================="+xssfCell.getRow().getRowNum());
+        if (xssfCell.getCellType() == xssfCell.CELL_TYPE_BOOLEAN) {
+            // 返回布尔类型的值
+            return String.valueOf(xssfCell.getBooleanCellValue());
+        } else if (xssfCell.getCellType() == xssfCell.CELL_TYPE_NUMERIC) {
+            // 返回数值类型的值
+        	if(HSSFDateUtil.isCellDateFormatted(xssfCell)){
+        		String datestr = DateUtils.formtDateTime(HSSFDateUtil.getJavaDate(xssfCell.getNumericCellValue()),"yyyy-MM-dd HH:mm:ss");
+        		if(type==1){
+        			return "\'"+datestr+"\'";
+        		}else{
+        			return datestr;
+        		}
+        	}
+            return String.valueOf(xssfCell.getNumericCellValue());
+        } else {
+            // 返回字符串类型的值
+        	if(type==1){
+        		return String.valueOf("\'"+xssfCell.getRichStringCellValue().toString()+"\'");
+        	}else{
+        		return String.valueOf(xssfCell.getRichStringCellValue().toString());
+        	}
+        }
+    }
+	@Override
+	public void exportExcel2007(HttpServletResponse response,List<Receivable> receivables) throws Exception {
+		XSSFWorkbook wb = new XSSFWorkbook();
+		XSSFSheet sheet = wb.createSheet("合同_应收_序时簿");
+		createHeadAndStyle(sheet,wb);
+		XSSFRow row;
+		XSSFCell cell = null;
+		XSSFFont font = null;
+		List<List<String>> list = createwritelist(receivables);
+		List<String> tmp = null;
+		for(int i=0;i<list.size();i++){
+			tmp = list.get(i);
+			row = sheet.createRow(i+4);
+			createCell(cell,font,wb, row, 0, "");
+			createCell(cell,font,wb, row, 1, tmp.get(1));
+			createCell(cell,font,wb, row, 2, tmp.get(2));
+			createCell(cell,font,wb, row, 3, tmp.get(3));
+			createCell(cell,font,wb, row, 4, tmp.get(4));
+			createCell(cell,font,wb, row, 5, tmp.get(5));
+			createCell(cell,font,wb, row, 6, tmp.get(6));
+			createCell(cell,font,wb, row, 7, tmp.get(7));
+			createCell(cell,font,wb, row, 8, tmp.get(8));
+			createCell(cell,font,wb, row, 9, tmp.get(9));
+			createCell(cell,font,wb, row, 10, tmp.get(10));
+			createCell(cell,font,wb, row, 11, tmp.get(11));
+			createCell(cell,font,wb, row, 12, tmp.get(12));
+			createCell(cell,font,wb, row, 13, tmp.get(13));
+			createCell(cell,font,wb, row, 14, tmp.get(14));
+			createCell(cell,font,wb, row, 15, tmp.get(15));
+			createCell(cell,font,wb, row, 16, tmp.get(16));
+			createCell(cell,font,wb, row, 17, tmp.get(17));
+			createCell(cell,font,wb, row, 18, tmp.get(18));
+			createCell(cell,font,wb, row, 19, tmp.get(19));
+			createCell(cell,font,wb, row, 20, tmp.get(20));
+			createCell(cell,font,wb, row, 21, tmp.get(21));
+			createCell(cell,font,wb, row, 22, tmp.get(22));
+			createCell(cell,font,wb, row, 23, tmp.get(23));
+			createCell(cell,font,wb, row, 24, tmp.get(24));
+			createCell(cell,font,wb, row, 25, tmp.get(25));
+			createCell(cell,font,wb, row, 26, tmp.get(26));
+			createCell(cell,font,wb, row, 27, tmp.get(27));
+			createCell(cell,font,wb, row, 28, tmp.get(28));
+			createCell(cell,font,wb, row, 29, tmp.get(29));
+			createCell(cell,font,wb, row, 30, tmp.get(30));
+			createCell(cell,font,wb, row, 31, tmp.get(31));
+			createCell(cell,font,wb, row, 32, tmp.get(32));
+			createCell(cell,font,wb, row, 33, tmp.get(33));
+			createCell(cell,font,wb, row, 44, tmp.get(34));
+			createCell(cell,font,wb, row, 35, tmp.get(35));
+			createCell(cell,font,wb, row, 36, tmp.get(36));
+			createCell(cell,font,wb, row, 37, tmp.get(37));
+			createCell(cell,font,wb, row, 38, tmp.get(38));
+			createCell(cell,font,wb, row, 39, tmp.get(39));
+			createCell(cell,font,wb, row, 40, tmp.get(40));
+			createCell(cell,font,wb, row, 41, tmp.get(41));
+			createCell(cell,font,wb, row, 42, tmp.get(42));
+			createCell(cell,font,wb, row, 43, tmp.get(43));
+			createCell(cell,font,wb, row, 44, tmp.get(44));
+			createCell(cell,font,wb, row, 45, tmp.get(45));
+			createCell(cell,font,wb, row, 46, tmp.get(46));
+			createCell(cell,font,wb, row, 47, tmp.get(47));
+			createCell(cell,font,wb, row, 48, tmp.get(48));
+			createCell(cell,font,wb, row, 49, tmp.get(49));
+			createCell(cell,font,wb, row, 50, tmp.get(50));
+			createCell(cell,font,wb, row, 51, tmp.get(51));
+			createCell(cell,font,wb, row, 52, tmp.get(52));
+			createCell(cell,font,wb, row, 53, tmp.get(53));
+			createCell(cell,font,wb, row, 54, tmp.get(54));
+			createCell(cell,font,wb, row, 55, tmp.get(55));
+			createCell(cell,font,wb, row, 56, tmp.get(56));
+			createCell(cell,font,wb, row, 57, tmp.get(57));
+			createCell(cell,font,wb, row, 58, tmp.get(58));
+			System.out.println("=="+i);
+		}
+		/*for(int i=0;i<receivables.size();i++){
+			receivable = receivables.get(i);
+//			String finstocks = "";
+//			List<Forderinstock> forderinstocks = null;
+			//List<RecePl> recePlss = receivable.getRecePls();
+			//RecePl recePls = (null==recePlss||recePlss.size()==0)?null:recePlss.get(0);
+//			forderinstocks = receivable.getForderinstocks();
+//			if(null!=forderinstocks&&forderinstocks.size()>0){
+//				for(Forderinstock forderinstock:forderinstocks){
+//					finstocks += forderinstock.getFdate();
+//				}
+//			}
+			recePls = new RecePl();
+			row = sheet.createRow(i+4);
+			createCell(cell,font,wb, row, 0, "");
+			createCell(cell,font,wb, row, 1, list.get(index));
+			createCell(cell,font,wb, row, 2, receivable.getFcontractno());
+			createCell(cell,font,wb, row, 3, receivable.getCheckProject());
+			createCell(cell,font,wb, row, 4, receivable.getArea());
+			createCell(cell,font,wb, row, 5, receivable.getSaler());
+			createCell(cell,font,wb, row, 6, receivable.getFnum()+"");
+			createCell(cell,font,wb, row, 7, receivable.getFamount()+"");
+			createCell(cell,font,wb, row, 8, receivable.getFitemname());
+			createCell(cell,font,wb, row, 9, receivable.getFclass());
+			createCell(cell,font,wb, row, 10, recePls.getPl4200fmodel());
+			createCell(cell,font,wb, row, 11, recePls.getPl4200fnum()+"");
+			createCell(cell,font,wb, row, 12, recePls.getPl4200listprice()+"");
+			createCell(cell,font,wb, row, 13, recePls.getPl4200finalprice()+"");
+			createCell(cell,font,wb, row, 14, recePls.getPl3000fmodel());
+			createCell(cell,font,wb, row, 15, recePls.getPl3000fnum()+"");
+			createCell(cell,font,wb, row, 16, recePls.getPl3000listprice()+"");
+			createCell(cell,font,wb, row, 17, recePls.getPl3000finalprice()+"");
+			createCell(cell,font,wb, row, 18, recePls.getSsv3500fmodel());
+			createCell(cell,font,wb, row, 19, recePls.getSsv3500fnum()+"");
+			createCell(cell,font,wb, row, 20, recePls.getSsv3500listprice()+"");
+			createCell(cell,font,wb, row, 21, recePls.getSsv3500finalprice()+"");
+			createCell(cell,font,wb, row, 22, recePls.getPl2000fmodel());
+			createCell(cell,font,wb, row, 23, recePls.getPl2000fnum()+"");
+			createCell(cell,font,wb, row, 24, recePls.getPl2000listprice()+"");
+			createCell(cell,font,wb, row, 25, recePls.getPl2000finalprice()+"");
+			createCell(cell,font,wb, row, 26, receivable.getServiceprice()+"");
+			createCell(cell,font,wb, row, 27, receivable.getServicelistprice()+"");
+			createCell(cell,font,wb, row, 28, receivable.getServicefinalprice()+"");
+			createCell(cell,font,wb, row, 29, recePls.getPl4200listpricesum()+"");
+			createCell(cell,font,wb, row, 30, recePls.getPl4200finalpricesum()+"");
+			createCell(cell,font,wb, row, 31, recePls.getPl3000listpricesum()+"");
+			createCell(cell,font,wb, row, 32, recePls.getPl3000finalpricesum()+"");
+			createCell(cell,font,wb, row, 33, recePls.getSsv3500listpricesum()+"");
+			createCell(cell,font,wb, row, 44, recePls.getSsv3500finalpricesum()+"");
+			createCell(cell,font,wb, row, 35, recePls.getPl2000listpricesum()+"");
+			createCell(cell,font,wb, row, 36, recePls.getPl2000finalpricesum()+"");
+			createCell(cell,font,wb, row, 37, receivable.getServicepricesum()+"");
+			createCell(cell,font,wb, row, 38, receivable.getServicelistpricesum()+"");
+			createCell(cell,font,wb, row, 39, receivable.getServicefinalpricesum()+"");
+			createCell(cell,font,wb, row, 40, receivable.getDiscountRate()+"");
+			createCell(cell,font,wb, row, 41, "");
+			createCell(cell,font,wb, row, 42, "");
+			createCell(cell,font,wb, row, 43, "");
+			createCell(cell,font,wb, row, 44, "");
+			createCell(cell,font,wb, row, 45, "");
+			createCell(cell,font,wb, row, 46, "");
+			createCell(cell,font,wb, row, 47, "");
+			createCell(cell,font,wb, row, 48, "");
+			createCell(cell,font,wb, row, 49, "");
+			createCell(cell,font,wb, row, 50, "");
+			createCell(cell,font,wb, row, 51, "");
+			createCell(cell,font,wb, row, 52, "");
+			createCell(cell,font,wb, row, 53, "");
+			createCell(cell,font,wb, row, 54, "");
+			createCell(cell,font,wb, row, 55, "");
+			createCell(cell,font,wb, row, 56, "");
+			createCell(cell,font,wb, row, 57, "");
+			createCell(cell,font,wb, row, 58, "");
+			System.out.println("=="+i);
+		}*/
+		wb.write(response.getOutputStream());
+	}
+	public List<List<String>> createwritelist(List<Receivable> receivables){
+		Receivable receivable = null;
+		RecePl recePls = null;
+		List<List<String>> list = new ArrayList<List<String>>();
+		List<String> listtmp = null;
+		for(int i=0;i<receivables.size();i++){
+			listtmp = new ArrayList<String>();
+			receivable = receivables.get(i);
+			recePls = new RecePl();
+			listtmp.add("");
+			listtmp.add(receivable.getContractDate().substring(0, 10));
+			listtmp.add(receivable.getFcontractno());
+			listtmp.add(receivable.getCheckProject());
+			listtmp.add(receivable.getArea());
+			listtmp.add(receivable.getSaler());
+			listtmp.add(receivable.getFnum()+"");
+			listtmp.add(receivable.getFamount()+"");
+			listtmp.add(receivable.getFitemname());
+			listtmp.add(receivable.getFclass());
+			listtmp.add(recePls.getPl4200fmodel());
+			listtmp.add(recePls.getPl4200fnum()+"");
+			listtmp.add(recePls.getPl4200listprice()+"");
+			listtmp.add(recePls.getPl4200finalprice()+"");
+			listtmp.add(recePls.getPl3000fmodel());
+			listtmp.add(recePls.getPl3000fnum()+"");
+			listtmp.add(recePls.getPl3000listprice()+"");
+			listtmp.add(recePls.getPl3000finalprice()+"");
+			listtmp.add(recePls.getSsv3500fmodel());
+			listtmp.add(recePls.getSsv3500fnum()+"");
+			listtmp.add(recePls.getSsv3500listprice()+"");
+			listtmp.add(recePls.getSsv3500finalprice()+"");
+			listtmp.add(recePls.getPl2000fmodel());
+			listtmp.add(recePls.getPl2000fnum()+"");
+			listtmp.add(recePls.getPl2000listprice()+"");
+			listtmp.add(recePls.getPl2000finalprice()+"");
+			listtmp.add(receivable.getServiceprice()+"");
+			listtmp.add(receivable.getServicelistprice()+"");
+			listtmp.add(receivable.getServicefinalprice()+"");
+			listtmp.add(recePls.getPl4200listpricesum()+"");
+			listtmp.add(recePls.getPl4200finalpricesum()+"");
+			listtmp.add(recePls.getPl3000listpricesum()+"");
+			listtmp.add(recePls.getPl3000finalpricesum()+"");
+			listtmp.add(recePls.getSsv3500listpricesum()+"");
+			listtmp.add(recePls.getSsv3500finalpricesum()+"");
+			listtmp.add(recePls.getPl2000listpricesum()+"");
+			listtmp.add(recePls.getPl2000finalpricesum()+"");
+			listtmp.add(receivable.getServicepricesum()+"");
+			listtmp.add(receivable.getServicelistpricesum()+"");
+			listtmp.add(receivable.getServicefinalpricesum()+"");
+			listtmp.add(receivable.getDiscountRate()+"");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			listtmp.add("");
+			list.add(listtmp);
+			System.out.println("========="+i);
+		}
+		return list;
+	}
+	/**
+	 * 创建表头和样式
+	 * @param sheet sheet对象
+	 * @param wb excel表格
+	 */
+	public void createHeadAndStyle(XSSFSheet sheet,XSSFWorkbook wb){
+		// 创建第一行
+	    XSSFRow row0 = sheet.createRow(0);
+	    XSSFCell cell = null;
+	    XSSFFont font = null;
+		// 设置单元格宽度
+		for(int i=0;i<59;i++){
+			 sheet.setColumnWidth(i, 4000);//调整列的宽度
+			 createCell(cell,font,wb, row0, i, "");
+		}
+		CellRangeAddress regioncol0058 = new CellRangeAddress(0,0,0,58);
+		sheet.addMergedRegion(regioncol0058);
+		// 创建第二行
+	    XSSFRow row1 = sheet.createRow(1);
+		// 设置单元格
+		createCell(cell,font,wb, row1, 0, "");
+		createCell(cell,font,wb, row1, 1, "合同日期");
+		createCell(cell,font,wb, row1, 2, "合同号");
+		createCell(cell,font,wb, row1, 3, "核算项目");
+		createCell(cell,font,wb, row1, 4, "区域");
+		createCell(cell,font,wb, row1, 5, "业务员");
+		createCell(cell,font,wb, row1, 6, "数量");
+		createCell(cell,font,wb, row1, 7, "价税合计");
+		createCell(cell,font,wb, row1, 8, "产品名称");
+		createCell(cell,font,wb, row1, 9, "产品类别");
+		createCell(cell,font,wb, row1, 10, "国产PL产品销售单价");
+		createCell(cell,font,wb, row1, 11, "");
+		createCell(cell,font,wb, row1, 12, "");
+		createCell(cell,font,wb, row1, 13, "");
+		createCell(cell,font,wb, row1, 14, "");
+		createCell(cell,font,wb, row1, 15, "");
+		createCell(cell,font,wb, row1, 16, "");
+		createCell(cell,font,wb, row1, 17, "");
+		createCell(cell,font,wb, row1, 18, "");
+		createCell(cell,font,wb, row1, 19, "");
+		createCell(cell,font,wb, row1, 20, "");
+		createCell(cell,font,wb, row1, 21, "");
+		createCell(cell,font,wb, row1, 22, "");
+		createCell(cell,font,wb, row1, 23, "");
+		createCell(cell,font,wb, row1, 24, "");
+		createCell(cell,font,wb, row1, 25, "");
+		createCell(cell,font,wb, row1, 26, "服务/工程费单价");
+		createCell(cell,font,wb, row1, 27, "列表单价");
+		createCell(cell,font,wb, row1, 28, "结算单价");
+		createCell(cell,font,wb, row1, 29, "国产PL产品销售单价");
+		createCell(cell,font,wb, row1, 30, "");
+		createCell(cell,font,wb, row1, 31, "");
+		createCell(cell,font,wb, row1, 32, "");
+		createCell(cell,font,wb, row1, 33, "");
+		createCell(cell,font,wb, row1, 34, "");
+		createCell(cell,font,wb, row1, 35, "");
+		createCell(cell,font,wb, row1, 36, "");
+		createCell(cell,font,wb, row1, 37, "服务/工程费总价");
+		createCell(cell,font,wb, row1, 38, "列表总价");
+		createCell(cell,font,wb, row1, 39, "结算总价");
+		createCell(cell,font,wb, row1, 40, "折扣率");
+		createCell(cell,font,wb, row1, 41, "入库时间");
+		createCell(cell,font,wb, row1, 42, "");
+		createCell(cell,font,wb, row1, 43, "发货时间");
+		createCell(cell,font,wb, row1, 44, "");
+		createCell(cell,font,wb, row1, 45, "发货金额");
+		createCell(cell,font,wb, row1, 46, "开票时间");
+		createCell(cell,font,wb, row1, 47, "");
+		createCell(cell,font,wb, row1, 48, "开票金额");
+		createCell(cell,font,wb, row1, 49, "系统票号");
+		createCell(cell,font,wb, row1, 50, "回款时间");
+		createCell(cell,font,wb, row1, 51, "");
+		createCell(cell,font,wb, row1, 52, "回款金额");
+		createCell(cell,font,wb, row1, 53, "保证金");
+		createCell(cell,font,wb, row1, 54, "贷款利息");
+		createCell(cell,font,wb, row1, 55, "结算日期");
+		createCell(cell,font,wb, row1, 56, "服务费抬头");
+		createCell(cell,font,wb, row1, 57, "服务费发票金额");
+		createCell(cell,font,wb, row1, 58, "业务费");
+		// 创建第三行
+	    XSSFRow row2 = sheet.createRow(2);
+		createCell(cell,font,wb, row2, 0, "");
+		createCell(cell,font,wb, row2, 1, "");
+		createCell(cell,font,wb, row2, 2, "");
+		createCell(cell,font,wb, row2, 3, "");
+		createCell(cell,font,wb, row2, 4, "");
+		createCell(cell,font,wb, row2, 5, "");
+		createCell(cell,font,wb, row2, 6, "");
+		createCell(cell,font,wb, row2, 7, "");
+		createCell(cell,font,wb, row2, 8, "");
+		createCell(cell,font,wb, row2, 9, "");
+		createCell(cell,font,wb, row2, 10, "PL4200");
+		createCell(cell,font,wb, row2, 11, "");
+		createCell(cell,font,wb, row2, 12, "");
+		createCell(cell,font,wb, row2, 13, "");
+		createCell(cell,font,wb, row2, 14, "PL3000");
+		createCell(cell,font,wb, row2, 15, "");
+		createCell(cell,font,wb, row2, 16, "");
+		createCell(cell,font,wb, row2, 17, "");
+		createCell(cell,font,wb, row2, 18, "SSV3500");
+		createCell(cell,font,wb, row2, 19, "");
+		createCell(cell,font,wb, row2, 20, "");
+		createCell(cell,font,wb, row2, 21, "");
+		createCell(cell,font,wb, row2, 22, "PL2000");
+		createCell(cell,font,wb, row2, 23, "");
+		createCell(cell,font,wb, row2, 24, "");
+		createCell(cell,font,wb, row2, 25, "");
+		createCell(cell,font,wb, row2, 26, "");
+		createCell(cell,font,wb, row2, 27, "");
+		createCell(cell,font,wb, row2, 28, "");
+		createCell(cell,font,wb, row2, 29, "PL4200");
+		createCell(cell,font,wb, row2, 30, "");
+		createCell(cell,font,wb, row2, 31, "PL3000");
+		createCell(cell,font,wb, row2, 32, "");
+		createCell(cell,font,wb, row2, 33, "SSV3500");
+		createCell(cell,font,wb, row2, 34, "");
+		createCell(cell,font,wb, row2, 35, "PL2000");
+		createCell(cell,font,wb, row2, 36, "");
+		createCell(cell,font,wb, row2, 37, "");
+		createCell(cell,font,wb, row2, 38, "");
+		createCell(cell,font,wb, row2, 39, "");
+		createCell(cell,font,wb, row2, 40, "");
+		createCell(cell,font,wb, row2, 41, "");
+		createCell(cell,font,wb, row2, 42, "");
+		createCell(cell,font,wb, row2, 43, "");
+		createCell(cell,font,wb, row2, 44, "");
+		createCell(cell,font,wb, row2, 45, "");
+		createCell(cell,font,wb, row2, 46, "");
+		createCell(cell,font,wb, row2, 47, "");
+		createCell(cell,font,wb, row2, 48, "");
+		createCell(cell,font,wb, row2, 49, "");
+		createCell(cell,font,wb, row2, 50, "");
+		createCell(cell,font,wb, row2, 51, "");
+		createCell(cell,font,wb, row2, 52, "");
+		createCell(cell,font,wb, row2, 53, "");
+		createCell(cell,font,wb, row2, 54, "");
+		createCell(cell,font,wb, row2, 55, "");
+		createCell(cell,font,wb, row2, 56, "");
+		createCell(cell,font,wb, row2, 57, "");
+		createCell(cell,font,wb, row2, 58, "");
+		// 创建第四行
+	    XSSFRow row3 = sheet.createRow(3);
+		createCell(cell,font,wb, row3, 0, "");
+		createCell(cell,font,wb, row3, 1, "");
+		createCell(cell,font,wb, row3, 2, "");
+		createCell(cell,font,wb, row3, 3, "");
+		createCell(cell,font,wb, row3, 4, "");
+		createCell(cell,font,wb, row3, 5, "");
+		createCell(cell,font,wb, row3, 6, "");
+		createCell(cell,font,wb, row3, 7, "");
+		createCell(cell,font,wb, row3, 8, "");
+		createCell(cell,font,wb, row3, 9, "");
+		createCell(cell,font,wb, row3, 10, "规格型号");
+		createCell(cell,font,wb, row3, 11, "数量");
+		createCell(cell,font,wb, row3, 12, "列表单价");
+		createCell(cell,font,wb, row3, 13, "结算单价");
+		createCell(cell,font,wb, row3, 14, "规格型号");
+		createCell(cell,font,wb, row3, 15, "数量");
+		createCell(cell,font,wb, row3, 16, "列表单价");
+		createCell(cell,font,wb, row3, 17, "结算单价");
+		createCell(cell,font,wb, row3, 18, "规格型号");
+		createCell(cell,font,wb, row3, 19, "数量");
+		createCell(cell,font,wb, row3, 20, "列表单价");
+		createCell(cell,font,wb, row3, 21, "结算单价");
+		createCell(cell,font,wb, row3, 22, "规格型号");
+		createCell(cell,font,wb, row3, 23, "数量");
+		createCell(cell,font,wb, row3, 24, "列表单价");
+		createCell(cell,font,wb, row3, 25, "结算单价");
+		createCell(cell,font,wb, row3, 26, "");
+		createCell(cell,font,wb, row3, 27, "");
+		createCell(cell,font,wb, row3, 28, "");
+		createCell(cell,font,wb, row3, 29, "列表总价");
+		createCell(cell,font,wb, row3, 30, "结算总价");
+		createCell(cell,font,wb, row3, 31, "列表总价");
+		createCell(cell,font,wb, row3, 32, "结算总价");
+		createCell(cell,font,wb, row3, 33, "列表总价");
+		createCell(cell,font,wb, row3, 34, "结算总价");
+		createCell(cell,font,wb, row3, 35, "列表总价");
+		createCell(cell,font,wb, row3, 36, "结算总价");
+		createCell(cell,font,wb, row3, 37, "");
+		createCell(cell,font,wb, row3, 38, "");
+		createCell(cell,font,wb, row3, 39, "");
+		createCell(cell,font,wb, row3, 40, "");
+		createCell(cell,font,wb, row3, 41, "年");
+		createCell(cell,font,wb, row3, 42, "月");
+		createCell(cell,font,wb, row3, 43, "年");
+		createCell(cell,font,wb, row3, 44, "月");
+		createCell(cell,font,wb, row3, 45, "");
+		createCell(cell,font,wb, row3, 46, "年");
+		createCell(cell,font,wb, row3, 47, "月");
+		createCell(cell,font,wb, row3, 48, "");
+		createCell(cell,font,wb, row3, 49, "");
+		createCell(cell,font,wb, row3, 50, "年");
+		createCell(cell,font,wb, row3, 51, "月");
+		createCell(cell,font,wb, row3, 52, "");
+		createCell(cell,font,wb, row3, 53, "");
+		createCell(cell,font,wb, row3, 54, "");
+		createCell(cell,font,wb, row3, 55, "");
+		createCell(cell,font,wb, row3, 56, "");
+		createCell(cell,font,wb, row3, 57, "");
+		createCell(cell,font,wb, row3, 58, "");
+		for(int i=0;i<10;i++){
+			CellRangeAddress regionrow = new CellRangeAddress(1,3,i,i);
+			sheet.addMergedRegion(regionrow);
+		}
+		for(int i=26;i<29;i++){
+			CellRangeAddress regionrow = new CellRangeAddress(1,3,i,i);
+			sheet.addMergedRegion(regionrow);
+		}
+		for(int i=37;i<41;i++){
+			CellRangeAddress regionrow = new CellRangeAddress(1,3,i,i);
+			sheet.addMergedRegion(regionrow);
+		}
+		CellRangeAddress regionrow45 = new CellRangeAddress(1,3,45,45);
+		sheet.addMergedRegion(regionrow45);
+		CellRangeAddress regionrow48 = new CellRangeAddress(1,3,48,48);
+		sheet.addMergedRegion(regionrow48);
+		CellRangeAddress regionrow49 = new CellRangeAddress(1,3,49,49);
+		sheet.addMergedRegion(regionrow49);
+		for(int i=52;i<59;i++){
+			CellRangeAddress regionrow = new CellRangeAddress(1,3,i,i);
+			sheet.addMergedRegion(regionrow);
+		}
+		CellRangeAddress regionrow1025 = new CellRangeAddress(1,1,10,25);
+		sheet.addMergedRegion(regionrow1025);
+		CellRangeAddress regionrow1013 = new CellRangeAddress(2,2,10,13);
+		sheet.addMergedRegion(regionrow1013);
+		CellRangeAddress regionrow2936 = new CellRangeAddress(1,1,29,36);
+		sheet.addMergedRegion(regionrow2936);
+		CellRangeAddress regionrow1417 = new CellRangeAddress(2,2,14,17);
+		sheet.addMergedRegion(regionrow1417);
+		CellRangeAddress regionrow1821 = new CellRangeAddress(2,2,18,21);
+		sheet.addMergedRegion(regionrow1821);
+		CellRangeAddress regionrow2225 = new CellRangeAddress(2,2,22,25);
+		sheet.addMergedRegion(regionrow2225);
+		CellRangeAddress regionrow2930 = new CellRangeAddress(2,2,29,30);
+		sheet.addMergedRegion(regionrow2930);
+		CellRangeAddress regionrow3132 = new CellRangeAddress(2,2,31,32);
+		sheet.addMergedRegion(regionrow3132);
+		CellRangeAddress regionrow3334 = new CellRangeAddress(2,2,33,34);
+		sheet.addMergedRegion(regionrow3334);
+		CellRangeAddress regionrow3536 = new CellRangeAddress(2,2,35,36);
+		sheet.addMergedRegion(regionrow3536);
+		CellRangeAddress regionrow4142 = new CellRangeAddress(1,1,41,42);
+		sheet.addMergedRegion(regionrow4142);
+		CellRangeAddress regionrow4344 = new CellRangeAddress(1,1,43,44);
+		sheet.addMergedRegion(regionrow4344);
+		CellRangeAddress regionrow4647 = new CellRangeAddress(1,1,46,47);
+		sheet.addMergedRegion(regionrow4647);
+		CellRangeAddress regionrow5051 = new CellRangeAddress(1,1,50,51);
+		sheet.addMergedRegion(regionrow5051);
+	}
+	/**
+	 * 创建单元格
+	 * @param wb excel表格
+	 * @param row 行
+	 * @param col 列
+	 * @param val 内容
+	 */
+	public void createCell(XSSFCell cell,XSSFFont font,XSSFWorkbook wb,XSSFRow row,int col,String val){
+		//创建一个celll单元格
+		cell=row.createCell(col);
+		cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
+        cell.setCellValue(val);
+        //创建样式
+        XSSFCellStyle cellstyle=wb.createCellStyle();
+        cellstyle.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        cellstyle.setBorderTop(XSSFCellStyle.BORDER_THIN);//带上边框
+        cellstyle.setBorderRight(XSSFCellStyle.BORDER_THIN);//带右边框
+        cellstyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);//带下边框
+        cellstyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);//带左边框
+        //cellstyle.setBorderLeft(BorderStyle.DASH_DOT);
+        cellstyle.setWrapText(true);//设置自动换行
+        cell.setCellStyle(cellstyle);//给单元格设置样式
+        font = wb.createFont();
+        font.setFontName("宋体");
+        font.setFontHeightInPoints((short)12);
+        cellstyle.setFont(font);
+	}
+	@Override
+	public void savelngpre(List<Receivable> receivableList) throws Exception {
+		if(null!=receivableList&&receivableList.size()>0){
+			Receivable receivableTemp = null;
+			for(Receivable receivable:receivableList){
+				receivableTemp = receivableDao.getById(receivable.getReceivableid());
+				if(null!=receivable&&null!=receivable.getLngmoneypre()){
+					receivableTemp.setLngmoneypre(receivable.getLngmoneypre());
+					receivableDao.update(receivableTemp);
+				}
+			}
+		}
+	}
+	//@Override
+	public void exportExcelStatic2007(HttpServletResponse response,List<Receivable> receivables) throws Exception {
+		XSSFWorkbook wb = new XSSFWorkbook();
+		XSSFSheet sheet = wb.createSheet("合同_奖励_序时簿");
+		createHeadAndStyle(sheet,wb);
+		XSSFRow row;
+		XSSFCell cell = null;
+		XSSFFont font = null;
+		List<List<String>> list = createwritelist(receivables);
+		List<String> tmp = null;
+		for(int i=0;i<list.size();i++){
+			tmp = list.get(i);
+			row = sheet.createRow(i+4);
+			createCell(cell,font,wb, row, 0, "");
+			createCell(cell,font,wb, row, 1, tmp.get(1));
+			createCell(cell,font,wb, row, 2, tmp.get(2));
+			createCell(cell,font,wb, row, 3, tmp.get(3));
+			createCell(cell,font,wb, row, 4, tmp.get(4));
+			createCell(cell,font,wb, row, 5, tmp.get(5));
+			createCell(cell,font,wb, row, 6, tmp.get(6));
+			createCell(cell,font,wb, row, 7, tmp.get(7));
+			createCell(cell,font,wb, row, 8, tmp.get(8));
+			createCell(cell,font,wb, row, 9, tmp.get(9));
+			createCell(cell,font,wb, row, 10, tmp.get(10));
+			createCell(cell,font,wb, row, 11, tmp.get(11));
+			createCell(cell,font,wb, row, 12, tmp.get(12));
+			createCell(cell,font,wb, row, 13, tmp.get(13));
+			createCell(cell,font,wb, row, 14, tmp.get(14));
+			createCell(cell,font,wb, row, 15, tmp.get(15));
+			createCell(cell,font,wb, row, 16, tmp.get(16));
+			createCell(cell,font,wb, row, 17, tmp.get(17));
+			createCell(cell,font,wb, row, 18, tmp.get(18));
+			createCell(cell,font,wb, row, 19, tmp.get(19));
+			createCell(cell,font,wb, row, 20, tmp.get(20));
+			createCell(cell,font,wb, row, 21, tmp.get(21));
+			createCell(cell,font,wb, row, 22, tmp.get(22));
+			createCell(cell,font,wb, row, 23, tmp.get(23));
+			createCell(cell,font,wb, row, 24, tmp.get(24));
+			createCell(cell,font,wb, row, 25, tmp.get(25));
+			createCell(cell,font,wb, row, 26, tmp.get(26));
+			createCell(cell,font,wb, row, 27, tmp.get(27));
+			createCell(cell,font,wb, row, 28, tmp.get(28));
+			createCell(cell,font,wb, row, 29, tmp.get(29));
+			createCell(cell,font,wb, row, 30, tmp.get(30));
+			createCell(cell,font,wb, row, 31, tmp.get(31));
+			createCell(cell,font,wb, row, 32, tmp.get(32));
+			createCell(cell,font,wb, row, 33, tmp.get(33));
+			createCell(cell,font,wb, row, 44, tmp.get(34));
+			createCell(cell,font,wb, row, 35, tmp.get(35));
+			createCell(cell,font,wb, row, 36, tmp.get(36));
+			createCell(cell,font,wb, row, 37, tmp.get(37));
+			createCell(cell,font,wb, row, 38, tmp.get(38));
+			createCell(cell,font,wb, row, 39, tmp.get(39));
+			createCell(cell,font,wb, row, 40, tmp.get(40));
+			createCell(cell,font,wb, row, 41, tmp.get(41));
+			createCell(cell,font,wb, row, 42, tmp.get(42));
+			createCell(cell,font,wb, row, 43, tmp.get(43));
+			createCell(cell,font,wb, row, 44, tmp.get(44));
+			createCell(cell,font,wb, row, 45, tmp.get(45));
+			createCell(cell,font,wb, row, 46, tmp.get(46));
+			createCell(cell,font,wb, row, 47, tmp.get(47));
+			createCell(cell,font,wb, row, 48, tmp.get(48));
+			createCell(cell,font,wb, row, 49, tmp.get(49));
+			createCell(cell,font,wb, row, 50, tmp.get(50));
+			createCell(cell,font,wb, row, 51, tmp.get(51));
+			createCell(cell,font,wb, row, 52, tmp.get(52));
+			createCell(cell,font,wb, row, 53, tmp.get(53));
+			createCell(cell,font,wb, row, 54, tmp.get(54));
+			createCell(cell,font,wb, row, 55, tmp.get(55));
+			createCell(cell,font,wb, row, 56, tmp.get(56));
+			createCell(cell,font,wb, row, 57, tmp.get(57));
+			createCell(cell,font,wb, row, 58, tmp.get(58));
+			System.out.println("=="+i);
+		}
+		
+		wb.write(response.getOutputStream());
+	}
+	public void checkcomplete(){
+		List<Long> list = new ArrayList<Long>();
+		ReceivableQuery query = new ReceivableQuery();
+		query.setFclass("A");
+		query.setCompleteA(1);
+		List<Receivable> receivableList = receivableDao.findList(query);
+		for(Receivable re:receivableList){
+			Double refund = 0D;
+			if(null!=re.getForderrefunds()&&re.getForderrefunds().size()>0){
+				for(Forderrefund ff:re.getForderrefunds()){
+					refund += replaceNull(ff.getFamount());
+				}
+				if(refund.doubleValue()<re.getFamount()){
+					re.setCompleteA(0);
+					//receivableDao.update(re);
+					list.add(re.getReceivableid());
+				}
+			}
+		}
+		System.out.println(list.size());
+	}
+}

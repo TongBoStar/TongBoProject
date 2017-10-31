@@ -1,0 +1,159 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Job;
+import com.terrence.crm.dol.bean.JobCheck;
+import com.terrence.crm.dol.bean.Task;
+import com.terrence.crm.dol.query.JobCheckQuery;
+import com.terrence.crm.dol.dao.IJobCheckDao;
+import com.terrence.crm.dol.dao.IJobDao;
+import com.terrence.crm.dol.dao.ITaskDao;
+import com.terrence.crm.dol.service.IJobCheckService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class JobCheckService extends BaseService implements IJobCheckService {
+	protected static Logger logger = LoggerFactory.getLogger(JobCheckService.class);
+	@Autowired
+	@Qualifier("jobCheckDao")
+	private IJobCheckDao jobCheckDao;
+	@Autowired
+	@Qualifier("jobDao")
+	private IJobDao jobDao;
+	@Autowired
+	@Qualifier("taskDao")
+	private ITaskDao taskDao;
+	public String getIbatisSqlMapNamespace() {
+		return "JobCheck";
+	}
+	@Transactional(readOnly=true)
+	public JobCheck getById(java.lang.Long id) throws ServiceException
+	{
+		return jobCheckDao.getById(id);
+	}
+	
+	public void saveOrUpdate(JobCheck entity) throws ServiceException
+	{
+		entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());
+		jobCheckDao.saveOrUpdate(entity);
+		Job job=new Job();
+		job.setJobid(entity.getJobid());
+		job.setCheckstatus(Job.CHECKSTATUS_FINAL);
+		jobDao.update(job);
+	}
+	
+	public java.lang.Long save(JobCheck entity) throws ServiceException
+	{
+		//System.out.println("Jobid:"+entity.getJobid());
+		//System.out.println("status:"+entity.getCheckstatus());
+		Job job=jobDao.getById(entity.getJobid());
+	  Task task = taskDao.getById(job.getTaskid());
+			entity.setCreatetime(new Date());//创建时间
+			entity.setChecknum(job.getAmount());//检查数
+			entity.setAcceptnum(0L);//合格数
+			entity.setOperationdiscard(0L);//工废
+			entity.setItemdiscardnum(0L);//料废
+			entity.setRepairnum(0L);//返修数
+			entity.setRepariacceptnum(0L);//返修合格数
+			entity.setCheckemp(-1L);//质检人员
+			entity.setFeesinnum(0L);//--投料数？
+			entity.setRework(0L);//返工数
+			entity.setReceviernum(0L);//让步接收数
+			entity.setExplain("");//备注
+//			entity.setCheckstatus;-已赋值--申请中状态2
+//			entity.setReqemp();-已赋值-当前用户
+			entity.setItemcode(task.getItemcode());
+			entity.setItemname(task.getItemname());
+			entity.setProcessid(job.getProcessid());
+			entity.setTaskid(job.getTaskid());
+			entity.setBatchno(task.getBatchno());
+			entity.setTeamid(job.getTeamid());
+			entity.setJobid(job.getJobid());
+			entity.setItemname(task.getTaskname());
+			entity.setPrice(job.getPrice());
+		job.setCheckstatus(Job.CHECKSTATUS_WAITING);////2:质检完成,0：未检查,1:申请中
+		jobDao.saveOrUpdate(job);//改变job的检查状态
+		Long adId = jobCheckDao.save(entity);//
+		return adId;
+	}
+	
+	public Integer update(JobCheck entity) throws ServiceException
+	{
+		Integer returnValue =  jobCheckDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = jobCheckDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = jobCheckDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		JobCheckQuery query = new JobCheckQuery();
+		try {
+			return jobCheckDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<JobCheck> findPage(Page<JobCheck> page, JobCheckQuery query) throws ServiceException
+	{
+		return jobCheckDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<JobCheck> findList(JobCheckQuery query) throws ServiceException
+	{
+		return jobCheckDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<JobCheck> findList(JobCheckQuery query,Integer pageSize) throws ServiceException
+	{
+		return jobCheckDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<JobCheck> findAllList() throws ServiceException
+	{
+		return jobCheckDao.findAllList();
+	}
+
+}

@@ -1,0 +1,48 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+
+@Repository
+public class WorkPlanDao extends BaseIbatisDao<WorkPlan,java.lang.Long> implements IWorkPlanDao{
+
+		
+	public void saveOrUpdate(WorkPlan entity) {
+		if(entity.getWorkplanid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WorkPlan";
+	}
+	public WorkPlan getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WorkPlan)this.getSqlMapClientTemplate().queryForObject("WorkPlan.getByProperty", map);		
+	}
+
+	@Override
+	public Double getByPlanednum(String itemcode) {
+		
+		return (Double)this.getSqlMapClientTemplate().queryForObject("planednum", itemcode);
+	}
+
+	@Override
+	public WorkPlan findEntity(WorkPlan entity) {
+		return (WorkPlan) this.getSqlMapClientTemplate().queryForObject("WorkPlan.find.plannum.for.baseitem.planfqty", entity);
+	}
+
+}

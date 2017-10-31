@@ -1,0 +1,154 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.OrgOrggorup;
+import com.terrence.crm.dol.bean.Organization;
+import com.terrence.crm.dol.query.OrgOrggorupQuery;
+import com.terrence.crm.dol.dao.IOrgOrggorupDao;
+import com.terrence.crm.dol.dao.IOrganizationDao;
+import com.terrence.crm.dol.service.IOrgOrggorupService;
+
+@Service
+@Transactional
+public class OrgOrggorupService extends BaseService implements IOrgOrggorupService {
+	protected static Logger logger = LoggerFactory.getLogger(OrgOrggorupService.class);
+	@Autowired
+	@Qualifier("orgOrggorupDao")
+	private IOrgOrggorupDao orgOrggorupDao;
+	
+	@Autowired
+	@Qualifier("organizationDao")
+	private IOrganizationDao organizationDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "OrgOrggorup";
+	}
+	@Transactional(readOnly=true)
+	public OrgOrggorup getById(java.lang.Long id) throws ServiceException
+	{
+		return orgOrggorupDao.getById(id);
+	}
+	
+	public void saveOrUpdate(OrgOrggorup entity) throws ServiceException
+	{
+		orgOrggorupDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(OrgOrggorup entity) throws ServiceException
+	{
+		Long adId = orgOrggorupDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(OrgOrggorup entity) throws ServiceException
+	{
+		Integer returnValue =  orgOrggorupDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = orgOrggorupDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		OrgOrggorup orggorup = orgOrggorupDao.getById(Long.valueOf(delIds));
+		Organization organization = organizationDao.getById(orggorup.getFinnerid());
+		if(organization.getFgroups()==null || organization.getFgroups() <=0){
+			
+		}else{
+			organization.setFgroups(organization.getFgroups()-1);
+		}
+		organizationDao.update(organization);
+		Integer returnValue = orgOrggorupDao.deleteByMultipleId(delIds);
+		
+		
+		return returnValue;
+	}
+	
+	public Integer deleteByFinnerid(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = orgOrggorupDao.deleteByMultipleId("OrgOrggorup.deleteByFinnerid", delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrgOrggorupQuery query = new OrgOrggorupQuery();
+		try {
+			return orgOrggorupDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<OrgOrggorup> findPage(Page<OrgOrggorup> page, OrgOrggorupQuery query) throws ServiceException
+	{
+		return orgOrggorupDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<OrgOrggorup> findPage(Page<OrgOrggorup> page,String statement, OrgOrggorupQuery query) throws ServiceException
+	{
+		return orgOrggorupDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrgOrggorup> findList(OrgOrggorupQuery query) throws ServiceException
+	{
+		return orgOrggorupDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrgOrggorup> findList(OrgOrggorupQuery query,Integer pageSize) throws ServiceException
+	{
+		return orgOrggorupDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<OrgOrggorup> findList(OrgOrggorupQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return orgOrggorupDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<OrgOrggorup> findAllList() throws ServiceException
+	{
+		return orgOrggorupDao.findAllList();
+	}
+	@Override
+	@Transactional(readOnly=true)
+	public void findListById(List<Long> checkedIdList) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

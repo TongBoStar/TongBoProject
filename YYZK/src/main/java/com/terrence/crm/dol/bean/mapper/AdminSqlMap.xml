@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+
+<!-- 不使用namespace是由于sql搜索定位会比较方便 -->
+<sqlMap>
+
+    <resultMap id="RM.Admin" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminId" column="adminId"/>
+        <result property="adminName" column="adminName"/>
+        <result property="loginName" column="loginName"/>
+        <result property="password" column="password"/>
+        <result property="createdTime" column="createdTime"/>
+        <result property="modifiedTime" column="modifiedTime"/>
+        <result property="lastLoginTime" column="lastLoginTime"/>
+        <result property="status" column="status"/>
+        <result property="type" column="type"/>
+        <result property="orgId" column="orgId"/>
+        <result property="telNumber" column="telNumber"/>
+        <result property="idCard" column="idCard"/>
+        <result property="idType" column="idType"/>
+        <result property="wxCode" column="wxCode"/>
+        <result property="headerUrl" column="headerUrl"/>
+        <result property="stars" column="stars"/>
+        <result property="orders" column="orders"/>
+        <result property="avprice" column="avprice"/>
+        <result property="sex" column="sex"/>
+        <result property="country" column="country"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="area" column="area"/>
+        <result property="timeScore" column="timeScore"/>
+        <result property="artScore" column="artScore"/>
+        <result property="serviceScore" column="serviceScore"/>
+        <result property="moduleCode" column="moduleCode"/>
+        <result property="adminCode" column="adminCode"/>
+        <result property="zfbCode" column="zfbCode"/>
+        <result property="ylCard" column="ylCard"/>
+        <result property="ylCardType" column="ylCardType"/>
+        <result property="wxCard" column="wxCard"/>
+        <result property="email" column="email"/>
+        <result property="fremark" column="fremark"/>
+        <result property="examineTime" column="examineTime"/>
+        <result property="isdel" column="isdel"/>
+        <result property="upUserId" column="upUserId"/>
+        <result property="upUserName" column="upUserName"/>
+        <result property="saleagreeTime" column="saleagreeTime"/>
+        <result property="issaleagree" column="issaleagree"/>
+        <result property="organization" resultMap="Admin.Organization"/>
+    </resultMap>
+    <resultMap id="Admin.Organization" class="com.terrence.crm.dol.bean.Organization">
+       <result property="orgName" column="orgName"/>
+       <result property="orgAddress" column="orgAddress"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Admin.columns">
+	    <![CDATA[
+        t_admin.adminId ,t_admin.adminName, t_admin.loginName ,t_admin.password ,t_admin.createdTime ,
+        t_admin.modifiedTime , t_admin.lastLoginTime, t_admin.status ,t_admin.type ,t_admin.email ,
+        t_admin.orgId,t_admin.telNumber,t_admin.idCard,t_admin.idType,t_admin.wxCode,t_admin.headerUrl ,
+        t_admin.stars,t_admin.orders,t_admin.avprice,t_admin.sex,t_admin.country,t_admin.province,
+        t_admin.city,t_admin.area,t_admin.artScore,t_admin.timeScore,t_admin.serviceScore,t_admin.moduleCode,t_admin.adminCode,
+        t_admin.zfbCode ,t_admin.ylCard ,t_admin.ylCardType ,t_admin.wxCard ,t_admin.fremark,t_admin.examineTime,t_admin.isdel,
+        t_admin.upUserId,t_admin.saleagreeTime,t_admin.issaleagree   
+	    ]]>
+	</sql>
+	
+    <insert id="Admin.insert" >
+        INSERT INTO t_admin (
+        	adminName ,
+       	 	loginName ,
+       	 	password ,
+       	 	createdTime ,
+       	 	modifiedTime ,
+       	 	lastLoginTime,       	 	
+       	 	status ,
+       	 	type,
+        	email ,
+        	orgId,
+        	telNumber,
+        	idCard,
+        	idType,
+        	wxCode,
+        	headerUrl,
+        	stars,
+        	orders,
+        	avprice,
+        	sex,
+        	country,
+        	province,
+        	city,
+        	area,
+        	timeScore,
+        	artScore,
+        	serviceScore,
+        	moduleCode ,
+        	adminCode,
+        	zfbCode ,
+        	ylCard ,
+        	ylCardType ,
+        	wxCard ,
+        	fremark,
+        	examineTime ,
+        	isdel ,
+        	upUserId,
+        	saleagreeTime
+        ) VALUES (
+        	#adminName# ,
+        	#loginName# ,
+        	#password# ,
+        	#createdTime# ,
+        	#modifiedTime# ,
+        	#lastLoginTime# ,
+        	#status# ,
+        	#type#,
+        	#email#,
+        	#orgId#,
+        	#telNumber#,
+        	#idCard#,
+        	#idType#,
+        	#wxCode#,
+        	#headerUrl#,
+        	#stars#,
+        	#orders#,
+        	#avprice#,
+        	#sex#,
+        	#country#,
+        	#province#,
+        	#city#,
+        	#area#,
+        	#timeScore#,
+        	#artScore#,
+        	#serviceScore#,
+        	#moduleCode# ,
+        	#adminCode# ,
+        	#zfbCode# ,
+        	#ylCard# ,
+        	#ylCardType# ,
+        	#wxCard# ,
+        	#fremark#,
+        	#examineTime# ,
+        	#isdel#,
+        	#upUserId#,
+        	#saleagreeTime#
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="adminId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+    <update id="Admin.update" >
+        UPDATE t_admin 
+        	<dynamic prepend="SET">
+       			<isNotEmpty prepend="," property="loginName">
+        			adminName = #adminName# 
+        		 </isNotEmpty>
+        		<isNotEmpty prepend="," property="loginName">
+        			loginName = #loginName# 
+        		 </isNotEmpty>
+        		<isNotEmpty prepend="," property="password">
+        			password = #password# 
+        		 </isNotEmpty>
+        		<isNotEmpty prepend="," property="createdTime">
+        			createdTime = #createdTime# 
+        		 </isNotEmpty>
+        		<isNotEmpty prepend="," property="modifiedTime">
+        			modifiedTime = #modifiedTime# 
+        		 </isNotEmpty>
+        		 <isNotEmpty prepend="," property="lastLoginTime">
+        			lastLoginTime = #lastLoginTime# 
+        		 </isNotEmpty>
+        		<isNotEmpty prepend="," property="status">
+        			status = #status# 
+        		 </isNotEmpty>
+        		 <isNotEmpty prepend="," property="type">
+        			type = #type# 
+        		 </isNotEmpty>
+		        <isNotEmpty prepend="," property="orgId">
+		        	orgId = #orgId# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="telNumber">
+		        	telNumber = #telNumber# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="idCard">
+		        	idCard = #idCard# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="idCard">
+		        	idCard = #idCard# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="wxCode">
+		        	wxCode = #wxCode# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="headerUrl">
+		        	headerUrl = #headerUrl# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="stars">
+		        	stars = #stars# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="orders">
+		        	orders = #orders# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="avprice">
+		        	avprice = #avprice# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="sex">
+		        	sex = #sex# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="country">
+		        	country = #country# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="province">
+		        	province = #province# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="city">
+		        	city = #city# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="timeScore">
+		        	timeScore = #timeScore# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="artScore">
+		        	artScore = #artScore# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="serviceScore">
+		        	serviceScore = #serviceScore# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="moduleCode">
+		        	moduleCode = #moduleCode# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="area">
+		        	area = #area# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="adminCode">
+		        	adminCode = #adminCode# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="email">
+		        	email = #email# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="zfbCode">
+		        	zfbCode = #zfbCode# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="ylCard">
+		        	ylCard = #ylCard# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="ylCardType">
+		        	ylCardType = #ylCardType# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="wxCard">
+		        	wxCard = #wxCard# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="fremark">
+		        	fremark = #fremark# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="examineTime">
+		        	examineTime = #examineTime# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="isdel">
+		        	isdel = #isdel# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="upUserId">
+		        	upUserId = #upUserId# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="saleagreeTime">
+		        	saleagreeTime = #saleagreeTime# 
+		        </isNotEmpty>
+	        </dynamic>	
+        WHERE 
+	        t_admin.adminId = #adminId# 
+    </update>
+
+    <delete id="Admin.delete">
+    <![CDATA[
+        DELETE FROM t_admin WHERE adminId = #adminId# 
+    ]]>
+    </delete>
+    
+    <delete id="Admin.deleteMultiple">
+    <![CDATA[
+        DELETE FROM t_admin WHERE adminId in ($adminId$) 
+    ]]>
+    </delete>
+    <update id="Admin.updateByMultipleId">
+    	<![CDATA[
+        UPDATE t_admin SET isdel=1 WHERE adminId in ($adminId$) 
+    	]]>
+    </update>
+    
+    <select id="Admin.getById" resultMap="RM.Admin">
+	    SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress ,ta1.adminName upUserName  
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id 
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+	        WHERE t_admin.adminId = #adminId# 
+    </select>
+    
+	<sql id="Admin.findPage.where">
+	    <dynamic prepend="WHERE">
+	       <isNotEmpty prepend="AND" property="adminId">
+	             t_admin.adminId = #adminId#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminName">
+	             t_admin.adminName like ('%$adminName$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="loginName">
+	             t_admin.loginName like ('%$loginName$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="password">
+	             t_admin.password = #password#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdTimeBegin">
+	             t_admin.createdTime &gt;= #createdTimeBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdTimeEnd">
+	             t_admin.createdTime &lt;= #createdTimeEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="modifiedTimeBegin">
+	             t_admin.modifiedTime &gt;= #modifiedTimeBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="modifiedTimeEnd">
+	             t_admin.modifiedTime &lt;= #modifiedTimeEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastLoginTimeBegin">
+	             t_admin.lastLoginTime &gt;= #lastLoginTimeBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastLoginTimeEnd">
+	             t_admin.lastLoginTime &lt;= #lastLoginTimeEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="status">
+	             t_admin.status = #status#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="type">
+	             t_admin.type = #type#
+	       </isNotEmpty>
+		   <isNotEmpty prepend="AND" property="email">
+	             t_admin.email = #email#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="orgId">
+	             t_admin.orgId = #orgId#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="telNumber">
+	             t_admin.telNumber = #telNumber#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="idCard">
+	             t_admin.idCard = #idCard#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="idType">
+	             t_admin.idType = #idType#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="wxCode">
+	             t_admin.wxCode = #wxCode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="headerUrl">
+	             t_admin.headerUrl = #headerUrl#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="stars">
+	             t_admin.stars = #stars#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="orders">
+	             t_admin.orders = #orders#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="avprice">
+	             t_admin.avprice = #avprice#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sex">
+	             t_admin.sex = #sex#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="country">
+	             t_admin.country = #country#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="province">
+	             t_admin.province = #province#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="city">
+	             t_admin.city = #city#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="area">
+	             t_admin.area = #area#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="timeScore">
+	             t_admin.timeScore = #timeScore#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="artScore">
+	             t_admin.artScore = #artScore#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="serviceScore">
+	             t_admin.serviceScore = #serviceScore#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="moduleCode">
+	             t_admin.moduleCode = #moduleCode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminCode">
+	             t_admin.adminCode = #adminCode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fremark">
+	             t_admin.fremark = #fremark#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="examineTime">
+	             t_admin.examineTime = #examineTime#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isdel">
+	             t_admin.isdel = #isdel#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="upUserId">
+	             t_admin.upUserId = #upUserId#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="saleagreeTime">
+	             t_admin.saleagreeTime = #saleagreeTime#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="issaleagree">
+	             t_admin.issaleagree = #issaleagree#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	<sql id="Admin.findPage.and">
+       <isNotEmpty prepend="AND" property="adminId">
+             t_admin.adminId = #adminId#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="adminName">
+             t_admin.adminName like ('%$adminName$%')
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="loginName">
+             t_admin.loginName like ('%$loginName$%')
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="password">
+             t_admin.password = #password#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="createdTimeBegin">
+             t_admin.createdTime &gt;= #createdTimeBegin#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="createdTimeEnd">
+             t_admin.createdTime &lt;= #createdTimeEnd#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="modifiedTimeBegin">
+             t_admin.modifiedTime &gt;= #modifiedTimeBegin#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="modifiedTimeEnd">
+             t_admin.modifiedTime &lt;= #modifiedTimeEnd#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="lastLoginTimeBegin">
+             t_admin.lastLoginTime &gt;= #lastLoginTimeBegin#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="lastLoginTimeEnd">
+             t_admin.lastLoginTime &lt;= #lastLoginTimeEnd#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="status">
+             t_admin.status = #status#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="type">
+             t_admin.type = #type#
+       </isNotEmpty>
+		<isNotEmpty prepend="AND" property="email">
+             t_admin.email = #email#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="orgId">
+             t_admin.orgId = #orgId#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="telNumber">
+             t_admin.telNumber = #telNumber#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="idCard">
+             t_admin.idCard = #idCard#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="idType">
+             t_admin.idType = #idType#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="wxCode">
+             t_admin.wxCode = #wxCode#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="headerUrl">
+             t_admin.headerUrl = #headerUrl#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="stars">
+             t_admin.stars = #stars#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="orders">
+             t_admin.orders = #orders#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="avprice">
+             t_admin.avprice = #avprice#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="sex">
+             t_admin.sex = #sex#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="country">
+             t_admin.country = #country#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="province">
+             t_admin.province = #province#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="city">
+             t_admin.city = #city#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="area">
+             t_admin.area = #area#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="timeScore">
+             t_admin.timeScore = #timeScore#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="artScore">
+             t_admin.artScore = #artScore#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="serviceScore">
+             t_admin.serviceScore = #serviceScore#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="moduleCode">
+             t_admin.moduleCode = #moduleCode#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="adminCode">
+             t_admin.adminCode = #adminCode#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="fremark">
+             t_admin.fremark = #fremark#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="examineTime">
+             t_admin.examineTime = #examineTime#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="isdel">
+             t_admin.isdel = #isdel#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="upUserId">
+             t_admin.upUserId = #upUserId#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="saleagreeTime">
+             t_admin.saleagreeTime = #saleagreeTime#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="issaleagree">
+             t_admin.issaleagree = #issaleagree#
+       </isNotEmpty>
+	</sql>
+    <select id="Admin.findPage.count" resultClass="long">
+         SELECT count(*) FROM t_admin <include refid="Admin.findPage.where"/>    
+    </select>
+   
+    <select id="Admin.findPage" resultMap="RM.Admin">
+    	SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress  ,ta1.adminName upUserName 
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id 
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+		<include refid="Admin.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+   
+    <select id="Admin.findList" resultMap="RM.Admin">
+    	SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress  ,ta1.adminName upUserName 
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id 
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+		<include refid="Admin.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Admin.getByLoginName" resultMap="RM.Admin" >
+	    SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress  ,ta1.adminName upUserName 
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+    	 WHERE t_admin.loginName = #loginName#
+    </select>
+    <select id="Admin.findByWxCode" resultMap="RM.Admin" >
+	    SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress  ,ta1.adminName upUserName 
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+    	 WHERE t_admin.wxCode = #wxCode#
+    </select>
+    <update id="Admin.update.bywxcode" >
+        UPDATE t_admin set adminName=#adminName# ,loginName=#loginName#,idCard=#idCard# ,telNumber=#telNumber#,status=#status#,password=#password#,
+        email=#email#,zfbCode = #zfbCode#,ylCard = #ylCard#,ylCardType = #ylCardType#,wxCard=#wxCard#  WHERE wxCode = #wxCode# 
+    </update>
+    <update id="Admin.update.accessxieyi.bywxcode" >
+        UPDATE t_admin set issaleagree=#issaleagree# ,saleagreeTime=#saleagreeTime# WHERE wxCode = #wxCode# 
+    </update>
+    <select id="Admin.getByAdminCode" resultMap="RM.Admin" >
+	    SELECT <include refid="Admin.columns"/>,t_organization.orgName,t_organization.orgAddress  ,ta1.adminName upUserName 
+    	FROM t_admin 
+    	left join t_organization on t_admin.orgId = t_organization.id
+    	left join t_admin ta1 on t_admin.upUserId = ta1.adminId 
+    	 WHERE t_admin.adminCode = #adminCode#
+    </select>
+</sqlMap>

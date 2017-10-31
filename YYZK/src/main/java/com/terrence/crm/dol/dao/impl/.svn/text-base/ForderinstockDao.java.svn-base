@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Forderinstock;
+import com.terrence.crm.dol.dao.IForderinstockDao;
+
+@Repository
+public class ForderinstockDao extends BaseIbatisDao<Forderinstock,java.lang.Long> implements IForderinstockDao{
+
+		
+	public void saveOrUpdate(Forderinstock entity) {
+		if(entity.getFentryid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Forderinstock";
+	}
+	public Forderinstock getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Forderinstock)this.getSqlMapClientTemplate().queryForObject("Forderinstock.getByProperty", map);		
+	}
+
+	@Override
+	public List<Forderinstock> findByMakeNumberCode(Map<String, String> map) {
+		return this.getSqlMapClientTemplate().queryForList("Forderinstock.findByMakeNumberCode", map);
+	}
+
+}

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Area">
+
+    <resultMap id="RM.Area" class="com.terrence.crm.dol.bean.Area">
+        <result property="areaid" column="areaid"/>
+        <result property="areaname" column="areaname"/>
+        <result property="adminid" column="adminid"/>
+        
+        <result property="fitemid" column="fitemid"/>
+        <result property="fnumber" column="fnumber"/>
+    </resultMap>
+	<resultMap id="RM.Area.list" class="com.terrence.crm.dol.bean.Area">
+        <result property="areaid" column="areaid"/>
+        <result property="areaname" column="areaname"/>
+        <result property="adminid" column="adminid"/>
+        <result property="admin" resultMap="RM.Admin.Name"/>
+        
+        <result property="fitemid" column="fitemid"/>
+        <result property="fnumber" column="fnumber"/>
+    </resultMap>
+	
+	<resultMap id="RM.Admin.Name" class="com.terrence.crm.dol.bean.Admin">
+		<result property="adminName" column="adminName"/>
+	</resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Area.columns">
+	    <![CDATA[
+        	t_area.areaid ,
+        	t_area.areaname ,
+        	t_area.adminid ,
+        	t_area.fitemid,
+        	t_area.fnumber
+	    ]]>
+	</sql>
+	
+   <insert id="Area.insert" >
+   
+        INSERT INTO
+        t_area (
+        	areaname 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="adminid">
+        			adminid
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fitemid">
+        			fitemid
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">
+        			fnumber
+        		</isNotEmpty>
+        	</dynamic>
+        ) VALUES (
+        	#areaname# 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="adminid">
+        			#adminid#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fitemid">
+        			#fitemid#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">
+        			#fnumber#
+        		</isNotEmpty>
+        	</dynamic>
+        )
+   
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="areaid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Area.update" parameterClass="com.terrence.crm.dol.bean.Area">         
+        UPDATE t_area 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="areaname">
+	        	areaname = #areaname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fitemid">
+       			fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="fnumber">
+       			fnumber=#fnumber#
+       		</isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        areaid = #areaid# 
+    </update>
+    
+	<delete id="Area.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_area where
+       areaid = #areaid# 
+    ]]>
+    </delete>
+    
+    <delete id="Area.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_area 
+        WHERE
+       areaid in ($areaid$) 
+    ]]>
+    </delete>
+    
+    <select id="Area.getById" resultMap="RM.Area.list">
+	    select <include refid="Area.columns"/>,t_admin.adminName
+	    
+	        from t_area left join t_admin on t_admin.adminId=t_area.adminid 
+	        where 
+		        t_area.areaid = #areaid# 
+	    
+    </select>
+    
+	<select id="Area.getByProperty" resultMap="RM.Area">
+		select <include refid="Area.columns"/> from t_area where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Area.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_area.areaid = #areaid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaname">
+	             t_area.areaname like ('%$areaname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_area.adminid = #adminid#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fitemid">
+        			t_area.fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fnumber">
+       			t_area.fnumber=#fnumber#
+       		</isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Area.findPage.and">
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_area.areaid = #areaid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaname">
+	             t_area.areaname like ('%$areaname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_area.adminid = #adminid#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fitemid">
+        			t_area.fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fnumber">
+       			t_area.fnumber=#fnumber#
+       		</isNotEmpty>
+	</sql>
+    
+    <select id="Area.findList" resultMap="RM.Area">
+    	SELECT 
+    		<include refid="Area.columns"/> 
+    	FROM 
+    		t_area
+		<include refid="Area.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Area.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_area
+    ]]>
+		<include refid="Area.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Area.findPage" resultMap="RM.Area">
+    	select <include refid="Area.columns"/>	    
+	        from t_area 	   
+		<include refid="Area.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Area.findPage" resultMap="RM.Area.list">
+    	select <include refid="Area.columns"/>,t_admin.adminName   
+	        from t_area left join t_admin on t_admin.adminId=t_area.adminid 
+	        
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_area.areaid 
+	   not in(select $notTop$ 
+       areaid 
+	   from t_area <include refid="Area.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Area.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    <procedure id="Area.synAreaErp.data">
+    	{call pro_synAreaErpData()}
+    </procedure>
+	
+	
+	<select id="Area.find.data.areaList" resultMap="RM.Area">
+    	SELECT 
+    		<include refid="Area.columns"/> 
+    	FROM 
+    		t_area
+		<include refid="Area.findPage.where"/>
+		
+    </select>
+</sqlMap>

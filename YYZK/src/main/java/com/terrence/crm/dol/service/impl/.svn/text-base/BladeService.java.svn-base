@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Blade;
+import com.terrence.crm.dol.dao.IBladeDao;
+import com.terrence.crm.dol.dao.IToolsBladeDao;
+import com.terrence.crm.dol.query.BladeQuery;
+import com.terrence.crm.dol.query.ToolsQuery;
+import com.terrence.crm.dol.service.IBladeService;
+
+@Service
+@Transactional
+public class BladeService extends BaseService implements IBladeService {
+	protected static Logger logger = LoggerFactory.getLogger(BladeService.class);
+	@Autowired
+	@Qualifier("bladeDao")
+	private IBladeDao bladeDao;
+	
+	
+	@Autowired
+	@Qualifier("toolsBladeDao")
+	private IToolsBladeDao toolsBladeDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Blade";
+	}
+	@Transactional(readOnly=true)
+	public Blade getById(java.lang.Long id) throws ServiceException
+	{
+		return bladeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Blade entity) throws ServiceException
+	{
+		bladeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Blade entity) throws ServiceException
+	{
+		Long adId = bladeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Blade entity) throws ServiceException
+	{
+		Integer returnValue =  bladeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	//删除刀片的同时删除所对应的关系
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = bladeDao.deleteById(id);
+		
+		//根据bladeid删除对应的blade关系
+		toolsBladeDao.deleteBybladeId(id);
+		
+		
+		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		
+		String delIds = StringUtils.join(idList, ",");
+		BladeQuery query=new BladeQuery();
+		query.setParentid(Long.valueOf(delIds.split(",")[0]));
+		Integer returnValue=0;
+		if(bladeDao.findList(query).size()>0)
+		{
+			return 0;
+		}
+		else
+		{
+			returnValue = bladeDao.deleteByMultipleId(delIds);
+			return returnValue;
+		}
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BladeQuery query = new BladeQuery();
+		try {
+			return bladeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Blade> findPage(Page<Blade> page, BladeQuery query) throws ServiceException
+	{
+		return bladeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Blade> findList(BladeQuery query) throws ServiceException
+	{
+		return bladeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Blade> findAllList() throws ServiceException
+	{
+		return bladeDao.findAllList();
+	}
+
+}

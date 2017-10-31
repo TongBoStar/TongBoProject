@@ -1,0 +1,590 @@
+package com.terrence.crm.dol.action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IModelListService;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.query.ModelListQuery;
+/**
+ * tongbo
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/modelList")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "modelList."+ CrudActionSupport.ACTIONSUFFIX
+		+ "?page.pageRequest=${page.pageRequest}", type = "redirect") })
+public class ModelListAction extends CrudActionSupport<ModelList> implements ApplicationContextAware {
+
+	@Autowired
+	@Qualifier("modelListService")
+	private IModelListService modelListService;
+
+	private ModelList entity;
+
+	private ModelListQuery modelListQuery;
+
+	private java.lang.Long modelListId;
+
+	/** 分页器 */
+	private Page<ModelList> page = new Page<ModelList>();
+
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	private List<String> dispatchList;
+	private ApplicationContext ctx;
+	private List<ModelList> modelListList;
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (modelListId != null) {
+			entity = modelListService.getById(modelListId);
+		} else {
+			entity = new ModelList();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		try {
+			if(null!=checkedIdList && checkedIdList.size()>0){
+				modelListService.deleteByMultipleId(checkedIdList);
+			}else{
+				modelListService.deleteById(modelListId);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			addActionMessage("删除成功");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		try {
+			delete();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	public String listToCallslip(){
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			modelListList = modelListService.listToCallslip(modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToQuery() throws Exception {
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			modelListList = modelListService.findList(modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToOutQuery() throws Exception {
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			modelListList = modelListService.findList("ModelList.find.bychangeallinfo",modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.DESC);
+		}
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			page = modelListService.findPage(page, modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+    /**
+     * 查询列表
+     * @return
+     * @throws Exception
+     */
+	public String listQuery() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.DESC);
+		}
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			modelListList = modelListService.findList(modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+	public String listToJson() throws Exception {
+		try {
+			list();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public String listToJsonQuery() throws Exception {
+		try {
+			listQuery();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		try {
+			modelListService.saveOrUpdate(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			addActionMessage("操作成功");
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败," + e.getMessage();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		try {
+			save();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		try {
+			entity = modelListService.getById(modelListId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		try {
+			show();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	// -------------------自定义方法
+	public String listAll() throws Exception {
+		try {
+			modelListList = modelListService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (ServiceException e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String dispatchModel(){
+		try {
+			modelListService.dispatchModel(checkedIdList,dispatchList,modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (ServiceException e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String saveManualBatch(){
+		try{
+			modelListService.saveManualBatch(modelListList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String deleteModelListDef(){
+		try{
+			modelListService.deleteModelListDef(modelListQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		}catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/*
+	 * (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ModelList getModel() {
+		return entity;
+	}
+
+	/**
+	 * 获得分页器
+	 * @return the page
+	 */
+	public Page<ModelList> getPage() {
+		return page;
+	}
+
+	public ModelList getEntity() {
+		return entity;
+	}
+	public void setEntity(ModelList entity) {
+		this.entity = entity;
+	}
+	public ModelListQuery getModelListQuery() {
+		return modelListQuery;
+	}
+	public void setModelListQuery(ModelListQuery modelListQuery) {
+		this.modelListQuery = modelListQuery;
+	}
+	public java.lang.Long getModelListId() {
+		return modelListId;
+	}
+	public void setModelListId(java.lang.Long modelListId) {
+		this.modelListId = modelListId;
+	}
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+	/**
+	 * 设置分页器
+	 * @param page
+	 *        the new page
+ */
+	public void setPage(Page<ModelList> page) {
+		this.page = page;
+	}
+	/**
+	 * 获得Json操作信息
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+	/**
+	 * 获得所选择的编号列表
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+	/**
+	 * 设置编号列表
+	 * @param checkedIdList
+	 *        编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+	public List<ModelList> getModelListList() {
+		return modelListList;
+	}
+
+	public List<String> getDispatchList() {
+		return dispatchList;
+	}
+
+	public void setDispatchList(List<String> dispatchList) {
+		this.dispatchList = dispatchList;
+	}
+
+	public void setModelListList(List<ModelList> modelListList) {
+		this.modelListList = modelListList;
+	}
+	
+	/*public String listToCallslipNew(){
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			List<ModelList> modelListLists = modelListService.listToCallslip(modelListQuery);
+			Map<String, List<ModelList>> maps = new HashMap<String, List<ModelList>>();
+			if(modelListLists!=null&&modelListLists.size()>0){
+				for(int i=0;i<modelListLists.size();i++){
+					ModelList model = modelListLists.get(i);
+					List<ModelList> list = new ArrayList<ModelList>();
+					if(model.getItemcode()!=null&&model.getItemcode()!=""){
+						list = maps.get(model.getItemcode());
+						if(list==null){
+							list = new ArrayList<ModelList>();
+							list.add(model);
+						}else{
+							for(int j=0;j<list.size();j++){
+								if(list.get(j).getBatchno()!=null&&list.get(j).getBatchno()!=""&&
+										model.getBatchno()!=null&&model.getBatchno()!=""&&!list.get(j).getBatchno().equals(model.getBatchno())){
+									list.add(model);
+								}else{
+									list.get(j).setAlen(list.get(j).getAlen()+model.getAlen());//总长
+									list.get(j).setFcount(list.get(j).getFcount()+model.getFcount());//应发数量
+								}
+							}
+						}
+						maps.put(model.getItemcode(), list);
+					}
+					
+				}
+			}
+			modelListList = new ArrayList<ModelList>();
+			if(maps!=null){
+				Set<Map.Entry<String, List<ModelList>>> entryseSet=maps.entrySet();
+				for (Map.Entry<String, List<ModelList>> entry:entryseSet) {
+					List<ModelList> models= entry.getValue();
+					if(models!=null&&models.size()>0){
+						modelListList.addAll(models);
+					}
+					
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}*/
+	public String listToCallslipNew(){
+		if (modelListQuery == null) {
+			modelListQuery = new ModelListQuery();
+		}
+		try {
+			List<ModelList> modelListLists = modelListService.listToCallslip(modelListQuery);
+			//根据物料编码合并数据 
+			Map<String, ModelList> maps = new HashMap<String, ModelList>();
+			if(modelListLists!=null&&modelListLists.size()>0){
+				for(int i=0;i<modelListLists.size();i++){
+					ModelList model = modelListLists.get(i);
+					ModelList map = new ModelList();
+					if(model.getItemcode()!=null&&model.getItemcode()!=""){
+						map = maps.get(model.getItemcode());
+						if(map==null){
+							map = model;
+							if(map.getUnitname()!=null&&map.getUnitname().equals("kg")){
+								map.setSumnum(map.getAweight()==null?0.0:map.getAweight());
+							}else if(map.getUnitname()!=null){
+								map.setSumnum(map.getFcount()==null?0.0:map.getFcount());
+							}
+						}else{
+							if(map.getUnitname()!=null&&map.getUnitname().equals("kg")){
+								map.setSumnum((map.getSumnum()==null?0.0:map.getSumnum())+(model.getAweight()==null?0.0:model.getAweight()));
+							}else if(map.getUnitname()!=null){
+								map.setSumnum((map.getSumnum()==null?0.0:map.getSumnum())+(model.getFcount()==null?0.0:model.getFcount()));
+							}
+							
+						}
+						maps.put(model.getItemcode(), map);
+					}
+					
+				}
+			}
+			modelListList = new ArrayList<ModelList>();
+			if(maps!=null){
+				Set<Map.Entry<String, ModelList>> entryseSet=maps.entrySet();
+				for (Map.Entry<String, ModelList> entry:entryseSet) {
+					ModelList models= entry.getValue();
+					if(models!=null){
+						modelListList.add(models);
+					}
+					
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+}

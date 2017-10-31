@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Pdparameter;
+import com.terrence.crm.dol.dao.IPdparameterDao;
+
+@Repository
+public class PdparameterDao extends BaseIbatisDao<Pdparameter,java.lang.Long> implements IPdparameterDao{
+
+		
+	public void saveOrUpdate(Pdparameter entity) {
+		if(entity.getParamid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Pdparameter";
+	}
+	public Pdparameter getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Pdparameter)this.getSqlMapClientTemplate().queryForObject("Pdparameter.getByProperty", map);		
+	}
+
+}

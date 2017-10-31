@@ -1,0 +1,148 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Nameplate;
+import com.terrence.crm.dol.query.NameplateQuery;
+import com.terrence.crm.dol.dao.INameplateDao;
+import com.terrence.crm.dol.service.INameplateService;
+
+@Service
+@Transactional
+public class NameplateService extends BaseService implements INameplateService {
+	protected static Logger logger = LoggerFactory.getLogger(NameplateService.class);
+	@Autowired
+	@Qualifier("nameplateDao")
+	private INameplateDao nameplateDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Nameplate";
+	}
+	@Transactional(readOnly=true)
+	public Nameplate getById(java.lang.Long id) throws ServiceException
+	{
+		return nameplateDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Nameplate entity) throws ServiceException
+	{
+		nameplateDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Nameplate entity) throws ServiceException
+	{
+		Long adId = nameplateDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Nameplate entity) throws ServiceException
+	{
+		Integer returnValue =  nameplateDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = nameplateDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = nameplateDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		NameplateQuery query = new NameplateQuery();
+		try {
+			return nameplateDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Nameplate> findPage(Page<Nameplate> page, NameplateQuery query) throws ServiceException
+	{
+		return nameplateDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Nameplate> findPage(Page<Nameplate> page,String statement, NameplateQuery query) throws ServiceException
+	{
+		return nameplateDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Nameplate> findList(NameplateQuery query) throws ServiceException
+	{
+		return nameplateDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Nameplate> findList(NameplateQuery query,Integer pageSize) throws ServiceException
+	{
+		return nameplateDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Nameplate> findList(NameplateQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return nameplateDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Nameplate> findAllList() throws ServiceException
+	{
+		return nameplateDao.findAllList();
+	}
+	@Override
+	public void saveNewDate(Nameplate entity) throws ServiceException {
+		
+		
+		if(entity.getPlateid() == null){
+			Nameplate np = nameplateDao.getByProperty("platename", entity.getPlatename());
+			if(np !=null){
+				throw new ServiceException("要保存的模板名称已存在，请修改为其他名称","-1");
+			}
+			
+		}
+		
+		if(entity.getPlateid() != null){
+			Nameplate np2 = nameplateDao.getById(entity.getPlateid());
+			if(!np2.getPlatename().toString().equals(entity.getPlatename().toString())){
+				Nameplate np3 = nameplateDao.getByProperty("platename", entity.getPlatename());
+				if(np3 != null){
+					throw new ServiceException("要保存的模板名称已存在，请修改为其他名称","-1");
+				}
+			}
+		}
+		nameplateDao.saveOrUpdate(entity);
+		
+	}
+
+}

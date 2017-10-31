@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Collection">
+
+<resultMap id="RM.Collection" class="com.terrence.crm.dol.bean.Collection">
+	<result property="id" column="id"/>
+	<result property="itemId" column="itemId"/>
+	<result property="userId" column="userId"/>
+	<result property="createTime" column="createTime"/>
+	<result property="item" resultMap="RM.Collection.Item"/>
+</resultMap>
+<resultMap id="RM.Collection.Item" class="com.terrence.crm.dol.bean.Item">
+	<result property="itemName" column="itemName"/>
+	<result property="itemPriceAux" column="itemPriceAux"/>
+	<result property="consumTimes" column="consumTimes"/>
+	<result property="serviceType" column="serviceType"/>
+	<result property="feeType" column="feeType"/>
+	<result property="itemUserName" column="itemUserName"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Collection.columns">
+	<![CDATA[
+		t_collection.id ,
+		t_collection.itemId ,
+		t_collection.userId ,
+		t_collection.createTime
+	]]>
+</sql>
+
+<insert id="Collection.insert" >
+	<![CDATA[
+	INSERT INTO t_collection (
+		itemId,
+		userId,
+		createTime
+	) VALUES (
+		#itemId#,
+		#userId#,
+		#createTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Collection.update" parameterClass="com.terrence.crm.dol.bean.Collection"> 
+	UPDATE t_collection 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="itemId">
+			itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="userId">
+			userId = #userId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Collection.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_collection.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemId">
+			t_collection.itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userId">
+			t_collection.userId = #userId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_collection.createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Collection.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_collection.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemId">
+		t_collection.itemId = #itemId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userId">
+		t_collection.userId = #userId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_collection.createTime = #createTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="Collection.getById" resultMap="RM.Collection">
+	select <include refid="Collection.columns"/> ,t_item.itemName,t_item.itemPriceAux,
+	t_item.consumTimes,t_item.serviceType,t_item.feeType,t_admin.adminName itemUserName 
+	FROM t_collection 
+	left join t_item on t_collection.itemId = t_item.id 
+	left join t_admin on t_item.itemUserId = t_admin.adminId 
+	 where id=#id#
+</select>
+
+<select id="Collection.getByProperty" resultMap="RM.Collection">
+	select <include refid="Collection.columns"/> from t_collection where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Collection.delete">
+	<![CDATA[
+		DELETE FROM t_collection WHERE id=#id#
+	]]>
+</delete>
+<delete id="Collection.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_collection WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Collection.findPage.count" resultClass="long">
+	select count(*) from t_collection <include refid="Collection.findPage.where"/>
+</select>
+
+<select id="Collection.findPage" resultMap="RM.Collection">
+	select <include refid="Collection.columns"/>,t_item.itemName,t_item.itemPriceAux,
+	t_item.consumTimes,t_item.serviceType,t_item.feeType,t_admin.adminName itemUserName 
+	FROM t_collection 
+	left join t_item on t_collection.itemId = t_item.id 
+	left join t_admin on t_item.itemUserId = t_admin.adminId 
+	<include refid="Collection.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Collection.findList" resultMap="RM.Collection">
+	SELECT <include refid="Collection.columns"/> ,t_item.itemName,t_item.itemPriceAux,
+	t_item.consumTimes,t_item.serviceType,t_item.feeType,t_admin.adminName itemUserName  
+	FROM t_collection 
+	left join t_item on t_collection.itemId = t_item.id 
+	left join t_admin on t_item.itemUserId = t_admin.adminId 
+	<include refid="Collection.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+</sqlMap>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProcessCycle">
+	<resultMap id="RM.ProcessCycle" class="com.terrence.crm.dol.bean.ProcessCycle">
+        <result property="cycleid" column="cycleid"/>
+        <result property="cyclename" column="cyclename"/>
+        <result property="ratio" column="ratio"/>
+    </resultMap>
+    <!-- 用于select查询公用抽取的列 -->
+	<sql id="ProcessCycle.columns">
+	    <![CDATA[
+        	t_process_cycle.cycleid ,
+        	t_process_cycle.cyclename ,
+        	t_process_cycle.ratio 
+	    ]]>
+	</sql>
+	<sql id="ProcessCycle.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="cycleid">
+	             t_process_cycle.cycleid = #cycleid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="cyclename">
+	             t_process_cycle.cyclename = #cyclename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ratio">
+	             t_process_cycle.ratio = #ratio#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	<select id="ProcessCycle.findList" resultMap="RM.ProcessCycle">
+    	SELECT 
+    		<include refid="ProcessCycle.columns"/> 
+    	FROM 
+    		t_process_cycle
+		<include refid="ProcessCycle.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+</sqlMap>

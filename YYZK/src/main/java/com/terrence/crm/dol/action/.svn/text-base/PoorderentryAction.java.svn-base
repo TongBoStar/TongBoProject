@@ -1,0 +1,869 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.query.PoorderentryQuery;
+import com.terrence.crm.dol.service.IPoorderentryService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/poorderentry")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "poorderentry." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PoorderentryAction extends CrudActionSupport<Poorderentry>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("poorderentryService")
+	private IPoorderentryService poorderentryService;
+	
+	
+	private Poorderentry entity;
+
+	private PoorderentryQuery poorderentryQuery;
+	
+	
+	private java.lang.Long poorderentryId;
+	
+	/** 分页器 */
+	private Page<Poorderentry> page = new Page<Poorderentry>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	private List<java.lang.Double> checkedfqtyList;//存放实际到货数量
+	private List<java.lang.Long> checkedstockList;//保存下推时的库房
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Poorderentry> poorderentryList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (poorderentryId != null ) {
+			entity = poorderentryService.getById(poorderentryId);
+		} else {
+			entity = new Poorderentry();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			poorderentryService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(poorderentryQuery == null) {
+			poorderentryQuery = new PoorderentryQuery();
+		}
+		
+		try {
+			poorderentryList = poorderentryService.findList(poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poorderentryId");
+			page.setOrder(Page.DESC);
+		}
+		if(poorderentryQuery == null) {
+			poorderentryQuery = new PoorderentryQuery();
+		}
+		
+		try {
+			page = poorderentryService.findPage(page, poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			poorderentryService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = poorderentryService.getById(poorderentryId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			poorderentryList = poorderentryService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public void prepareSaveNewPoor() throws Exception{
+		prepareModel();
+	}
+	public String saveNewPoor() throws Exception {//保存明细============
+			
+			try {
+			entity = poorderentryService.saveNewPoor(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+			
+			}
+			return JSON;
+		}
+	
+	
+	public void prepareSaveorupdatePoor() throws Exception{
+		prepareModel();
+	}
+	public String saveorupdatePoor() throws Exception {//明细单修改
+		
+		try {
+		entity = poorderentryService.saveorupdatePoor(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		
+		}
+		return JSON;
+	}
+	public String listPoorDetail() throws Exception {//订单列表查询
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poorderentryId");
+			page.setOrder(Page.DESC);
+		}
+		if(poorderentryQuery == null) {
+			poorderentryQuery = new PoorderentryQuery();
+		}
+		
+		try {
+			page = poorderentryService.findPage(page, "Poorderentry.findpage.poorder.detail", poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String listDetailTotalSum() throws Exception {//订单汇总列表查询
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poorderentryId");
+			page.setOrder(Page.DESC);
+		}
+		if(poorderentryQuery == null) {
+			poorderentryQuery = new PoorderentryQuery();
+		}
+		
+		try {
+			page = poorderentryService.findPage(page, "Poorderentry.findpage.poorder.detail.Total.Sum", poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	//===========================
+	
+	
+	@Action("/excel/exportPoorderAll")
+	public String exportAllitem(){
+		    try {
+		    	if(poorderentryQuery == null) {
+		    		poorderentryQuery = new PoorderentryQuery();
+				}
+				String fileName = poorderentryService.findPoorderAllXls(getRequest().getRealPath("/"),poorderentryQuery,checkedIdList);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	
+	@Action("/excel/savePoorderExport")
+	public void saveExport(){
+		String filename=getRequest().getParameter("filename");
+		HSSFWorkbook wb = null;
+		try {
+			wb = new HSSFWorkbook(new FileInputStream(getRequest().getRealPath("/")+filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+			HttpServletResponse response = getResponse();
+			response.setContentType("application/vnd.ms-excel");
+			try {
+				
+
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "采购订单汇总表.xls".getBytes("gb2312"), "ISO8859-1" ) );					
+			
+					OutputStream ouputStream = response.getOutputStream(); 
+					 wb.write(ouputStream);  
+					 ouputStream.flush();  
+					 ouputStream.close();
+					 new File(getRequest().getRealPath("/")+filename).delete();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	//===========================
+	
+	public String listPoorDetailWTJ() throws Exception {//未提交订单列表查询
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poorderentryId");
+			page.setOrder(Page.DESC);
+		}
+		if(poorderentryQuery == null) {
+			poorderentryQuery = new PoorderentryQuery();
+		}
+		
+		try {
+			
+			poorderentryQuery.setFbillerid(SpringSecurityUtils.getCurrentUserId());//制单人ID
+			page = poorderentryService.findPage(page, "Poorderentry.findpage.poorder.detail", poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareUpdateMrpclose() throws Exception{
+		prepareModel();
+	}
+	public String updateMrpclose() throws Exception {//行关闭修改
+			
+			try {
+				poorderentryService.updateMrpclose(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+				
+			}
+			return JSON;
+		}
+	
+	public void prepareUpdateforIspush() throws Exception{
+		prepareModel();
+	}
+	@Action("/poorderent/updateforIspush")
+	public String updateforIspush() throws Exception {//下推操作================================================================
+			
+			try {
+				Poorderentry poorderentry = new Poorderentry();
+				poorderentry.setIspush(1);//1、已下推 0、未下推
+				poorderentryService.updateforIspush(checkedIdList,poorderentry,checkedfqtyList,checkedstockList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+				
+			}
+			return JSON;
+		}
+	
+	
+	public String deleteToPoorderentry() throws Exception {//列表订单删除
+			
+			try {
+				poorderentryService.deleteToPoorderentry(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+			}
+			return JSON;
+		}
+	
+	
+	public String findCheckPush()throws Exception//查询是否有下推项
+	{
+		
+		try {
+			entity = poorderentryService.findCheckPush(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String findPushCheckAll()throws Exception//查询下推待检物资=============================================
+	{
+		
+		try {
+			poorderentryList = poorderentryService.findPushCheckAll(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public String findfissnmanager()throws Exception//查询序列号管理的物料信息
+	{
+		
+		try {
+			poorderentryList = poorderentryService.findfissnmanager(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String deleteDetail() throws Exception {
+			
+			try {
+				poorderentryService.deleteDetailData(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				addActionMessage("删除成功");
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+				addActionMessage("删除失败");
+			}
+			return JSON;
+		}
+	
+	public String deleteforDetail() throws Exception {
+		
+		try {
+			poorderentryService.deleteforDetail(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return JSON;
+	}
+	
+	
+	/**
+	 * 查询采购订单执行明细表
+	 * @return
+	 * @throws Exception
+	 */
+	public String finddetailData()throws Exception
+	{
+		
+		try {
+			poorderentryList = poorderentryService.finddetailData(poorderentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	* <p>Description:查询检验是否已有数据下推 </p>
+	* @author yjb
+	* @date 2015-9-23上午10:52:53
+	 */
+	public String findCehckData() throws Exception {//列表订单删除
+		
+		try {
+			poorderentryService.findCehckData(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Poorderentry getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PoorderentryQuery getPoorderentryQuery() {
+		return poorderentryQuery;
+	}
+
+	
+	public void setPoorderentryQuery(PoorderentryQuery poorderentryQuery) {
+		this.poorderentryQuery = poorderentryQuery;
+	}
+
+	public void setPoorderentryId(java.lang.Long poorderentryId) {
+		this.poorderentryId = poorderentryId;
+	}
+	
+	
+	public java.lang.Long getPoorderentryId() {
+		return this.poorderentryId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Poorderentry> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Poorderentry> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Poorderentry> getPoorderentryList() {
+		return poorderentryList;
+	}
+
+	public List<java.lang.Double> getCheckedfqtyList() {
+		return checkedfqtyList;
+	}
+
+	public void setCheckedfqtyList(List<java.lang.Double> checkedfqtyList) {
+		this.checkedfqtyList = checkedfqtyList;
+	}
+
+	public List<java.lang.Long> getCheckedstockList() {
+		return checkedstockList;
+	}
+
+	public void setCheckedstockList(List<java.lang.Long> checkedstockList) {
+		this.checkedstockList = checkedstockList;
+	}
+	
+	
+}

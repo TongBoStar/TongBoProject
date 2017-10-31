@@ -1,0 +1,384 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PerFee;
+import com.terrence.crm.dol.bean.RpBill;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IPerFeeDao;
+import com.terrence.crm.dol.dao.IRpBillDao;
+import com.terrence.crm.dol.query.RpBillQuery;
+import com.terrence.crm.dol.service.IPerFeeService;
+import com.terrence.crm.dol.service.IRpBillService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+@Service
+@Transactional
+public class RpBillService extends BaseService implements IRpBillService {
+	protected static Logger logger = LoggerFactory.getLogger(RpBillService.class);
+	@Autowired
+	@Qualifier("rpBillDao")
+	private IRpBillDao rpBillDao;
+	
+	@Autowired
+	@Qualifier("perFeeService")
+	private IPerFeeService perFeeService;
+	
+	@Autowired
+	@Qualifier("perFeeDao")
+	private IPerFeeDao perFeeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "RpBill";
+	}
+	@Transactional(readOnly=true)
+	public RpBill getById(java.lang.Long id) throws ServiceException
+	{
+		return rpBillDao.getById(id);
+	}
+	/**
+	 * 通过应收款ID查找应收款 信息及当前订单负责人的业绩奖明细信息
+	 * @param id
+	 * @return
+	 * @throws ServiceException
+	 */
+	@Transactional(readOnly=true)
+	public RpBill getRpBillPeFeeInfoById(java.lang.Long id) throws ServiceException
+	{
+		return rpBillDao.getRpBillPeFeeInfoById(id);
+	}
+	
+	 
+	public List<RpBill> findStatisticPageList(RpBillQuery query) throws ServiceException{
+		return rpBillDao.findStatisticPageList(query);
+	}
+	
+	
+	/**
+	 * 2015年4月前应收款管理-销售业绩奖统计
+	 */
+	public List<RpBill> findPageStatistic(RpBillQuery query) throws ServiceException{
+		return rpBillDao.findPageStatistic(query);
+	}
+	public Page<RpBill> findStatisticPage(Page<RpBill> page,RpBillQuery query) throws ServiceException{
+		return rpBillDao.findStatisticPage(page, query);
+		//rpBillDao.findPage(page, query);
+	}
+	public void saveOrUpdate(RpBill entity) throws ServiceException
+	{
+		rpBillDao.saveOrUpdate(entity);
+	}
+	
+	/**
+	 * 保存2015年4月前应收款信息
+	 */
+	public void updateRpBill(RpBill entity) throws ServiceException
+	{
+		//1先删除应收款信息及业绩奖明细
+		List<java.lang.Long> idList=new ArrayList<java.lang.Long>();
+		idList.add(entity.getFbillid());
+		deleteRpBillInfo(idList);
+		//2再添加应收款信息及业绩奖明细
+		saveRpBill(entity);
+	}
+	/**
+	 * 保存2015年4月前应收款信息
+	 */
+	public void saveRpBill(RpBill entity) throws ServiceException
+	{
+		//1保存应收款信息
+		//订单号 
+		List<String> fordernos = entity.getFordernos();
+		// 合同号 	
+		List<String> fcontractnos = entity.getFcontractnos();
+		//核算项目 	
+		List<String> fanaitems = entity.getFanaitems();
+		//订单日期 	
+		List<String> forderdates = entity.getForderdates();
+		//订单金额 	
+		List<String> forderamountfors = entity.getForderamountfors();
+		//业务员
+		List<String> fempnames = entity.getFempnames();
+		//业务员ID
+		List<String> fempids = entity.getFempids();
+		
+		//当前负责人 	
+		List<String> fcurempnames = entity.getFcurempnames();
+		//当前负责人ID
+		List<String> fcurempids = entity.getFcurempids();
+		
+		//回款月份 
+		List<String> fdates = entity.getFdates();
+		//回款金额(元)
+		List<String> fexchangeamounts = entity.getFexchangeamounts();
+		//个人比例(%)
+		List<String> personalpercents = entity.getPersonalpercents();
+		//业绩奖 
+		List<String> personalprizes = entity.getPersonalprizes();
+		
+		//当前负责人销售经理ID
+		List<String> salemids = entity.getSalemids();
+		
+		//当前负责人区域经理ID
+		List<String> amanagerids = entity.getAmanagerids();
+		
+		//销售经理个人比例(%)
+		List<String> salempersonalpercents= entity.getSalempersonalpercents();
+		//区域经理个人比例(%)
+		List<String> amanagerpersonalpercents= entity.getAmanagerpersonalpercents();
+		 
+		//区域经理业绩奖
+		List<String> salempersonalprizes= entity.getSalempersonalprizes();
+		//区域经理业绩奖 
+		List<String> amanagerpersonalprizes= entity.getAmanagerpersonalprizes();
+		
+		AdminSession adminSession = (AdminSession)SecurityContextHolder.getContext()
+		.getAuthentication().getPrincipal();
+		
+		for(int i = 0;i<fordernos.size();i++){
+			if(null!=fordernos.get(i)&&!"".equalsIgnoreCase(fordernos.get(i))){
+				RpBill rpBillEntity=new RpBill();
+				//订单号
+				rpBillEntity.setForderno(fordernos.get(i));
+				//合同号
+				if(null!=fcontractnos.get(i)){
+					rpBillEntity.setFcontractno(fcontractnos.get(i));
+				}
+				//核算项目
+				if(null!=fanaitems.get(i)){
+					rpBillEntity.setFanaitem(fanaitems.get(i));
+				}
+				//订单日期
+				if(null!=forderdates.get(i)){
+					rpBillEntity.setForderdate(DateConvertUtils.parse(forderdates.get(i)+" 00:00:000","yyyy-MM-dd HH:mm:ss"));
+				}
+				//订单金额
+				if(null!=forderamountfors.get(i)){
+					rpBillEntity.setForderamountfor(Double.valueOf(forderamountfors.get(i)));
+				}
+				//业务员
+				if(null!=fempnames.get(i)&&!"null".equalsIgnoreCase(fempnames.get(i))&&!"".equalsIgnoreCase(fempnames.get(i))){
+					rpBillEntity.setFempname(fempnames.get(i));
+				}
+				//业务员ID
+				if(null!=fempids.get(i)&&!"null".equalsIgnoreCase(fempids.get(i))&&!"".equalsIgnoreCase(fempids.get(i))){
+					rpBillEntity.setFempid(Long.valueOf(fempids.get(i)));
+				}
+				//当前负责人
+				if(null!=fcurempnames.get(i)&&!"null".equalsIgnoreCase(fcurempnames.get(i))&&!"".equalsIgnoreCase(fcurempnames.get(i))){
+					rpBillEntity.setFcurempname(fcurempnames.get(i));
+				}
+				//当前负责人ID
+				if(null!=fcurempids.get(i)&&!"null".equalsIgnoreCase(fcurempids.get(i))&&!"".equalsIgnoreCase(fcurempids.get(i))){
+					rpBillEntity.setFcurempid(Long.valueOf(fcurempids.get(i)));
+				}
+				//汇款月份
+				if(null!=fdates.get(i)){
+					rpBillEntity.setFdate(fdates.get(i));
+				}
+				//汇款金额
+				if(null!=fexchangeamounts.get(i)){
+					rpBillEntity.setFexchangeamount(Double.valueOf(fexchangeamounts.get(i)));
+				}
+				
+				//操作人ID
+				rpBillEntity.setFpreparer(adminSession.getAdmin().getAdminId()) ;
+				//操作时间
+				rpBillEntity.setCreatedate(DateConvertUtils.getCurrentDate());
+				//状态
+				rpBillEntity.setFstatus(1);//正常
+				
+				Long rpBillId = rpBillDao.save(rpBillEntity);
+				
+				//个人比例(%)personalpercents 业绩奖personalprizes
+				if(null!=personalpercents.get(i)&&null!=personalprizes.get(i)
+						&&!"null".equalsIgnoreCase(personalpercents.get(i))){
+					 //1保存当前负责人的个人业绩信息
+					PerFee perFeeentity =new PerFee();
+					perFeeentity.setFbillid(rpBillId);
+					
+					
+					if(null!=fcurempids.get(i)&&!"null".equalsIgnoreCase(fcurempids.get(i))
+							&&!"".equalsIgnoreCase(fcurempids.get(i))){
+						perFeeentity.setFempid(Long.valueOf(fcurempids.get(i)));
+						perFeeentity.setFemployee(Long.valueOf(fcurempids.get(i)));
+					}
+					perFeeentity.setFamount(Double.valueOf(personalprizes.get(i)));
+					perFeeentity.setFratio(Double.valueOf(personalpercents.get(i)));
+					perFeeentity.setIspay(0);
+					perFeeDao.save(perFeeentity);
+					//2保存当前负责人上级销售经理的个人业绩信息
+					if(!"null".equals(salemids)&&null!=salemids&&0<salemids.size()){
+						if(!"null".equals(salemids.get(i))&&null!=salemids.get(i)&&""!=salemids.get(i)){
+							PerFee perFeeentitySalem =new PerFee();
+							perFeeentitySalem.setFbillid(rpBillId);
+							perFeeentitySalem.setFempid(Long.valueOf(salemids.get(i)));
+							
+							if(null!=fcurempids.get(i)&&!"null".equalsIgnoreCase(fcurempids.get(i))
+									&&!"".equalsIgnoreCase(fcurempids.get(i))){
+								perFeeentitySalem.setFemployee(Long.valueOf(fcurempids.get(i)));
+							}
+							
+							perFeeentitySalem.setFamount(Double.valueOf(salempersonalprizes.get(i)));
+							perFeeentitySalem.setFratio(Double.valueOf(salempersonalpercents.get(i)));
+							perFeeentitySalem.setIspay(0);
+							if("14".equalsIgnoreCase(fcurempids.get(i))
+									||"889".equalsIgnoreCase(fcurempids.get(i))){//当前人员不是朱晓楠,何霖的上级销售经理不保存
+								perFeeDao.save(perFeeentitySalem);
+							}
+							
+						}
+					}
+					//3保存当前负责人上级区域经理的个人业绩信息
+					if(!"null".equals(amanagerids)&&null!=amanagerids&&0<amanagerids.size()){
+						if(!"null".equals(amanagerids.get(i))&&null!=amanagerids.get(i)&&""!=amanagerids.get(i)){
+							PerFee perFeeentityamanager =new PerFee();
+							perFeeentityamanager.setFbillid(rpBillId);
+							perFeeentityamanager.setFempid(Long.valueOf(amanagerids.get(i)));
+							if(null!=fcurempids.get(i)&&!"null".equalsIgnoreCase(fcurempids.get(i))
+									&&!"".equalsIgnoreCase(fcurempids.get(i))){
+								perFeeentityamanager.setFemployee(Long.valueOf(fcurempids.get(i)));
+							}
+							
+							perFeeentityamanager.setFamount(Double.valueOf(amanagerpersonalprizes.get(i)));
+							perFeeentityamanager.setFratio(Double.valueOf(amanagerpersonalpercents.get(i)));
+							
+							perFeeentityamanager.setIspay(0);
+							if("14".equalsIgnoreCase(fcurempids.get(i))
+									||"889".equalsIgnoreCase(fcurempids.get(i)) ){//当前人员不是朱晓楠,何霖的上级销售经理不保存
+								perFeeDao.save(perFeeentityamanager);
+							}
+						}
+					}
+					
+				}
+			}
+		}
+		
+		
+		//2保存业绩奖明细
+	}
+	
+	public java.lang.Long save(RpBill entity) throws ServiceException
+	{
+		Long adId = rpBillDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(RpBill entity) throws ServiceException
+	{
+		Integer returnValue =  rpBillDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = rpBillDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = rpBillDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	/**
+	 * 删除应收款及关联的业绩奖明细
+	 */
+	public void deleteRpBillInfo(List<java.lang.Long> idList) throws ServiceException
+	{
+		//删除应收款
+		String delIds = StringUtils.join(idList, ",");
+		//删除应收款及关联的业绩奖明细
+		perFeeService.deleteByMultipleByBillid(idList);
+		rpBillDao.deleteByMultipleId(delIds);
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		RpBillQuery query = new RpBillQuery();
+		try {
+			return rpBillDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<RpBill> findPage(Page<RpBill> page, RpBillQuery query) throws ServiceException
+	{
+		return rpBillDao.findPage(page, query);
+	}
+	
+	
+	
+	@Transactional(readOnly=true)
+	public Page<RpBill> findPageStatisticInfo(Page<RpBill> page, RpBillQuery query) throws ServiceException
+	{
+		return findPageStatisticInfo(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<RpBill> findPage(Page<RpBill> page,String statement, RpBillQuery query) throws ServiceException
+	{
+		return rpBillDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<RpBill> findList(RpBillQuery query) throws ServiceException
+	{
+		return rpBillDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<RpBill> findAllPageList(RpBillQuery query) throws ServiceException
+	{
+		return rpBillDao.findAllPageList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<RpBill> findList(RpBillQuery query,Integer pageSize) throws ServiceException
+	{
+		return rpBillDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<RpBill> findList(RpBillQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return rpBillDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<RpBill> findAllList() throws ServiceException
+	{
+		return rpBillDao.findAllList();
+	}
+
+}

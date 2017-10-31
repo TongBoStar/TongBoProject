@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Putstorage">
+
+        
+	<resultMap id="RM.Putstorage" class="com.terrence.crm.dol.bean.Putstorage">
+        <result property="finterid" column="finterid"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="creatdate" column="creatdate"/>
+        <result property="isclose" column="isclose"/>
+        <result property="status" column="status"/>
+        <result property="supplier" column="supplier"/>
+        <result property="empid" column="empid"/>
+        <result property="checker" column="checker"/>
+        <result property="maker" column="maker"/>
+        <result property="srctype" column="srctype"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="teamid" column="teamid"/>
+        
+        <result property="isreturn" column="isreturn"/>
+    </resultMap>
+	
+	
+	     
+	<resultMap id="RM.Putstorage.tongbu.find" class="com.terrence.crm.dol.bean.Putstorage">
+        <result property="finterid" column="finterid"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="creatdate" column="creatdate"/>
+        <result property="isclose" column="isclose"/>
+        <result property="status" column="status"/>
+        <result property="supplier" column="supplier"/>
+        <result property="empid" column="empid"/>
+        <result property="checker" column="checker"/>
+        <result property="maker" column="maker"/>
+        <result property="srctype" column="srctype"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="teamid" column="teamid"/>
+        <result property="isreturn" column="isreturn"/>
+         <result property="supper" resultMap="Supplier.in.putstorage.RM"/>
+         <result property="tename" column="tename"/>
+         <result property="tcname" column="tcname"/>
+         <result property="tmname" column="tmname"/>
+         <result property="erpfbillno" column="erpfbillno"/>
+         <result property="addtype" column="addtype"/>
+         <result property="suppliername" column="suppliername"/>
+         <result property="iserp" column="iserp"/>
+         
+    </resultMap>
+	 <resultMap id="Admin.in.putstorage.RM" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+    <resultMap id="Supplier.in.putstorage.RM" class="com.terrence.crm.dol.bean.Supplier">
+        <result property="fname" column="fname"/>
+    </resultMap>
+	 
+	 <resultMap id="RM.Putstorage.findIsold.data" class="com.terrence.crm.dol.bean.Putstorage">
+        <result property="isold" column="isold"/>
+    </resultMap>
+	 
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Putstorage.columns">
+	    <![CDATA[
+        	t_putstorage.finterid ,
+        	t_putstorage.fbillno ,
+        	t_putstorage.creatdate ,
+        	t_putstorage.isclose ,
+        	t_putstorage.status ,
+        	t_putstorage.supplier ,
+        	t_putstorage.empid ,
+        	t_putstorage.checker ,
+        	t_putstorage.maker ,
+        	t_putstorage.srctype ,
+        	t_putstorage.checkdate ,
+        	t_putstorage.teamid ,
+        	t_putstorage.isreturn
+	    ]]>
+	</sql>
+	
+   <insert id="Putstorage.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_putstorage (
+        	finterid ,
+        	fbillno ,
+        	creatdate ,
+        	isclose ,
+        	status ,
+        	supplier ,
+        	empid ,
+        	checker ,
+        	maker ,
+        	srctype,
+        	checkdate,
+        	teamid,
+        	<isNotEmpty prepend="," property="fsource">
+	        	fsource
+	         </isNotEmpty>
+        	isreturn
+        ) VALUES (
+        	#finterid# ,
+        	#fbillno# ,
+        	#creatdate# ,
+        	#isclose# ,
+        	#status# ,
+        	#supplier# ,
+        	#empid# ,
+        	#checker# ,
+        	#maker# ,
+        	#srctype#,
+        	#checkdate#,
+        	#teamid#,
+        	<isNotEmpty prepend="," property="fsource">
+	        	#fsource#
+	       </isNotEmpty>
+        	#isreturn#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <insert id="Putstorage.insert.fromTQIN" ><!-- 来自其他入库的添加 -->
+    		
+        INSERT INTO
+        t_putstorage (
+	        	fbillno,
+	        	creatdate,
+	        	isclose
+	        <isNotEmpty prepend="," property="status">
+	        	status 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="srctype">
+	        	srctype
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	checkdate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	teamid
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="addtype">
+	        	addtype
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="iserp">
+	        	iserp
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="suppliername">
+	        	suppliername
+	        </isNotEmpty>
+	        
+	        
+        ) VALUES (
+	        	#fbillno# ,
+	        	#creatdate# ,
+	        	#isclose# 
+	        <isNotEmpty prepend="," property="status">
+	        	#status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	 #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	 #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	#checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	#maker# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="srctype">
+	        	#srctype# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	#checkdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	#teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="addtype">
+	        	#addtype#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="iserp">
+	        	#iserp#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="suppliername">
+	        	#suppliername#
+	        </isNotEmpty>
+	        
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+  
+  	</insert>
+    
+    <insert id="Putstorage.insert.fromCheck" ><!-- 来自机加工终检的入库数据 -->
+  
+        INSERT INTO
+        t_putstorage (
+	        	fbillno,
+	        	creatdate,
+	        	isclose
+	        <isNotEmpty prepend="," property="status">
+	        	status 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="srctype">
+	        	srctype
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	checkdate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	teamid
+	        </isNotEmpty>
+        ) VALUES (
+	        	#fbillno# ,
+	        	#creatdate# ,
+	        	#isclose# 
+	        <isNotEmpty prepend="," property="status">
+	        	#status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	 #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	 #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	#checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	#maker# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="srctype">
+	        	#srctype# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	#checkdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	#teamid# 
+	        </isNotEmpty>
+	        
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+     
+    <insert id="Putstorage.insert.in.poorderentry" ><!-- 免检的保存入库数据 -->
+  
+        INSERT INTO
+        t_putstorage (
+        	
+	        	fbillno,
+	        
+	        	creatdate,
+	        
+	        	isclose
+	        <isNotEmpty prepend="," property="status">
+	        	status 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="srctype">
+	        	srctype
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	checkdate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	teamid
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsource">
+	        	fsource
+	         </isNotEmpty>
+        ) VALUES (
+        
+	        	#fbillno# ,
+	        	#creatdate# ,
+	        	#isclose# 
+	        <isNotEmpty prepend="," property="status">
+	        	#status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	 #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	 #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	#checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	#maker# 
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="srctype">
+	        	#srctype# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	#checkdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	#teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsource">
+	        	#fsource#
+	         </isNotEmpty>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    
+    
+    <insert id="Putstorage.insert.returnGoods.data" ><!-- 退货数据保存入库数据 -->
+  
+        INSERT INTO
+        t_putstorage (
+        	
+	        	fbillno,
+	        
+	        	creatdate,
+	        
+	        	isclose
+	        <isNotEmpty prepend="," property="status">
+	        	status 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="srctype">
+	        	srctype
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	checkdate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	teamid
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isreturn">
+	        	isreturn
+	        </isNotEmpty>
+        ) VALUES (
+        
+	        	#fbillno# ,
+	        	#creatdate# ,
+	        	#isclose# 
+	        <isNotEmpty prepend="," property="status">
+	        	#status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	 #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	 #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	#checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	#maker# 
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="srctype">
+	        	#srctype# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="checkdate">
+	        	#checkdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="teamid">
+	        	#teamid# 
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="isreturn">
+	        	#isreturn#
+	        </isNotEmpty>
+	        
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Putstorage.update" parameterClass="com.terrence.crm.dol.bean.Putstorage">         
+        UPDATE t_putstorage 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="creatdate">
+	        	creatdate = #creatdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isclose">
+	        	isclose = #isclose# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier = #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker = #checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker = #maker# 
+	        </isNotEmpty>
+	        
+	        <isNotEmpty prepend="," property="srctype">
+	        	srctype = #srctype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkdate">
+	        	checkdate = #checkdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="erpfbillno">
+	        	erpfbillno = #erpfbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fstatusDesc">
+	        	fstatusDesc = #fstatusDesc# 
+	        </isNotEmpty>
+	        
+	        
+	    </dynamic>
+        WHERE 
+	        finterid = #finterid# 
+    </update>
+    
+    
+    
+    <update id="Putstorage.update.status.sh" parameterClass="com.terrence.crm.dol.bean.Putstorage"><!-- 批量修改 -->        
+        UPDATE t_putstorage 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="creatdate">
+	        	creatdate = #creatdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isclose">
+	        	isclose = #isclose# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplier">
+	        	supplier = #supplier# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checker">
+	        	checker = #checker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="maker">
+	        	maker = #maker# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="srctype">
+	        	srctype = #srctype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkdate">
+	        	checkdate = #checkdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        finterid in ($finterids$) 
+    </update>
+    
+	<delete id="Putstorage.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_putstorage where
+       finterid = #finterid# 
+    ]]>
+    </delete>
+    
+    <delete id="Putstorage.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_putstorage 
+        WHERE
+       finterid in ($finterid$) 
+    ]]>
+    </delete>
+    
+    <select id="Putstorage.getById" resultMap="RM.Putstorage">
+	    select <include refid="Putstorage.columns"/>
+	    
+	        from t_putstorage 
+	        where 
+		        finterid = #finterid# 
+	    
+    </select>
+    
+  
+    
+    
+	<select id="Putstorage.getByProperty" resultMap="RM.Putstorage">
+		select <include refid="Putstorage.columns"/> from t_putstorage where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Putstorage.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_putstorage.finterid = #finterid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_putstorage.fbillno = #fbillno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="creatdateBegin">
+	             t_putstorage.creatdate &gt;= #creatdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="creatdateEnd">
+	             t_putstorage.creatdate &lt;= #creatdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="isclose">
+	             t_putstorage.isclose = #isclose#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_putstorage.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="supplier">
+	             t_putstorage.supplier = #supplier#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_putstorage.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checker">
+	             t_putstorage.checker = #checker#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="maker">
+	             t_putstorage.maker = #maker#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="srctype">
+	             t_putstorage.srctype = #srctype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdate">
+	             t_putstorage.checkdate = #checkdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_putstorage.teamid = #teamid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isreturn">
+	             t_putstorage.isreturn = #isreturn#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Putstorage.findPage.and">
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_putstorage.finterid = #finterid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_putstorage.fbillno = #fbillno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatdateBegin">
+	             t_putstorage.creatdate &gt;= #creatdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="creatdateEnd">
+	             t_putstorage.creatdate &lt;= #creatdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="isclose">
+	             t_putstorage.isclose = #isclose#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_putstorage.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="supplier">
+	             t_putstorage.supplier = #supplier#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_putstorage.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checker">
+	             t_putstorage.checker = #checker#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="maker">
+	             t_putstorage.maker = #maker#
+	       </isNotEmpty>
+	       
+	         <isNotEmpty prepend="AND" property="srctype">
+	             t_putstorage.srctype = #srctype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="checkdate">
+	             t_putstorage.checkdate = #checkdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_putstorage.teamid = #teamid#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="isreturn">
+	             t_putstorage.isreturn = #isreturn#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Putstorage.Entity" resultMap="RM.Putstorage">
+    	SELECT 	<include refid="Putstorage.columns"/> FROM t_putstorage <include refid="Putstorage.findPage.where"/>
+    </select>
+    
+    <select id="Putstorage.findList" resultMap="RM.Putstorage">
+    	SELECT 
+    		<include refid="Putstorage.columns"/> 
+    	FROM 
+    		t_putstorage
+		<include refid="Putstorage.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Putstorage.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_putstorage
+    ]]>
+		<include refid="Putstorage.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Putstorage.findPage" resultMap="RM.Putstorage">
+    	select <include refid="Putstorage.columns"/>	    
+	        from t_putstorage 	   
+		<include refid="Putstorage.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Putstorage.findPage" resultMap="RM.Putstorage">
+    	select <include refid="Putstorage.columns"/>	    
+	        from t_putstorage where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       finterid 
+	   not in(select $notTop$ 
+       finterid 
+	   from t_putstorage <include refid="Putstorage.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Putstorage.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+    
+     <select id="Putstorage.find.tongbu.findalldata" resultMap="RM.Putstorage.tongbu.find">
+    	SELECT 	<include refid="Putstorage.columns"/>,
+    	t_putstorage.erpfbillno,te.adminName tename,tc.adminName tcname,tm.adminName tmname ,t_supplier.fname 
+    	,t_putstorage.addtype
+    	,t_putstorage.suppliername
+    	,t_putstorage.iserp
+    	FROM t_putstorage  
+    	left join t_admin te on t_putstorage.empid = te.adminId
+    	left join t_admin tc on t_putstorage.checker = tc.adminId
+    	left join t_admin tm on t_putstorage.maker = tm.adminId
+    	left join t_supplier on t_putstorage.supplier = t_supplier.supplierid
+    	
+    	where t_putstorage.status = 1
+    </select>
+    
+    <select id="Putstorage.findtongbu.tdata" resultMap="RM.Putstorage.tongbu.find">
+    	SELECT 	<include refid="Putstorage.columns"/>,
+    	t_putstorage.erpfbillno,te.adminName tename,tc.adminName tcname,tm.adminName tmname ,t_supplier.fname 
+    	,t_putstorage.addtype
+    	,t_putstorage.suppliername
+    	,t_putstorage.iserp
+    	FROM t_putstorage  
+    	left join t_admin te on t_putstorage.empid = te.adminId
+    	left join t_admin tc on t_putstorage.checker = tc.adminId
+    	left join t_admin tm on t_putstorage.maker = tm.adminId
+    	left join t_supplier on t_putstorage.supplier = t_supplier.supplierid
+    	
+    	where finterid in ($finterids$)
+    </select>
+	
+	 <select id="Putstorage.find.putstorage.entity" resultMap="RM.Putstorage"><!-- 查询待入库单 -->
+    	SELECT 	<include refid="Putstorage.columns"/> FROM t_putstorage where finterid = #finterid#
+    </select>
+	
+	  <select id="Putstorage.findlist.in.assTask" resultMap="RM.Putstorage"><!-- 状态查询，作废用 -->
+	    select <include refid="Putstorage.columns"/>
+	    
+	        from t_putstorage 
+	        where 
+		        finterid in ( select  finterid from t_putstorageentity where poorderno=#sourceNo# group by finterid )
+	    
+   	 </select>
+	
+	
+	<select id="Putstorage.find.list.isold.data" resultMap="RM.Putstorage.findIsold.data">
+	    select isold
+	    
+	        from t_putstorage 
+	        where 
+		        finterid in ($finterids$)
+	    
+    </select>
+    
+</sqlMap>

@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Agents">
+
+        
+	<resultMap id="RM.Agents" class="com.terrence.crm.dol.bean.Agents">
+        <result property="aid" column="aid"/>
+        <result property="fyear" column="fyear"/>
+        <result property="adminid" column="adminid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="fagent" column="fagent"/>
+        <result property="fbase" column="fbase"/>
+        <result property="fbonus1" column="fbonus1"/>
+        <result property="fbusiness1" column="fbusiness1"/>
+        <result property="fbonus2" column="fbonus2"/>
+        <result property="fbusiness2" column="fbusiness2"/>
+    </resultMap>
+	
+	
+	<resultMap id="Agents.RM.get.select" class="com.terrence.crm.dol.bean.Agents">
+        <result property="aid" column="aid"/>
+        <result property="fyear" column="fyear"/>
+        <result property="adminid" column="adminid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="fagent" column="fagent"/>
+        <result property="fbase" column="fbase"/>
+        <result property="fbonus1" column="fbonus1"/>
+        <result property="fbusiness1" column="fbusiness1"/>
+        <result property="fbonus2" column="fbonus2"/>
+        <result property="fbusiness2" column="fbusiness2"/>
+        <result property="xsName" column="xsName"/>
+        <result property="dlName" column="dlName"/>
+        <result property="proName" column="proName"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Agents.columns">
+	    <![CDATA[
+        	t_agents.aid ,
+        	t_agents.fyear ,
+        	t_agents.adminid ,
+        	t_agents.provinceid ,
+        	t_agents.fagent ,
+        	t_agents.fbase ,
+        	t_agents.fbonus1 ,
+        	t_agents.fbusiness1 ,
+        	t_agents.fbonus2 ,
+        	t_agents.fbusiness2 
+	    ]]>
+	</sql>
+	
+   <insert id="Agents.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_agents (
+        	fyear ,
+        	adminid ,
+        	provinceid ,
+        	fagent ,
+        	fbase ,
+        	fbonus1 ,
+        	fbusiness1 ,
+        	fbonus2 ,
+        	fbusiness2 
+        ) VALUES (
+        	#fyear# ,
+        	#adminid# ,
+        	#provinceid# ,
+        	#fagent# ,
+        	#fbase# ,
+        	#fbonus1# ,
+        	#fbusiness1# ,
+        	#fbonus2# ,
+        	#fbusiness2# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="aid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Agents.update" parameterClass="com.terrence.crm.dol.bean.Agents">         
+        UPDATE t_agents 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="provinceid">
+	        	provinceid = #provinceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fagent">
+	        	fagent = #fagent# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbase">
+	        	fbase = #fbase# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbonus1">
+	        	fbonus1 = #fbonus1# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbusiness1">
+	        	fbusiness1 = #fbusiness1# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbonus2">
+	        	fbonus2 = #fbonus2# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbusiness2">
+	        	fbusiness2 = #fbusiness2# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        aid = #aid# 
+    </update>
+    
+	<delete id="Agents.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_agents where
+       aid = #aid# 
+    ]]>
+    </delete>
+    
+    <delete id="Agents.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_agents 
+        WHERE
+       aid in ($aid$) 
+    ]]>
+    </delete>
+    
+    <select id="Agents.getById" resultMap="RM.Agents">
+	    select <include refid="Agents.columns"/>
+	    
+	        from t_agents 
+	        where 
+		        aid = #aid# 
+	    
+    </select>
+    
+	<select id="Agents.getByProperty" resultMap="RM.Agents">
+		select <include refid="Agents.columns"/> from t_agents where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Agents.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="aid">
+	             t_agents.aid = #aid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_agents.fyear = #fyear#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_agents.adminid = #adminid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_agents.provinceid = #provinceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fagent">
+	             t_agents.fagent = #fagent#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbase">
+	             t_agents.fbase = #fbase#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbonus1">
+	             t_agents.fbonus1 = #fbonus1#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbusiness1">
+	             t_agents.fbusiness1 = #fbusiness1#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbonus2">
+	             t_agents.fbonus2 = #fbonus2#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbusiness2">
+	             t_agents.fbusiness2 = #fbusiness2#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Agents.findPage.and">
+			<isNotEmpty prepend="AND" property="aid">
+	             t_agents.aid = #aid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_agents.fyear = #fyear#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_agents.adminid = #adminid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_agents.provinceid = #provinceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fagent">
+	             t_agents.fagent = #fagent#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbase">
+	             t_agents.fbase = #fbase#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbonus1">
+	             t_agents.fbonus1 = #fbonus1#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbusiness1">
+	             t_agents.fbusiness1 = #fbusiness1#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbonus2">
+	             t_agents.fbonus2 = #fbonus2#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbusiness2">
+	             t_agents.fbusiness2 = #fbusiness2#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Agents.Entity" resultMap="RM.Agents">
+    	SELECT 	<include refid="Agents.columns"/> FROM t_agents <include refid="Agents.findPage.where"/>
+    </select>
+    
+    <select id="Agents.findList" resultMap="RM.Agents">
+    	SELECT 
+    		<include refid="Agents.columns"/> 
+    	FROM 
+    		t_agents
+		<include refid="Agents.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Agents.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_agents
+        left join t_admin adminXS on t_agents.adminid = adminXS.adminId
+	    left join t_admin adminDL on t_agents.fagent = adminDL.adminId
+	    left join t_province on t_agents.provinceid = t_province.provinceid
+    ]]>
+		<include refid="Agents.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Agents.findPage" resultMap="RM.Agents">
+    	select <include refid="Agents.columns"/>	    
+	        from t_agents 	   
+		<include refid="Agents.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Agents.findPage" resultMap="Agents.RM.get.select">
+    	select <include refid="Agents.columns"/>,adminXS.adminName xsName,adminDL.adminName dlName ,t_province.provincename proName
+	        from t_agents 
+	        left join t_admin adminXS on t_agents.adminid = adminXS.adminId
+	        left join t_admin adminDL on t_agents.fagent = adminDL.adminId
+	        left join t_province on t_agents.provinceid = t_province.provinceid
+	        
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       aid 
+	   not in(select $notTop$ 
+       aid 
+	   from t_agents 
+	     left join t_admin adminXS on t_agents.adminid = adminXS.adminId
+	     left join t_admin adminDL on t_agents.fagent = adminDL.adminId
+	     left join t_province on t_agents.provinceid = t_province.provinceid
+	   <include refid="Agents.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Agents.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>		
+    </select>
+	
+	
+	<select id="Agents.select.get.entityData" resultMap="Agents.RM.get.select">
+    	SELECT 
+    		<include refid="Agents.columns"/> ,adminXS.adminName xsName,adminDL.adminName dlName ,t_province.provincename proName
+    	FROM 
+    		t_agents
+    		left join t_admin adminXS on t_agents.adminid = adminXS.adminId
+		     left join t_admin adminDL on t_agents.fagent = adminDL.adminId
+		     left join t_province on t_agents.provinceid = t_province.provinceid
+		<include refid="Agents.findPage.where"/>
+    </select>
+</sqlMap>

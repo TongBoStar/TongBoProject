@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Adminlog;
+import com.terrence.crm.dol.dao.IAdminlogDao;
+
+@Repository
+public class AdminlogDao extends BaseIbatisDao<Adminlog,java.lang.Long> implements IAdminlogDao{
+
+		
+	public void saveOrUpdate(Adminlog entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Adminlog";
+	}
+	public Adminlog getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Adminlog)this.getSqlMapClientTemplate().queryForObject("Adminlog.getByProperty", map);		
+	}
+
+}

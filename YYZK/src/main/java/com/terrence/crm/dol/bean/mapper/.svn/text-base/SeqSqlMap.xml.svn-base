@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Seq">
+
+        
+	<resultMap id="RM.Seq" class="com.terrence.crm.dol.bean.Seq">
+        <result property="id" column="id"/>
+        <result property="periex" column="periex"/>
+        <result property="seqval" column="seqval"/>
+        <result property="note" column="note"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Seq.columns">
+	    <![CDATA[
+        	t_seq.id ,
+        	t_seq.periex ,
+        	t_seq.seqval ,
+        	t_seq.note 
+	    ]]>
+	</sql>
+	
+   <insert id="Seq.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_seq (
+        	id ,
+        	periex ,
+        	seqval ,
+        	note 
+        ) VALUES (
+        	#id# ,
+        	#periex# ,
+        	#seqval# ,
+        	#note# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Seq.update.Val" parameterClass="com.terrence.crm.dol.bean.Seq">         
+        UPDATE t_seq SET seqval = seqval+#seqval# WHERE periex = #periex# 
+    </update>
+
+	<update id="Seq.update" parameterClass="com.terrence.crm.dol.bean.Seq">         
+        UPDATE t_seq 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="periex">
+	        	periex = #periex# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqval">
+	        	seqval = #seqval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="note">
+	        	note = #note# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="Seq.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_seq where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="Seq.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_seq 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="Seq.getById" resultMap="RM.Seq">
+	    select <include refid="Seq.columns"/>
+	    
+	        from t_seq 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="Seq.getByProperty" resultMap="RM.Seq">
+		select <include refid="Seq.columns"/> from t_seq where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Seq.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_seq.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="periex">
+	             t_seq.periex = #periex#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqval">
+	             t_seq.seqval = #seqval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="note">
+	             t_seq.note = #note#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Seq.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_seq.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="periex">
+	             t_seq.periex = #periex#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqval">
+	             t_seq.seqval = #seqval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="note">
+	             t_seq.note = #note#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Seq.findList" resultMap="RM.Seq">
+    	SELECT 
+    		<include refid="Seq.columns"/> 
+    	FROM 
+    		t_seq
+		<include refid="Seq.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Seq.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_seq
+    ]]>
+		<include refid="Seq.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Seq.findPage" resultMap="RM.Seq">
+    	select <include refid="Seq.columns"/>	    
+	        from t_seq 	   
+		<include refid="Seq.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.Seq.findPage" resultMap="RM.Seq">
+    	select <include refid="Seq.columns"/>	    
+	        from t_seq where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_seq <include refid="Seq.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Seq.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

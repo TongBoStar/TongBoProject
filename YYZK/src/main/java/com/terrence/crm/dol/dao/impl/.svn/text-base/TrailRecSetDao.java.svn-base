@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.query.TrailRecSetQuery;
+
+@Repository
+public class TrailRecSetDao extends BaseIbatisDao<TrailRecSet,java.lang.Long> implements ITrailRecSetDao{
+
+		
+	public void saveOrUpdate(TrailRecSet entity) {
+		if(entity.getRecid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailRecSet";
+	}
+	public TrailRecSet getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailRecSet)this.getSqlMapClientTemplate().queryForObject("TrailRecSet.getByProperty", map);		
+	}
+
+	@Override
+	public List<TrailRecSet> findTrailRecSetList(
+			TrailRecSetQuery trailRecSetQuery) {
+		return this.getSqlMapClientTemplate().queryForList("TrailRecSet.findTrailRecSetList", trailRecSetQuery);
+	}
+
+}

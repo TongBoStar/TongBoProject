@@ -1,0 +1,830 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="RpBill">
+
+        
+	<resultMap id="RM.RpBill" class="com.terrence.crm.dol.bean.RpBill">
+        <result property="fbillid" column="fbillid"/>
+        <result property="fcontractno" column="fcontractno"/>
+        <result property="fanaitem" column="fanaitem"/>
+        <result property="forderdate" column="forderdate"/>
+        <result property="forderamountfor" column="forderamountfor"/>
+        <result property="fempid" column="fempid"/>
+        <result property="fcurempid" column="fcurempid"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fexchangeamount" column="fexchangeamount"/>
+        <result property="fpreparer" column="fpreparer"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fstatus" column="fstatus"/>
+        <result property="forderno" column="forderno"/>
+    </resultMap>
+    <!-- 应收款和业绩奖明细 -->
+    <resultMap id="RM.RpBillPerFee" class="com.terrence.crm.dol.bean.RpBill">
+        <result property="fbillid" column="fbillid"/>
+        <result property="fcontractno" column="fcontractno"/>
+        <result property="fanaitem" column="fanaitem"/>
+        <result property="forderdate" column="forderdate"/>
+        <result property="forderamountfor" column="forderamountfor"/>
+        <result property="fempid" column="fempid"/>
+        <result property="fcurempid" column="fcurempid"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fexchangeamount" column="fexchangeamount"/>
+        <result property="fpreparer" column="fpreparer"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fstatus" column="fstatus"/>
+        <result property="forderno" column="forderno"/>
+        
+        <result property="fempname" column="fempname"/>
+        <result property="fcurempname" column="fcurempname"/>
+        
+        <!-- 比例 -->
+        <result property="fratio" column="fratio"/>
+        <!-- 汇款额 -->
+        <result property="famount" column="famount"/>
+    </resultMap>
+	<resultMap id="RM.RpBillNew" class="com.terrence.crm.dol.bean.RpBill">
+        <result property="fbillid" column="fbillid"/>
+        <result property="fcontractno" column="fcontractno"/>
+        <result property="fanaitem" column="fanaitem"/>
+        <result property="forderdate" column="forderdate"/>
+        <result property="forderamountfor" column="forderamountfor"/>
+        <result property="fempid" column="fempid"/>
+        <result property="fcurempid" column="fcurempid"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fexchangeamount" column="fexchangeamount"/>
+        <result property="fpreparer" column="fpreparer"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fstatus" column="fstatus"/>
+        <result property="fcurempname" column="fcurempname"/>
+        <result property="forderno" column="forderno"/>
+        <result property="perid" column="perid"/>
+        <result property="fempName" column="fempName"/>
+        <result property="famount" column="famount"/>
+        <result property="fratio" column="fratio"/>
+        
+    </resultMap>
+    
+    <resultMap id="RM.RpBillCurempAmount" class="com.terrence.crm.dol.bean.RpBill">
+    
+        <result property="fcurempname" column="fcurempname"/>
+        <result property="fexchangeamount" column="fexchangeamount"/>
+        <result property="famount" column="famount"/>
+        
+    </resultMap>
+	
+    <sql id="RpBill.columnsnew">
+	    <![CDATA[
+        	t_rp_bill.fbillid ,
+        	t_rp_bill.fcontractno ,
+        	t_rp_bill.fanaitem ,
+        	t_rp_bill.forderdate ,
+        	t_rp_bill.forderamountfor ,
+        	t_rp_bill.fempid ,
+        	t_rp_bill.fcurempid ,
+        	t_rp_bill.fdate ,
+        	t_rp_bill.fexchangeamount ,
+        	t_rp_bill.fpreparer ,
+        	t_rp_bill.createdate ,
+        	t_rp_bill.fstatus,
+        	t_rp_bill.forderno,
+        	t_admin.adminName as fcurempname,
+        	t_per_fee.perid,
+        	t1.adminName as fempName,
+        	t_per_fee.famount,
+        	t_per_fee.fratio
+	    ]]>
+	</sql>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="RpBill.columns">
+	    <![CDATA[
+        	t_rp_bill.fbillid ,
+        	t_rp_bill.fcontractno ,
+        	t_rp_bill.fanaitem ,
+        	t_rp_bill.forderdate ,
+        	t_rp_bill.forderamountfor ,
+        	t_rp_bill.fempid ,
+        	t_rp_bill.fcurempid ,
+        	t_rp_bill.fdate ,
+        	t_rp_bill.fexchangeamount ,
+        	t_rp_bill.fpreparer ,
+        	t_rp_bill.createdate ,
+        	t_rp_bill.fstatus,
+        	t_rp_bill.forderno 
+	    ]]>
+	</sql>
+	
+   <insert id="RpBill.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_rp_bill (
+        	fcontractno ,
+        	fanaitem ,
+        	forderdate ,
+        	forderamountfor ,
+        	fempid ,
+        	fcurempid ,
+        	fdate ,
+        	fexchangeamount ,
+        	fpreparer ,
+        	createdate ,
+        	fstatus ,
+        	forderno,
+        	fempname,
+        	fcurempname
+        ) VALUES (
+        	#fcontractno# ,
+        	#fanaitem# ,
+        	#forderdate# ,
+        	#forderamountfor# ,
+        	#fempid# ,
+        	#fcurempid# ,
+        	#fdate# ,
+        	#fexchangeamount# ,
+        	#fpreparer# ,
+        	#createdate# ,
+        	#fstatus# ,
+        	#forderno#,
+        	#fempname#,
+        	#fcurempname#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fbillid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="RpBill.update" parameterClass="com.terrence.crm.dol.bean.RpBill">         
+        UPDATE t_rp_bill 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fcontractno">
+	        	fcontractno = #fcontractno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fanaitem">
+	        	fanaitem = #fanaitem# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderdate">
+	        	forderdate = #forderdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderamountfor">
+	        	forderamountfor = #forderamountfor# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fempid">
+	        	fempid = #fempid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcurempid">
+	        	fcurempid = #fcurempid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexchangeamount">
+	        	fexchangeamount = #fexchangeamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fpreparer">
+	        	fpreparer = #fpreparer# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fstatus">
+	        	fstatus = #fstatus# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fbillid = #fbillid# 
+    </update>
+    
+	<delete id="RpBill.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_rp_bill where
+       fbillid = #fbillid# 
+    ]]>
+    </delete>
+    
+    <delete id="RpBill.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_rp_bill 
+        WHERE
+       fbillid in ($fbillid$) 
+    ]]>
+    </delete>
+    
+    <select id="RpBill.getById" resultMap="RM.RpBill">
+	    select <include refid="RpBill.columns"/>
+	    
+	        from t_rp_bill 
+	        where 
+		        fbillid = #fbillid# 
+	    
+    </select>
+    <!-- 通过应收款ID查找应收款 信息及当前订单负责人的业绩奖明细信息-->
+    <select id="RpBill.getRpBillPeFeeInfoById" resultMap="RM.RpBillPerFee">
+	    select <include refid="RpBill.columns"/>,t_rp_bill.fempname,t_rp_bill.fcurempname,t_per_fee.famount,t_per_fee.fratio
+	        from t_rp_bill,t_per_fee 
+	        where 
+	            t_rp_bill.fbillid=t_per_fee.fbillid
+	            and
+	            t_rp_bill.fcurempid=t_per_fee.fempid
+	            and
+		        t_rp_bill.fbillid = #fbillid# 
+	    
+    </select>
+    
+	<select id="RpBill.getByProperty" resultMap="RM.RpBill">
+		select <include refid="RpBill.columns"/> from t_rp_bill where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="RpBill.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_rp_bill.fbillid = #fbillid#
+	       </isNotEmpty>
+	       <!--  
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno = #fcontractno#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno like ('%$fcontractno$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fanaitem">
+	             t_rp_bill.fanaitem = #fanaitem#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderdateBegin">
+	             t_rp_bill.forderdate &gt;= #forderdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="forderdateEnd">
+	             t_rp_bill.forderdate &lt;= #forderdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderamountfor">
+	             t_rp_bill.forderamountfor = #forderamountfor#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_rp_bill.fempid = #fempid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcurempid">
+	             t_rp_bill.fcurempid = #fcurempid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_rp_bill.fdate = #fdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rp_bill.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rp_bill.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexchangeamount">
+	             t_rp_bill.fexchangeamount = #fexchangeamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fpreparer">
+	             t_rp_bill.fpreparer = #fpreparer#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_rp_bill.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_rp_bill.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rp_bill.fstatus = #fstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno = #forderno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fcurempname">
+	             t_rp_bill.fcurempname like ('%$fcurempname$%')
+	       </isNotEmpty>
+	       <!--奖励金额-->
+	       <isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount !=#famount#
+	       </isNotEmpty>
+	       <!--区域经理id-->
+	       <isNotEmpty prepend="AND" property="amanagerid">
+	             t_admin.amanagerid =#amanagerid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="RpBill.findPage.and">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_rp_bill.fbillid = #fbillid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno = #fcontractno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fanaitem">
+	             t_rp_bill.fanaitem = #fanaitem#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderdateBegin">
+	             t_rp_bill.forderdate &gt;= #forderdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="forderdateEnd">
+	             t_rp_bill.forderdate &lt;= #forderdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderamountfor">
+	             t_rp_bill.forderamountfor = #forderamountfor#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_rp_bill.fempid = #fempid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcurempid">
+	             t_rp_bill.fcurempid = #fcurempid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_rp_bill.fdate = #fdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rp_bill.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rp_bill.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexchangeamount">
+	             t_rp_bill.fexchangeamount = #fexchangeamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fpreparer">
+	             t_rp_bill.fpreparer = #fpreparer#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_rp_bill.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_rp_bill.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rp_bill.fstatus = #fstatus#
+	       </isNotEmpty>
+	      <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno = #forderno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fcurempname">
+	             t_rp_bill.fcurempname like ('%$fcurempname$%')
+	       </isNotEmpty>
+	       <!--奖励金额-->
+	       <isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount !=#famount#
+	       </isNotEmpty>
+	       <!--区域经理id-->
+	       <isNotEmpty prepend="AND" property="amanagerid">
+	             t_admin.amanagerid =#amanagerid#
+	       </isNotEmpty>
+	</sql>
+	
+	<sql id="RpBill.findPage.wherenew">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_rp_bill.fbillid = #fbillid#
+	       </isNotEmpty>
+	       <!--  
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno = #fcontractno#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno like ('%$fcontractno$%')
+	       </isNotEmpty>
+	        
+	       
+			<isNotEmpty prepend="AND" property="fanaitem">
+	             t_rp_bill.fanaitem = #fanaitem#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderdateBegin">
+	             t_rp_bill.forderdate &gt;= #forderdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="forderdateEnd">
+	             t_rp_bill.forderdate &lt;= #forderdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderamountfor">
+	             t_rp_bill.forderamountfor = #forderamountfor#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_rp_bill.fempid = #fempid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcurempid">
+	             t_rp_bill.fcurempid = #fcurempid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_rp_bill.fdate = #fdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rp_bill.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rp_bill.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexchangeamount">
+	             t_rp_bill.fexchangeamount = #fexchangeamount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fpreparer">
+	             t_rp_bill.fpreparer = #fpreparer#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_rp_bill.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_rp_bill.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rp_bill.fstatus = #fstatus#
+	       </isNotEmpty>
+	       <!--  
+	       <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno = #forderno#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno  like ('%$forderno$%')
+	       </isNotEmpty>
+	       <!--  
+	       <isNotEmpty prepend="AND" property="fempname">
+	             t_rp_bill.fempname = #fempname#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="fcurempname">
+	             t_rp_bill.fcurempname like ('%$fcurempname$%')
+	       </isNotEmpty>
+	       <!--奖励金额-->
+	       <isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount !=#famount#
+	       </isNotEmpty>
+	       <!--区域经理id-->
+	       <isNotEmpty prepend="AND" property="amanagerid">
+	             t_admin.amanagerid =#amanagerid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="RpBill.findPage.andnew">
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_rp_bill.fbillid = #fbillid#
+	       </isNotEmpty>
+	       <!--  
+			<isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno = #fcontractno#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="fcontractno">
+	             t_rp_bill.fcontractno like ('%$fcontractno$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fanaitem">
+	             t_rp_bill.fanaitem = #fanaitem#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderdateBegin">
+	             t_rp_bill.forderdate &gt;= #forderdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="forderdateEnd">
+	             t_rp_bill.forderdate &lt;= #forderdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderamountfor">
+	             t_rp_bill.forderamountfor = #forderamountfor#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_rp_bill.fempid = #fempid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcurempid">
+	             t_rp_bill.fcurempid = #fcurempid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_rp_bill.fdate = #fdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateBegin">
+	             t_rp_bill.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_rp_bill.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexchangeamount">
+	             t_rp_bill.fexchangeamount = #fexchangeamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fpreparer">
+	             t_rp_bill.fpreparer = #fpreparer#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_rp_bill.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_rp_bill.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fstatus">
+	             t_rp_bill.fstatus = #fstatus#
+	       </isNotEmpty>
+	       <!--  
+	       <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno = #forderno#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="forderno">
+	             t_rp_bill.forderno  like ('%$forderno$%')
+	       </isNotEmpty>
+	       <!--  
+	       <isNotEmpty prepend="AND" property="fempname">
+	             t_rp_bill.fempname = #fempname#
+	       </isNotEmpty>
+	       -->
+	       <isNotEmpty prepend="AND" property="fcurempname">
+	             t_rp_bill.fcurempname like ('%$fcurempname$%')
+	       </isNotEmpty>
+	       <!--奖励金额-->
+	       <isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount !=#famount#
+	       </isNotEmpty>
+	       <!--区域经理id-->
+	       <isNotEmpty prepend="AND" property="amanagerid">
+	             t_admin.amanagerid =#amanagerid#
+	       </isNotEmpty>
+	</sql>
+	<!--2015年4月前应收款管理-销售业绩奖统计页面的奖励职员模糊查询-->
+	<sql id="RpBill.findPage.andnew.awardemp">
+	       <isNotEmpty prepend="AND" property="awardempname">
+	             A.adminName like ('%$awardempname$%')
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="RpBill.Entity" resultMap="RM.RpBill">
+    	SELECT 	<include refid="RpBill.columns"/> FROM t_rp_bill <include refid="RpBill.findPage.where"/>
+    </select>
+    
+    <select id="RpBill.findList" resultMap="RM.RpBill">
+    	SELECT 
+    		<include refid="RpBill.columns"/> 
+    	FROM 
+    		t_rp_bill 
+    	left join t_admin on t_rp_bill.fcurempid=t_admin.adminId 
+    	where 1=1 
+		<include refid="RpBill.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <!--2015年4月前应收款管理-销售业绩奖统计 -->
+    <select id="RpBill.findPageStatistic" resultMap="RM.RpBillNew">
+				select <include refid="RpBill.columnsnew"/>	    
+		        from t_rp_bill
+		        left join t_admin on t_rp_bill.fcurempid = t_admin.adminid
+		        left join t_per_fee on t_rp_bill.fbillid = t_per_fee.fbillid
+				left join t_admin t1 on  t_per_fee.fempid = t1.adminId
+		        where 1=1 
+		   	<include refid="RpBill.findPage.andnew"/>
+	    	<isNotEmpty property="sortColumns">
+				ORDER BY $sortColumns$
+			</isNotEmpty>
+    </select>
+    
+    <select id="RpBill.findStatisticPage.count" resultClass="long" > 
+            
+            SELECT  
+			COUNT(*)
+			FROM (
+			select 
+			t_admin.adminName ,
+			sum(famount) AS famount  FROM
+			t_per_fee
+			left join t_admin
+			on t_per_fee.fempid=t_admin.adminId
+			left join t_admin as admin2
+			on t_per_fee.femployee=admin2.adminId
+			left join 
+			t_rp_bill
+			on t_per_fee.fbillid=t_rp_bill.fbillid
+			where femployee is not  null and t_per_fee.famount!=0
+			<include refid="RpBill.findPage.andnew"/>
+			group by t_admin.adminName
+			) A LEFT JOIN (
+			select sum(t_rp_bill.fexchangeamount) AS fexchangeamount, t_rp_bill.fcurempname   from 
+			t_rp_bill
+			where 1=1
+			<include refid="RpBill.findPage.andnew"/>
+			group by t_rp_bill.fcurempname
+			) B
+			ON A.adminName=B.fcurempname
+			WHERE 1=1
+			<include refid="RpBill.findPage.andnew.awardemp"/>
+    </select>
+    
+    <!-- 2015年4月前应收款管理-销售业绩奖统计NEW -->
+	<select id="RpBill.findStatisticPage" resultMap="RM.RpBillCurempAmount">    
+		SELECT  
+			A.adminName as fcurempname ,A.famount,B.fexchangeamount
+			FROM (
+			select 
+			t_admin.adminName ,
+			sum(famount) AS famount  FROM
+			t_per_fee
+			left join t_admin
+			on t_per_fee.fempid=t_admin.adminId
+			left join t_admin as admin2
+			on t_per_fee.femployee=admin2.adminId
+			left join 
+			t_rp_bill
+			on t_per_fee.fbillid=t_rp_bill.fbillid
+			where femployee is not  null and t_per_fee.famount!=0
+			<include refid="RpBill.findPage.andnew"/> 
+			group by t_admin.adminName
+			) A LEFT JOIN (
+			select sum(t_rp_bill.fexchangeamount) AS fexchangeamount, t_rp_bill.fcurempname   from 
+			t_rp_bill
+			where 1=1
+			<include refid="RpBill.findPage.andnew"/>
+			group by t_rp_bill.fcurempname
+			) B
+			ON A.adminName=B.fcurempname
+			WHERE 1=1 
+		   <isNotEmpty property="notTop">  and 
+	       A.adminName 
+		   not in(select $notTop$ 
+				 
+															C.adminName as fcurempname
+															FROM (
+																select 
+																t_admin.adminName ,
+																sum(famount) AS famount  FROM
+																t_per_fee
+																left join t_admin
+																on t_per_fee.fempid=t_admin.adminId
+																left join t_admin as admin2
+																on t_per_fee.femployee=admin2.adminId
+																left join 
+																t_rp_bill
+																on t_per_fee.fbillid=t_rp_bill.fbillid
+																where femployee is not  null and t_per_fee.famount!=0
+																<include refid="RpBill.findPage.andnew"/>
+																group by t_admin.adminName
+															) C LEFT JOIN (
+																select sum(t_rp_bill.fexchangeamount) AS fexchangeamount, t_rp_bill.fcurempname   from 
+																t_rp_bill
+																where 1=1
+																<include refid="RpBill.findPage.andnew"/>
+																group by t_rp_bill.fcurempname
+															) D
+															ON C.adminName=D.fcurempname
+															order by 		C.adminName desc
+
+		   	    ) 
+		   	</isNotEmpty> 
+	    	 <include refid="RpBill.findPage.andnew.awardemp"/>
+			order by 		A.adminName desc
+	</select>
+	
+	<!--2015年4月前应收款管理-销售业绩奖统计回款NEW所有的  -->
+	<select id="RpBill.findStatisticPageList" resultMap="RM.RpBillCurempAmount">    
+		SELECT  
+			A.adminName as fcurempname ,A.famount,B.fexchangeamount
+			FROM (
+			select 
+			t_admin.adminName ,
+			sum(famount) AS famount  FROM
+			t_per_fee
+			left join t_admin
+			on t_per_fee.fempid=t_admin.adminId
+			left join t_admin as admin2
+			on t_per_fee.femployee=admin2.adminId
+			left join 
+			t_rp_bill
+			on t_per_fee.fbillid=t_rp_bill.fbillid
+			where femployee is not  null and t_per_fee.famount!=0
+			<include refid="RpBill.findPage.andnew"/> 
+			group by t_admin.adminName
+			) A LEFT JOIN (
+			select sum(t_rp_bill.fexchangeamount) AS fexchangeamount, t_rp_bill.fcurempname   from 
+			t_rp_bill
+			where 1=1
+			<include refid="RpBill.findPage.andnew"/>
+			group by t_rp_bill.fcurempname
+			) B
+			ON A.adminName=B.fcurempname
+			WHERE 1=1 
+			<include refid="RpBill.findPage.andnew.awardemp"/>
+			order by 		A.adminName desc
+	</select>
+	<!--2015年4月前应收款管理-销售业绩奖统计业绩奖NEW所有的  
+	<select id="RpBill.findStatisticPageamountList" resultMap="RM.RpBillCurempAmount">    
+		SELECT  
+			A.adminName as fcurempname ,A.famount,B.fexchangeamount
+			FROM (
+			select 
+			t_admin.adminName ,
+			sum(famount) AS famount  FROM
+			t_per_fee
+			left join t_admin
+			on t_per_fee.fempid=t_admin.adminId
+			left join t_admin as admin2
+			on t_per_fee.femployee=admin2.adminId
+			left join 
+			t_rp_bill
+			on t_per_fee.fbillid=t_rp_bill.fbillid
+			where femployee is not  null and t_per_fee.famount!=0
+			<include refid="RpBill.findPage.andnew"/> 
+			group by t_admin.adminName
+			) A LEFT JOIN (
+			select sum(t_rp_bill.fexchangeamount) AS fexchangeamount, t_rp_bill.fcurempname   from 
+			t_rp_bill
+			where 1=1
+			<include refid="RpBill.findPage.andnew"/>
+			group by t_rp_bill.fcurempname
+			) B
+			ON A.adminName=B.fcurempname
+			WHERE 1=1 
+			order by 		A.adminName desc
+	</select>-->
+	
+    <select id="RpBill.findAllPageList" resultMap="RM.RpBillNew">
+				select <include refid="RpBill.columnsnew"/>	    
+		        from t_rp_bill
+		        left join t_admin on t_rp_bill.fcurempid = t_admin.adminid
+		        left join t_per_fee on t_rp_bill.fbillid = t_per_fee.fbillid
+				left join t_admin t1 on  t_per_fee.fempid = t1.adminId
+		        where 1=1 
+		   	    
+		   	<include refid="RpBill.findPage.andnew"/>
+	    	<isNotEmpty property="sortColumns">
+				ORDER BY $sortColumns$
+			</isNotEmpty>
+    </select>
+    
+    <select id="RpBill.findPage.statistic.count" resultClass="long">
+    	select
+        count(*)
+    from
+        t_rp_bill 
+    left join
+        t_admin 
+            on t_rp_bill.fcurempid = t_admin.adminid 
+    left join
+        t_per_fee  
+            on t_rp_bill.fbillid = t_per_fee.fbillid 
+    left join
+        t_admin t1 
+            on t_per_fee.fempid = t1.adminId  
+    <include refid="RpBill.findPage.wherenew"/>
+    </select>
+    
+    <select id="RpBill.findPage.count" resultClass="long">
+    select count(*) from 
+    	t_rp_bill
+    	left join t_per_fee on t_rp_bill.fbillid = t_per_fee.fbillid
+    	left join t_admin t_admin on  t_per_fee.fempid = t_admin.adminId
+    <include refid="RpBill.findPage.wherenew"/>
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    
+    <select id="Sql.RpBill.findPage" resultMap="RM.RpBill">
+    	select <include refid="RpBill.columns"/>	    
+	        from t_rp_bill 	   
+		<include refid="RpBill.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>-->
+    
+	<select id="RpBill.findPage" resultMap="RM.RpBillNew">
+				select <include refid="RpBill.columnsnew"/>	    
+		        from t_rp_bill
+		        left join t_admin on t_rp_bill.fcurempid = t_admin.adminid
+		        left join t_per_fee on t_rp_bill.fbillid = t_per_fee.fbillid
+				left join t_admin t1 on  t_per_fee.fempid = t1.adminId
+		        where 1=1 
+		   <isNotEmpty property="notTop">  and 
+	      t_per_fee.perid 
+		   not in(select $notTop$ 
+	       t_per_fee.perid 
+		   from t_rp_bill 
+		   left join t_per_fee on t_rp_bill.fbillid = t_per_fee.fbillid
+		   left join t_admin t1 on  t_per_fee.fempid = t1.adminId<include refid="RpBill.findPage.wherenew"/>
+		   	   ORDER BY t_per_fee.perid DESC ) 
+		   	</isNotEmpty>    
+		   	<include refid="RpBill.findPage.andnew"/>
+	    	<isNotEmpty property="sortColumns">
+				ORDER BY $sortColumns$
+			</isNotEmpty>
+    </select>
+	
+</sqlMap>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AdminProvince">
+
+        
+	<resultMap id="RM.AdminProvince" class="com.terrence.crm.dol.bean.AdminProvince">
+        <result property="apid" column="apid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="areaid" column="areaid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AdminProvince.columns">
+	    <![CDATA[
+        	t_admin_province.apid ,
+        	t_admin_province.provinceid ,
+        	t_admin_province.adminId ,
+        	t_admin_province.areaid 
+	    ]]>
+	</sql>
+	
+   <insert id="AdminProvince.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_admin_province (
+        	provinceid ,
+        	adminId ,
+        	areaid 
+        ) VALUES (
+        	#provinceid# ,
+        	#adminId# ,
+        	#areaid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="apid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AdminProvince.update" parameterClass="com.terrence.crm.dol.bean.AdminProvince">         
+        UPDATE t_admin_province 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="provinceid">
+	        	provinceid = #provinceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminId">
+	        	adminId = #adminId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areaid">
+	        	areaid = #areaid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        apid = #apid# 
+    </update>
+    
+	<delete id="AdminProvince.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_admin_province where
+       apid = #apid# 
+    ]]>
+    </delete>
+    
+    <delete id="AdminProvince.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_admin_province 
+        WHERE
+       apid in ($apid$) 
+    ]]>
+    </delete>
+    
+    
+    <delete id="AdminProvince.delete.apid.data">
+    <![CDATA[
+        DELETE FROM 
+        	t_admin_province 
+        WHERE
+      adminId = #adminId# 
+    ]]>
+    </delete>
+    
+    <select id="AdminProvince.getById" resultMap="RM.AdminProvince">
+	    select <include refid="AdminProvince.columns"/>
+	    
+	        from t_admin_province 
+	        where 
+		        apid = #apid# 
+	    
+    </select>
+    
+	<select id="AdminProvince.getByProperty" resultMap="RM.AdminProvince">
+		select <include refid="AdminProvince.columns"/> from t_admin_province where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AdminProvince.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="apid">
+	             t_admin_province.apid = #apid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_admin_province.provinceid = #provinceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_admin_province.adminId = #adminId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_admin_province.areaid = #areaid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AdminProvince.findPage.and">
+			<isNotEmpty prepend="AND" property="apid">
+	             t_admin_province.apid = #apid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="provinceid">
+	             t_admin_province.provinceid = #provinceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_admin_province.adminId = #adminId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_admin_province.areaid = #areaid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AdminProvince.Entity" resultMap="RM.AdminProvince">
+    	SELECT 	<include refid="AdminProvince.columns"/> FROM t_admin_province <include refid="AdminProvince.findPage.where"/>
+    </select>
+    
+    <select id="AdminProvince.findList" resultMap="RM.AdminProvince">
+    	SELECT 
+    		<include refid="AdminProvince.columns"/> 
+    	FROM 
+    		t_admin_province
+		<include refid="AdminProvince.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AdminProvince.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_admin_province
+    ]]>
+		<include refid="AdminProvince.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AdminProvince.findPage" resultMap="RM.AdminProvince">
+    	select <include refid="AdminProvince.columns"/>	    
+	        from t_admin_province 	   
+		<include refid="AdminProvince.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AdminProvince.findPage" resultMap="RM.AdminProvince">
+    	select <include refid="AdminProvince.columns"/>	    
+	        from t_admin_province where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       apid 
+	   not in(select $notTop$ 
+       apid 
+	   from t_admin_province <include refid="AdminProvince.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AdminProvince.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

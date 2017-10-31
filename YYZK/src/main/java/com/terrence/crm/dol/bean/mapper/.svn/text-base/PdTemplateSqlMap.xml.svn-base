@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdTemplate">
+
+        
+	<resultMap id="RM.PdTemplate" class="com.terrence.crm.dol.bean.PdTemplate">
+        <result property="templateid" column="templateid"/>
+        <result property="templatename" column="templatename"/>
+        <result property="describes" column="describes"/>
+        <result property="isdefault" column="isdefault"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdTemplate.columns">
+	    <![CDATA[
+        	t_pd_template.templateid ,
+        	t_pd_template.templatename ,
+        	t_pd_template.describes ,
+        	t_pd_template.isdefault 
+	    ]]>
+	</sql>
+	
+   <insert id="PdTemplate.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_template (
+        	templatename ,
+        	describes ,
+        	isdefault 
+        ) VALUES (
+        	#templatename# ,
+        	#describes#  ,
+        	#isdefault#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="templateid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdTemplate.update" parameterClass="com.terrence.crm.dol.bean.PdTemplate">         
+        UPDATE t_pd_template 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="templatename">
+	        	templatename = #templatename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="describes">
+	        	describes = #describes# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isdefault">
+	        	isdefault = #isdefault# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        templateid = #templateid# 
+    </update>
+    
+	<delete id="PdTemplate.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_template where
+       templateid = #templateid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdTemplate.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_template 
+        WHERE
+       templateid in ($templateid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdTemplate.getById" resultMap="RM.PdTemplate">
+	    select <include refid="PdTemplate.columns"/>
+	    
+	        from t_pd_template 
+	        where 
+		        templateid = #templateid# 
+	    
+    </select>
+    
+	<select id="PdTemplate.getByProperty" resultMap="RM.PdTemplate">
+		select <include refid="PdTemplate.columns"/> from t_pd_template where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdTemplate.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_pd_template.templateid = #templateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="templatename">
+	             t_pd_template.templatename = #templatename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="describes">
+	             t_pd_template.describes = #describes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isdefault">
+	             t_pd_template.isdefault = #isdefault#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdTemplate.findPage.and">
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_pd_template.templateid = #templateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="templatename">
+	             t_pd_template.templatename = #templatename#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="describes">
+	             t_pd_template.describes = #describes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isdefault">
+	             t_pd_template.isdefault = #isdefault#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="PdTemplate.findList" resultMap="RM.PdTemplate">
+    	SELECT 
+    		<include refid="PdTemplate.columns"/> 
+    	FROM 
+    		t_pd_template
+		<include refid="PdTemplate.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdTemplate.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_template
+    ]]>
+		<include refid="PdTemplate.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="PdTemplate.findPage" resultMap="RM.PdTemplate">
+    	select <include refid="PdTemplate.columns"/>	    
+	        from t_pd_template 	   
+		<include refid="PdTemplate.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.PdTemplate.findPage" resultMap="RM.PdTemplate">
+    	select <include refid="PdTemplate.columns"/>	    
+	        from t_pd_template where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       templateid 
+	   not in(select $notTop$ 
+       templateid 
+	   from t_pd_template <include refid="PdTemplate.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdTemplate.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

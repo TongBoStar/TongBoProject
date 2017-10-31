@@ -1,0 +1,154 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Pdparameter;
+import com.terrence.crm.dol.bean.ProjectMakertree;
+import com.terrence.crm.dol.query.PdparameterQuery;
+import com.terrence.crm.dol.query.ProjectMakertreeQuery;
+import com.terrence.crm.dol.dao.IProjectMakertreeDao;
+import com.terrence.crm.dol.service.IProjectMakertreeService;
+
+@Service
+@Transactional
+public class ProjectMakertreeService extends BaseService implements IProjectMakertreeService {
+	protected static Logger logger = LoggerFactory.getLogger(ProjectMakertreeService.class);
+	@Autowired
+	@Qualifier("projectMakertreeDao")
+	private IProjectMakertreeDao projectMakertreeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ProjectMakertree";
+	}
+	@Transactional(readOnly=true)
+	public ProjectMakertree getById(java.lang.Long id) throws ServiceException
+	{
+		return projectMakertreeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProjectMakertree entity) throws ServiceException
+	{
+		projectMakertreeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ProjectMakertree entity) throws ServiceException
+	{
+		Long adId = projectMakertreeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProjectMakertree entity) throws ServiceException
+	{
+		Integer returnValue =  projectMakertreeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = projectMakertreeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = projectMakertreeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProjectMakertreeQuery query = new ProjectMakertreeQuery();
+		try {
+			return projectMakertreeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectMakertree> findPage(Page<ProjectMakertree> page, ProjectMakertreeQuery query) throws ServiceException
+	{
+		return projectMakertreeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectMakertree> findPage(Page<ProjectMakertree> page,String statement, ProjectMakertreeQuery query) throws ServiceException
+	{
+		return projectMakertreeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectMakertree> findList(ProjectMakertreeQuery query) throws ServiceException
+	{
+		return projectMakertreeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectMakertree> findList(ProjectMakertreeQuery query,Integer pageSize) throws ServiceException
+	{
+		return projectMakertreeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProjectMakertree> findList(ProjectMakertreeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return projectMakertreeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectMakertree> findAllList() throws ServiceException
+	{
+		return projectMakertreeDao.findAllList();
+	}
+	@Override
+	public Integer deleteAlone(Long projectMakertreeId) {
+		List<java.lang.Long> idList = new ArrayList<Long>();
+		if(projectMakertreeId!=0){
+			idList.add(projectMakertreeId);
+		}
+		finddeleteIds(idList,projectMakertreeId);
+		
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = projectMakertreeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	public List<java.lang.Long>  finddeleteIds(List<java.lang.Long> idList,Long id){
+		ProjectMakertreeQuery query = new ProjectMakertreeQuery();
+		query.setFparentid(id);
+		List<ProjectMakertree> list = new ArrayList<ProjectMakertree>();
+		list = this.projectMakertreeDao.findList(query);
+		if(list!=null&&list.size()>0){
+			for(ProjectMakertree pd:list){
+				idList.add(pd.getId());
+				finddeleteIds(idList,pd.getId());
+			}
+		}
+		return idList;
+	}
+	
+
+}

@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdExamineSolutionItem;
+import com.terrence.crm.dol.dao.IPdExamineSolutionItemDao;
+import com.terrence.crm.dol.query.PdExamineSolutionItemQuery;
+
+@Repository
+public class PdExamineSolutionItemDao extends BaseIbatisDao<PdExamineSolutionItem,java.lang.Long> implements IPdExamineSolutionItemDao{
+
+		
+	public void saveOrUpdate(PdExamineSolutionItem entity) {
+		if(entity.getPisiid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdExamineSolutionItem";
+	}
+	public PdExamineSolutionItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdExamineSolutionItem)this.getSqlMapClientTemplate().queryForObject("PdExamineSolutionItem.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByEntity(String statement,PdExamineSolutionItemQuery query) {
+		this.getSqlMapClientTemplate().delete(statement, query);
+	}
+
+}

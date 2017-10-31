@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="SalesBratio">
+
+<resultMap id="RM.SalesBratio" class="com.terrence.crm.dol.bean.SalesBratio">
+	<result property="id" column="id"/>
+	<result property="saleId" column="saleId"/>
+	<result property="saleName" column="saleName"/>
+	<result property="bztarget" column="bztarget"/>
+	<result property="bzselfratio" column="bzselfratio"/>
+	<result property="fbselfratio" column="fbselfratio"/>
+	<result property="bzsmratio" column="bzsmratio"/>
+	<result property="fbsmratio" column="fbsmratio"/>
+	<result property="bzamratio" column="bzamratio"/>
+	<result property="fbamratio" column="fbamratio"/>
+	<result property="salemanagerId" column="salemanagerId"/>
+	<result property="salemanagerName" column="salemanagerName"/>
+	<result property="areamanagerId" column="areamanagerId"/>
+	<result property="areamanagerName" column="areamanagerName"/>
+	<result property="fnotes" column="fnotes"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="SalesBratio.columns">
+	<![CDATA[
+		t_sales_bratio.id ,
+		t_sales_bratio.saleId ,
+		t_sales_bratio.saleName ,
+		t_sales_bratio.bztarget ,
+		t_sales_bratio.bzselfratio ,
+		t_sales_bratio.fbselfratio ,
+		t_sales_bratio.bzsmratio ,
+		t_sales_bratio.fbsmratio ,
+		t_sales_bratio.bzamratio ,
+		t_sales_bratio.fbamratio ,
+		t_sales_bratio.salemanagerId ,
+		t_sales_bratio.salemanagerName,
+		t_sales_bratio.areamanagerId,
+		t_sales_bratio.areamanagerName , 
+		t_sales_bratio.fnotes  
+	]]>
+</sql>
+
+<insert id="SalesBratio.insert" >
+	<![CDATA[
+	INSERT INTO t_sales_bratio (
+		saleId,
+		saleName,
+		bztarget,
+		bzselfratio,
+		fbselfratio,
+		bzsmratio,
+		fbsmratio,
+		bzamratio,
+		fbamratio ,
+		salemanagerId ,
+		salemanagerName,
+		areamanagerId,
+		areamanagerName ,
+		fnotes   
+	) VALUES (
+		#saleId#,
+		#saleName#,
+		#bztarget#,
+		#bzselfratio#,
+		#fbselfratio#,
+		#bzsmratio#,
+		#fbsmratio#,
+		#bzamratio#,
+		#fbamratio#,
+		#salemanagerId# ,
+		#salemanagerName#,
+		#areamanagerId#,
+		#areamanagerName# ,
+		#fnotes# 
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="SalesBratio.update" parameterClass="com.terrence.crm.dol.bean.SalesBratio"> 
+	UPDATE t_sales_bratio 
+	<dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="bztarget">
+	        	bztarget = #bztarget# 
+	        </isNotEmpty>
+	        <isEmpty prepend="," property="bztarget">
+	        	bztarget = null 
+	        </isEmpty>
+	        <isNotEmpty prepend="," property="bzselfratio">
+	        	bzselfratio = #bzselfratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbselfratio">
+	        	fbselfratio = #fbselfratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bzsmratio">
+	        	bzsmratio = #bzsmratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbsmratio">
+	        	fbsmratio = #fbsmratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bzamratio">
+	        	bzamratio = #bzamratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbamratio">
+	        	fbamratio = #fbamratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="salemanagerId">
+	        	salemanagerId = #salemanagerId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="salemanagerName">
+	        	salemanagerName = #salemanagerName# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areamanagerId">
+	        	areamanagerId = #areamanagerId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areamanagerName">
+	        	areamanagerName = #areamanagerName# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnotes">
+	        	fnotes = #fnotes# 
+	        </isNotEmpty>
+	        <isEmpty prepend="," property="fnotes">
+	        	fnotes =null 
+	        </isEmpty>
+	        <isEmpty prepend="," property="salemanagerName">
+				salemanagerName = null,  
+				bzsmratio = null ,
+				fbsmratio = null ,
+				salemanagerId = null 
+			</isEmpty>
+			<isEmpty prepend="," property="areamanagerName">
+				areamanagerName = null ,
+				areamanagerId = null  ,
+				bzamratio = null ,
+				fbamratio = null 
+			</isEmpty>
+			<isNotEmpty prepend="," property="saleId">
+	        	saleId = #saleId#  
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="saleName">
+	        	saleName = #saleName# 
+	        </isNotEmpty>
+	    </dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="SalesBratio.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_sales_bratio.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="saleId">
+			t_sales_bratio.saleId = #saleId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="saleName">
+			t_sales_bratio.saleName = #saleName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="bztarget">
+			t_sales_bratio.bztarget = #bztarget# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="bzselfratio">
+			t_sales_bratio.bzselfratio = #bzselfratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fbselfratio">
+			t_sales_bratio.fbselfratio = #fbselfratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="bzsmratio">
+			t_sales_bratio.bzsmratio = #bzsmratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fbsmratio">
+			t_sales_bratio.fbsmratio = #fbsmratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="bzamratio">
+			t_sales_bratio.bzamratio = #bzamratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fbamratio">
+			t_sales_bratio.fbamratio = #fbamratio# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="salemanagerId">
+			t_sales_bratio.salemanagerId = #salemanagerId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="salemanagerName">
+			t_sales_bratio.salemanagerName = #salemanagerName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="areamanagerId">
+			t_sales_bratio.areamanagerId = #areamanagerId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="areamanagerName">
+			t_sales_bratio.areamanagerName = #areamanagerName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fnotes">
+			t_sales_bratio.fnotes = #fnotes# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="SalesBratio.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_sales_bratio.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="saleId">
+		t_sales_bratio.saleId = #saleId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="saleName">
+		t_sales_bratio.saleName = #saleName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="bztarget">
+		t_sales_bratio.bztarget = #bztarget# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="bzselfratio">
+		t_sales_bratio.bzselfratio = #bzselfratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fbselfratio">
+		t_sales_bratio.fbselfratio = #fbselfratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="bzsmratio">
+		t_sales_bratio.bzsmratio = #bzsmratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fbsmratio">
+		t_sales_bratio.fbsmratio = #fbsmratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="bzamratio">
+		t_sales_bratio.bzamratio = #bzamratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fbamratio">
+		t_sales_bratio.fbamratio = #fbamratio# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="salemanagerId">
+		t_sales_bratio.salemanagerId = #salemanagerId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="salemanagerName">
+		t_sales_bratio.salemanagerName = #salemanagerName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="areamanagerId">
+		t_sales_bratio.areamanagerId = #areamanagerId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="areamanagerName">
+		t_sales_bratio.areamanagerName = #areamanagerName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fnotes">
+		t_sales_bratio.fnotes = #fnotes# 
+	</isNotEmpty>
+</sql>
+
+<select id="SalesBratio.getById" resultMap="RM.SalesBratio">
+	select <include refid="SalesBratio.columns"/> from t_sales_bratio where id=#id#
+</select>
+
+<select id="SalesBratio.getByProperty" resultMap="RM.SalesBratio">
+	select <include refid="SalesBratio.columns"/> from t_sales_bratio where $propertyName$=#propertyValue#
+</select>
+
+<delete id="SalesBratio.delete">
+	<![CDATA[
+		DELETE FROM t_sales_bratio WHERE id=#id#
+	]]>
+</delete>
+<delete id="SalesBratio.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_sales_bratio WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="SalesBratio.findPage.count" resultClass="long">
+	select count(*) from t_sales_bratio <include refid="SalesBratio.findPage.where"/>
+</select>
+
+<select id="SalesBratio.findPage" resultMap="RM.SalesBratio">
+	select <include refid="SalesBratio.columns"/> 
+		from t_sales_bratio 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_sales_bratio <include refid="SalesBratio.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="SalesBratio.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="SalesBratio.findList" resultMap="RM.SalesBratio">
+	SELECT <include refid="SalesBratio.columns"/> FROM t_sales_bratio
+	<include refid="SalesBratio.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

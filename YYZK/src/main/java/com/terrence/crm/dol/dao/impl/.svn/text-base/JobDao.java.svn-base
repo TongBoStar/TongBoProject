@@ -1,0 +1,54 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Job;
+import com.terrence.crm.dol.dao.IJobDao;
+
+@Repository
+public class JobDao extends BaseIbatisDao<Job,java.lang.Long> implements IJobDao{
+
+		
+	public void saveOrUpdate(Job entity) {
+		if(entity.getJobid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Job";
+	}
+	public Job getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Job)this.getSqlMapClientTemplate().queryForObject("Job.getByProperty", map);		
+	}
+	
+	public Job getByTaskId(long taskid) {
+		return (Job)this.getSqlMapClientTemplate().queryForObject("Job.getByTaskId", taskid);
+	}
+	
+	public void deleteByTaskId(long taskid) {
+		this.getSqlMapClientTemplate().delete("Job.deleteByTaskId", taskid);
+	}
+
+	@Override
+	public List<Job> findListLogs(Job entity) {
+		return	(List<Job>)this.getSqlMapClientTemplate().queryForList("Job.findListLogs", entity);
+	}
+	
+	
+}

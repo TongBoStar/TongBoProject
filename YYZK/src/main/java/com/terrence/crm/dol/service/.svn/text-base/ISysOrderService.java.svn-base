@@ -1,0 +1,171 @@
+package com.terrence.crm.dol.service;
+
+import java.util.List;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.star.uno.Exception;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.SysOrderQuery;
+
+/**
+ * 标准订单业务处理接口
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:35:44
+ */
+public interface ISysOrderService {
+	public Long saveSysOrderList(List<SysOrder> sysOrderList);
+	/**
+	 * 3统计常州ERP中的销售人员销售订单的关联合同的应收款信息
+	 */
+	public void getContractSchemeInfoWithDif( ) throws ServiceException;
+	/**
+	 * 2统计常州ERP中的销售人员数据
+	 */
+	public void getContractEntryInfoWithDif( ) throws ServiceException;
+	/**
+	 * 1统计常州ERP中的销售人员数据
+	 */
+	public void getSeorderDatasWithDif() throws ServiceException;
+	/**
+	 * 3统计常州ERP中的合同号有,订单号没有的
+	 */
+	public void getContractSchemeInfoWithNoOrderNum( ) throws ServiceException;
+	/**
+	 * 2统计常州ERP中的 合同号有,订单号没有的
+	 */
+	public void getContractEntryInfoWithNoOrderNum( ) throws ServiceException;
+	/**
+	 * 1统计常州ERP中的销售人员数据
+	 */
+	public void getSeorderDatasWithNoOrderNum() throws ServiceException;
+	public void getSeorderDatas() throws ServiceException;
+	public void getContractEntryInfo() throws ServiceException;
+	public void getContractSchemeInfo() throws ServiceException;
+	/**
+	 * 查询订单
+	 */
+	public List<SysOrder> listSysOrders( 
+			SysOrderQuery sysOrderQuery);
+	/**
+	 * 改变订单状态
+	 */
+	public void examineSysOrderInfo(SysOrderQuery sysOrderQuery,SysOrder sysOrder) throws ServiceException;
+	/**
+	 * 保存或修改系统订单
+	 */
+	public void saveOrUpdateSysOrder(SysOrder sysOrder,String products,String collectPays,
+			String delcollectPays,String delproducts) throws ServiceException;
+	public void updateSysOrder(SysOrder sysOrder) throws ServiceException;
+	
+	/**
+	 * 查找系统订单的关联产品信息通过条件
+	 * @param order
+	 * @return
+	 */
+	public List<Product> findProductQueryList(ProductQuery  productQuery );
+	/**
+	 * 查找系统订单通过条件
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findListQuery(SysOrderQuery  sysorderQuery );
+	
+	/**
+	 * 通过系统订单编号查询系统订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findlistBySysOrderCode(SysOrderQuery  sysorderQuery );
+	/**
+	 * 保存系统订单
+	 * @param sysOrder 系统订单
+	 * @return 系统订单id
+	 */
+	public Long save(SysOrder sysOrder);
+	/**
+	 * 更新系统订单
+	 * @param sysOrder 系统订单
+	 * @throws Exception 异常信息
+	 */
+	public void update(SysOrder sysOrder) throws Exception;
+	/**
+	 * 从最新的数据表中查询系统订单 带有分页功能
+	 * @param page 分页数据
+	 * @param sysOrderQuery 系统订单查询类
+	 * @return 系统订单分页数据
+	 */
+	public Page<SysOrder> findPage(Page<SysOrder> page,SysOrderQuery sysOrderQuery);
+	/**
+	 * 删除系统订单
+	 * @param id 要删除的系统订单的id
+	 */
+	public void deleteOrder(Long id);
+	/**
+	 * 删除系统订单列表
+	 * @param checkedIdList 要删除的系统订单的ID列表
+	 */
+	public void deleteByMultipleId(List<Long> checkedIdList);
+	/**
+	 * 根据ID获取系统订单
+	 * @param id 要获取的系统订单的ID
+	 * @return 系统订单
+	 */
+	public SysOrder getById(Long id);
+	/**
+	 * 自动创建系统订单时进行的保存
+	 * @param orderEntity 标准订单类
+	 * @return 系统订单id
+	 */
+	public Long saveSysOrder(Order orderEntity);
+	/**
+	 * 更新系统订单包括 系统订单基本信息，产品信息，应收款信息
+	 * @param sysOrder 系统订单
+	 * @param products 产品列表
+	 * @param collectPays 应收款列表
+	 */
+	public void updateTogather(SysOrder sysOrder, String products,String collectPays,String delcollectPays,String delproducts);
+	/**
+	 * 获取历史列表
+	 * @param page 分页数据
+	 * @param sysOrderQuery 系统订单查询类
+	 * @return 系统订单分页数据
+	 */
+	public Page<SysOrder> findHistoryList(Page<SysOrder> page,SysOrderQuery sysOrderQuery);
+	/**
+	 * 根据订单编号删除订单(订单编号唯一)
+	 * @param checkedCodeList 要删除的订单编号列表
+	 */
+	public void deleteByMultipleOrderCode(List<String> checkedCodeList);
+	/**
+	 * 历史记录中查看订单详情
+	 * @param id 从历史记录中获取的系统订单的id
+	 * @return 系统订单
+	 */
+	public SysOrder getByIdFromHistory(Long id);
+	/**
+	 * 创建系统订单时进行的保存
+	 * @param sysOrder 系统订单
+	 * @param products 产品列表
+	 * @param collectPays 应收款列表
+	 */
+	public void saveTogather(SysOrder sysOrder, String products,String collectPays);
+	
+	/**
+	 * 查询系统订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<SysOrder> findlistBySysOrderCodes(SysOrderQuery  sysorderQuery );
+	public void exeprocessExamine(SysOrderQuery sysOrderQuery,
+			SysOrder sysOrder, ProcessExetask processExetask) throws ServiceException;
+	public List<SysOrder> findCheckedList(SysOrderQuery sysOrderQuery) throws ServiceException;
+	
+}

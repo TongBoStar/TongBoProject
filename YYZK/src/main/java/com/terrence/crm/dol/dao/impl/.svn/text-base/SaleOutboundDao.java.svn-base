@@ -1,0 +1,38 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.SaleOutbound;
+import com.terrence.crm.dol.dao.ISaleOutboundDao;
+import com.terrence.crm.dol.query.SaleOutboundQuery;
+
+@Repository
+public class SaleOutboundDao extends BaseIbatisDao<SaleOutbound,java.lang.Long> implements ISaleOutboundDao{
+
+		
+	public void saveOrUpdate(SaleOutbound entity) {
+		if(entity.getSaleid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "SaleOutbound";
+	}
+	public SaleOutbound getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SaleOutbound)this.getSqlMapClientTemplate().queryForObject("SaleOutbound.getByProperty", map);		
+	}
+
+	@Override
+	public SaleOutbound findSaleOut(SaleOutboundQuery saleOutboundQuery) {
+		return (SaleOutbound) this.getSqlMapClientTemplate().queryForObject("SaleOutbound.find.entity.saleOut", saleOutboundQuery);
+	}
+
+}

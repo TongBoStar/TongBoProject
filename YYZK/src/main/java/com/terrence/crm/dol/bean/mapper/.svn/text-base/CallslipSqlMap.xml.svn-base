@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Callslip">
+
+<resultMap id="RM.Callslip" class="com.terrence.crm.dol.bean.Callslip">
+	<result property="id" column="id"/>
+	<result property="storeroomId" column="storeroomId"/>
+	<result property="callslipCode" column="callslipCode"/>
+	<result property="sourceCode" column="sourceCode"/>
+	<result property="sourceId" column="sourceId"/>
+	<result property="callType" column="callType"/>
+	<result property="productCode" column="productCode"/>
+	<result property="productName" column="productName"/>
+	<result property="productModel" column="productModel"/>
+	<result property="makeNumberCode" column="makeNumberCode"/>
+	<result property="fcount" column="fcount"/>
+	<result property="createTime" column="createTime"/>
+	<result property="createrId" column="createrId"/>
+	<result property="fmark" column="fmark"/>
+	<result property="fstatus" column="fstatus"/>
+	<result property="fstatusDesc" column="fstatusDesc"/>
+	<result property="closetime" column="closetime"/>
+	<result property="closeuserId" column="closeuserId"/>
+	<result property="closeuserName" column="closeuserName"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Callslip.columns">
+	<![CDATA[
+		t_callslip.id ,
+		t_callslip.storeroomId ,
+		t_callslip.callslipCode ,
+		t_callslip.sourceCode ,
+		t_callslip.sourceId ,
+		t_callslip.callType ,
+		t_callslip.productCode ,
+		t_callslip.productName ,
+		t_callslip.productModel ,
+		t_callslip.makeNumberCode ,
+		t_callslip.fcount ,
+		t_callslip.createTime ,
+		t_callslip.createrId ,
+		t_callslip.fmark ,
+		t_callslip.fstatus ,
+		t_callslip.fstatusDesc,
+		t_callslip.closetime,
+		t_callslip.closeuserId,
+		t_callslip.closeuserName
+	]]>
+</sql>
+
+<insert id="Callslip.insert" >
+	INSERT INTO t_callslip (
+		storeroomId,
+		callslipCode,
+		sourceCode,
+		sourceId,
+		callType,
+		productCode,
+		productName,
+		productModel,
+		makeNumberCode,
+		fcount,
+		createTime,
+		createrId,
+		fmark,
+		fstatus,
+		fstatusDesc
+		<isNotEmpty prepend="," property="closetime">
+			closetime
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserId">
+			closeuserId
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserName">
+			closeuserName
+		</isNotEmpty>
+	) VALUES (
+		#storeroomId#,
+		#callslipCode#,
+		#sourceCode#,
+		#sourceId#,
+		#callType#,
+		#productCode#,
+		#productName#,
+		#productModel#,
+		#makeNumberCode#,
+		#fcount#,
+		#createTime#,
+		#createrId#,
+		#fmark#,
+		#fstatus#,
+		#fstatusDesc#
+		<isNotEmpty prepend="," property="closetime">
+			#closetime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserId">
+			#closeuserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserName">
+			#closeuserName# 
+		</isNotEmpty>
+	)
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Callslip.update" parameterClass="com.terrence.crm.dol.bean.Callslip"> 
+	UPDATE t_callslip 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="callslipCode">
+			callslipCode = #callslipCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="storeroomId">
+			storeroomId = #storeroomId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sourceCode">
+			sourceCode = #sourceCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sourceId">
+			sourceId = #sourceId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="callType">
+			callType = #callType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="productCode">
+			productCode = #productCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="productName">
+			productName = #productName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="productModel">
+			productModel = #productModel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="makeNumberCode">
+			makeNumberCode = #makeNumberCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fcount">
+			fcount = #fcount# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrId">
+			createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fstatus">
+			fstatus = #fstatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fstatusDesc">
+			fstatusDesc = #fstatusDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closetime">
+			closetime = #closetime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserId">
+			closeuserId = #closeuserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="closeuserName">
+			closeuserName = #closeuserName# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Callslip.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_callslip.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="callslipCode">
+			t_callslip.callslipCode = #callslipCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="storeroomId">
+			t_callslip.storeroomId = #storeroomId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sourceCode">
+			t_callslip.sourceCode = #sourceCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sourceId">
+			t_callslip.sourceId = #sourceId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="callType">
+			t_callslip.callType = #callType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="productCode">
+			t_callslip.productCode = #productCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="productName">
+			t_callslip.productName = #productName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="productModel">
+			t_callslip.productModel = #productModel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="makeNumberCode">
+			t_callslip.makeNumberCode = #makeNumberCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fcount">
+			t_callslip.fcount = #fcount# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_callslip.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrId">
+			t_callslip.createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_callslip.fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fstatus">
+			t_callslip.fstatus = #fstatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fstatusDesc">
+			t_callslip.fstatusDesc = #fstatusDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="closetime">
+			t_callslip.closetime = #closetime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="closeuserId">
+			t_callslip.closeuserId = #closeuserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="closeuserName">
+			t_callslip.closeuserName = #closeuserName# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Callslip.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_callslip.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="callslipCode">
+		t_callslip.callslipCode = #callslipCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="storeroomId">
+		t_callslip.storeroomId = #storeroomId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sourceCode">
+		t_callslip.sourceCode = #sourceCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sourceId">
+		t_callslip.sourceId = #sourceId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="callType">
+		t_callslip.callType = #callType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="productCode">
+		t_callslip.productCode = #productCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="productName">
+		t_callslip.productName = #productName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="productModel">
+		t_callslip.productModel = #productModel# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="makeNumberCode">
+		t_callslip.makeNumberCode = #makeNumberCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fcount">
+		t_callslip.fcount = #fcount# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_callslip.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrId">
+		t_callslip.createrId = #createrId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_callslip.fmark = #fmark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fstatus">
+		t_callslip.fstatus = #fstatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fstatusDesc">
+		t_callslip.fstatusDesc = #fstatusDesc# 
+	</isNotEmpty>
+	
+	<isNotEmpty prepend="AND" property="fstatusDesc">
+		t_callslip.fstatusDesc = #fstatusDesc# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="closetime">
+		t_callslip.closetime = #closetime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="closeuserId">
+		t_callslip.closeuserId = #closeuserId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="closeuserName">
+		t_callslip.closeuserName = #closeuserName# 
+	</isNotEmpty>
+</sql>
+
+<select id="Callslip.getById" resultMap="RM.Callslip">
+	select <include refid="Callslip.columns"/> from t_callslip where id=#id#
+</select>
+
+<select id="Callslip.getByProperty" resultMap="RM.Callslip">
+	select <include refid="Callslip.columns"/> from t_callslip where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Callslip.delete">
+	<![CDATA[
+		DELETE FROM t_callslip WHERE id=#id#
+	]]>
+</delete>
+<delete id="Callslip.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_callslip WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Callslip.findPage.count" resultClass="long">
+	select count(*) from t_callslip <include refid="Callslip.findPage.where"/>
+</select>
+
+<select id="Callslip.findPage" resultMap="RM.Callslip">
+	select <include refid="Callslip.columns"/> 
+		from t_callslip 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_callslip <include refid="Callslip.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="Callslip.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Callslip.findList" resultMap="RM.Callslip">
+	SELECT <include refid="Callslip.columns"/> FROM t_callslip
+	<include refid="Callslip.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

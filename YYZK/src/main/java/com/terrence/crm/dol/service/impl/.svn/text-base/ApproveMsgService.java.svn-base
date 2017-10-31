@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ApproveMsg;
+import com.terrence.crm.dol.query.ApproveMsgQuery;
+import com.terrence.crm.dol.dao.IApproveMsgDao;
+import com.terrence.crm.dol.service.IApproveMsgService;
+
+@Service
+@Transactional
+public class ApproveMsgService extends BaseService implements IApproveMsgService {
+	protected static Logger logger = LoggerFactory.getLogger(ApproveMsgService.class);
+	@Autowired
+	@Qualifier("approveMsgDao")
+	private IApproveMsgDao approveMsgDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ApproveMsg";
+	}
+	@Transactional(readOnly=true)
+	public ApproveMsg getById(java.lang.Long id) throws ServiceException
+	{
+		return approveMsgDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ApproveMsg entity) throws ServiceException
+	{
+		approveMsgDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ApproveMsg entity) throws ServiceException
+	{
+		Long adId = approveMsgDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ApproveMsg entity) throws ServiceException
+	{
+		Integer returnValue =  approveMsgDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = approveMsgDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = approveMsgDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ApproveMsgQuery query = new ApproveMsgQuery();
+		try {
+			return approveMsgDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ApproveMsg> findPage(Page<ApproveMsg> page, ApproveMsgQuery query) throws ServiceException
+	{
+		return approveMsgDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ApproveMsg> findPage(Page<ApproveMsg> page,String statement, ApproveMsgQuery query) throws ServiceException
+	{
+		return approveMsgDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ApproveMsg> findList(ApproveMsgQuery query) throws ServiceException
+	{
+		return approveMsgDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ApproveMsg> findList(ApproveMsgQuery query,Integer pageSize) throws ServiceException
+	{
+		return approveMsgDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ApproveMsg> findList(ApproveMsgQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return approveMsgDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ApproveMsg> findAllList() throws ServiceException
+	{
+		return approveMsgDao.findAllList();
+	}
+
+}

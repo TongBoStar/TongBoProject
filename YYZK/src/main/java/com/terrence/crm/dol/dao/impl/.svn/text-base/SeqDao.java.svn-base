@@ -1,0 +1,56 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Seq;
+import com.terrence.crm.dol.dao.ISeqDao;
+import com.terrence.crm.dol.utils.StringCodeUtils;
+
+@Repository
+public class SeqDao extends BaseIbatisDao<Seq,java.lang.Long> implements ISeqDao{
+
+	public void saveOrUpdate(Seq entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Seq";
+	}
+	public Seq getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Seq)this.getSqlMapClientTemplate().queryForObject("Seq.getByProperty", map);		
+	}
+
+	@Override
+	public void updateSeqVal(Seq seq) {
+		this.getSqlMapClientTemplate().update("Seq.update.Val", seq);
+	}
+
+	@Override
+	public String getCurSeq(String prefix,Integer len) {
+		Map map=new HashMap();		
+		map.put("propertyName", "periex");
+		map.put("propertyValue", prefix);
+		Seq seq=(Seq)this.getSqlMapClientTemplate().queryForObject("Seq.getByProperty", map);
+		String str=seq.getPeriex()+StringCodeUtils.generatorseq(seq.getSeqval(),len);
+		seq.setPeriex(prefix);
+		seq.setSeqval(1);
+		updateSeqVal(seq);
+		return str;
+	}
+}

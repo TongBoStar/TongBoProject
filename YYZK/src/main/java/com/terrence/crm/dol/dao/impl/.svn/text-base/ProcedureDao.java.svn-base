@@ -1,0 +1,48 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Procedure;
+import com.terrence.crm.dol.dao.IProcedureDao;
+
+@Repository
+public class ProcedureDao extends BaseIbatisDao<Procedure,java.lang.Long> implements IProcedureDao{
+
+		
+	public void saveOrUpdate(Procedure entity) {
+		if(entity.getProcedurerid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Procedure";
+	}
+	public Procedure getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Procedure)this.getSqlMapClientTemplate().queryForObject("Procedure.getByProperty", map);		
+	}
+
+	@Override
+	public List<Procedure> findByItemId(Long baseitemid) {
+		Map map=new HashMap();		
+		map.put("propertyid", baseitemid);	
+		
+		return (List<Procedure>)this.getSqlMapClientTemplate().queryForList("Procedure.findByItemId", map);
+	}
+
+}

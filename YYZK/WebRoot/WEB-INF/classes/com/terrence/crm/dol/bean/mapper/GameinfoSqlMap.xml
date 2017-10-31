@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Gameinfo">
+
+<resultMap id="RM.Gameinfo" class="com.terrence.crm.dol.bean.Gameinfo">
+	<result property="id" column="id"/>
+	<result property="gameName" column="gameName"/>
+	<result property="gamePackage" column="gamePackage"/>
+	<result property="gameType" column="gameType"/>
+	<result property="isad" column="isad"/>
+	<result property="createUserId" column="createUserId"/>
+	<result property="createTime" column="createTime"/>
+	<result property="isrecommend" column="isrecommend"/>
+	<result property="fmark" column="fmark"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Gameinfo.columns">
+	<![CDATA[
+		t_gameinfo.id ,
+		t_gameinfo.gameName ,
+		t_gameinfo.gamePackage ,
+		t_gameinfo.gameType ,
+		t_gameinfo.isad ,
+		t_gameinfo.createUserId ,
+		t_gameinfo.createTime ,
+		t_gameinfo.isrecommend ,
+		t_gameinfo.fmark
+	]]>
+</sql>
+
+<insert id="Gameinfo.insert" >
+	<![CDATA[
+	INSERT INTO t_gameinfo (
+		gameName,
+		gamePackage,
+		gameType,
+		isad,
+		createUserId,
+		createTime,
+		isrecommend,
+		fmark
+	) VALUES (
+		#gameName#,
+		#gamePackage#,
+		#gameType#,
+		#isad#,
+		#createUserId#,
+		#createTime#,
+		#isrecommend#,
+		#fmark#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Gameinfo.update" parameterClass="com.terrence.crm.dol.bean.Gameinfo"> 
+	UPDATE t_gameinfo 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="gameName">
+			gameName = #gameName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="gamePackage">
+			gamePackage = #gamePackage# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="gameType">
+			gameType = #gameType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="isad">
+			isad = #isad# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createUserId">
+			createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="isrecommend">
+			isrecommend = #isrecommend# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Gameinfo.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_gameinfo.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="gameName">
+			t_gameinfo.gameName = #gameName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="gamePackage">
+			t_gameinfo.gamePackage = #gamePackage# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="gameType">
+			t_gameinfo.gameType = #gameType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isad">
+			t_gameinfo.isad = #isad# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createUserId">
+			t_gameinfo.createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_gameinfo.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isrecommend">
+			t_gameinfo.isrecommend = #isrecommend# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_gameinfo.fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Gameinfo.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_gameinfo.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="gameName">
+		t_gameinfo.gameName = #gameName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="gamePackage">
+		t_gameinfo.gamePackage = #gamePackage# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="gameType">
+		t_gameinfo.gameType = #gameType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="isad">
+		t_gameinfo.isad = #isad# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createUserId">
+		t_gameinfo.createUserId = #createUserId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_gameinfo.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="isrecommend">
+		t_gameinfo.isrecommend = #isrecommend# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_gameinfo.fmark = #fmark# 
+	</isNotEmpty>
+</sql>
+
+<select id="Gameinfo.getById" resultMap="RM.Gameinfo">
+	select <include refid="Gameinfo.columns"/> from t_gameinfo where id=#id#
+</select>
+
+<select id="Gameinfo.getByProperty" resultMap="RM.Gameinfo">
+	select <include refid="Gameinfo.columns"/> from t_gameinfo where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Gameinfo.delete">
+	<![CDATA[
+		DELETE FROM t_gameinfo WHERE id=#id#
+	]]>
+</delete>
+<delete id="Gameinfo.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_gameinfo WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Gameinfo.findPage.count" resultClass="long">
+	select count(*) from t_gameinfo <include refid="Gameinfo.findPage.where"/>
+</select>
+
+<select id="Gameinfo.findPage" resultMap="RM.Gameinfo">
+	select <include refid="Gameinfo.columns"/> 
+		from t_gameinfo 
+	<include refid="Gameinfo.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Gameinfo.findList" resultMap="RM.Gameinfo">
+	SELECT <include refid="Gameinfo.columns"/> FROM t_gameinfo
+	<include refid="Gameinfo.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

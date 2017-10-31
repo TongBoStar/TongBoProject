@@ -1,0 +1,139 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Teams;
+import com.terrence.crm.dol.dao.ITeamsDao;
+import com.terrence.crm.dol.query.TeamsQuery;
+import com.terrence.crm.dol.service.ITeamsService;
+
+@Service
+@Transactional
+public class TeamsService extends BaseService implements ITeamsService{
+	protected static Logger logger = LoggerFactory.getLogger(TeamService.class);
+	@Autowired
+	@Qualifier("teamsDao")
+	private ITeamsDao teamsDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Teams";
+	}
+	@Transactional(readOnly=true)
+	public List<Teams> findAllList() throws ServiceException
+	{
+		List<Teams> returnlist=new ArrayList<Teams>();
+		treeList(-1L,teamsDao.findAllList(),0,returnlist);
+		
+		for(Teams tt:returnlist){
+			//System.out.println(tt.getTeamname());
+		}
+		return returnlist;
+	}
+	public void treeList(Long superior,List<Teams> teamlist,int n,List<Teams> returnlist){
+		for(Teams t:teamlist){
+			if(t.getTeamsuperior()!=null&&t.getTeamsuperior().intValue()==superior.intValue()){
+				String space="";
+				if(superior.intValue()!=-1){
+					for(int i=1;i<t.getTeamlevel();i++){
+						System.out.print("  ");
+						space+="&nbsp&nbsp&nbsp";
+					}
+				}
+				//System.out.println("--"+t.getTeamname());
+				t.setTeamname(space+t.getTeamname());
+				returnlist.add(t);
+				treeList(t.getTeamid(),teamlist,0,returnlist);
+			}else{
+				n++;
+				if(n==teamlist.size()){
+					return;
+				}
+			}
+		}
+}
+	@Override
+	public Teams getById(Long id) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void saveOrUpdate(Teams entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public Long save(Teams entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Integer update(Teams entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public Page<Teams> findPage(Page<Teams> page, TeamsQuery query)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<Teams> findList(TeamsQuery query) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<Teams> findteamDeviceList(TeamsQuery teamQuery)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<Teams> findListTeam(TeamsQuery teamQuery)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Teams finddengluId() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<Teams> findloadteam() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<Teams> findrecursive(Long teamid) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

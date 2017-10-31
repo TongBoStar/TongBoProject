@@ -1,0 +1,114 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckDetail;
+import com.terrence.crm.dol.query.CheckDetailQuery;
+import com.terrence.crm.dol.dao.ICheckDetailDao;
+import com.terrence.crm.dol.service.ICheckDetailService;
+
+@Service
+@Transactional
+public class CheckDetailService extends BaseService implements ICheckDetailService {
+	protected static Logger logger = LoggerFactory.getLogger(CheckDetailService.class);
+	@Autowired
+	@Qualifier("checkDetailDao")
+	private ICheckDetailDao checkDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CheckDetail";
+	}
+	@Transactional(readOnly=true)
+	public CheckDetail getById(java.lang.Long id) throws ServiceException
+	{
+		return checkDetailDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CheckDetail entity) throws ServiceException
+	{
+		checkDetailDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CheckDetail entity) throws ServiceException
+	{
+		Long adId = checkDetailDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CheckDetail entity) throws ServiceException
+	{
+		Integer returnValue =  checkDetailDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = checkDetailDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = checkDetailDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CheckDetailQuery query = new CheckDetailQuery();
+		try {
+			return checkDetailDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckDetail> findPage(Page<CheckDetail> page, CheckDetailQuery query) throws ServiceException
+	{
+		return checkDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckDetail> findList(CheckDetailQuery query) throws ServiceException
+	{
+		return checkDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckDetail> findList(CheckDetailQuery query,Integer pageSize) throws ServiceException
+	{
+		return checkDetailDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CheckDetail> findAllList() throws ServiceException
+	{
+		return checkDetailDao.findAllList();
+	}
+
+}

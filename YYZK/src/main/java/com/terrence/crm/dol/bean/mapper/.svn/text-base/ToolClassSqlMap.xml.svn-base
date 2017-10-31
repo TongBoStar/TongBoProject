@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ToolClass">
+
+        
+	<resultMap id="RM.ToolClass" class="com.terrence.crm.dol.bean.ToolClass">
+        <result property="classid" column="classid"/>
+        <result property="classname" column="classname"/>
+        <result property="parentid" column="parentid"/>
+        <result property="levels" column="levels"/>
+        <result property="classcode" column="classcode"/>
+        <result property="toolDetail" resultMap="RM.ToolDetail.toolsid" />
+    </resultMap>
+    
+    <resultMap id="RM.ToolClass.Name" class="com.terrence.crm.dol.bean.ToolClass">
+        <result property="classid" column="classid"/>
+        <result property="classname" column="classname"/>
+        <result property="parentid" column="parentid"/>
+        <result property="levels" column="levels"/>
+        <result property="classcode" column="classcode"/>
+        <result property="name" column="name"/>
+    </resultMap>
+    
+	<resultMap id="RM.ToolDetail.toolsid" class="com.terrence.crm.dol.bean.ToolDetail">
+        <result property="toolsid" column="toolsid"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ToolClass.columns">
+	    <![CDATA[
+        	t_tool_class.classid ,
+        	t_tool_class.classname ,
+        	t_tool_class.parentid ,
+        	t_tool_class.levels ,
+        	t_tool_class.classcode
+	    ]]>
+	</sql>
+	
+   <insert id="ToolClass.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_tool_class (
+        	classname ,
+        	parentid ,
+        	levels ,
+        	classcode
+        ) VALUES (
+        	#classname# ,
+        	#parentid# ,
+        	#levels# ,
+        	#classcode#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="classid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ToolClass.update" parameterClass="com.terrence.crm.dol.bean.ToolClass">         
+        UPDATE t_tool_class 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="classname">
+	        	classname = #classname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="levels">
+	        	levels = #levels# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="classcode">
+	        	classcode=#classcode#
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        classid = #classid# 
+    </update>
+    
+	<delete id="ToolClass.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_tool_class where
+       classid = #classid# 
+    ]]>
+    </delete>
+    
+    <delete id="ToolClass.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_tool_class 
+        WHERE
+       classid in ($classid$) 
+    ]]>
+    </delete>
+    
+    <select id="ToolClass.getById" resultMap="RM.ToolClass">
+	    select <include refid="ToolClass.columns"/>
+	    
+	        from t_tool_class 
+	        where 
+		        classid = #classid# 
+	    
+    </select>
+    
+	<select id="ToolClass.getByProperty" resultMap="RM.ToolClass">
+		select <include refid="ToolClass.columns"/> from t_tool_class where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ToolClass.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="classid">
+	             t_tool_class.classid = #classid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="classname">
+	             t_tool_class.classname = #classname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_tool_class.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_tool_class.levels = #levels#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="and" property="classcode">
+	        	t_tool_class.classcode=#classcode#
+	        </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ToolClass.findPage.and">
+			<isNotEmpty prepend="AND" property="classid">
+	             t_tool_class.classid = #classid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="classname">
+	             t_tool_class.classname = #classname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_tool_class.parentid = #parentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="levels">
+	             t_tool_class.levels = #levels#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="and" property="classcode">
+	        	t_tool_class.classcode=#classcode#
+	        </isNotEmpty>
+	</sql>
+    
+    <select id="ToolClass.findList" resultMap="RM.ToolClass">
+    	SELECT 
+    		<include refid="ToolClass.columns"/> ,t_tool_detail.toolsid
+    	FROM 
+    		t_tool_class left join t_tool_detail on t_tool_class.classid=t_tool_detail.classid
+		<include refid="ToolClass.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ToolClass.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tool_class
+    ]]>
+		<include refid="ToolClass.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ToolClass.findPage" resultMap="RM.ToolClass">
+    	select <include refid="ToolClass.columns"/>	    
+	        from t_tool_class 	   
+		<include refid="ToolClass.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ToolClass.findPage" resultMap="RM.ToolClass.Name">
+    	select <include refid="ToolClass.columns"/> , t.classname name  
+	        from t_tool_class  left join t_tool_class t on t.classid = t_tool_class.parentid
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_tool_class.classid 
+	   not in(select $notTop$ 
+       t_tool_class.classid 
+	   from t_tool_class <include refid="ToolClass.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ToolClass.findPage.and"/>
+    	<isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

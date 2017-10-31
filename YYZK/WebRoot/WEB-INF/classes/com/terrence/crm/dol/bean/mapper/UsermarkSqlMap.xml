@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Usermark">
+
+<resultMap id="RM.Usermark" class="com.terrence.crm.dol.bean.Usermark">
+	<result property="id" column="id"/>
+	<result property="upTime" column="upTime"/>
+	<result property="operateType" column="operateType"/>
+	<result property="markContent" column="markContent"/>
+	<result property="serialNumber" column="serialNumber"/>
+	<result property="stCode" column="stCode"/>
+	<result property="fyear" column="fyear"/>
+	<result property="fmonth" column="fmonth"/>
+	<result property="fday" column="fday"/>
+	<result property="fversion" column="fversion"/>
+	<result property="username" column="username"/>
+	<result property="telNumber" column="telNumber"/>
+	<result property="faddress" column="faddress"/>
+	<result property="takeTime" column="takeTime"/>
+	<result property="useTimes" column="useTimes"/>
+	<result property="longitude" column="longitude"/>
+	<result property="latitude" column="latitude"/>
+	<result property="agentName" column="agentName"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Usermark.columns">
+	<![CDATA[
+		t_usermark.id ,
+		t_usermark.upTime ,
+		t_usermark.operateType ,
+		t_usermark.markContent ,
+		t_usermark.serialNumber ,
+		t_usermark.fyear ,
+		t_usermark.fmonth ,
+		t_usermark.fday ,
+		t_usermark.fversion ,
+		t_usermark.takeTime ,
+		t_usermark.useTimes ,
+		t_usermark.longitude,
+		t_usermark.latitude
+	]]>
+</sql>
+
+<insert id="Usermark.insert" >
+	<![CDATA[
+	INSERT INTO t_usermark (
+		upTime,
+		operateType,
+		markContent,
+		serialNumber,
+		fyear,
+		fmonth,
+		fday,
+		fversion,
+		takeTime,
+		useTimes ,
+		longitude,
+		latitude
+	) VALUES (
+		#upTime#,
+		#operateType#,
+		#markContent#,
+		#serialNumber#,
+		#fyear#,
+		#fmonth#,
+		#fday#,
+		#fversion#,
+		#takeTime#,
+		#useTimes#,
+		#longitude#,
+		#latitude#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Usermark.update" parameterClass="com.terrence.crm.dol.bean.Usermark"> 
+	UPDATE t_usermark 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="upTime">
+			upTime = #upTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="operateType">
+			operateType = #operateType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="markContent">
+			markContent = #markContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serialNumber">
+			serialNumber = #serialNumber# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fyear">
+			fyear = #fyear# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmonth">
+			fmonth = #fmonth# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fday">
+			fday = #fday# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fversion">
+			fversion = #fversion# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="useTimes">
+			useTimes = #useTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="longitude">
+			longitude = #longitude# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="latitude">
+			latitude = #latitude# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Usermark.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_usermark.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="upTime">
+			t_usermark.upTime = #upTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operateType">
+			t_usermark.operateType = #operateType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="markContent">
+			t_usermark.markContent = #markContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serialNumber">
+			t_usermark.serialNumber like ( '%$serialNumber$%' )
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stCode">
+			t_usermark.serialNumber in (select serialNumber from t_stcode where stCode like ( '%$stCode$%' ))
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="username">
+			t_usermark.serialNumber in (select serialNumber from t_stcode where t_stcode.username like ( '%$username$%' ))
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="agentName">
+			t_usermark.serialNumber in (select serialNumber from t_stcode where t_stcode.agentName like ( '%$agentName$%' ))
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fyear">
+			t_usermark.fyear = #fyear# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmonth">
+			t_usermark.fmonth = #fmonth# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fday">
+			t_usermark.fday = #fday# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fversion">
+			t_usermark.fversion = #fversion# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="useTimes">
+			t_usermark.useTimes = #useTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="longitude">
+			t_usermark.longitude = #longitude# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="latitude">
+			t_usermark.latitude = #latitude# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Usermark.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_usermark.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="upTime">
+		t_usermark.upTime = #upTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="operateType">
+		t_usermark.operateType = #operateType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="markContent">
+		t_usermark.markContent = #markContent# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serialNumber">
+		t_usermark.serialNumber like ( '%$serialNumber$%' )
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stCode">
+		t_usermark.serialNumber in (select serialNumber from t_stcode where stCode like ( '%$stCode$%' ))
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="username">
+		t_usermark.serialNumber in (select serialNumber from t_stcode where t_stcode.username like ( '%$username$%' ))
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="agentName">
+		t_usermark.serialNumber in (select serialNumber from t_stcode where t_stcode.agentName like ( '%$agentName$%' ))
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fyear">
+		t_usermark.fyear = #fyear# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmonth">
+		t_usermark.fmonth = #fmonth# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fday">
+		t_usermark.fday = #fday# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fversion">
+		t_usermark.fversion = #fversion# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="useTimes">
+		t_usermark.useTimes = #useTimes# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="longitude">
+		t_usermark.longitude = #longitude# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="latitude">
+		t_usermark.latitude = #latitude# 
+	</isNotEmpty>
+</sql>
+
+<select id="Usermark.getById" resultMap="RM.Usermark">
+	select <include refid="Usermark.columns"/> ,t_stcode.stCode ,t_stcode.username,t_stcode.telNumber,t_stcode.faddress,t_stcode.agentName  
+		from t_usermark 
+		left join t_stcode on t_usermark.serialNumber = t_stcode.serialNumber where t_usermark.id=#id#
+</select>
+
+<select id="Usermark.getByProperty" resultMap="RM.Usermark">
+	select <include refid="Usermark.columns"/> ,t_stcode.stCode ,t_stcode.username,t_stcode.telNumber,t_stcode.faddress,t_stcode.agentName  
+		from t_usermark 
+		left join t_stcode on t_usermark.serialNumber = t_stcode.serialNumber where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Usermark.delete">
+	<![CDATA[
+		DELETE FROM t_usermark WHERE id=#id#
+	]]>
+</delete>
+<delete id="Usermark.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_usermark WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Usermark.findPage.count" resultClass="long">
+	select count(*) from t_usermark <include refid="Usermark.findPage.where"/>
+</select>
+<select id="Usermark.findList.Lastest.count" resultClass="long">
+	select count(*) from (select serialNumber,MAX(id) aaid from t_usermark group by serialNumber ) aa 
+	left join t_usermark on aa.aaid = t_usermark.id
+	<include refid="Usermark.findPage.where"/>
+</select>
+
+<select id="Usermark.findPage" resultMap="RM.Usermark">
+	select <include refid="Usermark.columns"/> ,t_stcode.stCode ,t_stcode.username,t_stcode.telNumber,t_stcode.faddress,t_stcode.agentName  
+		from t_usermark 
+		left join t_stcode on t_usermark.serialNumber = t_stcode.serialNumber
+	<include refid="Usermark.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Usermark.findList" resultMap="RM.Usermark">
+	SELECT <include refid="Usermark.columns"/> ,t_stcode.stCode ,t_stcode.username,t_stcode.telNumber,t_stcode.faddress,t_stcode.agentName  
+		from t_usermark 
+		left join t_stcode on t_usermark.serialNumber = t_stcode.serialNumber
+	<include refid="Usermark.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Usermark.findList.Lastest" resultMap="RM.Usermark">
+	select aa.serialNumber serialNumber,aa.aaid id ,t_usermark.fday,t_usermark.fmonth,t_usermark.fyear,t_usermark.fversion,t_usermark.takeTime,
+	t_usermark.markContent,t_usermark.operateType,t_usermark.upTime,t_stcode.stCode stCode,t_stcode.username,t_stcode.telNumber,t_stcode.faddress ,
+	t_usermark.latitude,t_usermark.longitude ,t_usermark.useTimes,t_stcode.agentName  
+	from 
+	(select serialNumber,MAX(id) aaid from t_usermark group by serialNumber ) aa 
+	left join t_usermark on aa.aaid = t_usermark.id 
+	left join t_stcode on t_usermark.serialNumber = t_stcode.serialNumber 
+	<include refid="Usermark.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+</sqlMap>

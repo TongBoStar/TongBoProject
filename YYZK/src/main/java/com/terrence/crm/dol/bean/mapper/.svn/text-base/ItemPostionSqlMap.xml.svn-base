@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItemPostion">
+
+        
+	<resultMap id="RM.ItemPostion" class="com.terrence.crm.dol.bean.ItemPostion">
+        <result property="finterid" column="finterid"/>
+        <result property="positionid" column="positionid"/>
+        <result property="baseitemid" column="baseitemid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ItemPostion.columns">
+	    <![CDATA[
+        	t_item_postion.finterid ,
+        	t_item_postion.positionid ,
+        	t_item_postion.baseitemid 
+	    ]]>
+	</sql>
+	
+   <insert id="ItemPostion.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_item_postion (
+        	positionid ,
+        	baseitemid 
+        ) VALUES (
+        	#positionid# ,
+        	#baseitemid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ItemPostion.update" parameterClass="com.terrence.crm.dol.bean.ItemPostion">         
+        UPDATE t_item_postion 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="positionid">
+	        	positionid = #positionid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="baseitemid">
+	        	baseitemid = #baseitemid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        finterid = #finterid# 
+    </update>
+    
+	<delete id="ItemPostion.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_item_postion where
+       finterid = #finterid# 
+    ]]>
+    </delete>
+    
+    <delete id="ItemPostion.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_item_postion 
+        WHERE
+       finterid in ($finterid$) 
+    ]]>
+    </delete>
+    
+    <select id="ItemPostion.getById" resultMap="RM.ItemPostion">
+	    select <include refid="ItemPostion.columns"/>
+	    
+	        from t_item_postion 
+	        where 
+		        finterid = #finterid# 
+	    
+    </select>
+    
+	<select id="ItemPostion.getByProperty" resultMap="RM.ItemPostion">
+		select <include refid="ItemPostion.columns"/> from t_item_postion where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ItemPostion.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_item_postion.finterid = #finterid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="positionid">
+	             t_item_postion.positionid = #positionid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_item_postion.baseitemid = #baseitemid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ItemPostion.findPage.and">
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_item_postion.finterid = #finterid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="positionid">
+	             t_item_postion.positionid = #positionid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_item_postion.baseitemid = #baseitemid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ItemPostion.Entity" resultMap="RM.ItemPostion">
+    	SELECT 	<include refid="ItemPostion.columns"/> FROM t_item_postion <include refid="ItemPostion.findPage.where"/>
+    </select>
+    
+    <select id="ItemPostion.findList" resultMap="RM.ItemPostion">
+    	SELECT 
+    		<include refid="ItemPostion.columns"/> 
+    	FROM 
+    		t_item_postion
+		<include refid="ItemPostion.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ItemPostion.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item_postion
+    ]]>
+		<include refid="ItemPostion.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ItemPostion.findPage" resultMap="RM.ItemPostion">
+    	select <include refid="ItemPostion.columns"/>	    
+	        from t_item_postion 	   
+		<include refid="ItemPostion.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ItemPostion.findPage" resultMap="RM.ItemPostion">
+    	select <include refid="ItemPostion.columns"/>	    
+	        from t_item_postion where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       finterid 
+	   not in(select $notTop$ 
+       finterid 
+	   from t_item_postion <include refid="ItemPostion.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ItemPostion.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

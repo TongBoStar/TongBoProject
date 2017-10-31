@@ -1,0 +1,664 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.star.lib.connections.pipe.pipeAcceptor;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Area;
+import com.terrence.crm.dol.bean.Bloc;
+import com.terrence.crm.dol.bean.Competitor;
+import com.terrence.crm.dol.bean.KeyDevice;
+import com.terrence.crm.dol.bean.Organization;
+import com.terrence.crm.dol.bean.Pm;
+import com.terrence.crm.dol.bean.PmCompetitor;
+import com.terrence.crm.dol.bean.PmSection;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.bean.Sdari;
+import com.terrence.crm.dol.bean.SdariEngineer;
+import com.terrence.crm.dol.bean.WinCompany;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.PmCompetitorQuery;
+import com.terrence.crm.dol.query.PmQuery;
+import com.terrence.crm.dol.query.PmSectionQuery;
+import com.terrence.crm.dol.query.WinCompanyQuery;
+import com.terrence.crm.dol.dao.IPmCompetitorDao;
+import com.terrence.crm.dol.dao.IPmDao;
+import com.terrence.crm.dol.dao.IPmSectionDao;
+import com.terrence.crm.dol.dao.IWinCompanyDao;
+import com.terrence.crm.dol.service.IPmService;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class PmService extends BaseService implements IPmService {
+	protected static Logger logger = LoggerFactory.getLogger(PmService.class);
+	@Autowired
+	@Qualifier("pmDao")
+	private IPmDao pmDao;
+	@Autowired
+	@Qualifier("pmCompetitorDao")
+	private IPmCompetitorDao pmCompetitorDao;
+	@Autowired
+	@Qualifier("winCompanyDao")
+	private IWinCompanyDao winCompanyDao;
+	
+	@Autowired
+	@Qualifier("pmSectionDao")
+	private IPmSectionDao pmSectionDao;
+	
+	
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Pm";
+	}
+	@Transactional(readOnly=true)
+	public Pm getById(java.lang.Long id) throws ServiceException
+	{
+		return pmDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Pm entity) throws ServiceException
+	{
+		pmDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Pm entity) throws ServiceException
+	{
+		Long adId = pmDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Pm entity) throws ServiceException
+	{
+		Integer returnValue =  pmDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pmDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		for (Long pmId : idList) {
+			 pmSectionDao.deleteByPmId(pmId);
+			pmCompetitorDao.deleteByPmId(pmId);
+			winCompanyDao.deleteByPmId(pmId);
+		}
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pmDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PmQuery query = new PmQuery();
+		try {
+			return pmDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Pm> findPage(Page<Pm> page, PmQuery query) throws ServiceException
+	{
+		return pmDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Pm> findPage(Page<Pm> page,String statement, PmQuery query) throws ServiceException
+	{
+		return pmDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pm> findList(PmQuery query) throws ServiceException
+	{
+		return pmDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pm> findList(PmQuery query,Integer pageSize) throws ServiceException
+	{
+		return pmDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Pm> findList(PmQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pmDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Pm> findAllList() throws ServiceException
+	{
+		return pmDao.findAllList();
+	}
+	@Override
+	public void delSection(Pm entity) throws ServiceException {
+			WinCompanyQuery winCompanyQuery = new WinCompanyQuery();
+			winCompanyQuery.setSectionid(entity.getSectionid());
+			List<WinCompany> winCompanies = winCompanyDao.findList(winCompanyQuery);
+			if(winCompanies.size()>0){
+				for (WinCompany winCompany : winCompanies) {
+					winCompanyDao.deleteById(winCompany.getWinid());
+				}
+			}
+			PmCompetitorQuery pmCompetitorQuery = new PmCompetitorQuery();
+			pmCompetitorQuery.setSectionid(entity.getSectionid());
+			List<PmCompetitor> pmCompetitors = pmCompetitorDao.findList(pmCompetitorQuery);
+			if (pmCompetitors.size()>0) {
+				for (PmCompetitor pmCompetitor : pmCompetitors) {
+					pmCompetitorDao.deleteById(pmCompetitor.getPcid());
+				}
+			}
+			pmSectionDao.deleteById(entity.getSectionid());
+	}
+	@Override
+	public void saveDetail(Pm entity) throws ServiceException {
+		//	pmCompetitorDao
+		//  winCompanyDao
+		
+		Long[] pcCompetitoridlist=null;
+		Long[] winCompetitoridlist=null;
+		pcCompetitoridlist=entity.getPcCompetitoridlist();
+		winCompetitoridlist=entity.getWinCompetitoridlist();
+		AdminSession admin = (AdminSession)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		Long pmid=0L;
+		Long sectionid = null;
+		if(entity.getProType()!=null){//说明是修改
+			if(entity.getProType()==1){//修改项目
+				pmDao.update(entity);
+			}else{//修改标段
+				if(entity.getSectionid()==null){//说明是添加标段
+					PmSectionQuery pmSectionQuery = new PmSectionQuery();
+					pmSectionQuery.setPmid(entity.getPmid());
+					PmSection pmSection= new PmSection();
+					PmSection ps = getPmSection(pmSection, entity);
+					ps.setLastmanageremp(admin.getAdmin().getAdminName());
+					ps.setPmid(entity.getPmid());//项目ID
+					ps.setSectionname(entity.getSectionname());
+					sectionid=pmSectionDao.save(ps);//项目标段
+				}else{
+//					boolean isdisdinct = isdisdinct(entity.getCode());
+//					if(isdisdinct){
+//						throw new ServiceException("招标编号不能重复！", "-1");
+//					}
+					PmSectionQuery pmSectionQuery = new PmSectionQuery();
+					pmSectionQuery.setPmid(entity.getPmid());
+					pmSectionQuery.setSectionid(entity.getSectionid());
+					PmSection pmSection = pmSectionDao.getByEntity("PmSection.Entity", pmSectionQuery);
+					PmSection ps = getPmSection(pmSection, entity);
+					ps.setLastmanageremp(admin.getAdmin().getAdminName());
+					ps.setPmid(entity.getPmid());//项目ID
+					ps.setSectionname(entity.getSectionname());
+					pmid =entity.getPmid();
+					sectionid = entity.getSectionid();
+					pmSectionDao.update(ps);//项目标段
+				}
+				
+			}
+		}else{//说明是保存
+			Pm pm = new Pm();
+			pm.setCreatedate(DateUtils.GetDateTime());
+			pm.setFinterid(entity.getFinterid());//设计院
+			pm.setProstatus(entity.getProstatus());//项目状态
+			pm.setFinnerid(entity.getFinnerid());//客户
+			pm.setPmname(entity.getPmname());//项目名称
+			pm.setSaleempid(entity.getSaleempid());//销售负责人ID
+			pm.setSaleemp(entity.getSaleemp());//销售负责人
+			if(null==entity.getPmid()){//添加
+				pmid = pmDao.save(pm);
+			}else{
+				pmid=entity.getPmid();
+				pm.setPmid(entity.getPmid());
+				pmDao.update(pm);
+			}
+//			boolean isdisdinct = isdisdinct(entity.getCode());
+//			if(isdisdinct){
+//				throw new ServiceException("招标编号不能重复！", "-1");
+//			}
+			PmSection pmSection = new PmSection();//项目标段
+			pmSection.setPmid(pm.getPmid());//项目ID
+			PmSection ps = getPmSection(pmSection, entity);
+			pmSection.setLastmanageremp(admin.getAdmin().getAdminName());
+			pmSection.setSectionname(entity.getSectionname());
+			 sectionid = pmSectionDao.save(ps);//保存项目标段
+		}
+		if(sectionid!=null){
+			pmCompetitorDao.deleteByMultipleId("PmCompetitor.deleteBySectionId", sectionid+"");//清空竞争对手
+			winCompanyDao.deleteByMultipleId("WinCompany.deleteBySectionId", sectionid+"");//清空中标公司
+		}
+		if(pmid==0){
+			pmid = entity.getPmid();
+		}
+		
+		if(pcCompetitoridlist!=null){//清空竞争对手,重新保存
+			for(Long id:pcCompetitoridlist){
+				PmCompetitor pmCompetitor=new PmCompetitor();
+				pmCompetitor.setPmid(pmid);
+				pmCompetitor.setCompetitorid(id);
+				pmCompetitor.setSectionid(sectionid);
+				pmCompetitorDao.save(pmCompetitor);
+			}
+		}
+		if(winCompetitoridlist!=null){//清空中标公司,重新保存
+			for(Long id:winCompetitoridlist){
+				WinCompany winCompany=new WinCompany();
+				winCompany.setPmid(pmid);
+				winCompany.setCompetitorid(id);
+				winCompany.setSectionid(sectionid);
+				winCompanyDao.save(winCompany);
+			}
+		}
+		
+	}
+	
+	private boolean  isdisdinct(String code){
+		PmSectionQuery pmSectionQuery = new PmSectionQuery();
+		pmSectionQuery.setCode(code);
+		List<PmSection> pmSections = pmSectionDao.findList(pmSectionQuery);
+		if(null!=pmSections){
+			for (PmSection pmSection : pmSections) {
+				if(pmSection.getCode().equals(code)){
+					return true;
+				}
+			}
+		}
+		return false;
+	} 
+	private  PmSection getPmSection(PmSection pmSection,Pm entity) {
+		pmSection.setAmount(entity.getAmount());//实际采购金额
+		pmSection.setAnalyze(entity.getAnalyze());//投标分析
+		pmSection.setBistatus(entity.getBistatus());//招标状态
+		pmSection.setCode(entity.getCode());//招标编码
+		pmSection.setDeviceid(entity.getDeviceid());//设备ID
+		pmSection.setEngineer(entity.getEngineer());//项目负责人
+		pmSection.setFinterid(entity.getEngineerid());//设计师
+		pmSection.setLastdate(new Date());	
+		pmSection.setManager(entity.getManger());//项目负责人
+		pmSection.setNotes(entity.getNotes());//备注
+		pmSection.setPlanamount(entity.getPlanamount());//预计采购金额
+		pmSection.setPlandate(entity.getPlandate());//预计采购时间
+		pmSection.setProxy(entity.getProxy());
+		pmSection.setCreateDate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd"));
+		return pmSection;
+	}
+	@Override
+	public Pm getDetailById(PmQuery pmQuery) throws ServiceException {
+
+		return pmDao.getByEntity("Pm.Entity.deatil", pmQuery);
+	}
+	@SuppressWarnings("deprecation")
+	public void exportToExcel2003(OutputStream os,List<Pm> pmList, Pm pm) {
+		try{
+			// 工作区
+			HSSFWorkbook workbbook = new HSSFWorkbook();
+			HSSFSheet sheet = workbbook.createSheet("项目列表");
+			// 设置列宽度
+			sheet.setColumnWidth((short)0, (short)5000);
+			sheet.setColumnWidth((short)1, (short)5000);
+			sheet.setColumnWidth((short)2, (short)5000);
+			sheet.setColumnWidth((short)3, (short)20000);
+			sheet.setColumnWidth((short)4, (short)20000);
+			sheet.setColumnWidth((short)5, (short)5000);
+			sheet.setColumnWidth((short)6, (short)5000);
+			sheet.setColumnWidth((short)7, (short)5000);
+			sheet.setColumnWidth((short)8, (short)5000);
+			sheet.setColumnWidth((short)9, (short)5000);
+			sheet.setColumnWidth((short)10, (short)5000);
+			sheet.setColumnWidth((short)11, (short)5000);
+			sheet.setColumnWidth((short)12, (short)5000);
+			sheet.setColumnWidth((short)13, (short)5000);
+			sheet.setColumnWidth((short)14, (short)5000);
+			sheet.setColumnWidth((short)15, (short)5000);
+			sheet.setColumnWidth((short)16, (short)10000);
+			sheet.setColumnWidth((short)17, (short)10000);
+			sheet.setColumnWidth((short)18, (short)12000);
+			sheet.setColumnWidth((short)19, (short)7000);
+			sheet.setColumnWidth((short)20, (short)10000);
+			sheet.setColumnWidth((short)21, (short)10000);
+			sheet.setColumnWidth((short)22, (short)5000);
+			sheet.setColumnWidth((short)23, (short)20000);
+			// 设置单元格格式
+			HSSFCellStyle cellStyle = workbbook.createCellStyle();
+			cellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);// 水平布局 居中
+			// 设置字体
+			HSSFFont font = workbbook.createFont();
+			font.setFontName("微软雅黑");
+			cellStyle.setFont(font);
+			HSSFRow row = sheet.createRow(0);
+			// 设置这一行的第一列单元格
+			HSSFCell cell0 = row.createCell((short)0);
+			cell0.setCellStyle(cellStyle);// 设置该单元格文字居中
+			cell0.setCellValue("销售负责人");// 设置这一列的值
+			// 设置这一行的第二列单元格
+			HSSFCell cell1 = row.createCell((short)1);
+			cell1.setCellStyle(cellStyle);
+			cell1.setCellValue("最后维护时间");
+			// 设置这一行的第三列单元格
+			HSSFCell cell2 = row.createCell((short)2);
+			cell2.setCellStyle(cellStyle);
+			cell2.setCellValue("最后维护人");
+			// 设置这一行的第四列单元格
+			HSSFCell cell3 = row.createCell((short)3);
+			cell3.setCellStyle(cellStyle);
+			cell3.setCellValue("项目名称");
+			// 设置这一行的第五列单元格
+			HSSFCell cell4 = row.createCell((short)4);
+			cell4.setCellStyle(cellStyle);
+			cell4.setCellValue("客户名称");
+			// 设置这一行的第六列单元格
+			HSSFCell cell5 = row.createCell((short)5);
+			cell5.setCellStyle(cellStyle);
+			cell5.setCellValue("地区");
+			// 设置这一行的第七列单元格
+			HSSFCell cell6 = row.createCell((short)6);
+			cell6.setCellStyle(cellStyle);
+			cell6.setCellValue("区域");
+			// 设置这一行的第八列单元格
+			HSSFCell cell7 = row.createCell((short)7);
+			cell7.setCellStyle(cellStyle);
+			cell7.setCellValue("集团");
+			// 设置这一行的第九列单元格
+			HSSFCell cell8 = row.createCell((short)8);
+			cell8.setCellStyle(cellStyle);
+			cell8.setCellValue("招标状态");
+			// 设置这一行的第10列单元格
+			HSSFCell cell9 = row.createCell((short)9);
+			cell9.setCellStyle(cellStyle);
+			cell9.setCellValue("项目状态");
+			// 设置这一行的第11列单元格
+			HSSFCell cell10 = row.createCell((short)10);
+			cell10.setCellStyle(cellStyle);
+			cell10.setCellValue("项目负责人");
+			// 设置这一行的第12列单元格
+			HSSFCell cell11 = row.createCell((short)11);
+			cell11.setCellStyle(cellStyle);
+			cell11.setCellValue("设计院");
+			// 设置这一行的第13列单元格
+			HSSFCell cell12 = row.createCell((short)12);
+			cell12.setCellStyle(cellStyle);
+			cell12.setCellValue("设计工程师");
+			// 设置这一行的第14列单元格
+			HSSFCell cell13 = row.createCell((short)13);
+			cell13.setCellStyle(cellStyle);
+			cell13.setCellValue("关键设备");
+			// 设置这一行的第15列单元格
+			HSSFCell cell14 = row.createCell((short)14);
+			cell14.setCellStyle(cellStyle);
+			cell14.setCellValue("预计合同金额");
+			// 设置这一行的第16列单元格
+			HSSFCell cell15 = row.createCell((short)15);
+			cell15.setCellStyle(cellStyle);
+			cell15.setCellValue("预计采购时间");
+			// 设置这一行的第17列单元格
+			HSSFCell cell16 = row.createCell((short)16);
+			cell16.setCellStyle(cellStyle);
+			cell16.setCellValue("竞争对手");
+			// 设置这一行的第18列单元格
+			HSSFCell cell17 = row.createCell((short)17);
+			cell17.setCellStyle(cellStyle);
+			cell17.setCellValue("招标编号");
+			// 设置这一行的第19列单元格
+			HSSFCell cell18 = row.createCell((short)18);
+			cell18.setCellStyle(cellStyle);
+			cell18.setCellValue("招标代理");
+			// 设置这一行的第20列单元格
+			HSSFCell cell19 = row.createCell((short)19);
+			cell19.setCellStyle(cellStyle);
+			cell19.setCellValue("实际采购金额");
+			// 设置这一行的第21列单元格
+			HSSFCell cell20 = row.createCell((short)20);
+			cell20.setCellStyle(cellStyle);
+			cell20.setCellValue("中标情况");
+			// 设置这一行的第22列单元格
+			HSSFCell cell21 = row.createCell((short)21);
+			cell21.setCellStyle(cellStyle);
+			cell21.setCellValue("投标分析");
+			// 设置这一行的第23列单元格
+			HSSFCell cell22 = row.createCell((short)22);
+			cell22.setCellStyle(cellStyle);
+			cell22.setCellValue("项目工程师");
+			// 设置这一行的第24列单元格
+			HSSFCell cell23 = row.createCell((short)23);
+			cell23.setCellStyle(cellStyle);
+			cell23.setCellValue("备注");
+			String bistatus = "";
+			String prostatus = "";
+			for (int i = 0; i < pmList.size(); i++) {
+				row = sheet.createRow(i + 1);
+				row.createCell((short)0).setCellValue(pmList.get(i).getSaleemp());
+				row.createCell((short)1).setCellValue(pmList.get(i).getLastdateString());
+				row.createCell((short)2).setCellValue(pmList.get(i).getLastmanageremp());
+				row.createCell((short)3).setCellValue(pmList.get(i).getPmname());
+				row.createCell((short)4).setCellValue(null==pmList.get(i).getOrganization()?"":pmList.get(i).getOrganization().getFname());
+				row.createCell((short)5).setCellValue(null==pmList.get(i).getProvince()?"":pmList.get(i).getProvince().getProvincename());
+				row.createCell((short)6).setCellValue(null==pmList.get(i).getArea()?"":pmList.get(i).getArea().getAreaname());
+				row.createCell((short)7).setCellValue(null==pmList.get(i).getBloc()?"":pmList.get(i).getBloc().getBlocname());
+				if(null!=pmList.get(i).getBistatus()&&pmList.get(i).getBistatus()==0){
+					bistatus = "未招标";
+				}else if(null!=pmList.get(i).getBistatus()&&pmList.get(i).getBistatus()==1){
+					bistatus = "已招标";
+				}else{}
+				if(null!=pmList.get(i).getProstatus()&&pmList.get(i).getProstatus()==0){
+					prostatus = "未关闭";
+				}else if(null!=pmList.get(i).getProstatus()&&pmList.get(i).getProstatus()==1){
+					prostatus = "已关闭";
+				}else{}
+				row.createCell((short)8).setCellValue(bistatus);
+				row.createCell((short)9).setCellValue(prostatus);
+				row.createCell((short)10).setCellValue(pmList.get(i).getManger());
+				row.createCell((short)11).setCellValue(null==pmList.get(i).getSdari()?"":pmList.get(i).getSdari().getSdariname());
+				row.createCell((short)12).setCellValue(null==pmList.get(i).getSdariEngineer()?"":pmList.get(i).getSdariEngineer().getEngname());
+				row.createCell((short)13).setCellValue(null==pmList.get(i).getDevice()?"":pmList.get(i).getDevice().getDevicename());
+				row.createCell((short)14).setCellValue(null==pmList.get(i).getPlanamount()?0:pmList.get(i).getPlanamount());
+				row.createCell((short)15).setCellValue(null==pmList.get(i).getPlandate()?"":pmList.get(i).getPlandate());
+				String pcStr = "";
+				if(null!=pmList.get(i).getPclist()&&pmList.get(i).getPclist().size()>0){
+					for(Competitor competitor:pmList.get(i).getPclist()){
+						pcStr += competitor.getShortname();
+					}
+				}
+				row.createCell((short)16).setCellValue(pcStr);
+				row.createCell((short)17).setCellValue(null==pmList.get(i).getCode()?"":pmList.get(i).getCode());
+				row.createCell((short)18).setCellValue(null==pmList.get(i).getProxy()?"":pmList.get(i).getProxy());
+				row.createCell((short)19).setCellValue(null==pmList.get(i).getAmount()?0:pmList.get(i).getAmount());
+				String winStr = "";
+				if(null!=pmList.get(i).getWinlist()&&pmList.get(i).getWinlist().size()>0){
+					for(Competitor competitor:pmList.get(i).getWinlist()){
+						winStr += competitor.getShortname();
+					}
+				}
+				row.createCell((short)20).setCellValue(winStr);
+				row.createCell((short)21).setCellValue(null==pmList.get(i).getAnalyze()?"":pmList.get(i).getAnalyze());
+				row.createCell((short)22).setCellValue(null==pmList.get(i).getAdmin()?"":pmList.get(i).getAdmin().getAdminName());
+				row.createCell((short)23).setCellValue(null==pmList.get(i).getNotes()?"":pmList.get(i).getNotes());
+			}
+			// 写文件
+			workbbook.write(os);
+			// 关闭输出流
+			os.close();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+     * 读取xls文件内容
+     *
+     * @return List<XlsDto>对象
+     * @throws IOException
+     *             输入/输出(i/o)异常
+	 * @throws ParseException 
+     */
+    public java.util.List<Pm> readXls(InputStream is) throws Exception {
+    	//String rootpath = ServletActionContext.getServletContext().getRealPath("/");
+        //InputStream is = new FileInputStream(rootpath+"/files/xls/特瑞斯项目列表20140730091233.xls");
+        HSSFWorkbook hssfWorkbook = new HSSFWorkbook(is);
+        Pm pm = null;
+        List<Pm> list = new ArrayList<Pm>();
+        // 循环工作表Sheet
+        for (int numSheet = 0; numSheet < hssfWorkbook.getNumberOfSheets(); numSheet++) {
+            HSSFSheet hssfSheet = hssfWorkbook.getSheetAt(numSheet);
+            if (hssfSheet == null) {
+                continue;
+            }
+            // 循环行Row
+            for (int rowNum = 1; rowNum <= hssfSheet.getLastRowNum(); rowNum++) {
+                HSSFRow hssfRow = hssfSheet.getRow(rowNum);
+                if (hssfRow == null) {
+                    continue;
+                }
+                pm = new Pm();
+                HSSFCell saleemp = hssfRow.getCell(0);
+                pm.setSaleemp(getValue(saleemp));
+                HSSFCell lastDate = hssfRow.getCell(1);
+                SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                if(null==getValue(lastDate)||getValue(lastDate).equals("")){
+                	pm.setLastdate(null);
+                }else{
+                	 pm.setLastdate(formt.parse(getValue(lastDate)));
+                }
+                HSSFCell lastmanageremp = hssfRow.getCell(2);
+                pm.setLastmanageremp(getValue(lastmanageremp));
+                HSSFCell pmname = hssfRow.getCell(3);
+                pm.setPmname(getValue(pmname));
+                HSSFCell organization = hssfRow.getCell(4);
+                Organization organization2 = new Organization();
+                organization2.setFname(getValue(organization));
+                pm.setOrganization(organization2);
+                HSSFCell area = hssfRow.getCell(5);
+                Area area2 = new Area();
+                area2.setAreaname(getValue(area));
+                pm.setArea(area2);
+                HSSFCell province = hssfRow.getCell(6);
+                Province province2 = new Province();
+                province2.setProvincename(getValue(province));
+                pm.setProvince(province2);
+                HSSFCell bloc = hssfRow.getCell(7);
+                Bloc bloc2 = new Bloc();
+                bloc2.setBlocname(getValue(bloc));
+                pm.setBloc(bloc2);
+                HSSFCell bistatus = hssfRow.getCell(8);
+                if(null==getValue(bistatus)){
+                	pm.setBistatus(null);
+                }else {
+                	if(getValue(bistatus).equals("未招标")){
+                		pm.setBistatus(0);
+                	}else if(getValue(bistatus).equals("已招标")){
+                		pm.setBistatus(1);
+                	}else {
+                		pm.setBistatus(null);
+					}
+				}
+                HSSFCell prostatus = hssfRow.getCell(9);
+                if(null==getValue(prostatus)){
+                	pm.setProstatus(null);
+                }else {
+                	if(getValue(prostatus).equals("未关闭")){
+                		pm.setBistatus(0);
+                	}else if(getValue(prostatus).equals("已关闭")){
+                		pm.setBistatus(1);
+                	}else {
+                		pm.setBistatus(null);
+					}
+                }
+                HSSFCell manager = hssfRow.getCell(10);
+                pm.setManger(getValue(manager));
+                HSSFCell sdari = hssfRow.getCell(11);
+                Sdari sdari2 = new Sdari();
+                sdari2.setSdariname(getValue(sdari));
+                pm.setSdari(sdari2);
+                HSSFCell sdariEngineer = hssfRow.getCell(12);
+                SdariEngineer sdariEngineer2 = new SdariEngineer();
+                sdariEngineer2.setEngname(getValue(sdariEngineer));
+                pm.setSdariEngineer(sdariEngineer2);
+                HSSFCell device = hssfRow.getCell(13);
+                KeyDevice device2 = new KeyDevice();
+                device2.setDevicename(getValue(device));
+                pm.setDevice(device2);
+                HSSFCell planamount = hssfRow.getCell(14);
+                pm.setPlanamount(Double.valueOf(getValue(planamount)));
+                HSSFCell plandate = hssfRow.getCell(15);
+                pm.setPlandate(getValue(plandate));
+                list.add(pm);
+            }
+        }
+        for(Pm pm2:list){
+        	System.out.println(pm2.getSaleemp()+"-----------"+pm2.getLastdateString()+"----------"+pm2.getArea().getAreaname()+"----------"+pm2.getDevice().getDevicename());
+        }
+        return list;
+    };
+ 
+    /**
+     * 得到Excel表中的值
+     *
+     * @param hssfCell
+     *            Excel中的每一个格子
+     * @return Excel中每一个格子中的值
+     */
+    @SuppressWarnings({ "static-access", "deprecation" })
+    private String getValue(HSSFCell hssfCell) {
+        if (hssfCell.getCellType() == hssfCell.CELL_TYPE_BOOLEAN) {
+            // 返回布尔类型的值
+            return String.valueOf(hssfCell.getBooleanCellValue());
+        } else if (hssfCell.getCellType() == hssfCell.CELL_TYPE_NUMERIC) {
+            // 返回数值类型的值
+            return String.valueOf(hssfCell.getNumericCellValue());
+        } else {
+            // 返回字符串类型的值
+        	String value = String.valueOf(hssfCell.getStringCellValue());
+        	if(value.trim().equals("")){
+        		value = null;
+        	}
+            return value;
+        }
+    }
+	@Override
+	public void importData(InputStream in) {
+		try {
+			readXls(in);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

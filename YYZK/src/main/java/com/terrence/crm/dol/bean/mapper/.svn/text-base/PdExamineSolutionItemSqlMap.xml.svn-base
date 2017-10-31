@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdExamineSolutionItem">
+
+        
+	<resultMap id="RM.PdExamineSolutionItem" class="com.terrence.crm.dol.bean.PdExamineSolutionItem">
+        <result property="pisiid" column="pisiid"/>
+        <result property="solutionid" column="solutionid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="itemname" column="itemname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdExamineSolutionItem.columns">
+	    <![CDATA[
+        	t_pd_examine_solution_item.pisiid ,
+        	t_pd_examine_solution_item.solutionid ,
+        	t_pd_examine_solution_item.itemid 
+	    ]]>
+	</sql>
+	
+   <insert id="PdExamineSolutionItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_examine_solution_item (
+        	solutionid ,
+        	itemid 
+        ) VALUES (
+        	#solutionid# ,
+        	#itemid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="pisiid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdExamineSolutionItem.update" parameterClass="com.terrence.crm.dol.bean.PdExamineSolutionItem">         
+        UPDATE t_pd_examine_solution_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="solutionid">
+	        	solutionid = #solutionid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemid">
+	        	itemid = #itemid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        pisiid = #pisiid# 
+    </update>
+    
+	<delete id="PdExamineSolutionItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_examine_solution_item where
+       pisiid = #pisiid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdExamineSolutionItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_examine_solution_item 
+        WHERE
+       pisiid in ($pisiid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdExamineSolutionItem.getById" resultMap="RM.PdExamineSolutionItem">
+	    select <include refid="PdExamineSolutionItem.columns"/>
+	    
+	        from t_pd_examine_solution_item 
+	        where 
+		        pisiid = #pisiid# 
+	    
+    </select>
+    
+	<select id="PdExamineSolutionItem.getByProperty" resultMap="RM.PdExamineSolutionItem">
+		select <include refid="PdExamineSolutionItem.columns"/> from t_pd_examine_solution_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdExamineSolutionItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="pisiid">
+	             t_pd_examine_solution_item.pisiid = #pisiid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="solutionid">
+	             t_pd_examine_solution_item.solutionid = #solutionid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_examine_solution_item.itemid = #itemid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdExamineSolutionItem.findPage.and">
+			<isNotEmpty prepend="AND" property="pisiid">
+	             t_pd_examine_solution_item.pisiid = #pisiid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="solutionid">
+	             t_pd_examine_solution_item.solutionid = #solutionid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_examine_solution_item.itemid = #itemid#
+	       </isNotEmpty>
+	</sql>
+	<delete id="PdExamineSolutionItem.deleteEntity">
+        delete from t_pd_examine_solution_item where t_pd_examine_solution_item.solutionid = #solutionid#
+    </delete>
+    <select id="PdExamineSolutionItem.Entity" resultMap="RM.PdExamineSolutionItem">
+    	SELECT 	<include refid="PdExamineSolutionItem.columns"/> FROM t_pd_examine_solution_item <include refid="PdExamineSolutionItem.findPage.where"/>
+    </select>
+    
+    <select id="PdExamineSolutionItem.findList" resultMap="RM.PdExamineSolutionItem">
+    	SELECT 
+    		<include refid="PdExamineSolutionItem.columns"/> 
+    	FROM 
+    		t_pd_examine_solution_item
+		<include refid="PdExamineSolutionItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="PdExamineSolutionItem.findPdExamineItemList"  resultMap="RM.PdExamineSolutionItem">
+    	SELECT 
+    		<include refid="PdExamineSolutionItem.columns"/>,t_pd_examine_item.itemname 
+    	FROM 
+    		t_pd_examine_solution_item
+    	 left join t_pd_examine_item 
+    	 on  t_pd_examine_item.itemid = t_pd_examine_solution_item.itemid
+    	 where t_pd_examine_solution_item.solutionid=#solutionid#
+    </select>
+    <select id="PdExamineSolutionItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_examine_solution_item
+    ]]>
+		<include refid="PdExamineSolutionItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdExamineSolutionItem.findPage" resultMap="RM.PdExamineSolutionItem">
+    	select <include refid="PdExamineSolutionItem.columns"/>	    
+	        from t_pd_examine_solution_item 	   
+		<include refid="PdExamineSolutionItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdExamineSolutionItem.findPage" resultMap="RM.PdExamineSolutionItem">
+    	select <include refid="PdExamineSolutionItem.columns"/>	    
+	        from t_pd_examine_solution_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       pisiid 
+	   not in(select $notTop$ 
+       pisiid 
+	   from t_pd_examine_solution_item <include refid="PdExamineSolutionItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdExamineSolutionItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

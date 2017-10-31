@@ -1,0 +1,236 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Job;
+import com.terrence.crm.dol.bean.Task;
+import com.terrence.crm.dol.dao.IJobCheckDao;
+import com.terrence.crm.dol.dao.IJobDao;
+import com.terrence.crm.dol.dao.ITaskDao;
+import com.terrence.crm.dol.query.JobCheckQuery;
+import com.terrence.crm.dol.query.JobQuery;
+import com.terrence.crm.dol.service.IJobService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class JobService extends BaseService implements IJobService {
+	protected static Logger logger = LoggerFactory.getLogger(JobService.class);
+	@Autowired
+	@Qualifier("jobDao")
+	private IJobDao jobDao;
+	@Autowired
+	@Qualifier("jobCheckDao")
+	private IJobCheckDao jobCheckDao;
+	@Autowired
+	@Qualifier("taskDao")
+	private ITaskDao taskDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Job";
+	}
+	@Transactional(readOnly=true)
+	public Job getById(java.lang.Long id) throws ServiceException
+	{
+		return jobDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Job entity) throws ServiceException
+	{
+		//System.out.println(entity.getStatus().intValue());
+		if(entity.getJobid()!=null&&entity.getStatus().intValue()==2){
+				entity.setPerformdate(DateConvertUtils.getCurrentDateTime());
+		}
+		jobDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Job entity) throws ServiceException
+	{
+		if(null==entity.getTaskid()){//完成
+			List<Job> jlist=new ArrayList<Job>();
+			JobQuery jobQuery=new JobQuery();
+			jobQuery.setJobname(entity.getJobname());
+			jlist = jobDao.findList(jobQuery);
+			if(jlist.size()!=0){
+					return -1L;
+			}
+			
+			Task task=new Task();
+			task.setTaskname(entity.getJobname());
+			task.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			task.setTaskstatus(0);
+			task.setTasknum(entity.getAmount().intValue());
+			task.setPlanbegintime(DateConvertUtils.getCurrentDateTime());
+			task.setPlanendtime(DateConvertUtils.getCurrentDateTime());
+			task.setItemcode("");
+			task.setItemname("");
+			task.setModel("");
+			task.setBatchno("");
+			Long taskid=taskDao.save(task);
+			entity.setTaskid(taskid);
+		}//--非空不做处理
+		
+		if(null==entity.getJobid()){//新增
+			Long adId = jobDao.save(entity);
+			return adId;	
+		}
+		else{//更新-修改
+			jobDao.saveOrUpdate(entity);
+			JobQuery jquery=new JobQuery();
+			jquery.setTaskid(entity.getTaskid());
+			List<Job> jlist=new ArrayList<Job>();
+			
+			jlist= jobDao.findList(jquery);
+			if(jlist.size()!=0){//job名称和数量全部修改
+				for(Job j:jlist){
+					j.setJobname(entity.getJobname());
+					j.setAmount(entity.getAmount());
+					jobDao.update(j);
+				}
+			}
+			Task t=new Task();//修改task的name和数量 
+			t= taskDao.getById(entity.getTaskid());
+			t.setTaskname(entity.getJobname());
+			t.setTasknum(entity.getAmount().intValue());
+			taskDao.update(t);
+			
+			return 0L;
+		}
+	}
+	
+	public Integer update(Job entity) throws ServiceException
+	{
+		if(null!=entity.getStatus()&&entity.getStatus().intValue()==2){//完成状态
+			entity.setPerformdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		}
+		Integer returnValue =  jobDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		List<Job> jobList =new ArrayList<Job>();
+		//----删除零活质检记录----
+		Integer jstatus=0;
+		jstatus = jobDao.getById(id).getStatus();
+		
+		if(jstatus==2||jstatus==1){//已完工/已开工
+			JobQuery jquery=new JobQuery();
+			jquery.setJobid(id);
+			jobCheckDao.deleteByWhere("JobCheck.deleteByjid", jquery);
+		}
+		
+		//----------
+		Long tid=jobDao.getById(id).getTaskid();
+		Integer returnValue = jobDao.deleteById(id);
+		JobQuery jobQuery=new JobQuery();
+		
+		jobQuery.setTaskid(tid);
+		jobList= jobDao.findList(jobQuery);
+		if(jobList.size()==0){//任务全删除---需删除task
+			taskDao.deleteById(tid);
+		}
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = jobDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		JobQuery query = new JobQuery();
+		try {
+			return jobDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Job> findPage(Page<Job> page, JobQuery query) throws ServiceException
+	{
+		return jobDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Job> findList(JobQuery query) throws ServiceException
+	{
+		return jobDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Job> findAllList() throws ServiceException
+	{
+		return jobDao.findAllList();
+	}
+	@Transactional(readOnly=true)
+	public Job findByTaskId(Long taskid) throws ServiceException{
+		
+		return jobDao.getByTaskId(taskid);
+	}
+	@Override
+	public String saveNext(Job entity) throws ServiceException {
+		//System.out.println(entity.toString());
+		if(null==entity.getTaskid()){
+			List<Job> jlist=new ArrayList<Job>();
+			JobQuery jobQuery=new JobQuery();
+			jobQuery.setJobname(entity.getJobname());
+			jlist = jobDao.findList(jobQuery);
+			if(jlist.size()!=0){
+					return "false";
+			}
+			
+			Job job=new Job();
+			Long jobid=save(entity);
+			job=jobDao.getById(jobid);
+
+			return jobid+";"+job.getTaskid();			
+		}else{
+			Job job=new Job();
+			Long jobid=save(entity);
+			job=jobDao.getById(jobid);
+
+			return jobid+";"+job.getTaskid();
+		}
+		
+}
+	@Override
+	public List<Job> findListLogs(Job entity) throws ServiceException {
+
+		return jobDao.findListLogs(entity);
+		
+	}
+	
+	
+	
+	
+}

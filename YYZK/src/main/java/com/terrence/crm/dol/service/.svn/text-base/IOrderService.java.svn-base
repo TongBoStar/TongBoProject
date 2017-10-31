@@ -1,0 +1,59 @@
+package com.terrence.crm.dol.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.List;
+
+import com.lowagie.text.BadElementException;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.query.OrderQuery;
+
+/**
+ * 标准订单业务处理接口
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:35:44
+ */
+public interface IOrderService {
+	/**
+	 * 保存或修改标准订单
+	 */
+	public void saveOrUpdateOrderEntity(Order orderEntity,String products) throws ServiceException ;
+	/**
+	 * 审核标准订单
+	 */
+	public void examineOrderInfo(Order order) throws ServiceException;
+	/**
+	 * 查询基本订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<Order> findListAll(OrderQuery  orderQuery );
+	public Long save(Order order);
+	public void update(Order order);
+	public Page<Order> findPage(Page<Order> page,OrderQuery orderQuery);
+	public void deleteOrder(Long id);
+	public void deleteByMultipleId(List<Long> checkedIdList);
+	public Order getById(Long id);
+	public void saveTogather(Order orderEntity, String products);
+	public void updateTogather(Order orderEntity, String products);
+	public void deleteByMultipleByOrderCode(List<String> checkedCodeList);
+	/**
+	 * 通过多个id 查询基本订单列表
+	 * @param order
+	 * @return
+	 */
+	public List<Order> findListByOrderCodes(OrderQuery  orderQuery );
+	public void updateOrderStatus(Order order) throws ServiceException;
+	/**
+	 * 动态创建发送邮件PDF文件
+	 * @param orderEntity
+	 * @throws IOException 
+	 * @throws MalformedURLException 
+	 * @throws BadElementException 
+	 */
+	public void createOrderEmailFile(File file,Order orderEntity) throws Exception;
+}

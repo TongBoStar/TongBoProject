@@ -1,0 +1,1375 @@
+package com.terrence.crm.dol.action;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.terrence.core.dol.bean.Menu;
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.query.MenuOperateQuery;
+import com.terrence.core.dol.service.IMenuOperateService;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.ApproveMsg;
+import com.terrence.crm.dol.bean.CollectPay;
+import com.terrence.crm.dol.bean.Duty;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.Productpl;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.ApproveMsgQuery;
+import com.terrence.crm.dol.query.CollectPayQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.ProductplQuery;
+import com.terrence.crm.dol.query.SysOrderQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IApproveMsgService;
+import com.terrence.crm.dol.service.ICollectPayService;
+import com.terrence.crm.dol.service.IDutyService;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.service.IProductService;
+import com.terrence.crm.dol.service.IProductplService;
+import com.terrence.crm.dol.service.ISysOrderService;
+import com.terrence.crm.dol.utils.ConstantInfo;
+import com.terrence.crm.dol.utils.DateUtil;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import freemarker.template.Configuration;
+
+/**
+ * 设备控制类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-26 上午9:32:31
+ */
+@Scope("prototype")
+@Namespace("/sysOrder")
+public class SysOrderAction extends CrudActionSupport<SysOrder>  implements ApplicationContextAware {
+	private static final Logger log = Logger.getLogger(SysOrderAction.class);
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 91391478824792731L;
+	@Autowired
+	@Qualifier("menuOperateService")
+	private IMenuOperateService menuOperateService;
+	@Autowired
+	@Qualifier("productplService")
+	private IProductplService productplService;
+	@Autowired
+	@Qualifier("approveMsgService")
+	private IApproveMsgService approveMsgService;
+	@Autowired
+	@Qualifier("sysOrderService")
+	private ISysOrderService sysOrderService;
+	/** 管理员服务访问接口 */
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	@Autowired
+	@Qualifier("emailService")
+	private IEmailService emailService;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+	@Autowired
+	@Qualifier("dutyService")
+	private IDutyService dutyService;
+	@Autowired
+	@Qualifier("productService")
+	private IProductService productService;
+	@Autowired
+	@Qualifier("collectPayService")
+	private ICollectPayService collectPayService;
+	private ProcessExetask processExetask;
+	private SysOrder sysOrder;
+	private SysOrderQuery sysOrderQuery;
+	private Product product;
+	private ProductQuery productQuery;
+	private CollectPay collectPay;
+	private CollectPayQuery collectPayQuery;
+	private String products;
+	private String collectPays;
+	private Page<SysOrder> page;
+	List<MenuOperate> menuOperatelist ;
+	private ApplicationContext ctx;
+	private Long id;
+	private List<java.lang.Long> checkedIdList;
+	private List<String> checkedCodeList;
+	private List<Menu> authorityList;
+	private List<String> grantedAuthorityList;
+	
+	private Integer adminType;
+	private Long adminDuty;
+	private String adminDutyName;
+	
+	private String delproducts;
+	private String delcollectPays;
+	private List<Order> orderList;
+	private List<SysOrder> sysOrderList;
+	private Map<String, Object> map = new HashMap<String, Object>();
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	@Override
+	public SysOrder getModel() {
+		return sysOrder;
+	}
+	@Override
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+	@Action("/system/listSysOrders")	
+	public String listSysOrders() throws Exception {
+
+		if(sysOrderQuery == null) {
+			sysOrderQuery = new SysOrderQuery();
+		}
+		try {
+			sysOrderList = sysOrderService.listSysOrders(sysOrderQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Override
+	public String list() throws Exception {
+		log.debug("获取系统订单列表");
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("sysOrderId");
+			page.setOrder(Page.DESC);
+		}
+
+		if(sysOrderQuery == null) {
+			sysOrderQuery = new SysOrderQuery();
+		}
+		if (null != sysOrderQuery.getSysOrderStatus()
+				&& "-1".equals(sysOrderQuery.getSysOrderStatus() + "")) {
+			sysOrderQuery.setSysOrderStatus(null);// 查询全部
+		}
+		
+		//同时获取当前登录用户的权限信息
+		/*AdminSession adminSession = (AdminSession)SecurityContextHolder.getContext()
+		.getAuthentication().getPrincipal();
+		authorityList=  adminSession.getAdmin().getAuthorityList();
+		adminType = adminSession.getAdmin().getType();//
+		adminDuty = adminSession.getAdmin().getDutyid();
+		
+		*//**
+		 * 根据角色查看订单
+		 *//*
+		Long  dutyid =adminSession.getAdmin().getDutyid();//19销售工程师  18销售经理
+		Duty  duty =dutyService.getById(dutyid);
+		//根据职位id 查找职位名
+		String dutyName=duty.getDutyname();
+		String dutykey =duty.getDutykey();
+		adminDutyName =dutyName;
+		
+		 
+		
+		if( "订单管理员".equals(dutyName) ){// 新流程 经销商 实际 还是 销售工程师 ,按销售工程师的权限做查询
+			sysOrderQuery.setUserId(adminSession.getAdmin().getAdminId());//当前登陆人为经销商
+		}
+		//01 a  19销售工程师
+		
+		if(ConstantInfo.DUTY_XSGCS.equals(dutykey) ){//查看自己的 新建的 基本订单->新流程不变  (  含用户类别中的经销商 )
+			sysOrderQuery.setUserId(adminSession.getAdmin().getAdminId());//当前登陆人为  销售工程师  / 经销商
+		}
+		//01 b   经销商 
+		if( ConstantInfo.DUTY_JXS.equals(dutykey) ){// 新流程 经销商 实际 还是 销售工程师 ,按销售工程师的权限做查询
+			sysOrderQuery.setUserId(adminSession.getAdmin().getAdminId());//当前登陆人为经销商
+		}
+		//02  18销售经理
+		if( ConstantInfo.DUTY_XSJL.equals(dutykey) ){//查看自己权限范围的基本订单->新流程销售经理只有查看权限
+			sysOrderQuery.setBillUserId(adminSession.getAdmin().getAdminId());//当前登陆人为销售经理
+		}
+		//03   新流程 加入了 区域经理
+		if(ConstantInfo.DUTY_QYXSJL.equals(dutykey)  ){//查看自己权限范围的基本订单->新流程区域经理有查看自己下级的及  审核权限,新流程正常提交给区域销售经理
+			//orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为区域经理
+			
+			AdminQuery adminQuery=new AdminQuery();
+			
+			adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());//查询所有上级是当前登录的区域销售经理的下级
+			List<Admin> adminList=adminService.findList(adminQuery);//查询的是销售经理列表
+			StringBuffer sb=new StringBuffer();
+			sb.append( adminSession.getAdmin().getAdminId()+"" +",");
+			findBillUserIds(adminList,sb);
+			
+		}
+		//05
+		if(ConstantInfo.DUTY_CWJL.equals(dutykey) ){//查看自己权限范围的基本订单->新流程 财务经理 有查看 所有及  审核所有的 权限
+			//orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为财务经理 
+		}
+		//06  新流程 加入了 售后服务部经理
+		if( ConstantInfo.DUTY_SHFWBJL.equals(dutykey)  ){//查看自己权限范围的基本订单->新流程售后服务部经理有查看所有E类产品及  审核 E类产品权限
+			//orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为 售后服务部经理
+			//查看基本订单中包含C类产品的
+			String propertyValue = PropertiesUtils
+				.getPropertyFileKeyValue("containProductType");
+			//sysOrderQuery.setContainProductType("E");
+			sysOrderQuery.setContainProductType(propertyValue);
+		}
+		//07  39副总经理
+		if(ConstantInfo.DUTY_FZJL.equals(dutykey)){//查看自己权限范围的基本订单->新流程不变
+			
+			//副总经理 查询所有下级
+			AdminQuery adminQuery=new AdminQuery();
+			adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());//查询所有上级是当前登录的副总的下级
+			List<Admin> adminList=adminService.findList(adminQuery);
+			
+			StringBuffer sb=new StringBuffer();
+			//新流程 基本订单 可能 直接推给副总,如经销商提交的基本订单,可能 是有正常流程区域经理推给的, 所以需要做查询
+			//查询直接提交给副总的基本订单,或是 有正常流程区域经理推给的
+			
+			sb.append( adminSession.getAdmin().getAdminId()+"" +",");
+			findBillUserIds(adminList,sb);
+			
+			
+		}
+		//38总经理/管理员查看所有->新流程不变
+*/		
+		
+		try {
+			page = sysOrderService.findPage(page, sysOrderQuery);
+			
+			//查询当前登陆用户的按钮权限
+			 
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			
+			AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+					.getAuthentication().getPrincipal();
+			//authorityList=  adminSession1.getAdmin().getAuthorityList();
+			 
+			
+			//Iterator iterator=adminSession1.getAuthorities().iterator();
+			for (Iterator iterator2 = adminSession1.getAuthorities().iterator(); iterator2
+					.hasNext();) {
+				String type = (String) iterator2.next().toString();
+				MenuOperate menuOperate=new MenuOperate();
+				menuOperate.setFunctionName(type);
+				menuOperatelist.add(menuOperate);
+			}	
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	private void findBillUserIds(List<Admin> adminList ,StringBuffer sb ) {
+		
+		if(null!=adminList&&0<adminList.size()){//说明有值
+			
+			for (Admin admin2 : adminList) {
+				/**
+				 * 根据角色查看订单
+				 */
+				Long  dutyid =admin2.getDutyid();//19销售工程师  18销售经理
+				Duty  duty =dutyService.getById(dutyid);
+				//根据职位id 查找职位名
+				String dutyName=duty.getDutyname();
+				String dutykey =duty.getDutykey();
+				if(ConstantInfo.DUTY_XSJL.equals(dutykey)){
+					sb.append(admin2.getAdminId()+",");
+				}else{
+	                AdminQuery query=new AdminQuery();
+					query.setEmpSuperior(admin2.getAdminId());// 
+					List<Admin> queryList=adminService.findList(query);//
+					findBillUserIds(queryList,sb);
+				}
+				
+			}
+			String billUserIds=sb.toString();
+			billUserIds=billUserIds.substring(0, billUserIds.length()-1);
+			
+			sysOrderQuery.setBillUserIds( billUserIds+"" );//当前登陆人为副总经理
+		}
+	}
+
+	/**
+	 * 订单列表查询
+	 * @return
+	 * @throws Exception
+	 */
+	public String listToJson() throws Exception {
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Override
+	public String input() throws Exception {
+		//获取该订单
+		sysOrder = sysOrderService.getById(id);
+		if(null!=sysOrder.getContractCode()){
+			sysOrder.setContractOldCode(sysOrder.getContractCode());//修改操作记录旧编码
+		}
+		//获取该订单下的产品信息
+		if(null==productQuery) productQuery = new ProductQuery();
+		productQuery.setOrderCode(sysOrder.getOrderCode());
+		productQuery.setProductVersion(sysOrder.getContractVersion());
+		List<Product> productList = productService.findList(productQuery);
+		//获取获取该订单下的产品的PL产品信息
+		if(null!=productList&&0<productList.size()){
+			StringBuffer sbId=new StringBuffer();
+			for (int i = 0; i < productList.size(); i++) {
+				if(i==(productList.size()-1)){
+					sbId.append(productList.get(i).getProductId());
+				}else{
+					sbId.append(productList.get(i).getProductId()+",");
+				}
+			}
+			ProductplQuery  productplQuery =new ProductplQuery ();
+			productplQuery.setProductIds(sbId.toString());
+			List<Productpl> productplList=  productplService.findList(productplQuery);
+			map.put("productplList", productplList);
+		}
+		//获取该订单下的应收款管理信息
+		if(null==collectPayQuery) collectPayQuery = new CollectPayQuery();
+		collectPayQuery.setOrderCode(sysOrder.getOrderCode());
+		collectPayQuery.setCollectPayVersion(sysOrder.getContractVersion());
+		List<CollectPay> collectPayList = collectPayService.findList(collectPayQuery);
+		
+		//查看订单关联的审批人及最新的意见
+		String orderApprover=sysOrder.getExamineUserName();
+		if(null!=orderApprover){
+			ApproveMsgQuery approverquery=new ApproveMsgQuery();
+			approverquery.setApprover(orderApprover);
+			approverquery.setBillId(id);
+			
+			List<ApproveMsg> approverMsgList=approveMsgService.findList(approverquery);
+			if(null!=approverMsgList&&0<approverMsgList.size()){
+				sysOrder.setExamineMsg( approverMsgList.get(0).getApproveCotent() );
+			}
+		}
+		if(null==sysOrderQuery){
+			sysOrderQuery=new SysOrderQuery();
+		}
+		
+		//查询当前登陆用户的按钮权限
+		//MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+		//AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+//		menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+//		menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+//		menuOperateQuery.setSortColumns(" id asc ");
+//		menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+		
+		AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(null==menuOperatelist){
+			menuOperatelist=new ArrayList<MenuOperate>();
+		}
+		for (Iterator iterator2 = adminSession1
+				.getAuthorities().iterator(); iterator2
+				.hasNext();) {
+			String type = (String) iterator2.next().toString();
+			MenuOperate menuOperate=new MenuOperate();
+			menuOperate.setFunctionName(type);
+			menuOperatelist.add(menuOperate);
+		}
+		map.put("menuOperatelist", menuOperatelist);
+		
+		map.put("sysOrder", sysOrder);
+		map.put("productList", productList);
+		map.put("collectPayList", collectPayList);
+		Struts2Utils.renderJson(map);
+		return null;
+	}
+	public String monitorFile(){
+		return null;
+	}
+	public String inputHistory() throws Exception {
+		//获取该订单
+		sysOrder = sysOrderService.getByIdFromHistory(id);
+		
+		//获取该订单下的产品信息
+		if(null==productQuery) productQuery = new ProductQuery();
+		productQuery.setOrderCode(sysOrder.getOrderCode());
+		productQuery.setProductVersion(sysOrder.getContractVersion());
+		List<Product> productList = productService.findListHistory(productQuery);
+		//获取获取该订单下的产品的PL产品信息
+		if(null!=productList&&0<productList.size()){
+			StringBuffer sbId=new StringBuffer();
+			for (int i = 0; i < productList.size(); i++) {
+				if(i==(productList.size()-1)){
+					sbId.append(productList.get(i).getProductId());
+				}else{
+					sbId.append(productList.get(i).getProductId()+",");
+				}
+			}
+			ProductplQuery  productplQuery =new ProductplQuery ();
+			productplQuery.setProductIds(sbId.toString());
+			List<Productpl> productplList=  productplService.findListHistory(productplQuery);
+			map.put("productplList", productplList);
+		}
+		
+		//获取该订单下的应收款管理信息
+		if(null==collectPayQuery) collectPayQuery = new CollectPayQuery();
+		collectPayQuery.setOrderCode(sysOrder.getOrderCode());
+		collectPayQuery.setCollectPayVersion(sysOrder.getContractVersion());
+		List<CollectPay> collectPayList = collectPayService.findListHistory(collectPayQuery);
+		
+		
+		//查看订单关联的审批人及最新的意见
+		String orderApprover=sysOrder.getExamineUserName();
+		if(null!=orderApprover){
+			ApproveMsgQuery approverquery=new ApproveMsgQuery();
+			approverquery.setApprover(orderApprover);
+			approverquery.setBillId(id);
+			
+			List<ApproveMsg> approverMsgList=approveMsgService.findList(approverquery);
+			if(null!=approverMsgList&&0<approverMsgList.size()){
+				sysOrder.setExamineMsg( approverMsgList.get(0).getApproveCotent() );
+			}
+		}
+		
+		if(null==sysOrderQuery){
+			sysOrderQuery=new SysOrderQuery();
+		}
+		
+		//查询当前登陆用户的按钮权限
+//		MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+		//AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+//		menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+//		menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+//		menuOperateQuery.setSortColumns(" id asc ");
+//		menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+		
+		AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(null==menuOperatelist){
+			menuOperatelist=new ArrayList<MenuOperate>();
+		}
+		for (Iterator iterator2 = adminSession1.getAuthorities()
+				.iterator(); iterator2
+				.hasNext();) {
+			String type = (String) iterator2.next().toString();
+			MenuOperate menuOperate=new MenuOperate();
+			menuOperate.setFunctionName(type);
+			menuOperatelist.add(menuOperate);
+		}
+		map.put("menuOperatelist", menuOperatelist);
+		
+		map.put("sysOrder", sysOrder);
+		map.put("productList", productList);
+		map.put("collectPayList", collectPayList);
+		Struts2Utils.renderJson(map);
+		return null;
+	}
+	public String update() throws Exception {
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				Struts2Utils.renderJson("非法提交！");
+				return null;
+			} 
+			sysOrderService.update(sysOrder);
+			if(null!=product){
+				product.setOrderCode(sysOrder.getOrderCode());
+				productService.update(product);
+			}
+			if(null!=collectPay){
+				collectPay.setOrderCode(sysOrder.getOrderCode());
+				collectPayService.update(collectPay);
+			}
+			Struts2Utils.renderJson(SUCCESS);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson(e.getMessage());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("保存管理员信息失败！");
+		}
+		return null;
+	}
+	
+	/**
+	 * 保存或修改系统订单
+	 */
+	public String saveOrUpdateSysOrder() throws Exception {
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			}
+			sysOrderService.saveOrUpdateSysOrder( sysOrder, products, collectPays,
+					 delcollectPays, delproducts);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	
+	
+	
+	@Override
+	public String save() throws Exception {
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			}
+			//按照新流程添加和修改操作有订单管理员来操作
+			AdminSession admin = (AdminSession)SecurityContextHolder.getContext()
+									.getAuthentication().getPrincipal();
+			Long nowAdminDutyId=admin.getAdmin().getDutyid();
+			Duty  duty =dutyService.getById(nowAdminDutyId);
+			//根据职位id 查找职位名
+			String dutyName=duty.getDutyname();
+			String dutykey =duty.getDutykey();
+				if(null==sysOrder.getSysOrderId()){
+					//查询合同编号是否存在
+					SysOrderQuery	sysorderQuery=new SysOrderQuery();
+					sysorderQuery.setContractCode(sysOrder.getContractCode());
+					List<SysOrder> sysorderList=sysOrderService.findlistBySysOrderCode( sysorderQuery);
+					if(null!=sysorderList&&0<sysorderList.size()){
+						resultInfo[0] = "-1";
+						resultInfo[1] = "当前单据的合同编号已经存在！";
+						return JSON;
+					}
+					String productstring=sysOrder.getProductstring();
+					if(null!=productstring){
+						products=productstring;
+					}
+					sysOrder.setIssummary(0);
+					sysOrderService.saveTogather(sysOrder,products,collectPays);
+				}else {
+					if(null!=sysOrder.getIssummary()&& "1".equals(sysOrder.getIssummary()+"") ){
+						logger.error("该订单已经被汇总过,不允许再次修改!");
+						resultInfo[0] = "-1";
+						resultInfo[1] = "该订单已经被汇总过,不允许再次修改!";
+						return JSON;
+					}
+					String productstring=sysOrder.getProductstring();
+					if(null!=productstring){
+						products=productstring;
+					}
+					sysOrderService.updateTogather(sysOrder,products,collectPays,delcollectPays,delproducts);
+				}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	public String examineSysOrderInfoTest(){
+		resultInfo[0] = "0";
+		resultInfo[1] = "操作成功";
+		return JSON;
+	}
+	
+	/**
+	 * 改变订单状态
+	 * @return
+	 */
+	public String examineSysOrderInfo(){
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			} 
+			if(null==sysOrder){
+				sysOrder=new SysOrder();
+				if(null!=sysOrderQuery){
+					sysOrder.setSysOrderId(sysOrderQuery.getSysOrderId());
+				}
+			} 
+			SysOrder sysordernew = this.sysOrderService.getById(sysOrderQuery.getSysOrderId());
+			if(sysordernew!=null&&sysordernew.getChangeordercode()!=null){
+				sysOrder.setChangeordercode(sysordernew.getChangeordercode());
+			}
+			
+			sysOrderService.exeprocessExamine( sysOrderQuery, sysOrder,
+					processExetask);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			//addActionMessage("操作成功");
+			map.put("resultInfo", resultInfo);
+			Struts2Utils.renderJson(map);
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = " "+e.getMessage();
+			map.put("resultInfo", resultInfo);
+			Struts2Utils.renderJson(map);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = " "+e.getMessage();
+			map.put("resultInfo", resultInfo);
+			Struts2Utils.renderJson(map);
+		}
+		return null;
+	}
+	
+	/**
+	 * 改变订单状态
+	 * @return
+	 */
+	public String examineSysOrderInfoBak(){
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			} 
+			sysOrderService.examineSysOrderInfo( sysOrderQuery, sysOrder);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 改变订单状态
+	 * @return
+	 */
+	public String examineSysOrder(){
+		try {
+			String method = getRequest().getMethod();  
+			if (!"post".equalsIgnoreCase(method)) {  
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			} 
+			
+			AdminSession admin = (AdminSession)SecurityContextHolder.getContext()
+			.getAuthentication().getPrincipal();
+			Long nowAdminDutyId=admin.getAdmin().getDutyid();
+			Duty  duty =dutyService.getById(nowAdminDutyId);
+			//根据职位id 查找职位名
+			//提交操作由订单管理员操作
+			//审核操作有财务审核员操作
+				SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				sysOrder = sysOrderService.getById(sysOrderQuery.getSysOrderId());
+				int sysOrderStatus=sysOrderQuery.getSysOrderStatus();
+				if(sysOrderStatus==1){//提交系统订单
+					if(null==sysOrder.getContractCode()||"".equals(sysOrder.getContractCode())){
+						logger.error("系统订单的合同编号不能为空!");
+						//Struts2Utils.renderJson("改变系统订单的状态只能是订单管理员或财务审核员！");
+						resultInfo[0] = "-1";
+						resultInfo[1] = "系统订单的合同编号不能为空!";
+						return JSON;
+					}
+				}
+				sysOrder.setExamineTime(formt.format(new Date()));
+				sysOrder.setSysOrderStatus(sysOrderQuery.getSysOrderStatus());
+				sysOrderService.update(sysOrder);
+				
+				if (sysOrder.getSysOrderStatus().intValue() == 2
+						||
+						sysOrder.getSysOrderStatus().intValue() == 3) {//审核员审核或驳回操作
+					//同时保存审核意见
+					ApproveMsg approveMsgentity=new ApproveMsg();
+					approveMsgentity.setApprover(admin.getAdmin().getAdminName());
+					approveMsgentity.setBillId(sysOrderQuery.getSysOrderId());
+					
+					approveMsgentity.setBillType(2);//2系统订单
+					if ("2".equals(sysOrderQuery.getSysOrderStatus() + "")) {
+						approveMsgentity.setOptType(1);//审核
+					}
+		            if ("3".equals(sysOrderQuery.getSysOrderStatus() + "")) {
+		            	approveMsgentity.setOptType(2);//驳回
+					}
+		            approveMsgentity.setApproverTime(
+		            		DateUtil.GetDate2(
+		            				DateUtil.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		            if ( null!=sysOrderQuery.getApproveCotent() ) {
+						approveMsgentity.setApproveCotent(sysOrderQuery.getApproveCotent());
+					}
+					approveMsgService.saveOrUpdate(approveMsgentity);
+				}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	public String sysOrderHistoryList(){
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("sysOrderId");
+			page.setOrder(Page.DESC);
+		}
+		
+		if(sysOrderQuery == null) {
+			sysOrderQuery = new SysOrderQuery();
+		}
+		page = sysOrderService.findHistoryList(page,sysOrderQuery);
+		Struts2Utils.renderJson(page);
+		return null;
+	}
+	@Override
+	public String saveToJson() throws Exception {
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	private String joinOrderCode(List<String> checkedCodeList, String string) {
+		StringBuffer sb = new StringBuffer();
+		for(String temp:checkedCodeList){
+			sb.append("\'"+temp+"\'").append(",");
+		}
+		sb = sb.deleteCharAt(sb.length()-1);
+		return sb.toString();
+	}
+	@Override
+	public String delete() throws Exception {
+		String method = getRequest().getMethod();  
+		if (!"post".equalsIgnoreCase(method)) {  
+			logger.error("非法提交");
+			Struts2Utils.renderJson("非法提交！");
+			return null;
+		} 
+		if(null!=checkedCodeList){
+			//先判断是否有已经审核的,或待审核的
+			String sysorderCodes =joinOrderCode(checkedCodeList, ",");
+			SysOrderQuery	sysorderQuery=new SysOrderQuery();
+			sysorderQuery.setOrderCodes(sysorderCodes);
+			List<SysOrder> sysorderList=sysOrderService.findlistBySysOrderCodes( sysorderQuery);
+			if(null!=sysorderList&&0<sysorderList.size()){
+				//resultInfo[0] = "-1";
+				//resultInfo[1] = "当前选择的单据中有待审核或已生效的系统订单,不允许删除！";
+				Struts2Utils.renderJson("当前选择的单据中有待审核或已生效的系统订单,不允许删除！");
+				return JSON;
+			}
+			
+			//sysOrderService.deleteByMultipleId(checkedIdList);
+			sysOrderService.deleteByMultipleOrderCode(checkedCodeList);
+		}
+		Struts2Utils.renderJson("success");
+		return null;
+	}
+	public String findList(){
+		List<SysOrder> list = sysOrderService.findListQuery(sysOrderQuery);
+		//获取该订单下的产品信息
+		if(null!=list&&list.size()>0){
+			SysOrder sysOrder = sysOrderService.getById(list.get(0).getSysOrderId());
+			if(null==productQuery) productQuery = new ProductQuery();
+			productQuery.setOrderCode(sysOrder.getOrderCode());
+			List<Product> productList = productService.findList(productQuery);
+			ProductplQuery productplQuery = new ProductplQuery();
+			if(null!=productList&&productList.size()>0){
+				for(int i=0;i<productList.size();i++){
+					productplQuery.setProductId(productList.get(i).getProductId());
+					List<Productpl> pls = productplService.findList(productplQuery);
+					map.put("pls"+productList.get(i).getProductId(), pls);
+				}
+			}
+			map.put("productList", productList);
+			map.put("sysOrder", sysOrder);
+		}
+		return JSON;
+	}
+	public String findCheckedList(){
+		
+		try {
+			if(sysOrderQuery==null){
+				sysOrderQuery = new SysOrderQuery();
+			}
+			sysOrderQuery.setSysOrderStatus(100);
+			sysOrderQuery.setTop(10+"");
+			sysOrderList = sysOrderService.findCheckedList(sysOrderQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	@Override
+	public String deleteToJson() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public String show() throws Exception {
+		try {
+			sysOrder = sysOrderService.getById(id);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	@Override
+	public String showToJson() throws Exception {
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	@Override
+	protected void prepareModel() throws Exception {
+		if (id != null ) {
+			sysOrder = sysOrderService.getById(id);
+		} else {
+			sysOrder = new SysOrder();
+		}
+	}
+	/**-------------------------------------------------------------------------------------------------------------------*/
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+	public SysOrder getSysOrder() {
+		return sysOrder;
+	}
+	public void setSysOrder(SysOrder sysOrder) {
+		this.sysOrder = sysOrder;
+	}
+	public SysOrderQuery getSysOrderQuery() {
+		return sysOrderQuery;
+	}
+	public void setSysOrderQuery(SysOrderQuery sysOrderQuery) {
+		this.sysOrderQuery = sysOrderQuery;
+	}
+	public Page<SysOrder> getPage() {
+		return page;
+	}
+	public void setPage(Page<SysOrder> page) {
+		this.page = page;
+	}
+	public List<Order> getOrderList() {
+		return orderList;
+	}
+	public void setOrderList(List<Order> orderList) {
+		this.orderList = orderList;
+	}
+	public Map<String, Object> getMap() {
+		return map;
+	}
+	public void setMap(Map<String, Object> map) {
+		this.map = map;
+	}
+	public Product getProduct() {
+		return product;
+	}
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+	public ProductQuery getProductQuery() {
+		return productQuery;
+	}
+	public void setProductQuery(ProductQuery productQuery) {
+		this.productQuery = productQuery;
+	}
+	public CollectPay getCollectPay() {
+		return collectPay;
+	}
+	public void setCollectPay(CollectPay collectPay) {
+		this.collectPay = collectPay;
+	}
+	public CollectPayQuery getCollectPayQuery() {
+		return collectPayQuery;
+	}
+	public void setCollectPayQuery(CollectPayQuery collectPayQuery) {
+		this.collectPayQuery = collectPayQuery;
+	}
+	public String getProducts() {
+		return products;
+	}
+	public void setProducts(String products) {
+		this.products = products;
+	}
+	public String getCollectPays() {
+		return collectPays;
+	}
+	public void setCollectPays(String collectPays) {
+		this.collectPays = collectPays;
+	}
+	public String getDelproducts() {
+		return delproducts;
+	}
+	public void setDelproducts(String delproducts) {
+		this.delproducts = delproducts;
+	}
+	public String getDelcollectPays() {
+		return delcollectPays;
+	}
+	public void setDelcollectPays(String delcollectPays) {
+		this.delcollectPays = delcollectPays;
+	}
+	public List<String> getCheckedCodeList() {
+		return checkedCodeList;
+	}
+	public void setCheckedCodeList(List<String> checkedCodeList) {
+		this.checkedCodeList = checkedCodeList;
+	}
+	
+	public List<Menu> getAuthorityList() {
+		return authorityList;
+	}
+	public void setAuthorityList(List<Menu> authorityList) {
+		this.authorityList = authorityList;
+	}
+	public Integer getAdminType() {
+		return adminType;
+	}
+	public void setAdminType(Integer adminType) {
+		this.adminType = adminType;
+	}
+	public Long getAdminDuty() {
+		return adminDuty;
+	}
+	public void setAdminDuty(Long adminDuty) {
+		this.adminDuty = adminDuty;
+	}
+	public String getAdminDutyName() {
+		return adminDutyName;
+	}
+	public void setAdminDutyName(String adminDutyName) {
+		this.adminDutyName = adminDutyName;
+	}
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+	public List<SysOrder> getSysOrderList() {
+		return sysOrderList;
+	}
+	public void setSysOrderList(List<SysOrder> sysOrderList) {
+		this.sysOrderList = sysOrderList;
+	}
+	public List<MenuOperate> getMenuOperatelist() {
+		return menuOperatelist;
+	}
+	public void setMenuOperatelist(List<MenuOperate> menuOperatelist) {
+		this.menuOperatelist = menuOperatelist;
+	}
+	public List<String> getGrantedAuthorityList() {
+		return grantedAuthorityList;
+	}
+	public void setGrantedAuthorityList(
+			List<String> grantedAuthorityList) {
+		this.grantedAuthorityList = grantedAuthorityList;
+	} 
+	/**
+	 * test统计常州ERP中的销售人员数据getChangZhouErpDatas
+	 * /sysOrder/sys-order!getChangZhouErpDatas.htm
+	 */
+	/**/
+	public String listChangZhouErpDatasWith() throws Exception {
+		try {
+			//1统计常州ERP中的销售人员数据
+			sysOrderService.getSeorderDatas();
+			//2统计常州ERP中的销售人员数据
+			sysOrderService.getContractEntryInfo();
+			//3统计常州ERP中的销售人员销售订单的关联合同的应收款信息
+			sysOrderService.getContractSchemeInfo();
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * test统计常州ERP中的销售人员数据getChangZhouErpDatas
+	 * /sysOrder/sys-order!getChangZhouErpDatas.htm
+	 */
+	/**/
+	public String listChangZhouErpDatasWithDif() throws Exception {
+		try {
+			//1统计常州ERP中的销售人员数据
+			sysOrderService.getSeorderDatasWithDif();
+			//2统计常州ERP中的销售人员数据
+			sysOrderService.getContractEntryInfoWithDif();
+			//3统计常州ERP中的销售人员销售订单的关联合同的应收款信息
+			sysOrderService.getContractSchemeInfoWithDif();
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 统计只有合同号,没有订单号的情况
+//	 * /sysOrder/sys-order!listChangZhouErpDatasWithNoOrderNum.htm
+	 */
+	
+	public String listChangZhouErpDatasWithNoOrderNum() throws Exception {
+		try {
+			//1统计常州ERP中的销售人员数据
+			sysOrderService.getSeorderDatasWithNoOrderNum();
+			//2统计常州ERP中的销售人员数据
+			sysOrderService.getContractEntryInfoWithNoOrderNum();
+			//3统计常州ERP中的销售人员销售订单的关联合同的应收款信息
+			sysOrderService.getContractSchemeInfoWithNoOrderNum();
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	public ProcessExetask getProcessExetask() {
+		return processExetask;
+	}
+	public void setProcessExetask(ProcessExetask processExetask) {
+		this.processExetask = processExetask;
+	}
+	/**
+	 * 采购订单和采购申请单选择销售订单
+	 * @return
+	 * @throws Exception
+	 */
+	/**/public String listToJsonNew() throws Exception {
+		try {
+			listNew();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listNew() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("sysOrderId");
+			page.setOrder(Page.DESC);
+		}
+		if(sysOrderQuery == null) {
+			sysOrderQuery = new SysOrderQuery();
+		}
+		sysOrderQuery.setSysOrderStatus(2);// 查询全部
+		
+		try {
+			page = sysOrderService.findPage(page, sysOrderQuery);
+			List<SysOrder> orders =  page.getResult();
+			if(orders!=null&&orders.size()>0){
+				for(int i=0;i<orders.size();i++){
+					ProductQuery query = new ProductQuery();
+					query.setOrderCode(orders.get(i).getOrderCode());
+					List<Product> pros = productService.findList(query);
+					if(pros!=null&&pros.size()>0){
+						orders.get(i).setProducts(pros);
+					}
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}/**/
+	public ApplicationContext getCtx() {
+		return ctx;
+	}
+	public void setCtx(ApplicationContext ctx) {
+		this.ctx = ctx;
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 1:获取常州ERP中订单编号和合同编号存在且编号相同的情况
+	 */
+	public String changZhouErpDatasWith() throws Exception {
+		try {
+			//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+			sysOrderService.getSeorderDatas();
+			//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+			sysOrderService.getContractEntryInfo();
+			//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+			sysOrderService.getContractSchemeInfo();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 2:获取常州ERP中订单编号和合同编号存在但编号不相同的情况
+	 */
+	public String changZhouErpDatasWithDif() throws Exception {
+		try {
+			//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+			sysOrderService.getSeorderDatasWithDif();
+			//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+			sysOrderService.getContractEntryInfoWithDif();
+			//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+			sysOrderService.getContractSchemeInfoWithDif();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 3:获取常州ERP中订单编号不存在,合同编号存在的情况
+	 */
+	public String changZhouErpDatasWithNoOrderNum() throws Exception {
+		try {
+			//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+			sysOrderService.getSeorderDatasWithNoOrderNum();
+			//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+			sysOrderService.getContractEntryInfoWithNoOrderNum();
+			//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+			sysOrderService.getContractSchemeInfoWithNoOrderNum();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 1:t_sysorder
+	 *//*
+	public String changZhouErpDatasWith() throws Exception {
+		try {
+			//1订单编号和合同编号存在且编号相同的情况
+			sysOrderService.getSeorderDatas();
+			//2订单编号和合同编号存在但编号不相同的情况
+			sysOrderService.getSeorderDatasWithDif();
+			//3常州ERP中订单编号不存在,合同编号存在的情况
+			sysOrderService.getSeorderDatasWithNoOrderNum();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	*//**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 2:t_product
+	 *//*
+	public String changZhouErpDatasWithDif() throws Exception {
+		try {
+			//1订单编号和合同编号存在且编号相同的情况
+			sysOrderService.getContractEntryInfo();
+			//2订单编号和合同编号存在但编号不相同的情况
+			sysOrderService.getContractEntryInfoWithDif();
+			//3常州ERP中订单编号不存在,合同编号存在的情况
+			sysOrderService.getContractEntryInfoWithNoOrderNum();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}
+	*//**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 3:t_collectpay
+	 *//*
+	public String changZhouErpDatasWithNoOrderNum() throws Exception {
+		try {
+			//1订单编号和合同编号存在且编号相同的情况
+			sysOrderService.getContractSchemeInfo();
+			//2订单编号和合同编号存在但编号不相同的情况
+			sysOrderService.getContractSchemeInfoWithDif();
+			//3常州ERP中订单编号不存在,合同编号存在的情况
+			sysOrderService.getContractSchemeInfoWithNoOrderNum();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}
+		return JSON;
+	}*/
+}

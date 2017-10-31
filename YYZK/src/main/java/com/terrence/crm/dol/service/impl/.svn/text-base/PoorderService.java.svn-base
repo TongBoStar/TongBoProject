@@ -1,0 +1,810 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.BillnoCheck;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IBillnoCheckDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.dao.IPoorderentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.BillnoCheckQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.PoorderQuery;
+import com.terrence.crm.dol.query.PoorderentryQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.service.IPoorderService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
+/**
+ * 采购订单服务信息
+ * 
+ * @version 1.0
+ */
+
+@Service
+@Transactional
+public class PoorderService extends BaseService implements IPoorderService {
+	protected static Logger logger = LoggerFactory.getLogger(PoorderService.class);
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+
+	@Autowired
+	@Qualifier("billnoCheckDao")
+	private IBillnoCheckDao billnoCheckDao;
+	
+	@Autowired
+	@Qualifier("poorderentryDao")
+	private IPoorderentryDao poorderentryDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	private K3ServiceProxy k3ServiceProxy; 
+	
+	@Autowired
+	@Qualifier("emailService")
+	private IEmailService emailService;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Poorder";
+	}
+	@Transactional(readOnly=true)
+	public Poorder getById(java.lang.Long id) throws ServiceException
+	{
+		return poorderDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Poorder entity) throws ServiceException
+	{
+		poorderDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Poorder entity) throws ServiceException
+	{
+		Long adId = poorderDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Poorder entity) throws ServiceException
+	{
+		Integer returnValue =  poorderDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = poorderDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = poorderDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PoorderQuery query = new PoorderQuery();
+		try {
+			return poorderDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Poorder> findPage(Page<Poorder> page, PoorderQuery query) throws ServiceException
+	{
+		return poorderDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Poorder> findList(PoorderQuery query) throws ServiceException
+	{
+		return poorderDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Poorder> findList(PoorderQuery query,Integer pageSize) throws ServiceException
+	{
+		return poorderDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Poorder> findAllList() throws ServiceException
+	{
+		return poorderDao.findAllList();
+	}
+	@Override
+	public List<Poorder> findcreatPoorder(String statmentname) {
+		
+		return poorderDao.findcreatPoorder(statmentname);
+	}
+	@Override
+	public Poorder findPoorder(PoorderQuery poorderQuery)
+			throws ServiceException {
+		return poorderDao.findPoorder(poorderQuery);
+	}
+	@Override
+	public Poorder findtasksPoorder(PoorderQuery poorderQuery)
+			throws ServiceException {
+		return poorderDao.findtasksPoorder(poorderQuery);
+	}
+	@Override
+	public void updateUNAudit(List<Long> checkedIdList, Poorder poorder)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		poorder.setFinterids(auditIds);
+		poorderDao.updateUNAudit(poorder);
+	}
+	@Override
+	public void updateforfclosed(List<Long> checkedIdList, Poorder poorder)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		poorder.setFinterids(auditIds);
+		poorderDao.updateforfclosed(poorder);
+	}
+	@Override
+	public void updateforUNfclosed(List<Long> checkedIdList, Poorder poorder)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		poorder.setFinterids(auditIds);
+		poorderDao.updateforUNfclosed(poorder);
+	}
+	
+
+	/**
+	 * 采购订单审核
+	 */
+	public Integer saveCheckGtask(List<Long> checkedIdList)throws ServiceException 
+	{
+		try 
+		{
+			/**
+			 * 更新物料的在制品量
+			 */
+			updateBaseData(checkedIdList,1);
+			
+			List<Long> listchecked = new ArrayList<Long>();
+			for(int i = 0;i<checkedIdList.size();i++)
+			{
+				
+				Poorder por=poorderDao.getById(checkedIdList.get(i));
+			
+				BillnoCheck bill = getBillCheck();
+				if(bill!=null)
+				{
+					Poorder poorder=poorderDao.getByProperty("fbillno", por.getFbillno());
+					if(bill.getLevels().intValue()==1)
+					{
+						poorder.setFmultichecklevel1(SpringSecurityUtils.getCurrentUserId());
+						poorder.setFmulticheckdate1(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+						 poorder.setFcurchecklevel(1);//当前审核级别
+					}
+					else if(bill.getLevels().intValue()==2)
+					{
+						poorder.setFmultichecklevel2(SpringSecurityUtils.getCurrentUserId());
+						poorder.setFmulticheckdate2(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+						 poorder.setFcurchecklevel(2);//当前审核级别
+					}
+					else if(bill.getLevels().intValue()==3)
+					{
+						poorder.setFmultichecklevel3(SpringSecurityUtils.getCurrentUserId());
+						poorder.setFmulticheckdate3(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+					}
+				
+					if(SpringSecurityUtils.getCurrentUserId().equals(poorder.getFcheckerid()))//是否为终审
+					{
+						poorder.setFlowstatus(2);/**审核流程为结束状态**/ 
+					}
+					else
+					{
+						poorder.setFlowstatus(1);/**起动状态**/
+					}
+					
+					poorderDao.update(poorder);
+					
+					if(poorder.getFlowstatus().intValue()==2)/**审核流程结束**/
+					{
+						
+						Poorder ppoo = new Poorder();
+						
+						ppoo.setFinterid(checkedIdList.get(i));
+						
+						ppoo.setFcheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+						ppoo.setFstatus(1);//审核标志
+						poorderDao.update(ppoo);
+						listchecked.add(checkedIdList.get(i));
+						
+					}
+					
+					if(listchecked.size()>0 && (i+1)==checkedIdList.size()){
+						synchronousK3(listchecked);
+					}
+					
+					if(bill.getAmount().doubleValue()<poorder.getFtotalcostfor().doubleValue())
+					{
+						//saveGtask(por, task, bill);//添加待办任务
+						System.out.println("===========================");
+						//sendpoorderEmail();//发邮件
+					}
+				}else{
+					throw new ServiceException("审核失败，单据审批流程设置表中采购订单的审核无当前登录人id（如需解决，请与IT部门人员联系）","-1");
+				}
+			}
+			return 0;
+		} catch (ServiceException e) {
+			e.printStackTrace();
+			//throw new ServiceException("审核失败","-1");
+			throw new ServiceException(e.getMessage(),"-1");
+			//return -1;
+		}
+	}
+	
+	
+	private void updateBaseData(List<Long> checkedIdList,int flage) {
+		if(checkedIdList.size()>0){
+			for(int i=0;i<checkedIdList.size();i++){
+				Poorder por=poorderDao.getById(checkedIdList.get(i));
+				List<Poorderentry> entryList = new ArrayList<Poorderentry>();
+				PoorderentryQuery pq = new PoorderentryQuery();
+				pq.setFinterid(por.getFinterid());
+				entryList = poorderentryDao.findList(pq);
+				if(entryList.size()>0){
+					
+					if(por.getFxmark()==3){//3账套
+						for(int tt=0;tt<entryList.size();tt++){
+							List<BaseItem> itemList = new ArrayList<BaseItem>();
+							BaseItemQuery baseQuery=new BaseItemQuery();
+							baseQuery.setItemcode(entryList.get(tt).getItemcode());
+							itemList = baseItemDao.findEntityBase(baseQuery);
+							
+							BaseItem bitem = new BaseItem();
+							bitem.setItemcode(entryList.get(tt).getItemcode());
+							bitem.setBaseitemid(itemList.get(0).getBaseitemid());
+							if(flage==1){//审核  审核时增加在制品量
+								Double sumplan = (itemList.get(0).getPlanfqty()==null?0D:itemList.get(0).getPlanfqty()) - entryList.get(tt).getFqty();
+								bitem.setMakingnums((itemList.get(0).getMakingnums()==null?0D:itemList.get(0).getMakingnums())+entryList.get(tt).getFqty());//在制品量
+								bitem.setPlanfqty(sumplan<0?0D:sumplan);//已有计划量
+							}else{//反审
+								Double sumfqty = (itemList.get(0).getMakingnums()==null?0D:itemList.get(0).getMakingnums()) - entryList.get(tt).getFqty();//在制品量
+								bitem.setMakingnums(sumfqty<0?0D:sumfqty);
+								bitem.setPlanfqty((itemList.get(0).getPlanfqty()==null?0D:itemList.get(0).getPlanfqty()) + entryList.get(tt).getFqty());//已有计划量
+							}
+							
+							baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+						}
+					}else{//4账套 
+						for(int tt=0;tt<entryList.size();tt++){
+							List<BaseItem> itemList = new ArrayList<BaseItem>();
+							BaseItemQuery baseQuery=new BaseItemQuery();
+							baseQuery.setItemcode(entryList.get(tt).getItemcode());
+							itemList = baseItemDao.findEntityBase(baseQuery);
+							
+							BaseItem bitem = new BaseItem();
+							bitem.setItemcode(entryList.get(tt).getItemcode());
+							bitem.setBaseitemid(itemList.get(0).getBaseitemid());
+							if(flage==1){//审核  增加在制品量
+								Double sumplan = (itemList.get(0).getPlanfqty()==null?0D:itemList.get(0).getPlanfqty()) - entryList.get(tt).getFqty();
+								bitem.setMakingnums4((itemList.get(0).getMakingnums4()==null?0D:itemList.get(0).getMakingnums4())+entryList.get(tt).getFqty());
+								bitem.setPlanfqty(sumplan<0?0D:sumplan);//已有计划量
+							}else{
+								Double sumfqty = (itemList.get(0).getMakingnums4()==null?0D:itemList.get(0).getMakingnums4()) - entryList.get(tt).getFqty();
+								bitem.setMakingnums4(sumfqty<0?0D:sumfqty);
+								bitem.setPlanfqty((itemList.get(0).getPlanfqty()==null?0D:itemList.get(0).getPlanfqty()) + entryList.get(tt).getFqty());//已有计划量
+							}
+							baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+						}
+						
+					}
+				}
+			}
+		}
+	}
+	public void synchronousK3(List<Long> checkedIdList) throws ServiceException {
+		
+		
+		/**K3同步开始**/
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Poorder derpoor = new Poorder();
+		derpoor.setFinterids(auditIds);
+		List<Poorder> derpoorList = poorderDao.findtongdata(derpoor);
+		//=====================================================================
+		List<Poorder> listpoorder = new ArrayList<Poorder>();
+		List<Poorder> listpoorder2 = new ArrayList<Poorder>();
+		for(int t=0;t<derpoorList.size();t++){
+			if(derpoorList.get(t).getFxmark()==null || derpoorList.get(t).getFxmark()==3){
+				listpoorder.add(derpoorList.get(t));
+			}else{
+				listpoorder2.add(derpoorList.get(t));
+			}
+		}
+		
+		//=====================================================================
+		
+		if(listpoorder.size()>0){
+			List<List<Poorderentry>> list = new ArrayList<List<Poorderentry>>();
+			for(int d=0;d<listpoorder.size();d++){
+				
+				Poorderentry poorderentry = new Poorderentry();
+				poorderentry.setFinterid(listpoorder.get(d).getFinterid());
+				List<Poorderentry> poorderentryList = poorderentryDao.findpoorderentrytongdata(poorderentry);//查询订单明细
+				list.add(poorderentryList);
+				
+			}
+			
+			//同步K3暂时屏蔽	？？？？？？？？？？？？？？？？？？？？？？？2015-10-13-1412					
+			TREReturn  terreturn = k3ServiceProxy.saveNew(k3ServiceProxy.poorderK3Service, listpoorder,list);
+			//TREReturn  terreturn = null;
+			if(terreturn.getnCode() == -1){
+				throw new ServiceException(terreturn.getStrText(),"-1");
+			}
+			Map<Long,String> map=new HashMap();
+			 map = terreturn.getMap();
+		
+			if(map.size()==0){
+				throw new ServiceException("审核失败，ERP同步单据数据为空","-1");	
+			}
+			for(Map.Entry<Long, String> entry: map.entrySet()) { //保存K3数据后，回写K3的单据编号
+				Poorder poordererp = new Poorder();	
+				
+				if(entry.getValue()==null || entry.getValue().equals("NULL") || entry.getValue().equals("") || entry.getValue().equals("null")){
+					throw new ServiceException("审核失败，ERP同步单据数据为空","-1");	
+				}
+				poordererp.setErpfbillno(entry.getValue());
+				poordererp.setFinterid(entry.getKey());
+				poorderDao.update(poordererp);
+				}
+		}
+		
+		/**k3同步结束**/
+		
+		
+	}
+	
+	/**
+	 * 获取采购单审批层
+	 * @return
+	 */
+	public BillnoCheck getBillCheck() {
+		BillnoCheckQuery query=new BillnoCheckQuery();
+		query.setTemplateid(1l);
+		query.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		query.setSortColumns("billid asc ");
+		List<BillnoCheck> bills=billnoCheckDao.findList(query);
+		if(bills!=null&&bills.size()>0)
+			return bills.get(0);
+		else
+			return null;
+	}
+	@Override
+	public List<Poorder> findtongbuerp() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	/**
+	 * 采购单的反审
+	 * @return
+	 */
+	@Override
+	public void updatePoorderUNAudit(List<Long> checkedIdList, Poorder poorder)
+			throws ServiceException {
+		
+		/**
+		 * 更新物料的在制品量
+		 */
+		updateBaseData(checkedIdList,0);
+		
+		List<Long> listfinterid = new ArrayList<Long>();
+		for(int i =0;i<checkedIdList.size();i++){
+			Poorderentry poorderentry = new Poorderentry();
+			poorderentry.setFinterid(checkedIdList.get(i));
+			List<Poorderentry> pderentryList = poorderentryDao.findpderentryList(poorderentry);
+			
+			for(int t=0;t<pderentryList.size();t++){
+				listfinterid.add(pderentryList.get(t).getOrderid());//要反审的订单明细id
+			}
+		}
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Poorder p = new Poorder();
+		p.setFinterids(auditIds);
+		List<Poorder> poorderList = poorderDao.findpooderList(p);
+		
+		List<Poorder> poorList = poorderDao.findIsoldList(p);
+		if(poorList.size()>0){
+			for(int y=0;y<poorList.size();y++){
+				if(poorList.get(y).getIsold()!=0){
+					throw new ServiceException("旧单据不可反审核");
+				}
+			}
+		}
+		
+		
+
+		
+		poorder.setFinterids(auditIds);
+		poorderDao.updateUNAuditdate(poorder);
+	//=====================================================================	
+		List<Poorder> pList = new ArrayList<Poorder>();
+		for(int t=0;t<poorderList.size();t++){
+			if(poorderList.get(t).getFxmark() == null || poorderList.get(t).getFxmark() == 3){//判断是3帐套还是4帐套
+				pList.add(poorderList.get(t));
+			}
+		}
+		
+		//================= 同步erp ======================
+		
+		if(pList.size()>0){
+			//TREReturn  terreturn = k3ServiceProxy.deleteK3poorder(k3ServiceProxy.poorderEntryK3Service,listfinterid);
+			TREReturn  terreturn = k3ServiceProxy.deleteK3poorderfno(k3ServiceProxy.poorderEntryK3Service,pList);
+		//	TREReturn  terreturn = null;
+			if(terreturn.getnCode() == -1){
+				throw new ServiceException();
+			}
+		}
+	
+		
+		//================================================
+		
+	}
+	
+	
+	public int sendpoorderEmail(){
+
+		String subject = "采购信息待办任务提醒";
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String content = "";
+		String email = "frank.zhai@terrence.com.cn";
+		try {
+		
+				Template template = freemarkerConfiguration.getTemplate("template/applyandprocurementTemplate.ftl", "utf-8");
+				paramMap.put("userName", "翟");
+				paramMap.put("listItemDoc", "有新的待办任务，请及时处理！");
+				content = FreeMarkerTemplateUtils.processTemplateIntoString(template, paramMap);
+				if(emailService.sendEmail("admin@terrence.com.cn", "jingbo.yan@terrence.com.cn", subject, content)==1)// 发送邮件地址\接收邮件地址\邮件主题\ 邮件内容
+				{
+					System.out.println("====待办任务发送完毕");
+				}
+			
+		} catch (Exception e) {
+			logger.error("构造邮件失败",e);
+			
+		}
+		return 1;
+
+
+	}
+	@Override
+	public Poorder findPoorderRejected(PoorderQuery poorderQuery)
+			throws ServiceException {
+		return poorderDao.findPoorderRejected(poorderQuery);
+	}
+	@Override
+	public void updatePoorderRejected(List<Long> checkedIdList, Poorder entity)
+			throws ServiceException {
+	
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		entity.setFinterids(auditIds);
+		List<Poorder> listPoorder = poorderDao.findPoorderList(entity);
+		
+		for(int i = 0;i<listPoorder.size();i++){
+			if(listPoorder.get(i).getFmultichecklevel1() == null || listPoorder.get(i).getFmultichecklevel1().equals("null")){//一审驳
+			
+				
+				Poorder poorder = new Poorder();
+				poorder.setFinterid(listPoorder.get(i).getFinterid());
+				poorder.setFstatus(0);//审核:0、未审    1、审核通过        2、 待审        3、驳回    4、反审核中
+			
+				poorderDao.update("Poorder.update.for.rejected", poorder);
+			}else{ //if(listPoorder.get(i).getFmultichecklevel2() == null || listPoorder.get(i).getFmultichecklevel1().equals("null")){//二审驳
+			
+				
+				Poorder poorde = new Poorder();
+				poorde.setFinterid(listPoorder.get(i).getFinterid());
+				poorde.setFstatus(2);//审核:0、未审    1、审核通过        2、 待审        3、驳回    4、反审核中
+				poorderDao.update("Poorder.update.for.rejected", poorde);
+			}
+			
+		}
+		
+	
+		
+	}
+	@Override
+	public void updateK3fibillno(Poorder entity) throws ServiceException {
+		poorderDao.update(entity);
+		
+		Poorderentry pooentry = new Poorderentry();
+		pooentry.setFinterid(entity.getFinterid());
+		pooentry.setJobno(entity.getJobno());
+		poorderentryDao.update("Poorderentry.upate.k3fbillno.data", pooentry);
+	}
+	@Override
+	public void updateSubmit(List<Long> checkedIdList) throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		Poorder poorder = new Poorder();
+		poorder.setFinterids(delIds);
+		List<Poorder> poorList = poorderDao.findAllPoorderBatch(poorder);//查询要提交的订单
+		if(poorList.size()>0){
+			ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_POORDER_PUSH_TASK");
+			ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+			processDetailQuery.setProcessId(processTask.getProcessIds());
+			List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+			String handlers = "";
+			List<Long> handlids = new ArrayList<Long>();
+			ProcessDetail processDetail = processDetails.get(0);
+			for(ProcessHandle ph:processDetail.getProcessHandleList()){
+				handlers += ph.getHandlerName()+" ";
+				handlids.add(ph.getHandler());
+			}
+			for(int i = 0;i<poorList.size();i++){
+				Poorder poor = new Poorder();
+				poor.setFstatus(2);//待审核
+				poor.setCheckstatus(processDetail.getNodeSeq());
+				poor.setCheckdesc(processDetail.getNodeName()+",执行人:"+handlers);
+				poor.setFinterid(poorList.get(i).getFinterid());
+				
+				BillnoCheck billno = new BillnoCheck();
+				billno.setTemplateid(1L);
+				List<BillnoCheck> billList = billnoCheckDao.findbilllist(billno);
+							
+				
+				if(billList.get(0).getAmount()<poorList.get(i).getFtotalcostfor()){
+					poor.setFcheckerid(billList.get(1).getEmpid());
+					
+				}else{
+					poor.setFcheckerid(billList.get(0).getEmpid());
+				}
+				
+				poorderDao.updatePoorder(poor);
+				ProcessHistask processHistask = new ProcessHistask();
+				processHistask.setSourceCode(poorList.get(i).getFbillno());
+				processHistask.setSourceId(poorList.get(i).getFinterid());
+				processHistask.setTaskCode("TO_POORDER_PUSH_TASK");
+				processHistask.setExamineStatus(null);
+				processHistask.setFmark("");
+				processHistask.setNodeSeq(0);
+				processHistask.setNodeName("提交单据!");
+				processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+				processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+				processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+				processHistaskDao.save(processHistask);
+				
+				ProcessExetask processExetask = new ProcessExetask();
+				processExetask.setTaskCode("TO_POORDER_PUSH_TASK");
+				processExetask.setSourceCode(poorList.get(i).getFbillno());
+				processExetask.setSourceId(poorList.get(i).getFinterid());
+				processExetask.setNodeName(processDetail.getNodeName());
+				processExetask.setNodeSeq(processDetail.getNodeSeq());
+				processExetask.setHandlers(handlers);
+				processExetaskDao.save(processExetask);
+				//写入信息提醒
+				Integer messageres = messageDao.changeMessage(poorList.get(i).getFinterid(), poorList.get(i).getFbillno(), 
+						"procure/purchase/poordertoaudit.htm", "TO_POORDER_PUSH_TASK", handlids);
+				if(messageres!=1){
+					throw new ServiceException("系统错误,插入处理人信息失败，请联系管理员!");
+				}
+				
+			}
+		}
+		
+	}
+	@Override
+	public void exeProcess(Poorder entity, ProcessExetask processExetask) {
+		Long id = entity.getFinterid();
+		entity = new Poorder();
+		entity.setFinterid(id);
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);
+		if((Boolean)map.get("rebackTag")){
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+			changeMessage(entity,processExetask.getTaskCode(),map);
+			if((Integer)map.get("step")==-1){
+				//拨回到开始节点
+				entity.setFstatus(0);
+				entity.setRejectedwhy(processExetask.getFmark()==null?"":processExetask.getFmark());
+				entity.setCheckstatus(null);
+				entity.setCheckdesc(null);
+			}
+			
+		}else if((Boolean)map.get("flag")){
+			Integer step = (Integer)map.get("step");
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);
+			changeMessage(entity,processExetask.getTaskCode(),map);
+			if((Boolean)map.get("endTag")){//进入下推流程
+				List<Long> checkedIdList  = new ArrayList<Long>();
+				checkedIdList.add(entity.getFinterid());
+				try 
+				{
+					/**
+					 * 更新物料的在制品量
+					 */
+					updateBaseData(checkedIdList,1);
+					
+					List<Long> listchecked = new ArrayList<Long>();
+					for(int i = 0;i<checkedIdList.size();i++)
+					{
+						
+						Poorder ppoo = new Poorder();
+						ppoo.setFinterid(checkedIdList.get(i));
+						ppoo.setFcheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+						ppoo.setFcheckerid(SpringSecurityUtils.getCurrentUserId());
+						ppoo.setFstatus(1);//审核标志
+						poorderDao.update(ppoo);
+						boolean flag = false;
+						//先查看订单详情中是否数量都小于零，如果有存在大于零的数据则同步到erp
+						List<Poorderentry> entryLists = new ArrayList<Poorderentry>();
+						PoorderentryQuery entryquery  = new PoorderentryQuery();
+						entryquery.setFinterid(checkedIdList.get(i));
+						entryLists = this.poorderentryDao.findList(entryquery);
+						if(entryLists!=null&&entryLists.size()>0){
+							for(Poorderentry po:entryLists){
+								if(po.getFqty()!=null&&po.getFqty()>=0){
+									flag = true;
+								}
+							}
+						}
+						//如果分录中的数量有大于等于0的就同步到erp
+						if(flag){
+							listchecked.add(checkedIdList.get(i));
+						}
+						//同步数据
+						if(listchecked.size()>0 && (i+1)==checkedIdList.size()){
+							synchronousK3(listchecked);
+						}
+					}
+				} catch (ServiceException e) {
+					e.printStackTrace();
+					//throw new ServiceException("审核失败","-1");
+					throw new ServiceException(e.getMessage(),"-1");
+					//return -1;
+				}
+			}
+		}
+		poorderDao.update(entity);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_PURCHASEORDER, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getFinterid()+"的采购订单审核成功，审核人为："+admin.getAdmin().getAdminName());
+		
+	}
+	public void dispatchStatus(Poorder entity,String mark,Integer step,String desc){
+		if(mark.equals("TO_POORDER_PUSH_TASK")){
+			entity.setCheckstatus(step);
+			entity.setCheckdesc(desc);
+		}
+	}
+	//更新和保存系统消息
+	public void changeMessage(Poorder entity,String mark,Map<String,Object> map){
+		Poorder da = poorderDao.getById(entity.getFinterid());
+		if(mark.equals("TO_POORDER_PUSH_TASK")){
+			//1先将原来的消息更新为status=2
+			MessageQuery query = new MessageQuery();
+			query.setFbillid(da.getFinterid());
+			query.setProcessname(mark);
+			query.setSortColumns("id");
+			List<Message> lists = messageDao.findList(query);
+			if(lists!=null&&lists.size()>0){
+				Message mes = lists.get(lists.size()-1);
+				mes.setStatus(2);
+				mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+				this.messageDao.update(mes);
+			}
+			//2如果有当前执行人则插入数据
+			if(map!=null&&map.get("handlerIds")!=null){
+				List<Long> handlerIds = new ArrayList<Long>();
+				handlerIds = (List<Long>) map.get("handlerIds");
+				String empids="";
+				if(handlerIds!=null&&handlerIds.size()>0){
+					for(int i=0;i<handlerIds.size();i++){
+						if(i==handlerIds.size()-1){
+							empids +=handlerIds.get(i);
+						}else{
+							empids +=handlerIds.get(i)+",";
+						}
+					}
+				}
+				if(empids!=null&&!empids.equals("")){
+					Message message = new Message();
+					message.setName("采购订单待审核");//消息名称
+					message.setContent("单据编号："+da.getFbillno()+";制单人："+da.getCreaterName()+";制单日期："+(da.getFdateString()==null?"":da.getFdateString().substring(0, 10)));//消息内容
+					message.setType(1);//单据类型
+					message.setFbillno(da.getFbillno());//单据编号
+					message.setFbillid(da.getFinterid());//单据主键
+					message.setUrl("procure/purchase/poordertoaudit.htm");//链接地址
+					message.setStatus(1);//消息状态(1未处理2已处理)
+					message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+					message.setEmpids(empids);//执行人
+					message.setProcessname(mark);//流程名称
+					this.messageDao.save(message);
+				}
+			}
+		}
+	}
+}

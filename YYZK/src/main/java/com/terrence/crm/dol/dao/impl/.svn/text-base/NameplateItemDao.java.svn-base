@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.NameplateItem;
+import com.terrence.crm.dol.dao.INameplateItemDao;
+
+@Repository
+public class NameplateItemDao extends BaseIbatisDao<NameplateItem,java.lang.Long> implements INameplateItemDao{
+
+		
+	public void saveOrUpdate(NameplateItem entity) {
+		if(entity.getItemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "NameplateItem";
+	}
+	public NameplateItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (NameplateItem)this.getSqlMapClientTemplate().queryForObject("NameplateItem.getByProperty", map);		
+	}
+
+}

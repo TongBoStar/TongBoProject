@@ -1,0 +1,32 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.BaseitemApply;
+import com.terrence.crm.dol.dao.IBaseitemApplyDao;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Repository
+public class BaseitemApplyDao extends BaseIbatisDao<BaseitemApply,java.lang.Long> implements IBaseitemApplyDao{
+	public String getIbatisSqlMapNamespace() {
+		return "BaseitemApply"; 
+	}
+	public void saveOrUpdate(BaseitemApply entity) {
+		if(entity.getId() == null) {
+			entity.setApplyerId(SpringSecurityUtils.getCurrentUserId());
+			entity.setApplyerName(SpringSecurityUtils.getCurrentRealName());
+			entity.setCreateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			save(entity);
+		}else {
+			update(entity);
+		}
+	}
+	public BaseitemApply getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (BaseitemApply)this.getSqlMapClientTemplate().queryForObject("BaseitemApply.getByProperty", map);
+	}
+}

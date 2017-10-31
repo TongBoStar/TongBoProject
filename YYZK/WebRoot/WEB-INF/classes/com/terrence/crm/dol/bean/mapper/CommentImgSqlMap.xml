@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="CommentImg">
+
+<resultMap id="RM.CommentImg" class="com.terrence.crm.dol.bean.CommentImg">
+	<result property="id" column="id"/>
+	<result property="commentId" column="commentId"/>
+	<result property="imgPath" column="imgPath"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="CommentImg.columns">
+	<![CDATA[
+		t_comment_img.id ,
+		t_comment_img.commentId ,
+		t_comment_img.imgPath
+	]]>
+</sql>
+
+<insert id="CommentImg.insert" >
+	<![CDATA[
+	INSERT INTO t_comment_img (
+		commentId,
+		imgPath
+	) VALUES (
+		#commentId#,
+		#imgPath#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="CommentImg.update" parameterClass="com.terrence.crm.dol.bean.CommentImg"> 
+	UPDATE t_comment_img 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="commentId">
+			commentId = #commentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="imgPath">
+			imgPath = #imgPath# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="CommentImg.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_comment_img.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="commentId">
+			t_comment_img.commentId = #commentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgPath">
+			t_comment_img.imgPath = #imgPath# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="CommentImg.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_comment_img.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="commentId">
+		t_comment_img.commentId = #commentId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgPath">
+		t_comment_img.imgPath = #imgPath# 
+	</isNotEmpty>
+</sql>
+
+<select id="CommentImg.getById" resultMap="RM.CommentImg">
+	select <include refid="CommentImg.columns"/> from t_comment_img where id=#id#
+</select>
+
+<select id="CommentImg.getByProperty" resultMap="RM.CommentImg">
+	select <include refid="CommentImg.columns"/> from t_comment_img where $propertyName$=#propertyValue#
+</select>
+
+<delete id="CommentImg.delete">
+	<![CDATA[
+		DELETE FROM t_comment_img WHERE id=#id#
+	]]>
+</delete>
+<delete id="CommentImg.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_comment_img WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="CommentImg.findPage.count" resultClass="long">
+	select count(*) from t_comment_img <include refid="CommentImg.findPage.where"/>
+</select>
+
+<select id="CommentImg.findPage" resultMap="RM.CommentImg">
+	select <include refid="CommentImg.columns"/> 
+		from t_comment_img 
+	<include refid="CommentImg.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="CommentImg.findList" resultMap="RM.CommentImg">
+	SELECT <include refid="CommentImg.columns"/> FROM t_comment_img
+	<include refid="CommentImg.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

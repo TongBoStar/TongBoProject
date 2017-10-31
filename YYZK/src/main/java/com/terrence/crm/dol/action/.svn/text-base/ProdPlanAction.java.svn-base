@@ -1,0 +1,658 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.Date;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PlanDetailView;
+import com.terrence.crm.dol.bean.ProPlanDetailVo;
+import com.terrence.crm.dol.bean.ProdPlan;
+import com.terrence.crm.dol.query.ProdPlanQuery;
+import com.terrence.crm.dol.service.IProdPlanService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/prodPlan")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "prodPlan." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ProdPlanAction extends CrudActionSupport<ProdPlan>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("prodPlanService")
+	private IProdPlanService prodPlanService;
+	
+	
+	private ProdPlan entity;
+
+	private ProdPlanQuery prodPlanQuery;
+	
+	
+	private java.lang.Long prodPlanId;
+	
+	/** 分页器 */
+	private Page<ProdPlan> page = new Page<ProdPlan>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ProdPlan> prodPlanList;
+
+	private PlanDetailView planDetail=new PlanDetailView();
+	
+
+	ProPlanDetailVo proPlanDetailVo=new ProPlanDetailVo();  
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (prodPlanId != null ) {
+			entity = prodPlanService.getById(prodPlanId);
+		} else {
+			entity = new ProdPlan();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			Integer check=0;
+			check= prodPlanService.deleteByMultipleId(checkedIdList);
+			if(check.intValue()==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "自制件已下推!不可删除!";
+			}else if(check.intValue()==-2){
+				resultInfo[0] = "-2";
+				resultInfo[1] = "零部件已下推!不可删除!";
+			}else if(check.intValue()==-3){
+				resultInfo[0] = "-3";
+				resultInfo[1] = "原材料已下推!不可删除!";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+			}
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(prodPlanQuery == null) {
+			prodPlanQuery = new ProdPlanQuery();
+		}
+		
+		try {
+			prodPlanList = prodPlanService.findList(prodPlanQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("prodPlanId");
+			page.setOrder(Page.DESC);
+		}
+		if(prodPlanQuery == null) {
+			prodPlanQuery = new ProdPlanQuery();
+		}
+		
+		try {
+			page = prodPlanService.findPage(page, prodPlanQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public void prepareSaveToPlan() throws Exception {
+		prepareModel();
+	}
+	@Action("/prodplan/saveToPlan")
+	public String saveToPlan()throws Exception
+	{
+		try {
+			List<String> itemcodes=planDetail.getListcode();
+			PlanDetailView pdetail=new PlanDetailView();
+			String planum="";
+			Date macdate,plandate;
+			String dbno;
+			for(String itemcode:itemcodes)
+			{
+				planum=this.getRequest().getParameter("plannums"+itemcode);
+				macdate=DateConvertUtils.parse(this.getRequest().getParameter("macenddate"+itemcode), "yyyy-MM-dd");
+				plandate=DateConvertUtils.parse(this.getRequest().getParameter("planenddate"+itemcode), "yyyy-MM-dd");
+				dbno=this.getRequest().getParameter("dbnos"+itemcode);
+				if(!planum.equals("")&&!planum.equals("0"))
+				{
+					pdetail.getListcode().add(itemcode);
+					pdetail.getPlannums().add(Double.parseDouble(planum));
+					pdetail.getMacenddates().add(macdate);
+					pdetail.getPlanenddates().add(plandate);
+					pdetail.getDbnos().add(Integer.parseInt(dbno));
+				}
+			}
+			prodPlanService.saveOrPlan(entity,pdetail);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			prodPlanService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String showPlanDetail()throws Exception
+	{
+		try {
+			entity = prodPlanService.getById("ProdPlan.PlanDetail.getById",prodPlanId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = prodPlanService.getById(prodPlanId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			prodPlanList = prodPlanService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 查询订单信息
+	 * @return
+	 * @throws Exception
+	 */
+	
+	public String findprodentity() throws Exception {
+		try{
+			entity = prodPlanService.findprodentity(prodPlanQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e){
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	public void prepareSaveProdplan() throws Exception {
+		prepareModel();
+	}
+	public String saveProdplan()throws Exception
+	{
+		try {
+			//prodPlanService.saveProdPlan(proPlanDetailVo,entity);
+
+			PlanDetailView pldetail=new PlanDetailView();
+			if(proPlanDetailVo.getPlandetailid().length>0){
+				int detaillength=proPlanDetailVo.getPlandetailid().length;
+				for(int i=0;i<detaillength;i++){
+					pldetail.getListcode().add(proPlanDetailVo.getItemcode()[i]);
+					pldetail.getPlannums().add(proPlanDetailVo.getPlannum()[i]);
+					pldetail.getMacenddates().add(DateConvertUtils.parse(proPlanDetailVo.getMacenddate()[i],"yyyy-MM-dd"));
+					pldetail.getPlanenddates().add(DateConvertUtils.parse(proPlanDetailVo.getPlanenddate()[i],"yyyy-MM-dd"));
+				}
+
+			}
+			entity.setCheckstatus(0);
+			prodPlanService.saveOrPlan(entity,pldetail);
+			prodPlanService.updatedetailStatus(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功!";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	//------------------------
+	public void prepareDeleteToDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/prodplan/deleteplandetail")
+	public String deleteToDetail()throws Exception{
+		try{
+			PlanDetailView pldetail=new PlanDetailView();
+			if(proPlanDetailVo.getPlandetailid().length>0){
+				int detaillength=proPlanDetailVo.getPlandetailid().length;
+				for(int i=0;i<detaillength;i++){
+					pldetail.getListcode().add(proPlanDetailVo.getItemcode()[i]);
+					pldetail.getPlannums().add(0D);
+					pldetail.getMacenddates().add(DateConvertUtils.parse(proPlanDetailVo.getMacenddate()[i],"yyyy-MM-dd"));
+					pldetail.getPlanenddates().add(DateConvertUtils.parse(proPlanDetailVo.getPlanenddate()[i],"yyyy-MM-dd"));
+				}
+			}
+			prodPlanService.saveOrPlan(entity,pldetail);
+			//System.out.println(proPlanDetailVo.getPlandetailid()[0]);
+			prodPlanService.deleteplandetail(proPlanDetailVo.getPlandetailid()[0],proPlanDetailVo.getDbno());
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+	public String planToPushTask()
+	{
+		try {
+			prodPlanService.updatePushAssemblyTask(proPlanDetailVo);
+			resultInfo[0] = "0";
+			resultInfo[1] = "下推成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "下推失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public String check()throws Exception
+	{
+		try {
+			prodPlanService.updateCheck(proPlanDetailVo);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		return JSON;
+	}
+	//------------------------
+	public void prepareSaveToStatus() throws Exception{
+		prepareModel();
+	}
+	
+	public String saveToStatus()throws Exception{
+		try{
+			prodPlanService.updateStatus(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public void prepareUpdatedel() throws Exception {
+		prepareModel();
+	}
+	public String updatedel()throws Exception{
+		try{
+			prodPlanService.updatedel(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ProdPlan getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ProdPlanQuery getProdPlanQuery() {
+		return prodPlanQuery;
+	}
+
+	
+	public void setProdPlanQuery(ProdPlanQuery prodPlanQuery) {
+		this.prodPlanQuery = prodPlanQuery;
+	}
+
+	public void setProdPlanId(java.lang.Long prodPlanId) {
+		this.prodPlanId = prodPlanId;
+	}
+	
+	
+	public java.lang.Long getProdPlanId() {
+		return this.prodPlanId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ProdPlan> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ProdPlan> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ProdPlan> getProdPlanList() {
+		return prodPlanList;
+	}
+
+	public PlanDetailView getPlanDetail() {
+		return planDetail;
+	}
+
+	public void setPlanDetail(PlanDetailView planDetail) {
+		this.planDetail = planDetail;
+	}
+	public ProPlanDetailVo getProPlanDetailVo() {
+		return proPlanDetailVo;
+	}
+
+	public void setProPlanDetailVo(ProPlanDetailVo proPlanDetailVo) {
+		this.proPlanDetailVo = proPlanDetailVo;
+	}
+	
+	
+}

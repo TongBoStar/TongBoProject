@@ -1,0 +1,71 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgreementTitle;
+import com.terrence.crm.dol.dao.IAgreementTitleDao;
+import com.terrence.crm.dol.query.AgreementTitleQuery;
+import com.terrence.crm.dol.service.IAgreementTitleService;
+@Service
+@Transactional
+public class AgreementTitleService extends BaseService implements IAgreementTitleService {
+	@Autowired
+	@Qualifier("agreementTitleDao")
+	private IAgreementTitleDao agreementTitleDao;
+	@Override
+	public AgreementTitle getById(Long id) throws ServiceException {
+		return agreementTitleDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(AgreementTitle entity) throws ServiceException {
+		agreementTitleDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(AgreementTitle entity) throws ServiceException {
+		return agreementTitleDao.save(entity);
+	}
+	@Override
+	public Integer update(AgreementTitle entity) throws ServiceException {
+		return agreementTitleDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return agreementTitleDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = agreementTitleDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementTitle> findPage(Page<AgreementTitle> page, AgreementTitleQuery query) throws ServiceException{
+		return agreementTitleDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementTitle> findPage(Page<AgreementTitle> page,String statement, AgreementTitleQuery query) throws ServiceException{
+		return agreementTitleDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementTitle> findList(AgreementTitleQuery query) throws ServiceException{
+		return agreementTitleDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementTitle> findList(AgreementTitleQuery query,Integer pageSize) throws ServiceException{
+		return agreementTitleDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementTitle> findList(AgreementTitleQuery query,String statement,Integer pageSize) throws ServiceException{
+		return agreementTitleDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementTitle> findAllList() throws ServiceException{
+		return agreementTitleDao.findAllList();
+	}
+}

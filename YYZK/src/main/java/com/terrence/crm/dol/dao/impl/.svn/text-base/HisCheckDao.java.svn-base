@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.HisCheck;
+import com.terrence.crm.dol.dao.IHisCheckDao;
+
+@Repository
+public class HisCheckDao extends BaseIbatisDao<HisCheck,java.lang.Long> implements IHisCheckDao{
+
+		
+	public void saveOrUpdate(HisCheck entity) {
+		if(entity.getCheckid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "HisCheck";
+	}
+	public HisCheck getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (HisCheck)this.getSqlMapClientTemplate().queryForObject("HisCheck.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,80 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.ibatis.sqlmap.client.SqlMapClient;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.dao.IProductDao;
+
+/**
+ * 产品数据处理实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:38:56
+ */
+@Repository
+public class ProductDao extends BaseIbatisDao<Product, java.lang.Long> implements IProductDao {
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		return "Product";
+	}
+
+	@Override
+	public void saveOrUpdate(Product entity) throws DataAccessException {
+		
+	}
+
+	@Override
+	public Double findByQuarter(String currentQuarterStartTime,
+			String currentQuarterEndTime, Long currentUserId, String type) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("startTime", currentQuarterStartTime);
+		map.put("endTime", currentQuarterEndTime);
+		map.put("userId", currentUserId);
+		map.put("type", type);
+		Double obj = (Double)getSqlMapClientTemplate().queryForObject("", map);
+		return obj;
+	}
+
+	@Override
+	public void saveBatch(List<Product> productList) throws  SQLException{
+		// 注意使用同一个SqlMapClient会话  
+        SqlMapClient sqlMapClient =this.getSqlMapClientTemplate().getSqlMapClient();  
+  
+        try {  
+            // 开始事务  
+            sqlMapClient.startTransaction();  
+            // 开始批处理  
+            sqlMapClient.startBatch(); 
+             
+            for (Product product : productList) {  
+                // 插入操作  
+                sqlMapClient.insert("Product.insert", product);  
+            }  
+            
+            // 执行批处理  
+            sqlMapClient.executeBatch();  
+            // 提交事务交由spring  
+            sqlMapClient.commitTransaction();  
+            sqlMapClient.flushDataCache();
+        } finally {    
+                 try {  
+		                // 结束事务  
+		                sqlMapClient.endTransaction();  
+                    } catch (SQLException e) {  
+                            // e.printStackTrace(); 
+                             throw new RuntimeException();
+                    }  
+        		}    
+		} 
+
+}

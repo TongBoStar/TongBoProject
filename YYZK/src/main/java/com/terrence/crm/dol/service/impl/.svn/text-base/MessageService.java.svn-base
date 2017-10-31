@@ -1,0 +1,76 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.service.IMessageService;
+import com.terrence.crm.dol.utils.DateUtils;
+@Service
+@Transactional
+public class MessageService implements IMessageService {
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	@Override
+	public Message getById(Long id) throws ServiceException {
+		return messageDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(Message entity) throws ServiceException {
+		if(null!=entity&&entity.getType().intValue()==2){
+			entity.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			entity.setStatus(2);
+		}
+		messageDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(Message entity) throws ServiceException {
+		return messageDao.save(entity);
+	}
+	@Override
+	public Integer update(Message entity) throws ServiceException {
+		return messageDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return messageDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = messageDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<Message> findPage(Page<Message> page, MessageQuery query) throws ServiceException{
+		return messageDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Message> findPage(Page<Message> page,String statement, MessageQuery query) throws ServiceException{
+		return messageDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Message> findList(MessageQuery query) throws ServiceException{
+		return messageDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Message> findList(MessageQuery query,Integer pageSize) throws ServiceException{
+		return messageDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Message> findList(MessageQuery query,String statement,Integer pageSize) throws ServiceException{
+		return messageDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Message> findAllList() throws ServiceException{
+		return messageDao.findAllList();
+	}
+}

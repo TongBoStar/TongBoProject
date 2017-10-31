@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SurveysEntry">
+
+        
+	<resultMap id="RM.SurveysEntry" class="com.terrence.crm.dol.bean.SurveysEntry">
+        <result property="id" column="id"/>
+        <result property="gwid" column="gwid"/>
+        <result property="surveysid" column="surveysid"/>
+        <result property="scoreval" column="scoreval"/>
+        <result property="fyear" column="fyear"/>
+        <result property="gwval" column="gwval"/>
+        <result property="money" column="money"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="notes" column="notes"/>
+        <result property="gradeWight" resultMap="RM.SurveysEntry.GradeWight"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.GradeWight" id="RM.SurveysEntry.GradeWight">
+		<result property="gradeitem" column="gradeitem"/>
+	</resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="SurveysEntry.columns">
+	    <![CDATA[
+        	t_surveys_entry.id ,
+        	t_surveys_entry.gwid ,
+        	t_surveys_entry.surveysid ,
+        	t_surveys_entry.scoreval ,
+        	t_surveys_entry.fyear ,
+        	t_surveys_entry.gwval ,
+        	t_surveys_entry.money ,
+        	t_surveys_entry.finnerid ,
+        	t_surveys_entry.notes 
+	    ]]>
+	</sql>
+	
+   <insert id="SurveysEntry.insert" >
+        INSERT INTO
+        t_surveys_entry (
+        	gwid ,
+        	surveysid ,
+        	scoreval ,
+        	fyear ,
+        	gwval ,
+        	finnerid ,
+        	notes 
+        	<dynamic prepend="">
+				<isNotEmpty prepend="," property="money">
+	             money
+	       		</isNotEmpty>
+	       	</dynamic>
+        ) VALUES (
+        	#gwid# ,
+        	#surveysid# ,
+        	#scoreval# ,
+        	#fyear# ,
+        	#gwval#,
+        	#finnerid# ,
+        	#notes# 
+        	<dynamic prepend="">
+				<isNotEmpty prepend="," property="money">
+	             #money#
+	       		</isNotEmpty>
+	       	</dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="SurveysEntry.update" parameterClass="com.terrence.crm.dol.bean.SurveysEntry">         
+        UPDATE t_surveys_entry 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="gwid">
+	        	gwid = #gwid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="surveysid">
+	        	surveysid = #surveysid# 
+	        </isNotEmpty>
+	        	scoreval = #scoreval# ,
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gwval">
+	        	gwval = #gwval# 
+	        </isNotEmpty>
+	        	money = #money# 
+	    </dynamic>
+        WHERE 
+        	id = #id# 
+	      <!--   gwid = #gwid# and 
+	        fyear = #fyear# and 
+	        finnerid = #finnerid#  -->
+    </update>
+    
+	<delete id="SurveysEntry.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_surveys_entry where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="SurveysEntry.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_surveys_entry 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    <delete id="SurveysEntry.deleteMultipleBySid">
+    <![CDATA[
+        DELETE FROM 
+        	t_surveys_entry 
+        WHERE
+       surveysid in ($surveysid$) 
+    ]]>
+    </delete>
+    <select id="SurveysEntry.getById" resultMap="RM.SurveysEntry">
+	    select <include refid="SurveysEntry.columns"/>,t_grade_wight.gradeitem 
+	        from t_surveys_entry 
+	        left join t_grade_wight on t_surveys_entry.gwid = t_grade_wight.gwid 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="SurveysEntry.getByProperty" resultMap="RM.SurveysEntry">
+		select <include refid="SurveysEntry.columns"/>,t_grade_wight.gradeitem 
+	        from t_surveys_entry 
+	        left join t_grade_wight on t_surveys_entry.gwid = t_grade_wight.gwid 
+		 where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="SurveysEntry.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_surveys_entry.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwid">
+	             t_surveys_entry.gwid = #gwid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="surveysid">
+	             t_surveys_entry.surveysid = #surveysid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="scoreval">
+	             t_surveys_entry.scoreval = #scoreval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_surveys_entry.fyear = #fyear#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gwval">
+	             t_surveys_entry.gwval = #gwval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="money">
+	             t_surveys_entry.money = #money#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="finnerid">
+	             t_surveys_entry.finnerid = #finnerid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_surveys_entry.notes = #notes#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="SurveysEntry.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_surveys_entry.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwid">
+	             t_surveys_entry.gwid = #gwid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="surveysid">
+	             t_surveys_entry.surveysid = #surveysid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="scoreval">
+	             t_surveys_entry.scoreval = #scoreval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_surveys_entry.fyear = #fyear#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gwval">
+	             t_surveys_entry.gwval = #gwval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="money">
+	             t_surveys_entry.money = #money#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="finnerid">
+	             t_surveys_entry.finnerid = #finnerid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_surveys_entry.notes = #notes#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="SurveysEntry.findList" resultMap="RM.SurveysEntry">
+    	SELECT 
+    		<include refid="SurveysEntry.columns"/> ,t_grade_wight.gradeitem 
+	        from t_surveys_entry 
+	        left join t_grade_wight on t_surveys_entry.gwid = t_grade_wight.gwid 
+		<include refid="SurveysEntry.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SurveysEntry.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_surveys_entry
+    ]]>
+		<include refid="SurveysEntry.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.SurveysEntry.findPage" resultMap="RM.SurveysEntry">
+    	select <include refid="SurveysEntry.columns"/>,t_grade_wight.gradeitem 
+	        from t_surveys_entry 
+	        left join t_grade_wight on t_surveys_entry.gwid = t_grade_wight.gwid 
+		<include refid="SurveysEntry.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="SurveysEntry.findPage" resultMap="RM.SurveysEntry">
+    	select <include refid="SurveysEntry.columns"/>,t_grade_wight.gradeitem 
+	        from t_surveys_entry 
+	        left join t_grade_wight on t_surveys_entry.gwid = t_grade_wight.gwid where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_surveys_entry <include refid="SurveysEntry.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="SurveysEntry.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<update id="SurveysEntry.updateByYearAndOrg" parameterClass="com.terrence.crm.dol.bean.SurveysEntry">         
+        UPDATE t_surveys_entry  set money = #money# 
+        WHERE 
+        	fyear = #fyear# and 
+        	surveysid= #surveysid# 
+        	and gwid=#gwid#
+    </update>
+</sqlMap>

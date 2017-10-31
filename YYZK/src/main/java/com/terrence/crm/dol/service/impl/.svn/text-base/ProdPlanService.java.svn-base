@@ -1,0 +1,778 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyUnderfilled;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.PdTemplate;
+import com.terrence.crm.dol.bean.PlanDetailView;
+import com.terrence.crm.dol.bean.ProPlanDetailVo;
+import com.terrence.crm.dol.bean.ProdPlan;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyUnderfilledDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IPdTemplateDao;
+import com.terrence.crm.dol.dao.IProdPlanDao;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.dao.ISeqDao;
+import com.terrence.crm.dol.query.AssemblyUnderfilledQuery;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.PdTemplateQuery;
+import com.terrence.crm.dol.query.ProdPlanDetailQuery;
+import com.terrence.crm.dol.query.ProdPlanQuery;
+import com.terrence.crm.dol.service.IProdPlanService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class ProdPlanService extends BaseService implements IProdPlanService {
+	protected static Logger logger = LoggerFactory.getLogger(ProdPlanService.class);
+	@Autowired
+	@Qualifier("prodPlanDao")
+	private IProdPlanDao prodPlanDao;
+	@Autowired
+	@Qualifier("prodPlanDetailDao")
+	private IProdPlanDetailDao prodPlanDetailDao;
+	
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	@Autowired
+	@Qualifier("inventoryDao")
+	private IInventoryDao inventoryDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("seqDao")
+	private ISeqDao seqDao;
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("pdTemplateDao")
+	private IPdTemplateDao pdTemplateDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("assemblyUnderfilledDao")
+	private IAssemblyUnderfilledDao assemblyUnderfilledDao;
+	public String getIbatisSqlMapNamespace() {
+		return "ProdPlan";
+	}
+	@Transactional(readOnly=true)
+	public ProdPlan getById(java.lang.Long id) throws ServiceException
+	{
+		return prodPlanDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProdPlan entity) throws ServiceException
+	{
+		prodPlanDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ProdPlan entity) throws ServiceException
+	{
+		Long adId = prodPlanDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProdPlan entity) throws ServiceException
+	{
+		Integer returnValue =  prodPlanDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = prodPlanDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		
+		List<ProdPlanDetail> pdetaillist =new ArrayList<ProdPlanDetail>();
+		
+	/*不以审核状态判断是否可以删除,以下推状态判断
+	 * 	for(long planid:idList){//删除plandetail(删未审核的,审核的不准删)
+			
+			if(prodPlanDao.getById(planid).getCheckstatus().intValue()==1){//已审核
+				return -1;
+			}else{//未审核
+				prodPlanDetailDao.deleteByMultipleId("ProdPlanDetail.deleteByPlanid", planid+"");
+			}
+		}
+	*/	
+		for(long planid:idList){//删除plandetail(删未审核的,审核的不准删)
+			if(prodPlanDao.getById(planid).getPushstatus1().intValue()==1){//自制已下推
+				return -1;
+			}else if(prodPlanDao.getById(planid).getPushstatus2().intValue()==1){//零部件已下推
+				return -2;				
+			}else if(prodPlanDao.getById(planid).getPushstatus3().intValue()==1){//原材料已下推
+				return -3;
+			}else{
+				prodPlanDetailDao.deleteByMultipleId("ProdPlanDetail.deleteByPlanid", planid+"");
+			}
+		}
+		
+		Integer returnValue = prodPlanDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProdPlanQuery query = new ProdPlanQuery();
+		try {
+			return prodPlanDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProdPlan> findPage(Page<ProdPlan> page, ProdPlanQuery query) throws ServiceException
+	{
+		return prodPlanDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProdPlan> findPage(Page<ProdPlan> page,String statement, ProdPlanQuery query) throws ServiceException
+	{
+		return prodPlanDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlan> findList(ProdPlanQuery query) throws ServiceException
+	{
+		return prodPlanDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlan> findList(ProdPlanQuery query,Integer pageSize) throws ServiceException
+	{
+		return prodPlanDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProdPlan> findList(ProdPlanQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return prodPlanDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlan> findAllList() throws ServiceException
+	{
+		return prodPlanDao.findAllList();
+	}
+	@Override
+	public void saveOrPlan(ProdPlan entity,PlanDetailView planvw)
+			throws ServiceException {
+		Long planid=entity.getPlanid();
+		if(planid==null)
+		{
+			entity.setSd(DateUtils.GetFormatDate("yyyyMMddHHmm"));
+			entity.setCheckstatus(0);
+			entity.setPushstatus1(0);
+			entity.setPushstatus2(0);
+			entity.setPushstatus3(0);
+			entity.setPushstatus4(0);
+			String plancode=seqDao.getCurSeq("PLAN",6);
+			entity.setPlancode(plancode);
+			planid=prodPlanDao.save(entity);
+		}
+		else
+		{
+			prodPlanDao.update(entity);
+		}
+		List<String> itemcodes=planvw.getListcode();
+		List<Double> plannums=planvw.getPlannums();
+		List<Date> macdates=planvw.getMacenddates();
+		List<Date> plandate=planvw.getPlanenddates();
+		List<Integer> dbnos=planvw.getDbnos();
+		int size=itemcodes.size();
+		Double bfplannum=0.0;
+		
+		for(int i=0;i<size;i++)
+		{
+			bfplannum=0.0;
+			ProdPlanDetail planDetail=null;
+			ProdPlanDetailQuery query=new ProdPlanDetailQuery();
+			query.setPlanid(planid);
+			query.setItemcode(itemcodes.get(i));
+			List<ProdPlanDetail> detaillist=prodPlanDetailDao.findList(query);
+			if(detaillist!=null&&detaillist.size()>0)
+			{
+				planDetail=detaillist.get(0);
+				bfplannum=planDetail.getBeforenum();
+			}
+			ProdPlanDetail ppd=prodPlanDetailDao.getProdPlanDetail("ProdPlanDetail.getPlanParam.Assembly", query);/**取装配任务单在制品量**/
+			if(ppd!=null)
+			{
+				if(planDetail==null)
+				{
+					planDetail=new ProdPlanDetail();
+					planDetail.setPlannum(plannums.get(i));
+					planDetail.setProperty(0);
+					planDetail.setPlanid(planid);
+					planDetail.setItemcode(itemcodes.get(i));
+					
+					
+				}
+				else
+				{
+					planDetail.setPlannum(plannums.get(i));
+				}
+				Double amount=0d;
+				
+				planDetail.setCyclename(ppd.getCyclename());
+				planDetail.setYoutput(ppd.getYoutput());
+				planDetail.setExistednums(ppd.getExistednums());
+				planDetail.setMakingnums(ppd.getMakingnums());
+				planDetail.setFqty(ppd.getFqty());
+				planDetail.setSecinv(ppd.getSecinv());
+				planDetail.setRatio(ppd.getRatio());
+				planDetail.setPlanednum(ppd.getPlanednum());
+				
+				if(ppd.getFqty()+ppd.getMakingnums()+planDetail.getPlanednum()-planDetail.getPlannum()-(null==ppd.getExistednums()?0:ppd.getExistednums())>ppd.getSecinv())
+				{
+					amount=0d;
+				}
+				else
+				{
+					if(ppd.getYoutput()*ppd.getRatio()>ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getFqty()-ppd.getMakingnums()-planDetail.getPlanednum())
+					{
+						amount=ppd.getYoutput()*ppd.getRatio();
+					}
+					else
+					{
+						amount=ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getFqty()-ppd.getMakingnums()-planDetail.getPlanednum();
+					}
+				}
+			
+				planDetail.setAmount(amount);
+				planDetail.setInnum(amount);
+				planDetail.setTasknum(amount);
+				planDetail.setBeforenum(planDetail.getPlannum());
+				
+				planDetail.setMacenddate(macdates.get(i));
+				planDetail.setPlanenddate(plandate.get(i));
+				planDetail.setDbno(dbnos.get(i));
+				
+				prodPlanDetailDao.saveOrUpdate(planDetail);
+				
+			}
+			
+		}
+		
+	}
+
+	/**
+	 * 
+	 * @param planid
+	 * @param itemcode
+	 * @param plannum
+	 * @param bfnum
+	 * @param macdate
+	 * @param plandate
+	 * @param property 区分零部件外购，原材料外购(3：代表第一次调用，外购物料标记为1，为零部件外购，2:代表自制件调用,我购标记为3)
+	 * @param dbnos 
+	 */
+	public void findBom(Long planid,String itemcode,Double plannum,Double bfnum,Date macdate,Date plandate,int property, Integer dbnos)
+	{
+		try {
+			Inventory inventory=inventoryDao.getByProperty("itemcode", itemcode);
+			Double fqty=0d;
+			if(inventory!=null)
+			{
+				if(inventory.getFqty()!=null)
+				{
+					fqty+=inventory.getFqty();
+				}
+				if(inventory.getFqty2()!=null)
+				{
+					fqty+=inventory.getFqty2();
+				}
+				
+			}
+			if(plannum>0)
+			{
+				OrderBomQuery query=new OrderBomQuery();
+				query.setItemcode(itemcode);
+				List<OrderBom> list=orderBomDao.findList(query);
+				for(OrderBom orderBom:list)
+				{
+					if(property==2&&orderBom.getItemproperty().intValue()==1)
+					{
+					}
+					else{
+						Double preplannum=0d;
+						ProdPlanDetail planDetail=null;
+						ProdPlanDetailQuery ppquery=new ProdPlanDetailQuery();
+						ppquery.setPlanid(planid);
+						ppquery.setItemcode(orderBom.getParentcode());
+						List<ProdPlanDetail> detaillist=prodPlanDetailDao.findList(ppquery);
+						if(detaillist!=null&&detaillist.size()>0)
+						{
+							planDetail=detaillist.get(0);
+							preplannum=planDetail.getBeforenum();
+						}
+						Double amount=0d;
+						ProdPlanDetail ppd=null;
+						if(orderBom.getItemproperty().intValue()==1)/**外购件**/
+						{
+							ppd=prodPlanDetailDao.getProdPlanDetail("ProdPlanDetail.getPlanParam.buy", ppquery);/**取机加在制品量**/
+						}
+						else if(orderBom.getItemproperty().intValue()==2)/**自制件**/
+						{
+							ppd=prodPlanDetailDao.getProdPlanDetail("ProdPlanDetail.getPlanParam", ppquery);/**取机加在制品量**/
+						}
+						
+						if(ppd!=null)
+						{
+							if(planDetail==null)
+							{
+								planDetail=new ProdPlanDetail();
+								planDetail.setPlannum(plannum*orderBom.getParentqty());
+							}
+							else
+							{
+								planDetail.setPlannum(planDetail.getPlannum()+((plannum-bfnum)*orderBom.getParentqty()));
+								
+							}
+							planDetail.setPlanednum(ppd.getPlanednum());/**已有计划数**/
+							if(ppd.getFqty()+ppd.getMakingnums()+ppd.getPlanednum()-planDetail.getPlannum()-(null==ppd.getExistednums()?0:ppd.getExistednums())>ppd.getSecinv())
+							{
+								amount=0d;
+							}
+							else
+							{
+								if(ppd.getYoutput()*ppd.getRatio()>ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getFqty()-ppd.getMakingnums()-ppd.getPlanednum())
+								{
+									amount=ppd.getYoutput()*ppd.getRatio();
+								}
+								else
+								{
+									amount=ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getPlanednum()-ppd.getFqty()-ppd.getMakingnums();
+								}
+							}
+							planDetail.setAmount(amount);
+							planDetail.setItemcode(orderBom.getParentcode());
+							planDetail.setMacenddate(macdate);
+							planDetail.setPlanenddate(plandate);
+							planDetail.setPlanid(planid);
+							if(property==3&&orderBom.getItemproperty().intValue()==1)
+							{
+								planDetail.setProperty(1);
+							}
+							else if(property==2&&orderBom.getItemproperty().intValue()==1)
+							{
+								planDetail.setProperty(3);
+							}
+							else
+							{
+								planDetail.setProperty(orderBom.getItemproperty());
+							}
+							planDetail.setBeforenum(planDetail.getPlannum());
+						
+							
+							planDetail.setCyclename(ppd.getCyclename());
+							planDetail.setYoutput(ppd.getYoutput());
+							planDetail.setExistednums(ppd.getExistednums());
+							planDetail.setMakingnums(ppd.getMakingnums());
+							planDetail.setFqty(ppd.getFqty());
+							planDetail.setSecinv(ppd.getSecinv());
+							planDetail.setRatio(ppd.getRatio());
+							planDetail.setInnum(planDetail.getAmount());
+							planDetail.setTasknum(amount);
+							
+							planDetail.setDbno(dbnos);
+							
+							prodPlanDetailDao.saveOrUpdate(planDetail);
+							//updateItem(planDetail.getPlannum(), planDetail.getItemcode());
+							findBom(planid,orderBom.getParentcode(),planDetail.getPlannum(),preplannum,macdate,plandate,2,dbnos);
+							
+						}
+					}
+				}
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	@Override
+	public ProdPlan getById(String statement, Long id) throws ServiceException {
+		return prodPlanDao.getById(statement,id);
+	}
+	@Override
+	public void saveProdPlan(ProPlanDetailVo proPlanDetailVo, ProdPlan entity) {
+		//System.out.println("=="+entity.toString());
+		//System.out.println("=="+proPlanDetailVo.toString());
+		prodPlanDao.update(entity);//更新计划表
+		int volong=0; 
+		volong= proPlanDetailVo.getPlandetailid().length;
+		if(volong==0){//不存在计划明细
+		return ;
+		}
+		//更新计划明细
+		ProdPlanDetail ppdetail=null;
+		for(int i=0;i<volong;i++){
+			ppdetail=new ProdPlanDetail();
+			ppdetail.setPlandetailid(proPlanDetailVo.getPlandetailid()[i]);
+			ppdetail.setPlannum(proPlanDetailVo.getPlannum()[i]);
+			ppdetail.setMacenddate(DateConvertUtils.parse(proPlanDetailVo.getMacenddate()[i],"yyyy-MM-dd"));
+			ppdetail.setPlanenddate(DateConvertUtils.parse(proPlanDetailVo.getPlanenddate()[i],"yyyy-MM-dd"));
+			ppdetail.setPlanednum(0d);/**已有计划量，未排产装配任务单**/
+			ppdetail.setTasknum(proPlanDetailVo.getPlannum()[i]);
+			prodPlanDetailDao.update(ppdetail);
+		}
+		
+		
+	}
+	@Override
+	public void deleteplandetail(Long plandetailid,int dbno) {
+		ProdPlanDetail prodPlanDetail = prodPlanDetailDao.getById(plandetailid);
+		
+		updateItem(prodPlanDetail.getPlannum(), prodPlanDetail.getItemcode(),dbno,0);//最后参数：1、审核时；0、删除时
+		prodPlanDetailDao.deleteById(plandetailid);
+		
+	}
+	@Override
+	public void updateStatus(ProdPlan entity) {
+		
+		entity.setCheckstatus(1);//已审核
+		prodPlanDao.update(entity);
+		
+		ProdPlanDetailQuery pquery=new ProdPlanDetailQuery();
+		pquery.setPlanid(entity.getPlanid());
+		List<ProdPlanDetail> ppdlist=new ArrayList<ProdPlanDetail>();
+		
+		ppdlist = prodPlanDetailDao.findList(pquery);
+		long num=0;
+		num=ppdlist.size();
+		if(num!=0){
+			for(ProdPlanDetail ppd:ppdlist){
+				ppd.setStatus(1);//审核
+				prodPlanDetailDao.saveOrUpdate(ppd);
+					
+			}
+		}
+		
+	}
+	@Override
+	public void updatedetailStatus(ProdPlan entity) {
+
+		ProdPlanDetailQuery pquery=new ProdPlanDetailQuery();
+		pquery.setPlanid(entity.getPlanid());
+		List<ProdPlanDetail> ppdlist=new ArrayList<ProdPlanDetail>();
+		
+		ppdlist = prodPlanDetailDao.findList(pquery);
+		long num=0;
+		num=ppdlist.size();
+		if(num!=0){
+			for(ProdPlanDetail ppd:ppdlist){
+						ppd.setStatus(0);//未审核
+						prodPlanDetailDao.saveOrUpdate(ppd);
+			}
+		}
+	}
+	/**
+	 * 计划审核
+	 */
+	@Override
+	public void updateCheck(ProPlanDetailVo proPlanDetailVo)
+			throws ServiceException {
+		ProdPlan plan=new ProdPlan();
+		plan.setPlanid(proPlanDetailVo.getPlanid());
+		plan.setCheckstatus(1);
+		plan.setFcheckdate(DateUtils.GetDate2(DateUtils.GetDate(), "yyyy-MM-dd"));
+		plan.setFchecker(SpringSecurityUtils.getCurrentUserId());
+		prodPlanDao.update(plan);
+		
+		Double []innums=proPlanDetailVo.getInnums();
+		String []itemcodes=proPlanDetailVo.getItemcode();
+		Double []existnum=proPlanDetailVo.getExistednum();
+		Long []plandetailids=proPlanDetailVo.getPlandetailid();
+		
+		Integer[] dbnos = proPlanDetailVo.getDbnos();
+		
+		ProdPlanDetail ppd=null;
+		for(int i=0;i<itemcodes.length;i++)
+		{
+			ppd=prodPlanDetailDao.getById(plandetailids[i]);
+			ppd.setPlandetailid(plandetailids[i]);
+			ppd.setInnum(innums[i]);
+			ppd.setExistednums(existnum[i]);
+			ppd.setStatus(1);
+			prodPlanDetailDao.update(ppd);
+			/**更新物料已有需求量、计划量**/
+			updateItem(ppd.getPlannum(), itemcodes[i],dbnos[i],1);//最后参数：1、审核时；0、删除时
+			if(innums[i]>0)
+			{
+			findBom(ppd.getPlanid(),ppd.getItemcode(),ppd.getInnum(),ppd.getBeforenum(),ppd.getMacenddate(),ppd.getPlanenddate(),3,dbnos[i]);
+			}
+			
+			/**
+			 * 根据BOM更新物料列表中的基础数据
+			 */
+			if(innums[i]>0){//下单数量大于0
+				updateBaseItem(ppd.getPlanid(),ppd.getItemcode());
+			}
+		}
+	}
+	/**
+	 * 根据BOM更新物料表的数据
+	 * @param planid
+	 * @param itemcode
+	 */
+	private void updateBaseItem(Long planid, String itemcode) {
+		OrderBomQuery query=new OrderBomQuery();
+		query.setItemcode(itemcode);
+		List<OrderBom> list=orderBomDao.findList(query);
+		if(list.size()>0){//存在BOM
+			for(int tt=0;tt<list.size();tt++){
+				BaseItem baseItem=baseItemDao.getByProperty("itemcode",list.get(tt).getParentcode());
+				System.out.println("===="+list.get(tt)+"----"+baseItem);
+				baseItem.setExistdemand((baseItem.getExistdemand()==null?0:baseItem.getExistdemand())+list.get(tt).getParentqty());
+				baseItemDao.update(baseItem);
+			}
+		}
+	}
+	/**
+	 * @param plannum
+	 * @param itemcodes
+	 * @param dbnos 
+	 * @param flage 
+	 * @param i
+	 * @throws DataAccessException
+	 */
+	public void updateItem(Double plannum, String itemcodes, Integer dbnos, int flage)
+			throws DataAccessException {
+//		BaseItem baseItem=baseItemDao.getByProperty("itemcode", itemcodes);
+//		baseItem.setExistdemand((baseItem.getExistdemand()==null?0:baseItem.getExistdemand())+plannum);//已有需求量
+//		baseItemDao.update(baseItem);
+		
+		
+		List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+		BaseItemQuery bQuery=new BaseItemQuery();
+		bQuery.setItemcode(itemcodes);
+		baseitemList = baseItemDao.findEntityBase(bQuery);
+		
+		if(baseitemList.size()>0){
+			Double sumqty = 0D;
+			Double plansumqty = 0D;
+			if(dbnos == 4){
+				if(flage==1){
+					sumqty = (baseitemList.get(0).getExistdemand4()==null?0D:baseitemList.get(0).getExistdemand4()) + plannum;
+					plansumqty = (baseitemList.get(0).getPlanfqty4()==null?0D:baseitemList.get(0).getPlanfqty4()) + plannum;
+				}else{
+					sumqty = (baseitemList.get(0).getExistdemand4()==null?0D:baseitemList.get(0).getExistdemand4()) - plannum;
+					plansumqty = (baseitemList.get(0).getPlanfqty4()==null?0D:baseitemList.get(0).getPlanfqty4()) - plannum;
+				}
+				
+			}else{
+				if(flage==1){
+					sumqty = (baseitemList.get(0).getExistdemand()==null?0D:baseitemList.get(0).getExistdemand()) + plannum;
+					plansumqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) + plannum;
+				}else{
+					sumqty = (baseitemList.get(0).getExistdemand()==null?0D:baseitemList.get(0).getExistdemand()) - plannum;
+					plansumqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) - plannum;
+				}
+				
+			}
+			
+			BaseItem bitem = new BaseItem();
+			bitem.setItemcode(itemcodes);
+			bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+			if(dbnos == 4){
+				bitem.setExistdemand4(sumqty<0?0:sumqty);
+				bitem.setPlanfqty4(plansumqty<0?0D:plansumqty);
+			}else{
+				bitem.setExistdemand(sumqty<0?0:sumqty);
+				bitem.setPlanfqty(plansumqty<0?0D:plansumqty);
+			}
+			
+			baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+		}else{
+			throw new ServiceException("物料表中没有物料编码："+itemcodes);
+		}
+		
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.terrence.crm.dol.service.IProdPlanService#updatePushAssemblyTask(com.terrence.crm.dol.bean.ProPlanDetailVo)
+	 */
+	@Override
+	public void updatePushAssemblyTask(ProPlanDetailVo proPlanDetailVo)
+			throws ServiceException {
+		
+		ProdPlan plan=new ProdPlan();
+		plan.setPlanid(proPlanDetailVo.getPlanid());
+		plan.setPushstatus4(1);
+		prodPlanDao.update(plan);
+		
+		Double []tasknums=proPlanDetailVo.getTasknums();
+		String []itemcodes=proPlanDetailVo.getItemcode();
+		Long []plandetailids=proPlanDetailVo.getPlandetailid();
+		ProdPlanDetail ppd=null;
+		PdTemplateQuery pdquery=new PdTemplateQuery();
+		pdquery.setIsdefault(1);
+		PdTemplate pdtemplate=pdTemplateDao.findList(pdquery).get(0);
+		for(int i=0;i<itemcodes.length;i++)
+		{
+			ppd=prodPlanDetailDao.getById(plandetailids[i]);
+			ppd.setPlandetailid(plandetailids[i]);
+			ppd.setTasknum(tasknums[i]);
+			ppd.setStatus(1);
+			prodPlanDetailDao.update(ppd);
+			if(tasknums[i]>0)
+			{
+				/**下推装配任务单开始**/
+				
+				AssemblyTask task=new AssemblyTask();
+				task.setItemcode(itemcodes[i]);
+				BaseItem item=baseItemDao.getByProperty("itemcode", itemcodes[i]);
+				task.setItemname(item.getItemname());
+				task.setDemand(tasknums[i]);
+				task.setOrdercode(proPlanDetailVo.getPlancode());
+				task.setOrderid(plan.getPlanid());
+				task.setStatus(0);
+				task.setDispatchstatus(0);
+				task.setProductid(plandetailids[i]);
+				Icbillno icbillno=icbillnoDao.getByProperty("fpreletter", "JOB");
+				String taskcode=icbillno.getFpreletter()+icbillno.getFcurno();//seqDao.getCurSeq("WORK",6);
+				task.setTaskcode(taskcode);
+				task.setTaskstatus(0);
+				task.setCreatedate(DateConvertUtils.getCurrentDate());
+				task.setSource(TerrcnceConstants.ASSEMBLY_SOURCE_PLAN);
+				task.setDeleverydate(DateConvertUtils.add(ppd.getPlanenddate(), Calendar.DATE, -TerrcnceConstants.ORDER_TO_ASSEMBLE));
+				task.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+				task.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+				task.setTemplateid(pdtemplate.getTemplateid());
+				task.setWorkload(0d);
+				task.setDbno(ppd.getDbno());
+				
+				//检查是否缺料 0不缺料 1缺料
+				int isless = checkIsLess(task);
+				task.setIsLess(isless);
+				
+				assemblyTaskDao.save(task,"AssemblyTask.insert.Plan");
+			}
+		}
+	}
+	/**
+	 * 查看此任务单中的物料是否缺料
+	 * @param entity 任务单
+	 * @return 是否缺料 0不缺料 1缺料
+	 */
+	public int checkIsLess(AssemblyTask entity){
+		int flag = 0;
+		//查询此物料是否缺料
+		AssemblyUnderfilledQuery query = new AssemblyUnderfilledQuery();
+		query.setId(entity.getId());
+		query.setTaskcode(entity.getTaskcode());
+		query.setItemcode(entity.getItemcode());
+		query.setFqty(entity.getDemand());
+		List<AssemblyUnderfilled> tempList = assemblyUnderfilledDao.findList("AssemblyUnderfilled.checkdifference", query);
+		if(null!=tempList&&tempList.size()>0){
+			BaseItem baseItem = null;
+			for(AssemblyUnderfilled temp:tempList){
+				if(temp.getFsqty()<0){//如果缺料则记录缺料明细
+					flag = 1;
+					temp.setTaskcode(entity.getTaskcode());
+					temp.setPlancode(entity.getOrdercode());
+					temp.setFsqty(Math.abs(temp.getFsqty()));
+					temp.setCreatedate(new Date());
+					assemblyUnderfilledDao.save(temp);
+					//更新基础物料表中的已有需求量
+					baseItem = baseItemDao.getByColumn("BaseItem.getByItemCode", temp.getParentcode());
+					baseItem.setExistdemand(baseItem.getExistdemand()+temp.getFqty());
+					baseItemDao.update(baseItem);
+				}
+			}
+		}else {
+			flag=2;
+		}
+		return flag;
+	}
+	@Override
+	public void updatedel(List<Long> checkedIdList) throws ServiceException {
+		ProdPlan plan = prodPlanDao.getById(checkedIdList.get(0));
+		if(plan.getPushstatus1() !=null && plan.getPushstatus1()==1){
+			throw new ServiceException("自制件下推状态为已下推，不可删除");
+		}
+		if(plan.getPushstatus2() !=null && plan.getPushstatus2()==1){
+			throw new ServiceException("零部件下推状态为已下推，不可删除");
+		}
+		if(plan.getPushstatus3() !=null && plan.getPushstatus3()==1){
+			throw new ServiceException("原材料下推状态为已下推，不可删除");
+		}
+		if(plan.getPushstatus4() !=null && plan.getPushstatus4()==1){
+			throw new ServiceException("装配产品下推状态为已下推，不可删除");
+		}
+		
+		
+		List<ProdPlanDetail> ppdlist = new ArrayList<ProdPlanDetail>();
+		ProdPlanDetailQuery ppdq = new ProdPlanDetailQuery();
+		ppdq.setPlanid(checkedIdList.get(0));
+		ppdlist = prodPlanDetailDao.findList(ppdq);
+		/**更新物料已有需求量、计划量**/
+		updateItem(ppdlist.get(0).getPlannum(), ppdlist.get(0).getItemcode(),ppdlist.get(0).getDbno(),0);//最后参数：1、审核时；0、删除时
+		
+		ProdPlan pp = new ProdPlan();
+		pp.setPlanid(checkedIdList.get(0));
+		pp.setCheckstatus(3);//作废
+		prodPlanDao.update(pp);
+	}
+	/**
+	 * 检查是否缺料
+	 * @return
+	 */
+	public Boolean checkItemIsEnough(ProPlanDetailVo proPlanDetailVo){
+		
+		return true;
+	}
+	@Override
+	public ProdPlan findprodentity(ProdPlanQuery prodPlanQuery)
+			throws ServiceException {
+		return prodPlanDao.findprodentity(prodPlanQuery);
+	}
+}

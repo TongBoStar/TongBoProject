@@ -1,0 +1,129 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Workarea;
+import com.terrence.crm.dol.query.WorkareaQuery;
+import com.terrence.crm.dol.dao.IWorkareaDao;
+import com.terrence.crm.dol.service.IWorkareaService;
+
+@Service
+@Transactional
+public class WorkareaService extends BaseService implements IWorkareaService {
+	protected static Logger logger = LoggerFactory.getLogger(WorkareaService.class);
+	@Autowired
+	@Qualifier("workareaDao")
+	private IWorkareaDao workareaDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Workarea";
+	}
+	@Transactional(readOnly=true)
+	public Workarea getById(java.lang.Long id) throws ServiceException
+	{
+		return workareaDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Workarea entity) throws ServiceException
+	{
+		workareaDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Workarea entity) throws ServiceException
+	{
+		Long adId = workareaDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Workarea entity) throws ServiceException
+	{
+		Integer returnValue =  workareaDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = workareaDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = workareaDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WorkareaQuery query = new WorkareaQuery();
+		try {
+			return workareaDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Workarea> findPage(Page<Workarea> page, WorkareaQuery query) throws ServiceException
+	{
+		return workareaDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Workarea> findPage(Page<Workarea> page,String statement, WorkareaQuery query) throws ServiceException
+	{
+		return workareaDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Workarea> findList(WorkareaQuery query) throws ServiceException
+	{
+		return workareaDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Workarea> findList(WorkareaQuery query,Integer pageSize) throws ServiceException
+	{
+		return workareaDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Workarea> findList(WorkareaQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return workareaDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Workarea> findAllList() throws ServiceException
+	{
+		return workareaDao.findAllList();
+	}
+	@Override
+	public List<Workarea> findEntity(WorkareaQuery wquery) throws ServiceException {
+		
+		return workareaDao.findEntity(wquery);
+	}
+
+}

@@ -1,0 +1,342 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.ProcessExetaskQuery;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class ProcessExetaskService implements IProcessExetaskService {
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Override
+	public ProcessExetask getById(Long id) throws ServiceException {
+		return processExetaskDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProcessExetask entity) throws ServiceException {
+		processExetaskDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(ProcessExetask entity) throws ServiceException {
+		return processExetaskDao.save(entity);
+	}
+	@Override
+	public Integer update(ProcessExetask entity) throws ServiceException {
+		return processExetaskDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return processExetaskDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = processExetaskDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessExetask> findPage(Page<ProcessExetask> page, ProcessExetaskQuery query) throws ServiceException{
+		return processExetaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessExetask> findPage(Page<ProcessExetask> page,String statement, ProcessExetaskQuery query) throws ServiceException{
+		return processExetaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessExetask> findList(ProcessExetaskQuery query) throws ServiceException{
+		return processExetaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessExetask> findList(ProcessExetaskQuery query,Integer pageSize) throws ServiceException{
+		return processExetaskDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessExetask> findList(ProcessExetaskQuery query,String statement,Integer pageSize) throws ServiceException{
+		return processExetaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessExetask> findAllList() throws ServiceException{
+		return processExetaskDao.findAllList();
+	}
+	@Override
+	public Map<String,Object> exeProcess(ProcessExetask entity,Integer enddispatch) throws ServiceException{
+		Map<String,Object> map = new HashMap<String, Object>();
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", entity.getTaskCode());
+		List<ProcessDetail> processDetails;
+		if(null==processTask){
+			map.put("flag", false);
+			map.put("msg", "该任务流程["+entity.getTaskCode()+"]没有创建!");
+		}else if(null==processTask.getProcessIds()){
+			map.put("flag", false);
+			map.put("msg", "该任务["+processTask.getTaskName()+"]已没有绑定流程!");
+		}else{
+			ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+			processDetailQuery.setProcessId(processTask.getProcessIds());
+			processDetails = processDetailDao.findList(processDetailQuery);
+			boolean isdispatch = false;
+			for(ProcessDetail pd:processDetails){
+				if(pd.getNodeType().intValue()==2){
+					isdispatch = true;
+				}
+			}
+			if(!isdispatch&&enddispatch==1){
+				map.put("flag", false);
+				map.put("msg", "该流程中需要下发节点,请联系管理员修改此流程!");
+			}else{
+				if(null!=entity.getExamineStatus()&&entity.getExamineStatus().intValue()==0){//审核不通过
+					dispatchReject(entity,processDetails,map);//驳回到之前的节点
+					return map;
+				}
+				if(entity.getNodeSeq().intValue()==0){//当前过来的节点是第一步提交单据
+					if(null!=processDetails&&processDetails.size()==0){//如果流程内容是空的
+						exeEmptyProcess(entity,map);
+					}else{//流程不是空的,流程经过第一步提交单据之后往下走
+						exeFirstProcess(entity,processDetails,map);
+					}
+				}else{//当前过来的节点不是第一步提交单据
+					exeNotFirstProcess(entity,processDetails,map);//往下执行
+				}
+			}
+		}
+		return map;
+	}
+	/**
+	 * 执行的不是第一步提交单据，流程继续往下走
+	 * @param entity
+	 * @param processDetails
+	 * @param map
+	 */
+	public void exeNotFirstProcess(ProcessExetask entity,List<ProcessDetail> processDetails,Map<String,Object> map){
+		List<Long> handlerIds = null;
+		List<Long> handleDepIds = null;
+		//先装入历史记录
+		ProcessDetail processDetailOld = processDetails.get(entity.getNodeSeq()-1);
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(entity.getSourceCode());
+		processHistask.setSourceId(entity.getSourceId());
+		processHistask.setTaskCode(entity.getTaskCode());
+		processHistask.setExamineStatus(entity.getExamineStatus());
+		processHistask.setFmark(entity.getFmark());
+		processHistask.setNodeSeq(processDetailOld.getNodeSeq());
+		processHistask.setNodeName(processDetailOld.getNodeName());
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		//更新当前任务
+		if(entity.getNodeSeq().intValue()==processDetails.size()){//如果当前的节点序号是最后一个，说明审批流程结束
+			processExetaskDao.deleteById(entity.getId());
+			map.put("flag", true);
+			map.put("endTag", true);
+			map.put("rebackTag", false);
+			map.put("step", 100);
+			map.put("stepName", "流程结束");
+			map.put("handlers", "");
+			map.put("handlerIds", null);
+			map.put("handleDepIds", "");
+			map.put("msg", "删除正在执行的流程!");
+		}
+		if(entity.getNodeSeq().intValue()<processDetails.size()){//如果当前的节点序号不是最后一个，说明流程没有结束
+			ProcessDetail processDetail = processDetails.get(entity.getNodeSeq());
+			if(processDetail.getNodeType().intValue()==2){//如果下一个节点是下发节点，说明审批的流程已经走完
+				handlerIds = new ArrayList<Long>();
+				handleDepIds = new ArrayList<Long>();
+				for(ProcessHandle ph:processDetail.getProcessHandleList()){
+					handlerIds.add(ph.getHandler());
+					handleDepIds.add(ph.getDispatchdep());
+				}
+				processExetaskDao.deleteById(entity.getId());
+				map.put("flag", true);
+				map.put("endTag", true);
+				map.put("rebackTag", false);
+				map.put("step", 100);
+				map.put("stepName", "流程结束");
+				map.put("handlers", "");
+				map.put("handlerIds", null);
+				map.put("handleDepIds", handleDepIds);
+				map.put("msg", "删除正在执行的流程，并执行下发!");
+			}else{//如果下一个节点不是发节点，说明审批的流程已经走完
+				handlerIds = new ArrayList<Long>();
+				entity.setNodeName(processDetail.getNodeName());
+				entity.setNodeSeq(processDetail.getNodeSeq());
+				String handlers = "";
+				for(ProcessHandle ph:processDetail.getProcessHandleList()){
+					handlers += ph.getHandlerName()+" ";
+					handlerIds.add(ph.getHandler());
+				}
+				entity.setHandlers(handlers);
+				entity.setIsreback(0);
+				processExetaskDao.update(entity);
+				map.put("flag", true);
+				map.put("endTag", false);
+				map.put("rebackTag", false);
+				map.put("step", processDetail.getNodeSeq());
+				map.put("stepName", processDetail.getNodeName());
+				map.put("handlers", handlers);
+				map.put("handlerIds", handlerIds);
+				map.put("msg", "正在执行流程!");
+			}
+		}
+	}
+	public void exeFirstProcess(ProcessExetask entity,List<ProcessDetail> processDetails,Map<String,Object> map){
+		List<Long> handlerIds = null;
+		handlerIds = new ArrayList<Long>();
+		//将要进行的流程节点写入当前任务
+		ProcessDetail processDetail = processDetails.get(0);
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode(entity.getTaskCode());
+		processExetask.setSourceCode(entity.getSourceCode());
+		processExetask.setSourceId(entity.getSourceId());
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		entity.setIsreback(0);//不是驳回
+		String handlers = "";
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+			handlerIds.add(ph.getHandler());
+		}
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+		//开始标记结果
+		map.put("flag", true);
+		map.put("endTag", false);
+		map.put("rebackTag", false);
+		map.put("step", processDetail.getNodeSeq());
+		map.put("stepName", processDetail.getNodeName());
+		map.put("handlers", handlers);
+		map.put("handlerIds", handlerIds);
+		map.put("msg", "进入第一步流程!");
+		//将提交单据的操作记录到流程历史
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(entity.getSourceCode());
+		processHistask.setSourceId(entity.getSourceId());
+		processHistask.setTaskCode(entity.getTaskCode());
+		processHistask.setExamineStatus(entity.getExamineStatus());
+		processHistask.setFmark(entity.getFmark());
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+	}
+	/**
+	 * 驳回单据
+	 * @param entity
+	 * @param processDetails
+	 * @param map
+	 */
+	public void dispatchReject(ProcessExetask entity,List<ProcessDetail> processDetails,Map<String,Object> map){
+		List<Long> handlerIds = null;
+		//先将驳回的操作装入历史记录
+		ProcessDetail processDetailOld = processDetails.get(entity.getNodeSeq()-1);
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(entity.getSourceCode());
+		processHistask.setSourceId(entity.getSourceId());
+		processHistask.setTaskCode(entity.getTaskCode());
+		processHistask.setExamineStatus(entity.getExamineStatus());
+		processHistask.setFmark(entity.getFmark());
+		processHistask.setNodeSeq(processDetailOld.getNodeSeq());
+		processHistask.setNodeName(processDetailOld.getNodeName());
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistask.setBacknode(entity.getRebackNode());//驳回的节点
+		processHistaskDao.save(processHistask);
+		//更新当前任务，更新到驳回的节点
+		if(entity.getRebackNode()==0){//返回到开始节点
+			processExetaskDao.deleteById(entity.getId());
+			map.put("flag", true);
+			map.put("endTag", false);
+			map.put("rebackTag", true);
+			map.put("step", -1);
+			map.put("stepName", entity.getFmark());
+			map.put("handlers", "");
+			map.put("handlerIds", null);
+			map.put("msg", "单据被驳回!");
+		}else{//驳回到指定的非开始节点
+			handlerIds = new ArrayList<Long>();
+			ProcessDetail processDetail = processDetails.get(entity.getRebackNode()-1);
+			entity.setNodeName(processDetail.getNodeName());
+			entity.setNodeSeq(processDetail.getNodeSeq());
+			String handlers = "";
+			for(ProcessHandle ph:processDetail.getProcessHandleList()){
+				handlers += ph.getHandlerName()+" ";
+				handlerIds.add(ph.getHandler());
+			}
+			entity.setHandlers(handlers);
+			entity.setIsreback(1);//是驳回
+			processExetaskDao.update(entity);
+			map.put("flag", true);
+			map.put("endTag", false);
+			map.put("rebackTag", true);
+			map.put("step", processDetail.getNodeSeq());
+			map.put("stepName", processDetail.getNodeName());
+			map.put("handlers", handlers);
+			map.put("handlerIds", handlerIds);
+			map.put("msg", entity.getFmark());
+		}
+	}
+	/**
+	 * 流程内容为空，说明只是下推不走审核和分发
+	 * @param entity
+	 * @param map
+	 */
+	public void exeEmptyProcess(ProcessExetask entity,Map<String,Object> map){
+		//开始标记结果
+		map.put("flag", true);
+		map.put("endTag", true);
+		map.put("rebackTag", false);
+		map.put("step", 100);
+		map.put("stepName", "流程结束!");
+		map.put("handlers", "");
+		map.put("handlerIds", null);
+		map.put("msg", "流程结束!");
+		//保存操作的信息
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(entity.getSourceCode());
+		processHistask.setSourceId(entity.getSourceId());
+		processHistask.setTaskCode(entity.getTaskCode());
+		processHistask.setExamineStatus(entity.getExamineStatus());
+		processHistask.setFmark(entity.getFmark());
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("下推成功!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+	}
+}

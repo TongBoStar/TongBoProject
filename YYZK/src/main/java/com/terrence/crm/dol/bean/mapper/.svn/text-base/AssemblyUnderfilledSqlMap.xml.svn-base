@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblyUnderfilled">
+
+        
+	<resultMap id="RM.AssemblyUnderfilled" class="com.terrence.crm.dol.bean.AssemblyUnderfilled">
+        <result property="id" column="id"/>
+        <result property="plancode" column="plancode"/>
+        <result property="taskcode" column="taskcode"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="parentcode" column="parentcode"/>
+        <result property="parentname" column="parentname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fsqty" column="fsqty"/>
+        <result property="createdate" column="createdate"/>
+        <result property="updatedate" column="updatedate"/>
+    </resultMap>
+	<resultMap id="RM.AUnderfilledDefference" class="com.terrence.crm.dol.bean.AssemblyUnderfilled">
+        <result property="itemcode" column="itemcode"/>
+        <result property="parentcode" column="parentcode"/>
+        <result property="parentname" column="parentname"/>
+        <result property="fqty" column="fqty"/>
+        <result property="fsqty" column="fsqty"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblyUnderfilled.columns">
+	    <![CDATA[
+        	t_assembly_underfilled.id ,
+        	t_assembly_underfilled.plancode ,
+        	t_assembly_underfilled.taskcode ,
+        	t_assembly_underfilled.itemcode ,
+        	t_assembly_underfilled.parentcode ,
+        	t_assembly_underfilled.parentname ,
+        	t_assembly_underfilled.fqty ,
+        	t_assembly_underfilled.fsqty ,
+        	t_assembly_underfilled.createdate ,
+        	t_assembly_underfilled.updatedate 
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblyUnderfilled.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_assembly_underfilled (
+        	plancode ,
+        	taskcode ,
+        	itemcode ,
+        	parentcode ,
+        	parentname ,
+        	fqty ,
+        	fsqty ,
+        	createdate 
+        ) VALUES (
+        	#plancode# ,
+        	#taskcode# ,
+        	#itemcode# ,
+        	#parentcode# ,
+        	#parentname# ,
+        	#fqty# ,
+        	#fsqty# ,
+        	#createdate# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssemblyUnderfilled.update" parameterClass="com.terrence.crm.dol.bean.AssemblyUnderfilled">         
+        UPDATE t_assembly_underfilled 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="plancode">
+	        	plancode = #plancode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskcode">
+	        	taskcode = #taskcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentcode">
+	        	parentcode = #parentcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentname">
+	        	parentname = #parentname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqty">
+	        	fqty = #fqty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsqty">
+	        	fsqty = #fsqty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="updatedate">
+	        	updatedate = #updatedate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="AssemblyUnderfilled.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_underfilled where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblyUnderfilled.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_underfilled 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="AssemblyUnderfilled.getById" resultMap="RM.AssemblyUnderfilled">
+	    select <include refid="AssemblyUnderfilled.columns"/>
+	    
+	        from t_assembly_underfilled 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="AssemblyUnderfilled.getByProperty" resultMap="RM.AssemblyUnderfilled">
+		select <include refid="AssemblyUnderfilled.columns"/> from t_assembly_underfilled where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblyUnderfilled.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_assembly_underfilled.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="plancode">
+	             t_assembly_underfilled.plancode = #plancode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskcode">
+	             t_assembly_underfilled.taskcode = #taskcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_underfilled.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_assembly_underfilled.parentcode = #parentcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentname">
+	             t_assembly_underfilled.parentname = #parentname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_assembly_underfilled.fqty = #fqty#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsqty">
+	             t_assembly_underfilled.fsqty = #fsqty#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_assembly_underfilled.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_assembly_underfilled.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="updatedateBegin">
+	             t_assembly_underfilled.updatedate &gt;= #updatedateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="updatedateEnd">
+	             t_assembly_underfilled.updatedate &lt;= #updatedateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblyUnderfilled.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_assembly_underfilled.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="plancode">
+	             t_assembly_underfilled.plancode = #plancode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskcode">
+	             t_assembly_underfilled.taskcode = #taskcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_underfilled.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_assembly_underfilled.parentcode = #parentcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentname">
+	             t_assembly_underfilled.parentname = #parentname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_assembly_underfilled.fqty = #fqty#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsqty">
+	             t_assembly_underfilled.fsqty = #fsqty#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_assembly_underfilled.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_assembly_underfilled.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="updatedateBegin">
+	             t_assembly_underfilled.updatedate &gt;= #updatedateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="updatedateEnd">
+	             t_assembly_underfilled.updatedate &lt;= #updatedateEnd#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssemblyUnderfilled.Entity" resultMap="RM.AssemblyUnderfilled">
+    	SELECT 	<include refid="AssemblyUnderfilled.columns"/> FROM t_assembly_underfilled <include refid="AssemblyUnderfilled.findPage.where"/>
+    </select>
+    
+    <select id="AssemblyUnderfilled.findList" resultMap="RM.AssemblyUnderfilled">
+    	SELECT 
+    		<include refid="AssemblyUnderfilled.columns"/> 
+    	FROM 
+    		t_assembly_underfilled
+		<include refid="AssemblyUnderfilled.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssemblyUnderfilled.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_underfilled
+    ]]>
+		<include refid="AssemblyUnderfilled.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblyUnderfilled.findPage" resultMap="RM.AssemblyUnderfilled">
+    	select <include refid="AssemblyUnderfilled.columns"/>	    
+	        from t_assembly_underfilled 	   
+		<include refid="AssemblyUnderfilled.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblyUnderfilled.findPage" resultMap="RM.AssemblyUnderfilled">
+    	select <include refid="AssemblyUnderfilled.columns"/>	    
+	        from t_assembly_underfilled where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_assembly_underfilled <include refid="AssemblyUnderfilled.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyUnderfilled.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	<select id="AssemblyUnderfilled.checkdifference" resultMap="RM.AUnderfilledDefference">
+      select tob.itemcode itemcode,tob.parentcode,tob.parentname,isnull(tob.parentqty,0)*#fqty# fqty,
+      isnull(tib.fqtyall,0)-isnull(tob.parentqty,0)*#fqty#-isnull(tbi.existdemand,0) fsqty
+	  from t_order_bom tob 
+	  left join (select sum(isnull(fqty,0))+SUM(ISNULL(fqty2,0)) fqtyall,itemcode from t_inventory_batch group by itemcode) tib on tob.parentcode = tib.itemcode 
+	  left join t_base_item tbi on tob.parentcode = tbi.itemcode 
+	  left join t_assembly_task tat on tob.itemcode = tat.itemcode and tat.taskcode=#taskcode#
+	  where tob.itemcode=#itemcode#
+    </select>
+</sqlMap>

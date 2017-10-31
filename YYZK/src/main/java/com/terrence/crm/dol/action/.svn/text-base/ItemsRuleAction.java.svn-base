@@ -1,0 +1,642 @@
+package com.terrence.crm.dol.action;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemsRule;
+import com.terrence.crm.dol.query.ItemsRuleQuery;
+import com.terrence.crm.dol.service.IItemsRuleService;
+
+@Scope("prototype")
+@Namespace("/itemsRule")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "itemsRule." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemsRuleAction extends CrudActionSupport<ItemsRule>  implements ApplicationContextAware {
+	
+	
+	@Autowired
+	@Qualifier("itemsRuleService")
+	private IItemsRuleService itemsRuleService;
+	
+	
+	private ItemsRule entity;
+
+	private ItemsRuleQuery itemRuleQuery;
+	private Integer newruleNameNumberParam;
+	private Integer ruleNameNumberParam;
+	
+	private java.lang.Long itemRuleId;
+	
+	/** 分页器 */
+	private Page<ItemsRule> page = new Page<ItemsRule>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ItemsRule> itemRuleList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemRuleId != null ) {
+			entity = itemsRuleService.getById(itemRuleId);
+		} else {
+			entity = new ItemsRule();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			itemsRuleService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	
+public String deleteAlone() throws Exception {
+	
+	try {
+		itemsRuleService.deleteAlone(itemRuleQuery);
+
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功！";
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = "删除失败";
+	}
+	return JSON;
+}
+	
+	
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemsRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("seq");
+			itemRuleList = itemsRuleService.findList(itemRuleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToDetail()throws Exception
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemsRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("seq");
+			itemRuleList = itemsRuleService.findListDetail(itemRuleQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String listToitemDetail()throws Exception//2013-11-12查询明细修改
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemsRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("seq");
+			//itemRuleList = itemRuleService.findListitemDetail(itemRuleQuery);
+			entity=itemsRuleService.finditemDetail(itemRuleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemRuleId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemsRuleQuery();
+		}
+		
+		try {
+			page = itemsRuleService.findPage(page, itemRuleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			itemsRuleService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemsRuleService.getById(itemRuleId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			itemRuleList = itemsRuleService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//--------------------
+	//--------
+	public void prepareSaveAlone() throws Exception {
+		prepareModel();
+	}
+	public String saveAlone()throws Exception {
+		
+		try {
+				Long itemid = entity.getItemid();
+				
+				ItemsRuleQuery rulequery=new ItemsRuleQuery();
+				rulequery.setItemid(itemid);
+				List<ItemsRule> list=new ArrayList<ItemsRule>();
+				list = itemsRuleService.findList(rulequery);
+				entity.setSeq(list.size()+1);
+				itemsRuleService.saveOrUpdate(entity);
+				
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveAll() throws Exception {
+		prepareModel();
+	}
+	public String saveAll()throws Exception {
+		
+		try {
+				//先判断是否规则名称是否存在
+			//String uniquePropertyNames, Object newValue, Object oldValue
+			/*if(0<ruleNameNumber){//说明是有新保存的
+				ItemRuleQuery itemRuleQuery =new ItemRuleQuery();
+				String[] rulenameArr=entity.getRulenamelist();
+				String rulename="";
+				if(null!=rulenameArr&&0<rulenameArr.length){
+					rulename=rulenameArr[rulenameArr.length-1];
+				}
+				else{
+					resultInfo[0] = "-1";
+					resultInfo[1] = "操作失败,规则名称不能为空!";
+					return JSON;
+				}
+				itemRuleQuery.setRulename(rulename);
+				itemRuleQuery.setItemid(entity.getItemid());
+				List<ItemRule> itemRuleList=itemRuleService.findList(itemRuleQuery);
+				if(null!=itemRuleList&&0<itemRuleList.size()){
+					resultInfo[0] = "-1";
+					resultInfo[1] = "操作失败,规则名称已经存在,请更换!";
+					return JSON;
+				}
+				ItemRuleQuery itemRuleSeqQuery =new ItemRuleQuery();
+				Integer[] ruleSeqArr=entity.getSeqlist();
+				Integer ruleSeq=0;
+				if(null!=ruleSeqArr&&0<ruleSeqArr.length){
+					ruleSeq=ruleSeqArr[ruleSeqArr.length-1];
+				}
+				else{
+					resultInfo[0] = "-1";
+					resultInfo[1] = "操作失败,规则序号不能为空!";
+					return JSON;
+				}
+				itemRuleSeqQuery.setSeq(ruleSeq);
+				itemRuleSeqQuery.setItemid(entity.getItemid());
+				List<ItemRule> itemRuleSeqList=itemRuleService.findList(itemRuleSeqQuery);
+				if(null!=itemRuleSeqList&&0<itemRuleSeqList.size()){
+					resultInfo[0] = "-1";
+					resultInfo[1] = "操作失败,规则序号已经存在,请更换!";
+					return JSON;
+				} 
+			}*/
+			String[] rulenameArr=entity.getRulenamelist();
+			Integer[] ruleSeqArr=entity.getSeqlist();
+			if(0<entity.getRuleNameNumber()){//说明数据库中已经有了几条一级规则
+				
+				
+				
+				//查名称
+				for (int i = 0; i < entity.getRuleNameNumber(); i++) {
+					ItemsRuleQuery itemRuleQuery =new ItemsRuleQuery();
+					String rulename=rulenameArr[i];
+					itemRuleQuery.setRulename(rulename);
+					itemRuleQuery.setItemid(entity.getItemid());
+					
+					List<ItemsRule> itemRuleList=itemsRuleService.findList(itemRuleQuery);
+					
+					if(null!=itemRuleList&&1<itemRuleList.size()){
+						resultInfo[0] = "-1";
+						resultInfo[1] = "操作失败,已经存在相同的规则名称,请更换!";
+						return JSON;
+					}
+				}
+				//查序列号
+				
+				for (int i = 0; i < entity.getRuleNameNumber(); i++) {
+					ItemsRuleQuery itemRuleSeqQuery =new ItemsRuleQuery();
+					Integer ruleSeq=ruleSeqArr[i];
+					
+					itemRuleSeqQuery.setSeq(ruleSeq);
+					itemRuleSeqQuery.setItemid(entity.getItemid());
+					List<ItemsRule> itemRuleSeqList=itemsRuleService.findList(itemRuleSeqQuery);
+					if(null!=itemRuleSeqList&&1<itemRuleSeqList.size()){
+						resultInfo[0] = "-1";
+						resultInfo[1] = "操作失败,已经存在相同的规则序号,请更换!";
+						return JSON;
+					} 
+				}
+				
+			}
+			if(0<entity.getNewruleNameNumber()){//说明需要新增几条一级规则
+				//查名称
+				for (int i = entity.getRuleNameNumber(); i < rulenameArr.length; i++) {
+					ItemsRuleQuery itemRuleQuery =new ItemsRuleQuery();
+					String rulename=rulenameArr[i];
+					itemRuleQuery.setRulename(rulename);
+					itemRuleQuery.setItemid(entity.getItemid());
+					
+					List<ItemsRule> itemRuleList=itemsRuleService.findList(itemRuleQuery);
+					
+					if(null!=itemRuleList&&0<itemRuleList.size()){
+						resultInfo[0] = "-1";
+						resultInfo[1] = "操作失败,已经存在相同的规则名称,请更换!";
+						return JSON;
+					}
+				}
+				//查序列号
+				
+				for (int i = entity.getRuleNameNumber(); i < ruleSeqArr.length; i++) {
+					ItemsRuleQuery itemRuleSeqQuery =new ItemsRuleQuery();
+					Integer ruleSeq=ruleSeqArr[i];
+					
+					itemRuleSeqQuery.setSeq(ruleSeq);
+					itemRuleSeqQuery.setItemid(entity.getItemid());
+					List<ItemsRule> itemRuleSeqList=itemsRuleService.findList(itemRuleSeqQuery);
+					if(null!=itemRuleSeqList&&0<itemRuleSeqList.size()){
+						resultInfo[0] = "-1";
+						resultInfo[1] = "操作失败,已经存在相同的规则序号,请更换!";
+						return JSON;
+					} 
+				}
+			}
+			
+			
+			
+			itemsRuleService.saveall(entity);
+				
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ItemsRule getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemsRuleQuery getItemRuleQuery() {
+		return itemRuleQuery;
+	}
+
+	
+	public void setItemRuleQuery(ItemsRuleQuery itemRuleQuery) {
+		this.itemRuleQuery = itemRuleQuery;
+	}
+
+	public void setItemRuleId(java.lang.Long itemRuleId) {
+		this.itemRuleId = itemRuleId;
+	}
+	
+	
+	public java.lang.Long getItemRuleId() {
+		return this.itemRuleId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ItemsRule> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ItemsRule> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ItemsRule> getItemRuleList() {
+		return itemRuleList;
+	}
+
+	public Integer getNewruleNameNumberParam() {
+		return newruleNameNumberParam;
+	}
+
+	public void setNewruleNameNumberParam(Integer newruleNameNumberParam) {
+		this.newruleNameNumberParam = newruleNameNumberParam;
+	}
+
+	public Integer getRuleNameNumberParam() {
+		return ruleNameNumberParam;
+	}
+
+	public void setRuleNameNumberParam(Integer ruleNameNumberParam) {
+		this.ruleNameNumberParam = ruleNameNumberParam;
+	}
+	
+}

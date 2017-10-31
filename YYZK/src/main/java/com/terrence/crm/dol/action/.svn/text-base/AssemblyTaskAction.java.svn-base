@@ -1,0 +1,689 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IAssemblyTaskService;
+import com.terrence.crm.dol.service.IAssemblyUnderfilledService;
+import com.terrence.crm.dol.service.IOrderBomService;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyUnderfilled;
+import com.terrence.crm.dol.bean.Bom;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+import com.terrence.crm.dol.query.AssemblyUnderfilledQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/assemblyTask")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "assemblyTask." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class AssemblyTaskAction extends CrudActionSupport<AssemblyTask>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("assemblyTaskService")
+	private IAssemblyTaskService assemblyTaskService;
+	@Autowired
+	@Qualifier("orderBomService")
+	private IOrderBomService orderBomService;
+	@Autowired
+	@Qualifier("assemblyUnderfilledService")
+	private IAssemblyUnderfilledService assemblyUnderfilledService;
+	
+	
+	private AssemblyTask entity;
+
+	private AssemblyTaskQuery assemblyTaskQuery;
+
+	
+	private java.lang.Long assemblyTaskId;
+	
+	/** 分页器 */
+	private Page<AssemblyTask> page = new Page<AssemblyTask>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	private List<java.lang.String> checkedcode;
+	
+	private ApplicationContext ctx;
+	
+	private List<AssemblyTask> assemblyTaskList;
+	private List<AssemblyUnderfilled> assemblyUnderfilledList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (assemblyTaskId != null ) {
+			entity = assemblyTaskService.getById(assemblyTaskId);
+		} else {
+			entity = new AssemblyTask();
+		}
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			assemblyTaskService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(assemblyTaskQuery == null) {
+			assemblyTaskQuery = new AssemblyTaskQuery();
+		}
+		
+		try {
+			assemblyTaskList = assemblyTaskService.findList(assemblyTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("t_assembly_task.id");
+			page.setOrder(Page.DESC);
+		}
+		if(assemblyTaskQuery == null) {
+			assemblyTaskQuery = new AssemblyTaskQuery();
+		}
+		
+		try {
+			page = assemblyTaskService.findPage(page, assemblyTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public void prepareSavePush() throws Exception {
+		prepareModel();
+	}
+	/**
+	 * 下推装配任务单
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/assemble/savepush")
+	public String savePush()throws Exception
+	{
+		try 
+		{
+			if(assemblyTaskService.savepush(entity)==-1)
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "不可重新下推";
+			}
+			else
+			{
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	public void prepareSaveTask()throws Exception
+	{
+		prepareModel();
+	}
+	public String saveTask()throws Exception
+	{
+		try 
+		{
+			assemblyTaskService.save(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			assemblyTaskService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	
+	
+	
+	public void prepareUpdateIsOvaer() throws Exception {
+		prepareModel();
+	}
+	@Action("/assemble/updateIsOvaer")
+	public String updateIsOvaer()throws Exception
+	{
+		try 
+		{
+			assemblyTaskService.updateIsOvaer(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = assemblyTaskService.getById(assemblyTaskId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			assemblyTaskList = assemblyTaskService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 *
+	 *根据任务单号查询 
+	 * @return entity
+	 * @throws Exception
+	 */
+	public String findAssemblyTask() throws Exception {
+		try{
+			entity = assemblyTaskService.findAssemblyTask(assemblyTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public String findAssemblyTaskNew() throws Exception {
+		try{
+			entity = assemblyTaskService.findAssemblyTaskNew(assemblyTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 任务单作废
+	 * @return
+	 * @throws Exception
+	 */
+	public void prepareUpdateToVoid()throws Exception
+	{
+		prepareModel();
+	}
+	@Action("/taskassembly/updateToVoid")
+	public String updateToVoid() throws Exception {
+		try{
+			assemblyTaskService.updateVoid(checkedcode);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	/**
+	 * 删除做改变状态处理
+	 */
+	public String delupdate() throws Exception {
+			
+			try {
+				assemblyTaskService.delupdate(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				addActionMessage("删除成功");
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+				addActionMessage("删除失败");
+			}
+			return JSON;
+		}
+	/**
+	 * 查看是否有BOM
+	 */
+	public String checkBOM() throws Exception {
+			
+			try {
+				OrderBomQuery orderBomQuery = new OrderBomQuery();
+				orderBomQuery.setItemcode(assemblyTaskQuery.getItemcode());
+				List<OrderBom> bomList = orderBomService.findList(orderBomQuery);
+				if(null!=bomList&&bomList.size()>0){
+					resultInfo[0] = "1";
+					resultInfo[1] = "有BOM";
+				}else{
+					resultInfo[0] = "0";
+					resultInfo[1] = "此物料无BOM!";
+				}
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询BOM异常";
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询BOM异常";
+			}
+			return JSON;
+		}
+	/**
+	 * 缺料明细
+	 */
+	public String notEnoughDetail() throws Exception {
+		AssemblyUnderfilledQuery auQuery = new AssemblyUnderfilledQuery();
+			try {
+				auQuery.setItemcode(assemblyTaskQuery.getItemcode());
+				auQuery.setTaskcode(assemblyTaskQuery.getTaskcode());
+				assemblyUnderfilledList = assemblyUnderfilledService.findList(auQuery);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功!";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询缺料明细异常";
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询缺料明细异常";
+			}
+			return JSON;
+		}
+	
+	/**
+	 * 查询订单信息
+	 * @return
+	 * @throws Exception
+	 */
+	public String findOrderData() throws Exception {
+		
+		try {
+			entity = assemblyTaskService.findOrderData(assemblyTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public AssemblyTask getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public AssemblyTaskQuery getAssemblyTaskQuery() {
+		return assemblyTaskQuery;
+	}
+
+	
+	public void setAssemblyTaskQuery(AssemblyTaskQuery assemblyTaskQuery) {
+		this.assemblyTaskQuery = assemblyTaskQuery;
+	}
+
+	public void setAssemblyTaskId(java.lang.Long assemblyTaskId) {
+		this.assemblyTaskId = assemblyTaskId;
+	}
+	
+	
+	public java.lang.Long getAssemblyTaskId() {
+		return this.assemblyTaskId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<AssemblyTask> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<AssemblyTask> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<AssemblyTask> getAssemblyTaskList() {
+		return assemblyTaskList;
+	}
+	public List<java.lang.String> getCheckedcode() {
+		return checkedcode;
+	}
+	public void setCheckedcode(List<java.lang.String> checkedcode) {
+		this.checkedcode = checkedcode;
+	}
+	public List<AssemblyUnderfilled> getAssemblyUnderfilledList() {
+		return assemblyUnderfilledList;
+	}
+	public void setAssemblyUnderfilledList(
+			List<AssemblyUnderfilled> assemblyUnderfilledList) {
+		this.assemblyUnderfilledList = assemblyUnderfilledList;
+	}
+}

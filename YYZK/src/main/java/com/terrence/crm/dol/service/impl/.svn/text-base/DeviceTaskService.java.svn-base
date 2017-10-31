@@ -1,0 +1,271 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.DeviceTask;
+import com.terrence.crm.dol.bean.DeviceWork;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.query.DeviceTaskQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.IcmoQuery;
+import com.terrence.crm.dol.query.WorkSeqQuery;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDeviceTaskDao;
+import com.terrence.crm.dol.dao.IDeviceWorkDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.service.IDeviceTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class DeviceTaskService extends BaseService implements IDeviceTaskService {
+	protected static Logger logger = LoggerFactory.getLogger(DeviceTaskService.class);
+	@Autowired
+	@Qualifier("deviceTaskDao")
+	private IDeviceTaskDao deviceTaskDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	@Autowired
+	@Qualifier("deviceWorkDao")
+	private IDeviceWorkDao deviceWorkDao;
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "DeviceTask";
+	}
+	@Transactional(readOnly=true)
+	public DeviceTask getById(java.lang.Long id) throws ServiceException
+	{
+		return deviceTaskDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DeviceTask entity) throws ServiceException
+	{
+		deviceTaskDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DeviceTask entity) throws ServiceException
+	{
+		Long adId = deviceTaskDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(DeviceTask entity) throws ServiceException
+	{
+		Integer returnValue =  deviceTaskDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = deviceTaskDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = deviceTaskDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DeviceTaskQuery query = new DeviceTaskQuery();
+		try {
+			return deviceTaskDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceTask> findPage(Page<DeviceTask> page, DeviceTaskQuery query) throws ServiceException
+	{
+		return deviceTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceTask> findPage(Page<DeviceTask> page,String statement, DeviceTaskQuery query) throws ServiceException
+	{
+		return deviceTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceTask> findList(DeviceTaskQuery query) throws ServiceException
+	{
+		return deviceTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceTask> findList(DeviceTaskQuery query,Integer pageSize) throws ServiceException
+	{
+		return deviceTaskDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<DeviceTask> findList(DeviceTaskQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return deviceTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceTask> findAllList() throws ServiceException
+	{
+		return deviceTaskDao.findAllList();
+	}
+	@Override
+	public List<DeviceTask> findList(DeviceTaskQuery deviceTaskQuery,
+			String statement) throws ServiceException {
+		
+		return deviceTaskDao.findList(statement, deviceTaskQuery);
+		 
+	}
+	@Override
+	public void saveLeadTask(DeviceTaskQuery deviceTaskQuery)
+			throws ServiceException {
+		
+		//EmployeeTask---查询已领取数量
+		EmployeeTaskQuery equery=new EmployeeTaskQuery();
+		equery.setDevtaskid(deviceTaskQuery.getDevtaskid());
+		EmployeeTask emp =new EmployeeTask(); 
+		emp=employeeTaskDao.getByEntity("EmployeeTask.getreqtakefqty", equery);
+		double rfqty=0;//已领数量
+		if(emp==null||null==emp.getFqty()){
+			rfqty=0;
+		}else{
+			rfqty=emp.getFqty().doubleValue();
+		}
+		
+		//---------------------
+		DeviceTask deviceTask = deviceTaskDao.getById(deviceTaskQuery.getDevtaskid());
+		if(deviceTask.getFqty()<(rfqty+deviceTaskQuery.getReqtakefqty())){//领取数大于派工数
+			throw new ServiceException("领取总数大于派工数，请重新操作！！！");
+		}
+		
+		EmployeeTask employeeTask=new EmployeeTask();
+		Long icmoid=icmoDao.getByProperty("fbillno", deviceTaskQuery.getFbillno()).getIcmoid();
+		
+		employeeTask.setDevtaskid(deviceTask.getDevtaskid());
+		employeeTask.setWorkid(icmoid);
+		employeeTask.setItemcode(deviceTask.getItemcode());
+		employeeTask.setItemname(baseItemDao.getByProperty("itemcode", deviceTask.getItemcode()).getItemname());
+		Long empid=SpringSecurityUtils.getCurrentUserId();
+		employeeTask.setTeamid(adminDao.getById(empid).getTeamid().longValue());
+		employeeTask.setCreatetime(new Date());
+		employeeTask.setFqty(deviceTaskQuery.getReqtakefqty().intValue());
+		employeeTask.setStatus(0);
+		employeeTask.setAcceptnum(0);
+		employeeTask.setPlanstartdate(deviceTaskQuery.getCreatedateBegin());//派到设备上的时间
+		employeeTask.setPlanenddate(deviceTaskQuery.getCreatedateBegin());//派到设备上的时间
+		employeeTask.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		employeeTask.setDeviceid(deviceTask.getDeviceid());
+		employeeTask.setClasstype(deviceTask.getFclass());//班别
+		
+		//t_work_seq
+		WorkSeqQuery wquery=new WorkSeqQuery();
+		wquery.setIcmoid(icmoid);
+		wquery.setItemprocedureid(deviceTask.getItemprocedureid());
+		DispatchWork dwork = dispatchWorkDao.getByProperty("workseqid", workSeqDao.getByEntity("WorkSeq.getidByIcmoid", wquery).getWorkseqid()+"");
+
+		employeeTask.setProcessid(dwork.getProcessid());//工序
+		employeeTask.setDispatchid(dwork.getId());//------t_work_seq --
+		employeeTask.setCenterid(dwork.getCenterid());
+		employeeTask.setItemprocessid(dwork.getItemprocessid());//---t_dispatch_work--Itemprocessid
+
+		ItemProcess itemProcess = itemProcessDao.getById(dwork.getItemprocessid());
+		employeeTask.setProcessmins(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());
+		Long eid = employeeTaskDao.save(employeeTask, "EmployeeTask.insertIncludeStartDate");
+	//	saveDeviceWork(eid,employeeTask);//开始结束时间相同-----统计无意义
+		
+		if(deviceTaskQuery.getIsdebug().intValue()==1){//调试--添加首件金额
+			PrepareEmp preapareemp=new PrepareEmp();
+			preapareemp.setEmployeetaskid(eid);
+			preapareemp.setMoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//准备金
+			preapareemp.setPreparemins(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//首检准备时长
+			preapareemp.setEmpid(employeeTask.getEmpid());
+			preapareemp.setProcessid(employeeTask.getProcessid());//原来的工序id  !!!
+			preapareemp.setItemcode(employeeTask.getItemcode());
+			preapareemp.setItemname(employeeTask.getItemname());
+			preapareemp.setTeamid(employeeTask.getTeamid());
+			preapareemp.setItemprocessid(itemProcess.getItemprocessid());
+			preapareemp.setEmpname(SpringSecurityUtils.getCurrentRealName());
+//			preapareemp.setFbillgroup(deviceTaskQuery.getFbillno());
+			preapareemp.setFbillgroup(icmoDao.getById("Icmo.getGroupByid", icmoid).getFbillgroup()==null?icmoDao.getById("Icmo.getGroupByid", icmoid).getFbillno():icmoDao.getById("Icmo.getGroupByid", icmoid).getFbillgroup());
+		//	只调试一次，未排产任务单生成时添加group
+			//icmoid
+			prepareEmpDao.save(preapareemp);
+		}
+		
+	}
+	@Override
+	public List<DeviceTask> findTaskall(String statement,
+			DeviceTaskQuery deviceTaskQuery) throws ServiceException {
+		
+		return deviceTaskDao.findList(statement, deviceTaskQuery); 
+	}
+		
+	
+	
+	
+
+}

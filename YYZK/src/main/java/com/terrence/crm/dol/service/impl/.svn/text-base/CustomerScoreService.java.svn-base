@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CustomerScore;
+import com.terrence.crm.dol.query.CustomerScoreQuery;
+import com.terrence.crm.dol.dao.ICustomerScoreDao;
+import com.terrence.crm.dol.service.ICustomerScoreService;
+
+@Service
+@Transactional
+public class CustomerScoreService extends BaseService implements ICustomerScoreService {
+	protected static Logger logger = LoggerFactory.getLogger(CustomerScoreService.class);
+	@Autowired
+	@Qualifier("customerScoreDao")
+	private ICustomerScoreDao customerScoreDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CustomerScore";
+	}
+	@Transactional(readOnly=true)
+	public CustomerScore getById(java.lang.Long id) throws ServiceException
+	{
+		return customerScoreDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CustomerScore entity) throws ServiceException
+	{
+		customerScoreDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CustomerScore entity) throws ServiceException
+	{
+		Long adId = customerScoreDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CustomerScore entity) throws ServiceException
+	{
+		Integer returnValue =  customerScoreDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = customerScoreDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = customerScoreDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CustomerScoreQuery query = new CustomerScoreQuery();
+		try {
+			return customerScoreDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CustomerScore> findPage(Page<CustomerScore> page, CustomerScoreQuery query) throws ServiceException
+	{
+		return customerScoreDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CustomerScore> findPage(Page<CustomerScore> page,String statement, CustomerScoreQuery query) throws ServiceException
+	{
+		return customerScoreDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CustomerScore> findList(CustomerScoreQuery query) throws ServiceException
+	{
+		return customerScoreDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CustomerScore> findList(CustomerScoreQuery query,Integer pageSize) throws ServiceException
+	{
+		return customerScoreDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CustomerScore> findList(CustomerScoreQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return customerScoreDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CustomerScore> findAllList() throws ServiceException
+	{
+		return customerScoreDao.findAllList();
+	}
+
+}

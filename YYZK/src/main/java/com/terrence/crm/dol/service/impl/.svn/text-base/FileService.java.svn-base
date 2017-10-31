@@ -1,0 +1,533 @@
+/**
+ * 
+ */
+package com.terrence.crm.dol.service.impl;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.FileUploadBase.SizeLimitExceededException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.struts2.ServletActionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.artofsolving.jodconverter.DocumentConverter;
+import com.artofsolving.jodconverter.openoffice.connection.OpenOfficeConnection;
+import com.artofsolving.jodconverter.openoffice.connection.SocketOpenOfficeConnection;
+import com.artofsolving.jodconverter.openoffice.converter.OpenOfficeDocumentConverter;
+import com.terrence.crm.dol.base.UserContextHolder;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.bean.ProjectFiles;
+import com.terrence.crm.dol.dao.IOrderDao;
+import com.terrence.crm.dol.dao.IProjectFilesDao;
+import com.terrence.crm.dol.query.FileInfo;
+import com.terrence.crm.dol.query.FileType;
+import com.terrence.crm.dol.service.IFileService;
+import com.terrence.crm.dol.utils.ConvertSwf;
+import com.terrence.crm.dol.utils.DocConverter;
+
+/**
+ * @author Administrator
+ *
+ */
+
+public class FileService implements IFileService {
+	@Autowired
+	private IOrderDao orderDao;
+	
+	private String basePath = ""; 
+	private String defaultFileTypePath = "/files/pic";
+	private String fileCategory;
+	private Map<String,String> fileTypeMap = new HashMap<String,String>();
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+	/* (non-Javadoc)
+	 * @see com.terrence.dol.service.IFileService#getRandomFileName(java.lang.String)
+	 */
+	public String getRandomFileName(String fileName) {
+		StringBuffer rnt = new StringBuffer();
+		String fileSuffix = fileName.substring(fileName.lastIndexOf("."),fileName.length());
+		rnt.append(UserContextHolder.get().getId());
+		rnt.append("_");
+		rnt.append(System.currentTimeMillis());
+		rnt.append(fileSuffix);
+		return rnt.toString();
+	}
+	/**
+	 * 
+	 * @param srcFile
+	 * @param srcFileName
+	 * @param fileType
+	 * @param distFileName
+	 * @return
+	 * @throws Exception
+	 */
+	public FileInfo uploadStandOrderFile(InputStream srcFile, String srcFileName,
+			FileType fileType, String distFileName) throws Exception {
+		String filePath = getFileTypePath(fileType)+(new Date().getYear()+1900)
+			+"/"+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.YEAR)+"/"
+			+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.MONTH)
+			+ "/"
+			+System.currentTimeMillis();
+		
+		String AllPath = AllPath=basePath+filePath;
+		String fileUrl = filePath+"/" + distFileName;
+		/*if(!fileCategory.equals(""))
+		{
+			AllPath=basePath+"/"+fileCategory+"/"+filePath;
+			fileUrl = fileCategory+"/"+filePath+"/" + distFileName;
+		}*/
+		
+		this.createPath(AllPath);
+		String filename=distFileName.substring(0,distFileName.lastIndexOf("."));
+		String fileextname=distFileName.substring(distFileName.lastIndexOf("."));
+		
+		FileOutputStream fos = new FileOutputStream(new File(basePath+fileUrl));
+        IOUtils.copy(srcFile, fos);
+        DocConverter docConverter = new DocConverter(basePath+fileUrl);
+        docConverter.conver();
+		return new FileInfo(fileUrl);
+	}
+	/* (non-Javadoc)
+	 * @see com.terrence.dol.service.IFileService#upload(java.io.InputStream, java.lang.String, com.disney.dol.bo.FileType, java.lang.String)
+	 */
+	public FileInfo upload(InputStream srcFile, String srcFileName,
+			FileType fileType, String distFileName) throws Exception {
+		String filePath = getFileTypePath(fileType)+"/"+(new Date().getYear()+1900)
+			+"/"+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.YEAR)+"/"
+			+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.MONTH);
+		String AllPath = AllPath=basePath+filePath;
+		String fileUrl = filePath+"/" + distFileName;
+		/*if(!fileCategory.equals(""))
+		{
+			AllPath=basePath+"/"+fileCategory+"/"+filePath;
+			fileUrl = fileCategory+"/"+filePath+"/" + distFileName;
+		}*/
+		
+		this.createPath(AllPath);
+		String filename=distFileName.substring(0,distFileName.lastIndexOf("."));
+		String fileextname=distFileName.substring(distFileName.lastIndexOf("."));
+		
+		FileOutputStream fos = new FileOutputStream(new File(basePath+fileUrl));
+        IOUtils.copy(srcFile, fos);
+        srcFile.close();
+        fos.close();
+        if(fileUrl.indexOf("doc")>-1||fileUrl.indexOf("docx")>-1||fileUrl.indexOf("ppt")>-1||
+        		fileUrl.indexOf("pptx")>-1||fileUrl.indexOf("xlsx")>-1||fileUrl.indexOf("xls")>-1){
+        	DocConverter docConverter = new DocConverter(basePath+fileUrl);
+            docConverter.conver();
+        }
+		return new FileInfo(fileUrl);
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.terrence.dol.service.IFileService#upload(java.io.InputStream, java.lang.String, com.disney.dol.bo.FileType)
+	 */
+	public FileInfo upload(InputStream srcFile, String srcFileName,
+			FileType fileType) throws Exception {
+		String distFileName = this.getRandomFileName(srcFileName);
+		return this.upload(srcFile, srcFileName, fileType, distFileName);
+	}
+	/**
+	 * 上传
+	 */
+	public FileInfo uploadStandOrderFile(InputStream srcFile, String srcFileName,
+			FileType fileType) throws Exception {
+		//String distFileName = this.getRandomFileName(srcFileName);
+		String distFileName = srcFileName;
+		
+		return this.uploadStandOrderFile(srcFile, srcFileName, fileType, distFileName);
+	}
+	
+	public FileInfo uploadOrderFile(InputStream srcFile, String srcFileName,
+			FileType fileType) throws Exception {
+		String distFileName = this.getRandomFileName(srcFileName);
+		return this.upload(srcFile, srcFileName, fileType, distFileName);
+	}
+	
+	public FileInfo uploadFile(InputStream srcFile, String srcFileName,
+			FileType fileType,Order orderEntity) throws Exception {
+		String distFileName = srcFileName;
+		return this.uploadFile(srcFile, srcFileName, fileType, distFileName, orderEntity);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.terrence.dol.service.IFileService#upload(java.lang.String, com.disney.dol.bo.FileType, java.lang.String)
+	 */
+	public FileInfo upload(String srcFile, FileType fileType,
+			String distFileName) throws Exception {
+		return this.upload(new FileInputStream(srcFile), srcFile, fileType, distFileName);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IFileService#upload(java.lang.String, com.disney.dol.bo.FileType)
+	 */
+	public FileInfo upload(String srcFile, FileType fileType) throws Exception {
+		String distFileName = this.getRandomFileName(srcFile);
+		return this.upload(new FileInputStream(srcFile), srcFile, fileType, distFileName);
+	}
+
+	/**
+	 * @param fileTypeMap the fileTypeMap to set
+	 */
+	public void setFileTypeMap(Map<String, String> fileTypeMap) {
+		this.fileTypeMap = fileTypeMap;
+	}
+	/**
+	 * @param basePath the basePath to set
+	 */
+	public void setBasePath(String basePath) {
+		if(basePath!=null&&basePath.charAt(basePath.length()-1)=='/'){
+			basePath=basePath.substring(0,basePath.length()-1);
+		}
+		this.basePath = basePath;
+	}
+
+	/**
+	 * @param defaultFileTypePath the defaultFileTypePath to set
+	 */
+	public void setDefaultFileTypePath(String defaultFileTypePath) {
+		this.defaultFileTypePath = defaultFileTypePath;
+	}
+	
+	
+	/**
+	 * 取文件分类对应相对目录
+	 * @param fileType
+	 * @return
+	 */
+	private String getFileTypePath(FileType fileType){
+		String rnt = defaultFileTypePath;
+		if(fileTypeMap!=null&&fileType!=null){
+			String fileTypePath = fileTypeMap.get(fileType.toString());
+			if(fileTypePath!=null&&!fileTypePath.trim().equals("")){
+				rnt = fileTypePath;
+			}
+		}
+		return rnt;
+	}
+	/**
+	 * 新建目录
+	 * @param path
+	 * @return
+	 */
+	private boolean createPath(String path){
+		File dir = new File(path);
+		if(!dir.exists()){
+			dir.mkdirs();
+		}
+		return true;
+	}
+	
+	public FileInfo scaleImage(String oldPath, int width, int height) {  
+        // 获取老的图片  
+		String newPath = StringUtils.substringBeforeLast(oldPath, ".") + "_"+width+"." +StringUtils.substringAfterLast(oldPath, ".");
+		return scaleImage(oldPath, newPath, width, height);
+  
+    } 
+	/**
+	 * 删除文件
+	 * @param srcFile
+	 * @param srcFileName
+	 * @param fileType
+	 * @param distFileName
+	 * @return
+	 * @throws Exception
+	 */
+	public FileInfo uploadFile(InputStream srcFile, String srcFileName,
+			FileType fileType, String distFileName,Order orderEntity) throws Exception {
+		String fext=distFileName.substring(distFileName.lastIndexOf(".")+1);
+		String filePath = getFileTypePath(fileType)+"/"+(new Date().getYear()+1900)+"/"
+			+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.YEAR)+"/"
+			+DateUtils.getFragmentInDays(new Date(), java.util.Calendar.MONTH);
+		String AllPath =basePath+filePath;
+		String fileUrl = filePath+"/" + distFileName;
+		//String fileUrl = getFileTypePath(fileType)+"/" + distFileName;
+		File pdfFile;
+		File swfFile;
+		File docFile;
+		
+		String appPath=ServletActionContext.getRequest().getRealPath("/");
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().
+		getContextClassLoader().getResourceAsStream("application.properties");
+        prop.load(inputStream);
+     	String importPlmPath = prop.getProperty("upload.bashPath").trim();
+		//String fileString=basePath+fileUrl;
+		String fileString=appPath+importPlmPath+distFileName;
+		String webAppRootPath = prop.getProperty("webapps.rootPath").trim();
+		
+		String pdf2swfPath = prop.getProperty("pdf2swf.path").trim();
+		String pdf2swfXpdfPath = prop.getProperty("pdf2swf.xpdf.path").trim();
+		/*if(!fileCategory.equals(""))
+		{
+			AllPath=basePath+"/"+fileCategory+"/"+filePath;
+			fileUrl = fileCategory+"/"+filePath+"/" + distFileName;
+		}*/
+		
+		this.createPath(AllPath);
+		//String filename=distFileName.substring(0,distFileName.lastIndexOf("."));
+		//FileOutputStream fos = new FileOutputStream(new File(webAppRootPath+fileUrl));
+		//FileOutputStream fos = new FileOutputStream(new File(basePath+fileUrl));
+		//FileOutputStream fos = new FileOutputStream(new File(fileString));
+		//保存到数据库表中:
+		//Order orderEntity=new Order();
+		orderDao.update(orderEntity);
+		
+		//IOUtils.copy(srcFile, fos);
+		//String fileName = fileString.substring(0, fileString.lastIndexOf("."));
+		//String fileName =(basePath+fileUrl).substring(0, (basePath+fileUrl).lastIndexOf("."));
+		String fileName =(webAppRootPath+fileUrl).substring(0, (webAppRootPath+fileUrl).lastIndexOf("."));
+		String swffileurl="";
+		if(fext.equalsIgnoreCase("doc")||fext.equalsIgnoreCase("docx")
+				||fext.equalsIgnoreCase("xls")||fext.equalsIgnoreCase("xlsx")
+				||fext.equalsIgnoreCase("ppt")||fext.equalsIgnoreCase("pptx"))
+		{
+			docFile = new File(fileString);
+			pdfFile = new File(fileName + ".pdf");
+			doc2pdf(docFile,pdfFile);
+			
+			//swfFile = new File(fileName + ".swf");
+			//pdf2swf(swfFile,pdfFile,pdf2swfPath,pdf2swfXpdfPath);
+			swffileurl=fileUrl.substring(0,fileUrl.lastIndexOf("."))+".swf";
+		}
+		if(fext.equalsIgnoreCase("pdf"))
+		{
+			//swfFile = new File(fileName + ".swf");
+			pdfFile = new File(fileName + ".pdf");
+			//pdf2swf(swfFile,pdfFile,pdf2swfPath,pdf2swfXpdfPath);
+			swffileurl=fileUrl.substring(0,fileUrl.lastIndexOf("."))+".swf";
+		}
+		return new FileInfo(fileUrl,swffileurl);
+	}
+	static String loadStream(InputStream in) throws IOException {
+
+		int ptr = 0;
+		in = new BufferedInputStream(in);
+		StringBuffer buffer = new StringBuffer();
+
+		while ((ptr = in.read()) != -1) {
+			buffer.append((char) ptr);
+		}
+
+		return buffer.toString();
+	}
+	private void doc2pdf(File docFile,File pdfFile) throws Exception {
+		if (docFile.exists()) {
+			if (!pdfFile.exists()) {
+				try {
+				OpenOfficeConnection connection = new SocketOpenOfficeConnection(8100);
+				
+					connection.connect();
+					DocumentConverter converter = new OpenOfficeDocumentConverter(connection);
+					converter.convert(docFile, pdfFile);
+					// close the connection
+					connection.disconnect();
+					System.out.println("PDF输出：" + pdfFile.getPath());
+				} catch (java.net.ConnectException e) {
+					e.printStackTrace();
+					System.out.println("openoffice服务未启动！");
+					throw e;
+				} catch (com.artofsolving.jodconverter.openoffice.connection.OpenOfficeException e) {
+					e.printStackTrace();
+					System.out.println("读取转换文件失败");
+					throw e;
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw e;
+				}
+			} else {
+				System.out.println("不需要再进行转化");
+			}
+		} else {
+			System.out.println("文档不存在，无法转换");
+		}
+	}
+	
+	private void pdf2swf(File swfFile,File pdfFile,String pdf2swfPath,String pdf2swfXpdfPath) throws Exception {
+		Runtime r = Runtime.getRuntime();
+		if (!swfFile.exists()) {
+			if (pdfFile.exists()) {
+					try {
+						//Process p = r.exec("D:/SWFTools/pdf2swf.exe "+ pdfFile.getPath() + " -o "+ swfFile.getPath() + " -T 9 -s poly2bitmap -s languagedir=D:\\xpdf\\xpdf-chinese-simplified");
+						//Process p = r.exec("D:/SWFTools/pdf2swf.exe "+ pdfFile.getPath() + " -o "+ swfFile.getPath() + " -T 9");
+						/*Process p = 
+							r.exec("D:/SWFTools/pdf2swf.exe "+ pdfFile.getPath() + " -o "+ swfFile.getPath() + " -G -S -T 9 -t -s languagedir=D:/SWFTools/xpdf/xpdf-chinese-simplified ");
+						*/
+						Process p = 
+							r.exec(pdf2swfPath+"/pdf2swf.exe "+ pdfFile.getPath() + " -o "
+									+ swfFile.getPath() + " -G -S -T 9 -t -s languagedir="+pdf2swfXpdfPath+" ");
+						
+						//pdf2swf.exe d:/1.pdf -o d:/2.swf -G -S -T 9 -t -s languagedir=D:\SWFTools\xpdf\xpdf-chinese-simplified
+						/*String result = loadStream(p.getInputStream());
+						if(result.indexOf("disallows copying")>0){
+							throw new Exception("该文件已经被加密，请先处理再上传!");
+						}
+						System.out.print(result);
+						System.err.print(loadStream(p.getErrorStream()));
+						System.out.print(loadStream(p.getInputStream()));
+						if (pdfFile.exists()) {
+							pdfFile.delete();
+						}*/
+						/*System.out.print(loadStream(p.getInputStream()));
+						//System.err.print(loadStream(p.getErrorStream()));
+						//System.out.print(loadStream(p.getInputStream()));
+						System.err.println("****swf转换成功，文件输出："
+								+ swfFile.getPath() + "****");
+						if (pdfFile.exists()) {
+							pdfFile.delete();
+						}*/
+
+					} catch (IOException e) {
+						e.printStackTrace();
+						throw e;
+					}
+			} else {
+				System.out.println("不存在,无法转换");
+			}
+		} else {
+			System.out.println("已经存在不需要转换");
+		}
+	}
+	
+	public FileInfo scaleImage(String oldPath, String newPath, int width, int height) {  
+        // 获取老的图片  
+       /* File oldimg = new File(basePath + oldPath);  
+  
+        try {  
+            BufferedImage bi = ImageIO.read(oldimg);  
+            Image Itemp = bi.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);  
+            BufferedImage thumbnail = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);  
+            thumbnail.getGraphics().drawImage(Itemp, 0, 0, null);  
+  
+            // 缩略后的图片路径  
+           
+            File newimg = new File(basePath + newPath);  
+            FileOutputStream out = new FileOutputStream(newimg);  
+  
+            // 绘图  
+            JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);  
+            JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam(thumbnail);  
+            param.setQuality(1.0f, false);  
+            encoder.encode(thumbnail);  
+            out.close();  
+            bi.flush();  
+            bi = null;  
+            return new FileInfo(newPath);
+        } catch (IOException e) {  
+            e.printStackTrace();
+        }  */
+        return null;
+  
+    }
+	public FileInfo uploadProject(InputStream srcFile, String srcFileName,
+			FileType fileType, String distFileName,String folderName) throws Exception {
+		//拼接文件路径
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties");
+		prop.load(inputStream);
+		String projectPath = prop.getProperty("upload.projectPath").trim();
+		if(projectPath==null){
+			projectPath=prop.getProperty("upload.bashPath").trim()+"/projectfiles";
+		}
+		/**if(folderName!=null&&folderName.trim()!=""){
+			projectPath += "/"+folderName;
+		}*/
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		String folder = sdf.format(new Date());
+		String prex = projectPath.substring(projectPath.lastIndexOf("\\")+1, projectPath.length());
+		projectPath = projectPath+"/"+folder;
+		this.createPath(projectPath);
+		String allPath="";
+		sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		String relativepath = "/"+sdf.format(new Date())+srcFileName.subSequence(srcFileName.lastIndexOf("."),srcFileName.length());
+		allPath = projectPath +relativepath;
+		FileOutputStream fos = new FileOutputStream(new File(allPath));
+        IOUtils.copy(srcFile, fos);
+        ConvertSwf convertSwf = new ConvertSwf();
+        //convertSwf.saveProjectFilesTemp(allPath);
+        convertSwf.convert(allPath);
+		return new FileInfo("/"+prex+"/"+folder+relativepath);
+		
+	}
+	
+	/* 项目系统文件
+	 */
+	public FileInfo uploadProject(InputStream srcFile, String srcFileName,
+			FileType fileType,String folderName) throws Exception {
+		String distFileName = this.getRandomFileName(srcFileName);
+		return this.uploadProject(srcFile, srcFileName, fileType, distFileName,folderName);
+	}
+	@Override
+	public FileInfo uploadHelp(InputStream srcFile, String srcFileName,
+			FileType fileType,String folderName) throws Exception {
+		String distFileName = this.getRandomFileName(srcFileName);
+		return this.uploadHelp(srcFile, srcFileName, fileType, distFileName,folderName);
+	}
+	public FileInfo uploadHelp(InputStream srcFile, String srcFileName,
+			FileType fileType, String distFileName,String folderName) throws Exception {
+		//拼接文件路径
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties");
+		prop.load(inputStream);
+		String projectPath = prop.getProperty("upload.helpPath").trim();
+		if(projectPath==null){
+			projectPath=prop.getProperty("upload.bashPath").trim()+"/helpfiles";
+		}
+		/**if(folderName!=null&&folderName.trim()!=""){
+			projectPath += "/"+folderName;
+		}*/
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		String folder = sdf.format(new Date());
+		String prex = projectPath.substring(projectPath.lastIndexOf("\\")+1, projectPath.length());
+		projectPath = projectPath+"/"+folder;
+		this.createPath(projectPath);
+		String allPath="";
+		sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		String relativepath = "/"+sdf.format(new Date())+srcFileName.subSequence(srcFileName.lastIndexOf("."),srcFileName.length());
+		allPath = projectPath +relativepath;
+		FileOutputStream fos = new FileOutputStream(new File(allPath));
+        IOUtils.copy(srcFile, fos);
+        DocConverter docConverter = new DocConverter(allPath);
+		docConverter.conver();
+        /*ConvertSwf convertSwf = new ConvertSwf();
+        convertSwf.convert(allPath);*/
+		return new FileInfo("/"+prex+"/"+folder+relativepath);
+		
+	}
+	@Override
+	public void setFileCategory(String categoryname) {
+		this.fileCategory=categoryname;
+	}
+
+	public static void main(String args[])
+	{
+		System.out.println(new Date().getYear()+1900);
+	}
+	
+	
+	
+	
+}

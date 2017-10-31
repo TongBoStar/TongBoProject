@@ -1,0 +1,198 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemsRule;
+import com.terrence.crm.dol.bean.ItemsRuleDetail;
+import com.terrence.crm.dol.dao.IItemsDao;
+import com.terrence.crm.dol.dao.IItemsRuleDao;
+import com.terrence.crm.dol.dao.IItemsRuleDetailDao;
+import com.terrence.crm.dol.query.ItemsQuery;
+import com.terrence.crm.dol.query.ItemsRuleDetailQuery;
+import com.terrence.crm.dol.query.ItemsRuleQuery;
+import com.terrence.crm.dol.service.IItemsRuleService;
+@Service
+@Transactional
+public class ItemsRuleService extends BaseService implements IItemsRuleService {
+
+	protected static Logger logger = LoggerFactory.getLogger(ItemsRuleService.class);
+	@Autowired
+	@Qualifier("itemsRuleDao")
+	private IItemsRuleDao itemsRuleDao;
+	@Autowired
+	@Qualifier("itemsRuleDetailDao")
+	private IItemsRuleDetailDao itemsRuleDetailDao;
+	@Autowired
+	@Qualifier("itemsDao")
+	private IItemsDao itemsDao;
+	
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemsRule";
+	}
+	@Transactional(readOnly=true)
+	public ItemsRule getById(java.lang.Long id) throws ServiceException
+	{
+		return itemsRuleDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemsRule entity) throws ServiceException
+	{
+		itemsRuleDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ItemsRule entity) throws ServiceException
+	{
+		Long adId = itemsRuleDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemsRule entity) throws ServiceException
+	{
+		Integer returnValue =  itemsRuleDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemsRuleDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemsRuleDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemsRuleQuery query = new ItemsRuleQuery();
+		try {
+			return itemsRuleDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemsRule> findPage(Page<ItemsRule> page, ItemsRuleQuery query) throws ServiceException
+	{
+		return itemsRuleDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemsRule> findPage(Page<ItemsRule> page,String statement, ItemsRuleQuery query) throws ServiceException
+	{
+		return itemsRuleDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemsRule> findList(ItemsRuleQuery query) throws ServiceException
+	{
+		return itemsRuleDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemsRule> findList(ItemsRuleQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemsRuleDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemsRule> findList(ItemsRuleQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemsRuleDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemsRule> findAllList() throws ServiceException
+	{
+		return itemsRuleDao.findAllList();
+	}
+	@Override
+	public void saveall(ItemsRule entity) throws ServiceException {
+		String[] rulenamelist=null;
+		Integer[] seqlist=null;
+		Long[] runleidlist =null;
+		Long itemid = entity.getItemid();
+		rulenamelist=entity.getRulenamelist();
+		seqlist = entity.getSeqlist();
+		runleidlist = entity.getItemruleidlist();
+		
+		int length=rulenamelist.length;
+		ItemsRule itemRule=null;
+		for(int i=0;i<length;i++){
+			itemRule=new ItemsRule();
+			itemRule.setItemruleid(runleidlist[i]);
+			itemRule.setItemid(itemid);
+			itemRule.setRulename(rulenamelist[i]);
+			itemRule.setSeq(seqlist[i]);
+			
+			itemsRuleDao.saveOrUpdate(itemRule);
+		}
+		
+		
+	}
+	@Override
+	public void deleteAlone(ItemsRuleQuery itemRuleQuery)
+			throws ServiceException {
+		ItemsRuleDetailQuery itemRuleDetailQuery=new ItemsRuleDetailQuery();
+		itemRuleDetailQuery.setItemruleid(itemRuleQuery.getItemruleid());
+		List<ItemsRuleDetail> itemRuleDetaillist=null;
+		 itemRuleDetaillist = itemsRuleDetailDao.findList(itemRuleDetailQuery);
+		for(ItemsRuleDetail detail:itemRuleDetaillist ){
+			itemsRuleDetailDao.deleteById(detail.getDetailid());
+		}
+		itemsRuleDao.deleteById(itemRuleQuery.getItemruleid());
+	}
+	@Override
+	public List<ItemsRule> findListDetail(ItemsRuleQuery itemRuleQuery)
+			throws ServiceException {
+		return itemsRuleDao.findList("ItemsRule.findList.findListDetail", itemRuleQuery);		
+	}
+	@Override
+	public List<ItemsRule> findListitemDetail(ItemsRuleQuery itemRuleQuery)
+			throws ServiceException {
+		ItemsQuery itemQuery = new ItemsQuery();
+		itemQuery.setItemid(itemRuleQuery.getParent());
+		itemsDao.findParent(itemQuery);
+		return itemsRuleDao.findListitemDetail(itemRuleQuery);
+	}
+	@Override
+	public ItemsRule finditemDetail(ItemsRuleQuery itemRuleQuery)
+			throws ServiceException {
+		ItemsRule itemRule = new ItemsRule();
+		List<ItemsRule> itemRulelist = itemsRuleDao.findListitemDetail(itemRuleQuery);
+		ItemsQuery itemQuery = new ItemsQuery();
+		itemQuery.setItemid(itemRuleQuery.getParent());
+		itemRule.setItm(itemsDao.findParent(itemQuery));
+		itemRule.setItemRulelist(itemRulelist);
+		return itemRule;
+	}
+
+
+}

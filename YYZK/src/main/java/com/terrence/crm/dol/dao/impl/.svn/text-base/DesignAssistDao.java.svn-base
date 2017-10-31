@@ -1,0 +1,32 @@
+package com.terrence.crm.dol.dao.impl;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.dao.IDesignAssistDao;
+@Repository
+public class DesignAssistDao extends BaseIbatisDao<DesignAssist,java.lang.Long> implements IDesignAssistDao{
+	public String getIbatisSqlMapNamespace() {
+		return "DesignAssist"; 
+	}
+	public void saveOrUpdate(DesignAssist entity) {
+		if(entity.getId() == null) {
+			SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddhhmm");
+			String dateCode = sf.format(new Date()).substring(2, 12);
+			entity.setDesignAssistCode("DA"+dateCode);
+			entity.setFstatus(0);
+			save(entity);
+		}else {
+			update(entity);
+		}
+	}
+	public DesignAssist getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (DesignAssist)this.getSqlMapClientTemplate().queryForObject("DesignAssist.getByProperty", map);
+	}
+}

@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailPdStep">
+
+        
+	<resultMap id="RM.TrailPdStep" class="com.terrence.crm.dol.bean.TrailPdStep">
+        <result property="stepid" column="stepid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="stepname" column="stepname"/>
+        <result property="forder" column="forder"/>
+        <result property="criterion" column="criterion"/>
+        <result property="fcomment" column="fcomment"/>
+        <result property="qualvar" column="qualvar"/>
+
+    </resultMap>
+	
+	<resultMap id="RM.TrailPdStep.TrailPdStep.getDetailById" class="com.terrence.crm.dol.bean.TrailPdStep">
+        <result property="stepid" column="stepid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="stepname" column="stepname"/>
+        <result property="forder" column="forder"/>
+        <result property="criterion" column="criterion"/>
+        <result property="fcomment" column="fcomment"/>
+        <result property="did" column="did"/>
+        <result property="varlist" column="stepid" select="TrailPdStep.varlist.TrailPdStep.getDetailById"/>
+        
+        
+    </resultMap>
+	
+	<resultMap id="RM.TrailPdStep.varlist.TrailPdStep.getDetailById" class="com.terrence.crm.dol.bean.TrailPdStepQualVar">
+        <result property="varid" column="varid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="varname" column="varname"/>
+        <result property="cnname" column="cnname"/>
+    </resultMap>
+	
+	
+	
+	
+	
+		
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailPdStep.columns">
+	    <![CDATA[
+        	t_trail_pd_step.stepid ,
+        	t_trail_pd_step.tplid ,
+        	t_trail_pd_step.stepname ,
+        	t_trail_pd_step.forder ,
+        	t_trail_pd_step.criterion,
+        	t_trail_pd_step.fcomment,
+        	t_trail_pd_step.qualvar,
+        	t_trail_pd_step.did
+
+	    ]]>
+	</sql>
+	
+   <insert id="TrailPdStep.insert" >
+    
+        INSERT INTO
+        t_trail_pd_step (
+
+        	tplid 
+        	<isNotEmpty prepend="," property="stepname">
+        	stepname
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="forder">
+        	forder
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="criterion">
+        	criterion
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fcomment">
+        	fcomment
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="qualvar">
+        	qualvar
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="did">
+        	did
+        	</isNotEmpty>
+       
+        ) VALUES (
+
+        	#tplid# 
+        	<isNotEmpty prepend="," property="stepname">
+        	#stepname#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="forder">
+        	#forder#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="criterion">
+        	#criterion#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fcomment">
+        	#fcomment#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="qualvar">
+        	#qualvar#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="did">
+        	#did#
+        	</isNotEmpty>
+
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="stepid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailPdStep.update" parameterClass="com.terrence.crm.dol.bean.TrailPdStep">         
+        UPDATE t_trail_pd_step 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="tplid">
+	        	tplid = #tplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stepname">
+	        	stepname = #stepname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forder">
+	        	forder = #forder# 
+	        </isNotEmpty>
+
+	        <isNotEmpty prepend="," property="criterion">
+        		criterion=#criterion#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fcomment">
+        		fcomment=#fcomment#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="qualvar">
+        	qualvar=#qualvar#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="did">
+        	did=#did#
+        	</isNotEmpty>
+        	<isEmpty prepend="," property="did">
+        	did=NULL
+        	</isEmpty>
+
+	    </dynamic>
+        WHERE 
+	        stepid = #stepid# 
+    </update>
+    
+	<delete id="TrailPdStep.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_pd_step where
+       stepid = #stepid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrailPdStep.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_pd_step 
+        WHERE
+       stepid in ($stepid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrailPdStep.getById" resultMap="RM.TrailPdStep">
+	    select <include refid="TrailPdStep.columns"/>
+	    
+	        from t_trail_pd_step 
+	        where 
+		        stepid = #stepid# 
+	    
+    </select>
+    
+    <select id="TrailPdStep.getDetailById" resultMap="RM.TrailPdStep.TrailPdStep.getDetailById">
+	    select 
+	    t_trail_pd_step.stepid ,
+        	t_trail_pd_step.tplid ,
+        	t_trail_pd_step.stepname ,
+        	t_trail_pd_step.forder ,
+        	t_trail_pd_step.criterion,
+        	t_trail_pd_step.fcomment,
+        	t_trail_pd_step.did
+        	
+	    
+	        from t_trail_pd_step 
+	        where 
+		        stepid = #stepid# 
+	    
+    </select>
+    
+    
+    
+	<select id="TrailPdStep.getByProperty" resultMap="RM.TrailPdStep">
+		select <include refid="TrailPdStep.columns"/> from t_trail_pd_step where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailPdStep.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_step.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trail_pd_step.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="did">
+	             t_trail_pd_step.did = #did#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stepname">
+	             t_trail_pd_step.stepname = #stepname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forder">
+	             t_trail_pd_step.forder = #forder#
+	       </isNotEmpty>
+
+	       <isNotEmpty prepend="," property="criterion">
+        		 t_trail_pd_step.criterion =#criterion#
+        	</isNotEmpty>
+        	
+        	<isNotEmpty prepend="," property="fcomment">
+        		t_trail_pd_step.fcomment=#fcomment#
+        	</isNotEmpty>
+
+
+			<isNotEmpty prepend="AND" property="qualvar">
+	             t_trail_pd_step.qualvar = #qualvar#
+	       </isNotEmpty>
+
+	       
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailPdStep.findPage.and">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_step.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_trail_pd_step.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stepname">
+	             t_trail_pd_step.stepname = #stepname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forder">
+	             t_trail_pd_step.forder = #forder#
+	       </isNotEmpty>
+
+	       <isNotEmpty prepend="," property="criterion">
+        		 t_trail_pd_step.criterion =#criterion#
+        	</isNotEmpty>
+        	
+        	<isNotEmpty prepend="," property="fcomment">
+        		t_trail_pd_step.fcomment=#fcomment#
+        	</isNotEmpty>
+	       
+
+			<isNotEmpty prepend="AND" property="qualvar">
+	             t_trail_pd_step.qualvar = #qualvar  #
+	       </isNotEmpty>
+
+	</sql>
+	
+    <select id="TrailPdStep.Entity" resultMap="RM.TrailPdStep">
+    	SELECT 	<include refid="TrailPdStep.columns"/> FROM t_trail_pd_step <include refid="TrailPdStep.findPage.where"/>
+    </select>
+    
+    <select id="TrailPdStep.findList" resultMap="RM.TrailPdStep">
+    	SELECT 
+    		<include refid="TrailPdStep.columns"/> 
+    	FROM 
+    		t_trail_pd_step
+		<include refid="TrailPdStep.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailPdStep.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_pd_step
+    ]]>
+		<include refid="TrailPdStep.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailPdStep.findPage" resultMap="RM.TrailPdStep">
+    	select <include refid="TrailPdStep.columns"/>	    
+	        from t_trail_pd_step 	   
+		<include refid="TrailPdStep.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailPdStep.findPage" resultMap="RM.TrailPdStep">
+    	select <include refid="TrailPdStep.columns"/>	    
+	        from t_trail_pd_step where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       stepid 
+	   not in(select $notTop$ 
+       stepid 
+	   from t_trail_pd_step <include refid="TrailPdStep.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailPdStep.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+	<select id="TrailPdStep.varlist.TrailPdStep.getDetailById" resultMap="RM.TrailPdStep.varlist.TrailPdStep.getDetailById">
+		select 
+			t_trail_pd_step_qual_var.varid ,
+        	t_trail_pd_step_qual_var.stepid ,
+        	t_trail_pd_step_qual_var.varname ,
+        	t_trail_pd_step_qual_var.cnname 
+		from 
+			t_trail_pd_step_qual_var	
+		where stepid=#stepid#
+		
+	</select>
+
+	 <select id="TrailPdStep.findAllList" resultMap="RM.TrailPdStep.TrailPdStep.getDetailById">
+    	SELECT 
+    		<include refid="TrailPdStep.columns"/> 
+    	FROM 
+    		t_trail_pd_step
+		<include refid="TrailPdStep.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+
+	<insert id="TrailPdStep.update.Copy"><!-- 步骤复制 -->
+			insert into t_trail_pd_step(tplid,did,stepname,forder,criterion,fcomment,qualvar)
+			select #tplid#,did,stepname,forder,criterion,fcomment,qualvar
+			from t_trail_pd_step
+			where 
+			t_trail_pd_step.stepid=#stepid#
+			
+		<selectKey resultClass="java.lang.Long" type="post" keyProperty="stepid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+	</insert>
+
+	
+</sqlMap>

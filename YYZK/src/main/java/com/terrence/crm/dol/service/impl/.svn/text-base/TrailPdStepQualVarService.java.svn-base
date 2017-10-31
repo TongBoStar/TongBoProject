@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailPdStepQualVar;
+import com.terrence.crm.dol.query.TrailPdStepQualVarQuery;
+import com.terrence.crm.dol.dao.ITrailPdStepQualVarDao;
+import com.terrence.crm.dol.service.ITrailPdStepQualVarService;
+
+@Service
+@Transactional
+public class TrailPdStepQualVarService extends BaseService implements ITrailPdStepQualVarService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailPdStepQualVarService.class);
+	@Autowired
+	@Qualifier("trailPdStepQualVarDao")
+	private ITrailPdStepQualVarDao trailPdStepQualVarDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailPdStepQualVar";
+	}
+	@Transactional(readOnly=true)
+	public TrailPdStepQualVar getById(java.lang.Long id) throws ServiceException
+	{
+		return trailPdStepQualVarDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailPdStepQualVar entity) throws ServiceException
+	{
+		trailPdStepQualVarDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailPdStepQualVar entity) throws ServiceException
+	{
+		Long adId = trailPdStepQualVarDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailPdStepQualVar entity) throws ServiceException
+	{
+		Integer returnValue =  trailPdStepQualVarDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailPdStepQualVarDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailPdStepQualVarDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailPdStepQualVarQuery query = new TrailPdStepQualVarQuery();
+		try {
+			return trailPdStepQualVarDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdStepQualVar> findPage(Page<TrailPdStepQualVar> page, TrailPdStepQualVarQuery query) throws ServiceException
+	{
+		return trailPdStepQualVarDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdStepQualVar> findPage(Page<TrailPdStepQualVar> page,String statement, TrailPdStepQualVarQuery query) throws ServiceException
+	{
+		return trailPdStepQualVarDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStepQualVar> findList(TrailPdStepQualVarQuery query) throws ServiceException
+	{
+		return trailPdStepQualVarDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStepQualVar> findList(TrailPdStepQualVarQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailPdStepQualVarDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailPdStepQualVar> findList(TrailPdStepQualVarQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailPdStepQualVarDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStepQualVar> findAllList() throws ServiceException
+	{
+		return trailPdStepQualVarDao.findAllList();
+	}
+
+}

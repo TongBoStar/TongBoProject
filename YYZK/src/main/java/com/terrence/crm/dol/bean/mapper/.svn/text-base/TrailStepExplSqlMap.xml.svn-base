@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailStepExpl">
+
+        
+	<resultMap id="RM.TrailStepExpl" class="com.terrence.crm.dol.bean.TrailStepExpl">
+        <result property="stepid" column="stepid"/>
+        <result property="did" column="did"/>
+        <result property="stepval" column="stepval"/>
+        <result property="fexplain" column="fexplain"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailStepExpl.columns">
+	    <![CDATA[
+        	t_trail_step_expl.stepid ,
+        	t_trail_step_expl.did ,
+        	t_trail_step_expl.stepval ,
+        	t_trail_step_expl.fexplain 
+	    ]]>
+	</sql>
+	
+   <insert id="TrailStepExpl.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_trail_step_expl (
+        	did ,
+        	stepval ,
+        	fexplain 
+        ) VALUES (
+        	#did# ,
+        	#stepval# ,
+        	#fexplain# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="stepid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailStepExpl.update" parameterClass="com.terrence.crm.dol.bean.TrailStepExpl">         
+        UPDATE t_trail_step_expl 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="did">
+	        	did = #did# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stepval">
+	        	stepval = #stepval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexplain">
+	        	fexplain = #fexplain# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        stepid = #stepid# 
+    </update>
+    
+	<delete id="TrailStepExpl.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_step_expl where
+       stepid = #stepid# 
+    ]]>
+    </delete>
+    <delete id="delete.byDid">
+    	delete from t_trail_step_expl where
+       did = #did# 
+    </delete>
+    <delete id="TrailStepExpl.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_step_expl 
+        WHERE
+       stepid in ($stepid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrailStepExpl.getById" resultMap="RM.TrailStepExpl">
+	    select <include refid="TrailStepExpl.columns"/>
+	    
+	        from t_trail_step_expl 
+	        where 
+		        stepid = #stepid# 
+	    
+    </select>
+    
+	<select id="TrailStepExpl.getByProperty" resultMap="RM.TrailStepExpl">
+		select <include refid="TrailStepExpl.columns"/> from t_trail_step_expl where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailStepExpl.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_step_expl.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="did">
+	             t_trail_step_expl.did = #did#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stepval">
+	             t_trail_step_expl.stepval = #stepval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fexplain">
+	             t_trail_step_expl.fexplain = #fexplain#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailStepExpl.findPage.and">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_step_expl.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="did">
+	             t_trail_step_expl.did = #did#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stepval">
+	             t_trail_step_expl.stepval = #stepval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexplain">
+	             t_trail_step_expl.fexplain = #fexplain#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrailStepExpl.Entity" resultMap="RM.TrailStepExpl">
+    	SELECT 	<include refid="TrailStepExpl.columns"/> FROM t_trail_step_expl <include refid="TrailStepExpl.findPage.where"/>
+    </select>
+    
+    <select id="TrailStepExpl.findList" resultMap="RM.TrailStepExpl">
+    	SELECT 
+    		<include refid="TrailStepExpl.columns"/> 
+    	FROM 
+    		t_trail_step_expl
+		<include refid="TrailStepExpl.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailStepExpl.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_step_expl
+    ]]>
+		<include refid="TrailStepExpl.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailStepExpl.findPage" resultMap="RM.TrailStepExpl">
+    	select <include refid="TrailStepExpl.columns"/>	    
+	        from t_trail_step_expl 	   
+		<include refid="TrailStepExpl.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailStepExpl.findPage" resultMap="RM.TrailStepExpl">
+    	select <include refid="TrailStepExpl.columns"/>	    
+	        from t_trail_step_expl where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       stepid 
+	   not in(select $notTop$ 
+       stepid 
+	   from t_trail_step_expl <include refid="TrailStepExpl.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailStepExpl.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

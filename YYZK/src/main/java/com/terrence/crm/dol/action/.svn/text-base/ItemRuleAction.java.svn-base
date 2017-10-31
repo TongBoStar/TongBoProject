@@ -1,0 +1,691 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.query.ItemRuleQuery;
+import com.terrence.crm.dol.service.IItemRuleService;
+import com.terrence.crm.dol.bean.ItemRule;
+import com.terrence.crm.dol.bean.ItemRuleDetail;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/itemRule")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "itemRule." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemRuleAction extends CrudActionSupport<ItemRule>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("itemRuleService")
+	private IItemRuleService itemRuleService;
+	
+	
+	private ItemRule entity;
+
+	private ItemRuleQuery itemRuleQuery;
+	private Integer newruleNameNumberParam;
+	private Integer ruleNameNumberParam;
+	
+	private java.lang.Long itemRuleId;
+	
+	/** 分页器 */
+	private Page<ItemRule> page = new Page<ItemRule>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ItemRule> itemRuleList;
+	
+	private java.lang.Long itemRuleDetailId;
+	private List<Long> itemRuleIds = new ArrayList<Long>();//经过排序后的规则id
+	
+	private String delIds;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemRuleId != null ) {
+			entity = itemRuleService.getById(itemRuleId);
+		} else {
+			entity = new ItemRule();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			itemRuleService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	
+public String deleteAlone() throws Exception {
+	
+	try {
+		itemRuleService.deleteAlone(itemRuleQuery);
+
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功！";
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = "删除失败";
+	}
+	return JSON;
+}
+	
+	
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("seq");
+			itemRuleList = itemRuleService.findList(itemRuleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToDetail()throws Exception
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("seq");
+			itemRuleList = itemRuleService.findListDetail(itemRuleQuery);
+			if(itemRuleQuery.getItemid()!=null&&this.itemRuleDetailId!=null&&itemRuleQuery.getItemid()!=itemRuleDetailId){
+				//去掉规则详情中已经不显示的数据
+				if(itemRuleList!=null&&itemRuleList.size()>0){
+					List<ItemRule> removeRule = new ArrayList<ItemRule>();
+					for(ItemRule rule:itemRuleList){
+						//去掉规则列表中不显示的
+						if(rule!=null&&rule.getHideitemids()!=null&&rule.getHideitemids()!=""&&rule.getHideitemids().contains(itemRuleDetailId.toString())){
+							removeRule.add(rule);
+						}
+						
+					}
+					if(removeRule!=null&&removeRule.size()>0){
+						for(ItemRule rule:removeRule){
+							itemRuleList.remove(rule);
+						}
+					}
+					for(ItemRule rule1:itemRuleList){
+						if(rule1!=null&&rule1.getItemRuleDetaillist()!=null&&rule1.getItemRuleDetaillist().size()>0){
+							List<ItemRuleDetail> removeList = new ArrayList<ItemRuleDetail>();
+							for(ItemRuleDetail detail:rule1.getItemRuleDetaillist()){
+								if(detail!=null&&detail.getDelitemids()!=null&&detail.getDelitemids()!=""&&detail.getDelitemids().contains(itemRuleDetailId.toString())){
+									removeList.add(detail);
+								}
+							}
+							if(removeList!=null&&removeList.size()>0){
+								for(ItemRuleDetail re:removeList){
+									rule1.getItemRuleDetaillist().remove(re);
+								}
+							}
+						}
+					}
+					
+				}
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String listToitemDetail()throws Exception//2013-11-12查询明细修改
+	{
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemRuleQuery();
+		}
+		
+		try {
+			itemRuleQuery.setSortColumns("showseq");
+			//itemRuleList = itemRuleService.findListitemDetail(itemRuleQuery);
+			entity=itemRuleService.finditemDetail(itemRuleQuery);
+			List<ItemRule> itemRuleList = new ArrayList<ItemRule>();
+			if(entity!=null&&entity.getItemRuleDetails()!=null){
+				itemRuleList = entity.getItemRulelist();
+			}
+			if(itemRuleQuery.getItemid()!=null&&this.itemRuleDetailId!=null&&itemRuleQuery.getItemid()!=itemRuleDetailId){
+				/*//去掉规则详情中已经不显示的数据
+				if(itemRuleList!=null&&itemRuleList.size()>0){
+					for(ItemRule rule:itemRuleList){
+						if(rule!=null&&rule.getItemRuleDetaillist()!=null&&rule.getItemRuleDetaillist().size()>0){
+							List<ItemRuleDetail> removeList = new ArrayList<ItemRuleDetail>();
+							for(ItemRuleDetail detail:rule.getItemRuleDetaillist()){
+								if(detail!=null&&detail.getDelitemids()!=null&&detail.getDelitemids()!=""&&detail.getDelitemids().contains(itemRuleDetailId.toString())){
+									removeList.add(detail);
+								}
+							}
+							if(removeList!=null&&removeList.size()>0){
+								for(ItemRuleDetail re:removeList){
+									rule.getItemRuleDetaillist().remove(re);
+								}
+							}
+						}
+					}
+				}*/
+				//去掉规则详情中已经不显示的数据
+				if(itemRuleList!=null&&itemRuleList.size()>0){
+					List<ItemRule> removeRule = new ArrayList<ItemRule>();
+					for(ItemRule rule:itemRuleList){
+						//去掉规则列表中不显示的
+						if(rule!=null&&rule.getHideitemids()!=null&&rule.getHideitemids()!=""&&rule.getHideitemids().contains(itemRuleDetailId.toString())){
+							removeRule.add(rule);
+						}
+						
+					}
+					if(removeRule!=null&&removeRule.size()>0){
+						for(ItemRule rule:removeRule){
+							itemRuleList.remove(rule);
+						}
+					}
+					for(ItemRule rule1:itemRuleList){
+						if(rule1!=null&&rule1.getItemRuleDetaillist()!=null&&rule1.getItemRuleDetaillist().size()>0){
+							List<ItemRuleDetail> removeList = new ArrayList<ItemRuleDetail>();
+							for(ItemRuleDetail detail:rule1.getItemRuleDetaillist()){
+								if(detail!=null&&detail.getDelitemids()!=null&&detail.getDelitemids()!=""&&detail.getDelitemids().contains(itemRuleDetailId.toString())){
+									removeList.add(detail);
+								}
+							}
+							if(removeList!=null&&removeList.size()>0){
+								for(ItemRuleDetail re:removeList){
+									rule1.getItemRuleDetaillist().remove(re);
+								}
+							}
+						}
+					}
+					
+				}
+				
+			}
+			//得到排列的顺序id，以及排列的顺序和指定id对应的map
+			ItemRuleQuery query = new ItemRuleQuery();
+			query.setSortColumns("seq");
+			if(itemRuleQuery!=null&&itemRuleQuery.getItemid()!=null){
+				query.setItemid(itemRuleQuery.getItemid());
+			}
+			
+			List<ItemRule> list = this.itemRuleService.findList(query);
+			if(list!=null&&list.size()>0){
+				List<ItemRule> removeRules = new ArrayList<ItemRule>();
+				//去掉不显示的规则列
+				for(ItemRule rule:list){
+					if(rule!=null&&rule.getHideitemids()!=null&&rule.getHideitemids()!=""&&rule.getHideitemids().contains(itemRuleDetailId.toString())){
+						removeRules.add(rule);
+					}
+				}
+				if(removeRules!=null&&removeRules.size()>0){
+					for(ItemRule re:removeRules){
+						list.remove(re);
+					}
+				}
+				for(ItemRule rule1:list){
+					this.itemRuleIds.add(rule1.getItemruleid());
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemRuleId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemRuleQuery == null) {
+			itemRuleQuery = new ItemRuleQuery();
+		}
+		
+		try {
+			page = itemRuleService.findPage(page, itemRuleQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			itemRuleService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemRuleService.getById(itemRuleId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			itemRuleList = itemRuleService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//--------------------
+	//--------
+	public void prepareSaveAlone() throws Exception {
+		prepareModel();
+	}
+	public String saveAlone()throws Exception {
+		
+		try {
+				Long itemid = entity.getItemid();
+				
+				ItemRuleQuery rulequery=new ItemRuleQuery();
+				rulequery.setItemid(itemid);
+				List<ItemRule> list=new ArrayList<ItemRule>();
+				list = itemRuleService.findList(rulequery);
+				entity.setSeq(list.size()+1);
+				itemRuleService.saveOrUpdate(entity);
+				
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public void prepareSaveRule() throws Exception {
+		prepareModel();
+	}
+	public String saveRule()throws Exception
+	{
+		try {
+			if(this.delIds!=null&&this.delIds!=""){
+				entity.setHideRuleIds(delIds);
+			}
+			itemRuleService.saveall(entity);
+				
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ItemRule getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemRuleQuery getItemRuleQuery() {
+		return itemRuleQuery;
+	}
+
+	
+	public void setItemRuleQuery(ItemRuleQuery itemRuleQuery) {
+		this.itemRuleQuery = itemRuleQuery;
+	}
+
+	public void setItemRuleId(java.lang.Long itemRuleId) {
+		this.itemRuleId = itemRuleId;
+	}
+	
+	
+	public java.lang.Long getItemRuleId() {
+		return this.itemRuleId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ItemRule> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ItemRule> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ItemRule> getItemRuleList() {
+		return itemRuleList;
+	}
+
+	public Integer getNewruleNameNumberParam() {
+		return newruleNameNumberParam;
+	}
+
+	public void setNewruleNameNumberParam(Integer newruleNameNumberParam) {
+		this.newruleNameNumberParam = newruleNameNumberParam;
+	}
+
+	public Integer getRuleNameNumberParam() {
+		return ruleNameNumberParam;
+	}
+
+	public void setRuleNameNumberParam(Integer ruleNameNumberParam) {
+		this.ruleNameNumberParam = ruleNameNumberParam;
+	}
+
+	public ItemRule getEntity() {
+		return entity;
+	}
+
+	public void setEntity(ItemRule entity) {
+		this.entity = entity;
+	}
+
+	public java.lang.Long getItemRuleDetailId() {
+		return itemRuleDetailId;
+	}
+
+	public void setItemRuleDetailId(java.lang.Long itemRuleDetailId) {
+		this.itemRuleDetailId = itemRuleDetailId;
+	}
+
+	public List<Long> getItemRuleIds() {
+		return itemRuleIds;
+	}
+
+	public void setItemRuleIds(List<Long> itemRuleIds) {
+		this.itemRuleIds = itemRuleIds;
+	}
+
+	public String getDelIds() {
+		return delIds;
+	}
+
+	public void setDelIds(String delIds) {
+		this.delIds = delIds;
+	}
+	
+	
+
+	
+	
+}

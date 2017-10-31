@@ -1,0 +1,768 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IPositionsService;
+import com.terrence.crm.dol.bean.PdCategory;
+import com.terrence.crm.dol.bean.Positions;
+import com.terrence.crm.dol.query.PdCategoryQuery;
+import com.terrence.crm.dol.query.PositionsQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/positions")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "positions." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PositionsAction extends CrudActionSupport<Positions>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("positionsService")
+	private IPositionsService positionsService;
+	
+	
+	private Positions entity;
+
+	private PositionsQuery positionsQuery;
+	
+	
+	private java.lang.Long positionsId;
+	
+	/** 分页器 */
+	private Page<Positions> page = new Page<Positions>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Positions> positionsList=new ArrayList<Positions>();
+	private String tree="";
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (positionsId != null ) {
+			entity = positionsService.getById(positionsId);
+		} else {
+			entity = new Positions();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			positionsService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	
+	public String deleteToItemPosition() throws Exception {
+			
+			try {
+				positionsService.deleteToItemPosition(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				addActionMessage("删除成功");
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+				addActionMessage("删除失败");
+			}
+			return JSON;
+		}
+		
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		
+		try {
+			positionsList = positionsService.findList(positionsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("positionsId");
+			page.setOrder(Page.DESC);
+		}
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		
+		try {
+			page = positionsService.findPage(page, positionsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			positionsService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = positionsService.getById(positionsId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	@Action("/system/showSecondParentid")
+	public String showSecondParentid() throws Exception {
+		try {
+    		//Positions pp = positionsService.getById(positionsQuery.getPositionid());
+    		
+    		loadSecondParents(positionsQuery.getPositionid());
+				
+    		resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+		private void loadSecondParents(Long positionid){
+			Positions pp = positionsService.getById(positionid);
+			entity=pp;
+			if(pp.getLevels().intValue()!=1){
+				loadSecondParents(pp.getParentid());
+			}
+		}
+	
+	@Action("/system/showToParentid")
+	public String showToParentid() throws Exception {
+		try {
+    		//Positions pp = positionsService.getById(positionsQuery.getPositionid());
+    		
+    		loadParents(positionsQuery.getPositionid());
+				
+    		resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	private void loadParents(Long positionid) {
+		Positions pp = positionsService.getById(positionid);
+		entity=pp;
+		if(pp.getParentid().intValue()!=0){
+				loadParents(pp.getParentid());
+			}
+	}
+
+	@Action("/positions/listToTreesys")
+	public String listToTreesys()throws Exception
+	{
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		try
+		{
+			List<Positions> list=positionsService.findList(positionsQuery);
+			for(Positions positions:list)
+			{
+				 tree+="<li><span ref=\""+positions.getPositionid()+"\" lev=\""+positions.getLevels()+"\" pid="+positions.getParentid()+" id=li"+positions.getPositionid()+" spanname="+positions.getPositionname()+"><a href=\"javascript:choosepositions('"+positions.getPositionid()+"','"+positions.getPositionname()+"')\";\">"+positions.getPositionname()+"</a></span>"+loopsys(positions)+"</li>";
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String loopsys(Positions positions)
+	{
+		PositionsQuery pQuery=new PositionsQuery();
+		pQuery.setParentid(positions.getPositionid());
+		List<Positions> list=positionsService.findList(pQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			if(list.get(0).getLevels().intValue()<=1){
+				sbuf.append("<ul id=\"ul"+positions.getPositionid()+"\">");
+				for(Positions p:list)
+				{
+					sbuf.append("<li><span ref=\""+p.getPositionid()+"\" lev=\""+p.getLevels()+"\" pid="+p.getParentid()+" id=li"+p.getPositionid()+" spanname="+p.getPositionname()+"><a href=\"javascript:choosepositions("+p.getPositionid()+",\'"+p.getPositionname()+"\');\">"+p.getNumber()+";"+p.getPositionname()+"</a></span>"+loopsys(p)+"</li>");
+				}
+				sbuf.append("</ul>");
+			}
+		}
+		return sbuf.toString();
+	}
+	
+	// -------------------自定义方法
+	@Action("/positions/listToTree")
+	public String listToTree()throws Exception
+	{
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		try
+		{
+			//positionsQuery.setLevels(0);
+			//前台传入id
+			List<Positions> list=positionsService.findList(positionsQuery);
+			positionsList=new ArrayList<Positions>();
+			for(Positions positions:list)
+			{
+				 tree="<li><span ref=\""+positions.getPositionid()+"\" lev=\""+positions.getLevels()+"\" pid="+positions.getParentid()+" id=li"+positions.getPositionid()+" spanname="+positions.getPositionname()+"><a href=\"javascript:\"\";\">"+positions.getPositionname()+"</a></span>"+loop(positions)+"</li>";
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	//-----------------------------------
+	public String loop(Positions positions)
+	{
+		PositionsQuery pQuery=new PositionsQuery();
+		pQuery.setParentid(positions.getPositionid());
+		List<Positions> list=positionsService.findList(pQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+positions.getPositionid()+"\">");
+			for(Positions p:list)
+			{
+				if(p.getLevels().intValue()==4){//最底层
+					sbuf.append("<li><span ref=\""+p.getPositionid()+"\" lev=\""+p.getLevels()+"\" pid="+p.getParentid()+" id=li"+p.getPositionid()+" spanname="+p.getPositionname()+"><a href=\"javascript:searchposition("+p.getPositionid()+");\">"+p.getPositionname()+"</a></span>"+loop(p)+"</li>");		
+				}else{
+					sbuf.append("<li><span ref=\""+p.getPositionid()+"\" lev=\""+p.getLevels()+"\" pid="+p.getParentid()+" id=li"+p.getPositionid()+" spanname="+p.getPositionname()+"><a href=\"javascript:searchall("+p.getPositionid()+");\">"+p.getNumber()+";"+p.getPositionname()+"</a></span>"+loop(p)+"</li>");		
+				}
+				
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	//--------------------
+	public void prepareSaveToAlone() throws Exception {
+		prepareModel();
+	}
+	@Action("/positions/saveToJson")
+	public String saveToAlone() throws Exception {
+		
+		try {
+		/*	Positions pp=null;
+			pp=positionsService.getByProperty("positionname",entity.getPositionname());
+			
+			if(pp==null){
+				positionsService.saveOrupdatePositions(entity);
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			}else{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此名称已被占用!请重新命名!";
+			}
+		*/
+			positionsService.saveOrupdatePositions(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	//--------------------
+	public String showById() throws Exception {
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		try {
+			List<Positions> pplist = positionsService.findList("Positions.Entity.BaseItemDetail", positionsQuery);
+			//entity = positionsService.getByEntity("Positions.Entity.BaseItemDetail", positionsQuery);
+			entity=pplist.get(0);
+			String content="";
+			content=showContent(entity.getParentid());//获取路径返回值为;连接的字符串			
+			entity.setContent(content);
+			//System.out.println("====="+content);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	public String showByIdNew() throws Exception {
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		try {
+			//entity = positionsService.getByEntity("Positions.Entity.BaseItemDetailNew", positionsQuery);
+			positionsList=positionsService.findList("Positions.Entity.BaseItemDetailNew",positionsQuery);
+			ArrayList<Positions> ppList = new ArrayList<Positions>();
+			for(Positions pp:positionsList){
+				String content="";
+				content=showContent(pp.getParentid());//获取路径返回值为;连接的字符串			
+				pp.setContent(content);
+				ppList.add(pp);
+			}
+			positionsList=ppList;
+			//System.out.println("====="+content);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	public String showContent(long positionid ) throws Exception {
+
+		Positions  positions=null;
+		positions=positionsService.getById(positionid);
+		String str="";
+		if(null!=positions)
+		{
+			str+=";"+positions.getPositionname();
+			str+=showContent(positions.getParentid());
+		}
+		return str;
+	}
+	
+	//--------------------
+	@Action("/positions/showAllposition")
+	public String showAllposition() throws Exception {
+		if(positionsQuery == null) {
+			positionsQuery = new PositionsQuery();
+		}
+		try{
+			entity = positionsService.getById(positionsQuery.getPositionid());
+			List<Positions> list=new ArrayList<Positions>();
+			
+			list=loadPlist(positionsQuery.getPositionid());
+			entity.setPositionslist(list);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	private List<Positions> loadPlist(Long positionid) {
+		PositionsQuery pQuery=new PositionsQuery();
+		pQuery.setParentid(positionid);
+		if(positionsService.getById(positionid).getLevels().intValue()==2){//货架层倒序排列
+			pQuery.setSortColumns("t_positions.positionid desc");
+		}
+		
+		List<Positions> returnlist =new ArrayList<Positions>();
+		List<Positions> listAll =new ArrayList<Positions>();
+		listAll=positionsService.findList("Positions.findList.includeItem",pQuery);
+		
+		if(listAll.size()>0){
+			for(Positions pp:listAll){
+				pp.setPositionslist(loadPlist(pp.getPositionid()));
+				returnlist.add(pp);
+			}
+		}
+		return returnlist;
+	}
+
+	public String listAll() throws Exception {
+		try{
+			positionsList = positionsService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public String findPositionidName() throws Exception {
+		try{
+			positionsList = positionsService.findPositionidNameList(positionsQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	
+	
+	public String findPositionidPoorder() throws Exception {//采购订单表仓库，不用这个了
+		try{
+			positionsList = positionsService.findPositionidPoorder(positionsQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Positions getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PositionsQuery getPositionsQuery() {
+		return positionsQuery;
+	}
+
+	
+	public void setPositionsQuery(PositionsQuery positionsQuery) {
+		this.positionsQuery = positionsQuery;
+	}
+
+	public void setPositionsId(java.lang.Long positionsId) {
+		this.positionsId = positionsId;
+	}
+	
+	
+	public java.lang.Long getPositionsId() {
+		return this.positionsId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Positions> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Positions> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Positions> getPositionsList() {
+		return positionsList;
+	}
+
+	/**
+	 * @return the tree
+	 */
+	public String getTree() {
+		return tree;
+	}
+
+	/**
+	 * @param tree the tree to set
+	 */
+	public void setTree(String tree) {
+		this.tree = tree;
+	}
+
+	/**
+	 * @param positionsList the positionsList to set
+	 */
+	public void setPositionsList(List<Positions> positionsList) {
+		this.positionsList = positionsList;
+	}
+	
+	
+}

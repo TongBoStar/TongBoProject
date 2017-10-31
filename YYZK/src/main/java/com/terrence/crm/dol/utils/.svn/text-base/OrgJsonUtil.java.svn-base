@@ -1,0 +1,273 @@
+package com.terrence.crm.dol.utils;
+
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.terrence.crm.dol.bean.Productpl;
+
+/**
+ * 使用json-lib构造和解析Json数据
+ * 
+ * @author Alexia
+ * @date 2013/5/23
+ * 
+ */
+public class OrgJsonUtil {
+
+    /**
+     * 构造Json数据
+     * 
+     * @return
+     * @throws JSONException
+     */
+    public static String BuildJson() throws JSONException {
+
+        // JSON格式数据解析对象
+        JSONObject jo = new JSONObject();
+
+        // 下面构造两个map、一个list和一个Employee对象
+        Map<String, String> map1 = new HashMap<String, String>();
+        map1.put("pL4200Model", "Alexia");
+        map1.put("pL3000Unit", "female");
+        map1.put("Ptr", "23");
+
+        Map<String, String> map2 = new HashMap<String, String>();
+        map2.put("name", "Edward");
+        map2.put("sex", "male");
+        map2.put("Ptr", "24");
+
+        List<Map> list = new ArrayList<Map>();
+        list.add(map1);
+        list.add(map2);
+
+
+        // 将Map转换为JSONArray数据
+        JSONArray ja = new JSONArray();
+        ja.put(map1);
+
+        System.out.println("1JSONArray对象数据格式：");
+        System.out.println(ja.toString());
+
+        // 将Javabean转换为Json数据（需要Map中转）
+
+        // 构造Json数据，包括一个map和一个含Employee对象的Json数据
+        jo.put("map", ja);
+        //jo.put("pLProduct", jo1.toString());
+        System.out.println("\n3最终构造的JSON数据格式：");
+        System.out.println("3:"+jo.toString());
+
+        return jo.toString();
+
+    }
+
+    /**
+     * 解析Json数据
+     * 
+     * @param jsonString
+     *            Json数据字符串
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static void ParseJson(String jsonString) throws JSONException,
+            ParseException {
+
+        JSONObject jo = new JSONObject(jsonString);
+        JSONArray ja = jo.getJSONArray("map");
+        System.out.println("\n5:JSONArray ja = jo.getJSONArray('map')："+ja.length());
+        System.out.println("\n5:将Json数据解析为Map：");
+        System.out.println("5:"+"pL4200Model: " + ja.getJSONObject(0).getString("pL4200Model")
+                + " pL3000Unit: " + ja.getJSONObject(0).getString("pL3000Unit") + " Ptr: "
+                + ja.getJSONObject(0).getInt("Ptr"));
+
+        String jsonStr = jo.getString("pLProduct");
+        
+
+    }
+    /**
+     * 解析Json数据
+     * 
+     * @param jsonString
+     *            Json数据字符串
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static void ParseJsonMethod2(String jsonString) throws JSONException,
+            ParseException {
+
+        JSONObject jo = new JSONObject(jsonString);
+        JSONArray ja = jo.getJSONArray("value");
+        
+        int length = ja.length();  
+        String aa = "";  
+        for(int i = 0; i < length; i++) {//遍历JSONArray  
+        	Productpl productpl=new Productpl();  
+            JSONObject oj = ja.getJSONObject(i);  
+            /*if(null!= ja.getJSONObject(0).get("productLineNum") ){
+            	System.out.println(ja.getJSONObject(0).getString("productLineNum"));
+            }*/
+            /*if(null!= ja.getJSONObject(0).getString("fmodel") ){
+            	System.out.println(ja.getJSONObject(0).getInt("fmodel"));
+            	
+            }
+            if(null!= ja.getJSONObject(0).getString("pl3000fprice") ){
+            	System.out.println(ja.getJSONObject(0).getString("pl3000fprice"));
+            }
+            if(null!= ja.getJSONObject(0).getString("fnum") ){
+            	System.out.println(ja.getJSONObject(0).getString("fnum"));
+            }*/
+            String fmodel=ja.getJSONObject(0).getString("fmodel");
+        	productpl.setFmodel( fmodel.equals("")? null
+					: fmodel  );
+        	String fnum=ja.getJSONObject(0).getString("fnum");
+        	productpl.setFnum( fnum.equals("")? null
+					: Double.valueOf(fnum)  );
+        	String fprice=ja.getJSONObject(0).getString("fprice");
+        	productpl.setFprice( fprice.equals("")? null
+					: Double.valueOf(fprice)  );
+        	String flistprice=ja.getJSONObject(0).getString("flistprice");
+        	productpl.setFlistprice( flistprice.equals("")? null
+					: Double.valueOf(flistprice)  );
+        	
+        	String pl3000fmodel=ja.getJSONObject(0).getString("pl3000fmodel");
+        	productpl.setPl3000fmodel( pl3000fmodel.equals("")? null
+					: pl3000fmodel  );
+        	String Pl3000fnum=ja.getJSONObject(0).getString("pl3000fnum");
+        	productpl.setPl3000fnum( Pl3000fnum.equals("")? null
+					: Double.valueOf(Pl3000fnum)  );
+        	String Pl3000fprice=ja.getJSONObject(0).getString("pl3000fprice");
+        	productpl.setPl3000fprice( Pl3000fprice.equals("")? null
+					: Double.valueOf(Pl3000fprice)  );
+        	String Pl3000flistprice=ja.getJSONObject(0).getString("pl3000flistprice");
+        	productpl.setPl3000flistprice( Pl3000flistprice.equals("")? null
+					: Double.valueOf(Pl3000flistprice)  );
+        	
+        	String ssv3500fmodel=ja.getJSONObject(0).getString("ssv3500fmodel");
+        	productpl.setSsv3500fmodel( ssv3500fmodel.equals("")? null
+					: ssv3500fmodel  );
+        	String Ssv3500fnum=ja.getJSONObject(0).getString("ssv3500fnum");
+        	productpl.setSsv3500fnum( Ssv3500fnum.equals("")? null
+					: Double.valueOf(Ssv3500fnum)  );
+        	String Ssv3500fprice=ja.getJSONObject(0).getString("ssv3500fprice");
+        	productpl.setSsv3500fprice( Ssv3500fprice.equals("")? null
+					: Double.valueOf(Ssv3500fprice)  );
+        	String Ssv3500flistprice=ja.getJSONObject(0).getString("ssv3500flistprice");
+        	productpl.setSsv3500flistprice( Ssv3500flistprice.equals("")? null
+					: Double.valueOf(Ssv3500flistprice)  );
+        	
+        	String pl2000fmodel=ja.getJSONObject(0).getString("pl2000fmodel");
+        	productpl.setPl2000fmodel( pl2000fmodel.equals("")? null
+					: pl2000fmodel  );
+        	String Pl2000fnum=ja.getJSONObject(0).getString("pl2000fnum");
+        	productpl.setPl2000fnum( Pl2000fnum.equals("")? null
+					: Double.valueOf(Pl2000fnum)  );
+        	String Pl2000fprice=ja.getJSONObject(0).getString("pl2000fprice");
+        	productpl.setPl2000fprice( Pl2000fprice.equals("")? null
+					: Double.valueOf(Pl2000fprice)  );
+        	String Pl2000flistprice=ja.getJSONObject(0).getString("pl2000flistprice");
+        	productpl.setPl2000flistprice( Pl2000flistprice.equals("")? null
+					: Double.valueOf(Pl2000flistprice)  );
+            
+        } 
+
+    }
+    /**
+     * 解析Json数据
+     * 
+     * @param jsonString
+     *            Json数据字符串
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static List<Productpl> ParseJsonMethod(String jsonString) throws JSONException,
+            ParseException {
+
+        JSONObject jo = new JSONObject(jsonString);
+        JSONArray ja = jo.getJSONArray("value");
+         
+        int length = ja.length();  
+        String aa = "";  
+        List<Productpl> productplList=new ArrayList<Productpl>();
+        for(int i = 0; i < length; i++) {//遍历JSONArray  
+        	Productpl productpl=new Productpl();  
+            JSONObject oj = ja.getJSONObject(i);
+            
+            String fmodel=ja.getJSONObject(i).getString("fmodel");
+        	productpl.setFmodel( fmodel.equals("")? null
+					: fmodel  );
+        	String fnum=ja.getJSONObject(i).getString("fnum");
+        	productpl.setFnum( fnum.equals("")? null
+					: Double.valueOf(fnum)  );
+        	String fprice=ja.getJSONObject(i).getString("fprice");
+        	productpl.setFprice( fprice.equals("")? null
+					: Double.valueOf(fprice)  );
+        	String flistprice=ja.getJSONObject(i).getString("flistprice");
+        	productpl.setFlistprice( flistprice.equals("")? null
+					: Double.valueOf(flistprice)  );
+        	
+        	String pl3000fmodel=ja.getJSONObject(i).getString("pl3000fmodel");
+        	productpl.setPl3000fmodel( pl3000fmodel.equals("")? null
+					: pl3000fmodel  );
+        	String Pl3000fnum=ja.getJSONObject(i).getString("pl3000fnum");
+        	productpl.setPl3000fnum( Pl3000fnum.equals("")? null
+					: Double.valueOf(Pl3000fnum)  );
+        	String Pl3000fprice=ja.getJSONObject(i).getString("pl3000fprice");
+        	productpl.setPl3000fprice( Pl3000fprice.equals("")? null
+					: Double.valueOf(Pl3000fprice)  );
+        	String Pl3000flistprice=ja.getJSONObject(i).getString("pl3000flistprice");
+        	productpl.setPl3000flistprice( Pl3000flistprice.equals("")? null
+					: Double.valueOf(Pl3000flistprice)  );
+        	
+        	String ssv3500fmodel=ja.getJSONObject(i).getString("ssv3500fmodel");
+        	productpl.setSsv3500fmodel( ssv3500fmodel.equals("")? null
+					: ssv3500fmodel  );
+        	String Ssv3500fnum=ja.getJSONObject(i).getString("ssv3500fnum");
+        	productpl.setSsv3500fnum( Ssv3500fnum.equals("")? null
+					: Double.valueOf(Ssv3500fnum)  );
+        	String Ssv3500fprice=ja.getJSONObject(i).getString("ssv3500fprice");
+        	productpl.setSsv3500fprice( Ssv3500fprice.equals("")? null
+					: Double.valueOf(Ssv3500fprice)  );
+        	String Ssv3500flistprice=ja.getJSONObject(i).getString("ssv3500flistprice");
+        	productpl.setSsv3500flistprice( Ssv3500flistprice.equals("")? null
+					: Double.valueOf(Ssv3500flistprice)  );
+        	
+        	String pl2000fmodel=ja.getJSONObject(i).getString("pl2000fmodel");
+        	productpl.setPl2000fmodel( pl2000fmodel.equals("")? null
+					: pl2000fmodel  );
+        	String Pl2000fnum=ja.getJSONObject(i).getString("pl2000fnum");
+        	productpl.setPl2000fnum( Pl2000fnum.equals("")? null
+					: Double.valueOf(Pl2000fnum)  );
+        	String Pl2000fprice=ja.getJSONObject(i).getString("pl2000fprice");
+        	productpl.setPl2000fprice( Pl2000fprice.equals("")? null
+					: Double.valueOf(Pl2000fprice)  );
+        	String Pl2000flistprice=ja.getJSONObject(i).getString("pl2000flistprice");
+        	productpl.setPl2000flistprice( Pl2000flistprice.equals("")? null
+					: Double.valueOf(Pl2000flistprice)  );
+        	productplList.add(productpl);
+        } 
+        return productplList;
+    }
+
+    /**
+     * @param args
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static void main(String[] args) throws JSONException, ParseException {
+        // TODO Auto-generated method stub
+        //ParseJson(BuildJson());
+        System.out.println("-------");
+        //String str="{\"value\":[{\"Ptr\":0,\"pL4200Model\":\"1\",\"pL3000Unit\":2},{\"Ptr\":1,\"pL4200Model\":\"12\",\"pL3000Unit\":22},{\"Ptr\":2,\"pL4200Model\":\"122\",\"pL3000Unit\":222}]}";
+		//String str="{\"value\":[{\"productLineNum\":\"1\",\"fmodel\":\"1\",\"fnum\":\"1\",\"fprice\":\"1\",\"flistprice\":\"1\",\"pl3000fmodel\":\"\",\"pl3000fnum\":\"\",\"pl3000fprice\":\"\",\"pl3000flistprice\":\"\",\"ssv3500fmodel\":\"\",\"ssv3500fnum\":\"\",\"ssv3500fprice\":\"\",\"ssv3500flistprice\":\"\",\"pl2000fmodel\":\"\",\"pl2000fnum\":\"\",\"pl2000fprice\":\"\",\"pl2000flistprice\":\"\"}]}";
+        String str="{\"value\":[{\"productLineNum\":\"1\",\"fmodel\":\"1\",\"fnum\":\"1\",\"fprice\":\"1\",\"flistprice\":\"1\",\"pl3000fmodel\":\"\",\"pl3000fnum\":\"\",\"pl3000fprice\":\"\",\"pl3000flistprice\":\"\",\"ssv3500fmodel\":\"\",\"ssv3500fnum\":\"\",\"ssv3500fprice\":\"\",\"ssv3500flistprice\":\"\",\"pl2000fmodel\":\"\",\"pl2000fnum\":\"\",\"pl2000fprice\":\"\",\"pl2000flistprice\":\"\"}]}";
+        ParseJsonMethod(str);
+    }
+
+}

@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ApproveMsg">
+
+        
+	<resultMap id="RM.ApproveMsg" class="com.terrence.crm.dol.bean.ApproveMsg">
+        <result property="id" column="id"/>
+        <result property="billType" column="billType"/>
+        <result property="billId" column="billId"/>
+        <result property="optType" column="optType"/>
+        <result property="approveCotent" column="approveCotent"/>
+        <result property="approver" column="approver"/>
+        <result property="approverTime" column="approverTime"/>
+    </resultMap>
+	
+	  
+	<resultMap id="ApproveMsg.RM.select.list.data" class="com.terrence.crm.dol.bean.ApproveMsg">
+        <result property="id" column="id"/>
+        <result property="billType" column="billType"/>
+        <result property="billId" column="billId"/>
+        <result property="optType" column="optType"/>
+        <result property="approveCotent" column="approveCotent"/>
+        <result property="approver" column="approver"/>
+        <result property="approverTime" column="approverTime"/>
+        <result property="orderCode" column="orderCode"/>
+    </resultMap>
+    
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ApproveMsg.columns">
+	    <![CDATA[
+        	t_approve_msg.id ,
+        	t_approve_msg.billType ,
+        	t_approve_msg.billId ,
+        	t_approve_msg.optType ,
+        	t_approve_msg.approveCotent ,
+        	t_approve_msg.approver ,
+        	t_approve_msg.approverTime 
+	    ]]>
+	</sql>
+	
+   <insert id="ApproveMsg.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_approve_msg (
+        	billType ,
+        	billId ,
+        	optType ,
+        	approveCotent ,
+        	approver ,
+        	approverTime 
+        ) VALUES (
+        	#billType# ,
+        	#billId# ,
+        	#optType# ,
+        	#approveCotent# ,
+        	#approver# ,
+        	#approverTime# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ApproveMsg.update" parameterClass="com.terrence.crm.dol.bean.ApproveMsg">         
+        UPDATE t_approve_msg 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="billType">
+	        	billType = #billType# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="billId">
+	        	billId = #billId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="optType">
+	        	optType = #optType# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="approveCotent">
+	        	approveCotent = #approveCotent# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="approver">
+	        	approver = #approver# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="approverTime">
+	        	approverTime = #approverTime# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="ApproveMsg.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_approve_msg where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="ApproveMsg.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_approve_msg 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="ApproveMsg.getById" resultMap="RM.ApproveMsg">
+	    select <include refid="ApproveMsg.columns"/>
+	    
+	        from t_approve_msg 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="ApproveMsg.getByProperty" resultMap="RM.ApproveMsg">
+		select <include refid="ApproveMsg.columns"/> from t_approve_msg where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ApproveMsg.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_approve_msg.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="billType">
+	             t_approve_msg.billType = #billType#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="billId">
+	             t_approve_msg.billId = #billId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="optType">
+	             t_approve_msg.optType = #optType#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="approveCotent">
+	             t_approve_msg.approveCotent = #approveCotent#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="approver">
+	             t_approve_msg.approver = #approver#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="approverTimeBegin">
+	             t_approve_msg.approverTime &gt;= #approverTimeBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="approverTimeEnd">
+	             t_approve_msg.approverTime &lt;= #approverTimeEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ApproveMsg.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_approve_msg.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="billType">
+	             t_approve_msg.billType = #billType#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="billId">
+	             t_approve_msg.billId = #billId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="optType">
+	             t_approve_msg.optType = #optType#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="approveCotent">
+	             t_approve_msg.approveCotent = #approveCotent#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="approver">
+	             t_approve_msg.approver = #approver#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="approverTimeBegin">
+	             t_approve_msg.approverTime &gt;= #approverTimeBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="approverTimeEnd">
+	             t_approve_msg.approverTime &lt;= #approverTimeEnd#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ApproveMsg.Entity" resultMap="RM.ApproveMsg">
+    	SELECT 	<include refid="ApproveMsg.columns"/> FROM t_approve_msg <include refid="ApproveMsg.findPage.where"/>
+    </select>
+    
+    <select id="ApproveMsg.findList" resultMap="RM.ApproveMsg">
+    	SELECT 
+    		<include refid="ApproveMsg.columns"/> 
+    	FROM 
+    		t_approve_msg
+		<include refid="ApproveMsg.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ApproveMsg.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_approve_msg
+    ]]>
+		<include refid="ApproveMsg.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ApproveMsg.findPage" resultMap="RM.ApproveMsg">
+    	select <include refid="ApproveMsg.columns"/>	    
+	        from t_approve_msg 	   
+		<include refid="ApproveMsg.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ApproveMsg.findPage" resultMap="RM.ApproveMsg">
+    	select <include refid="ApproveMsg.columns"/>	    
+	        from t_approve_msg where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_approve_msg <include refid="ApproveMsg.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ApproveMsg.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>		
+    </select>
+    
+    
+     <select id="ApproveMsg.find.list.data.select.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_approve_msg
+        left join t_order on t_approve_msg.billId = t_order.orderId
+    ]]>
+		<include refid="ApproveMsg.findPage.where"/>    
+    </select>
+    <select id="ApproveMsg.find.list.data.select" resultMap="ApproveMsg.RM.select.list.data">
+    	select <include refid="ApproveMsg.columns"/>,t_order.orderCode orderCode	    
+	        from t_approve_msg 
+	        left join t_order on t_approve_msg.billId = t_order.orderId 
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_approve_msg 
+	   left join t_order on t_approve_msg.billId = t_order.orderId
+	   <include refid="ApproveMsg.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ApproveMsg.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>		
+    </select>
+	
+</sqlMap>

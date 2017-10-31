@@ -1,0 +1,42 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CodeSeq;
+import com.terrence.crm.dol.dao.ICodeSeqDao;
+
+@Repository
+public class CodeSeqDao extends BaseIbatisDao<CodeSeq,java.lang.Long> implements ICodeSeqDao{
+
+		
+	public void saveOrUpdate(CodeSeq entity) {
+		if(entity.getSeqid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CodeSeq";
+	}
+	public CodeSeq getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CodeSeq)this.getSqlMapClientTemplate().queryForObject("CodeSeq.getByProperty", map);		
+	}
+	public CodeSeq getByFcode(java.lang.Object v) {
+		return (CodeSeq)getSqlMapClientTemplate().queryForObject("CodeSeq.getByUsername",v);
+	}	
+
+}

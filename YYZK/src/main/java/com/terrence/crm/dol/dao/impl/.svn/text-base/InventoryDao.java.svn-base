@@ -1,0 +1,69 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.query.InventoryQuery;
+
+@Repository
+public class InventoryDao extends BaseIbatisDao<Inventory,java.lang.Long> implements IInventoryDao{
+
+		
+	public void saveOrUpdate(Inventory entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Inventory";
+	}
+	public Inventory getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Inventory)this.getSqlMapClientTemplate().queryForObject("Inventory.getByProperty", map);		
+	}
+
+	@Override
+	public void saveSync(String statement) {
+		this.getSqlMapClientTemplate().insert("Inventory.Insert.Sync");
+	}
+
+	@Override
+	public void updateSync(String statement) {
+		this.getSqlMapClientTemplate().update("Inventory.update.Sync");
+	}
+
+	@Override
+	public Inventory getByItemcode(InventoryQuery query) {
+		return (Inventory)this.getSqlMapClientTemplate().queryForObject("Inventory.getByItemcode", query);
+	}
+
+	@Override
+	public List<Inventory> findBatchno(Inventory entity) {
+		
+		return this.getSqlMapClientTemplate().queryForList("Inventory.findBatchno", entity);
+	}
+
+	
+
+	@Override
+	public Inventory find(InventoryQuery inventoryQuery) {
+		return (Inventory)this.getSqlMapClientTemplate().queryForObject("Inventory.findItemName", inventoryQuery);
+	}
+
+}

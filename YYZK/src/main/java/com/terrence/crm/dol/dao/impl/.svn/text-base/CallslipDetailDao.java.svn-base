@@ -1,0 +1,31 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CallslipDetail;
+import com.terrence.crm.dol.dao.ICallslipDetailDao;
+import com.terrence.crm.dol.query.CallslipDetailQuery;
+@Repository
+public class CallslipDetailDao extends BaseIbatisDao<CallslipDetail,java.lang.Long> implements ICallslipDetailDao{
+	public String getIbatisSqlMapNamespace() {
+		return "CallslipDetail"; 
+	}
+	public void saveOrUpdate(CallslipDetail entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public CallslipDetail getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CallslipDetail)this.getSqlMapClientTemplate().queryForObject("CallslipDetail.getByProperty", map);
+	}
+	@Override
+	public List<CallslipDetail> getListDetail(CallslipDetailQuery query) {
+		return (List<CallslipDetail>)this.getSqlMapClientTemplate().queryForList("CallslipDetail.getListDetail", query);
+	}
+}

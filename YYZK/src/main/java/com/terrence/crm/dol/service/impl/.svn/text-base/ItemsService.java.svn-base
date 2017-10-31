@@ -1,0 +1,686 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icitems;
+import com.terrence.crm.dol.bean.Items;
+import com.terrence.crm.dol.bean.WebIdentity;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IItemBasicDao;
+import com.terrence.crm.dol.dao.IItemRuleDao;
+import com.terrence.crm.dol.dao.IItemsDao;
+import com.terrence.crm.dol.dao.IItemsRuleDao;
+import com.terrence.crm.dol.dao.IWebIdentityDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.ItemRuleQuery;
+import com.terrence.crm.dol.query.ItemsQuery;
+import com.terrence.crm.dol.query.ItemsRuleQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IItemsService;
+import com.terrence.crm.dol.utils.CacheService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.k3.dol.service.IItemOptService;
+import com.terrence.k3.dol.service.impl.ItemOptService;
+import com.terrence.k3.dol.util.TREReturn;
+import com.terrence.k3.dol.vo.ItemVo;
+@Service
+@Transactional
+public class ItemsService extends BaseService implements IItemsService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemsService.class);
+	@Autowired
+	@Qualifier("itemsDao")
+	private IItemsDao itemsDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("itemsRuleDao")
+	private IItemsRuleDao itemsRuleDao;
+	@Autowired
+	@Qualifier("itemRuleDao")
+	private IItemRuleDao itemRuleDao;
+	
+	@Autowired
+	@Qualifier("itemBasicDao")
+	private IItemBasicDao itemBasicDao;
+	@Autowired
+	@Qualifier("webIdentityDao")
+	private IWebIdentityDao webIdentityDao;
+	
+	
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Items";
+	}
+	@Transactional(readOnly=true)
+	public Items getById(java.lang.Long id) throws ServiceException
+	{
+		//operationLogDao.save(ConfigTerrence.MODEL_ITEMCODE, ConfigTerrence.OPT_DEL, "主键为："+id+"的物料代码删除成功");
+		return itemsDao.getById(id);
+
+	}
+	
+	public void saveOrUpdate(Items entity) throws ServiceException
+	{		 
+		//若为修改规则还需要修改规则同时修改关联的孩子信息,上面的只是修改自己,没有修改关联孩子信息
+		if(null!=entity.getItemid()){//为修改
+			//该规则关联物料有孩子不与许修改
+			BaseItemQuery query=new BaseItemQuery();
+			query.setItemparentcode( entity.getOldfnumber() );//修改之前先判断规则关联的物料有孩子吗?有不能修改
+			List<BaseItem> baseItemList=baseItemDao.findList(query);
+			if(null!=baseItemList&&0<baseItemList.size()){//说明规则关联的物料有孩子
+				throw new ServiceException(" 原因：该规则关联的物料目录有子节点,不允许修改!");
+			}
+			
+			Items entityChild =new Items();
+			entityChild.setOldpfnumber(entity.getOldfnumber());
+			entityChild.setPfnumber(entity.getFnumber());
+			entityChild.setParentid(entity.getItemid());
+			itemsDao.updatechildinfo(entityChild);
+		}
+		
+		//
+		
+		//begin 201503131058 需求中 规则修改了 同时排产和 K3中的目录及关联子目录都会改变
+		String newRuleName=entity.getItemname();//新的规则的名称
+		String newRuleFullCode=entity.getFnumber();//新的规则全代码
+		String oldRuleFullCode=entity.getOldfnumber();//旧的规则全代码
+		
+		//1 更新排产的目录及关联子目录
+		//itemchildcode
+		if(null!=entity.getItemid()){
+			 updateItemWithChildCode(entity);
+			 operationLogDao.save(ConfigTerrence.MODEL_ITEMCODE, ConfigTerrence.OPT_ADD, "ID为:"+entity.getItemid()+",编码为："+entity.getItemcode()+"的物料代码编辑添加成功");
+		}else{//保存时 同时保存到排产目录中和K3目录中
+			
+			//List<Item> itemList=new ArrayList<Item>();
+			Icitems entityIcitem=new Icitems();
+			if (entity != null) {
+				//item=  getByProperty("itemcode",entity.getItemcode());
+				
+				/*itemList=  getListByProperty("itemcode",entity.getItemcode());
+				
+				
+				if(null!=itemList&&0<itemList.size()){
+					throw new ServiceException(" 原因：代码已经存在,请更换!");
+				}*/
+			}
+			//itemService.getByProperty
+			//entityIcitem.setItemcode(entity.getItemcode());
+			entityIcitem.setItemcode(entity.getFnumber());//排产中存的是全编码
+			//短编码
+			entityIcitem.setShortNumber(entity.getShortNumber());//短编码
+			entityIcitem.setItemname(entity.getItemname());//短名称
+			//设置父编码
+			entityIcitem.setItemparentcode(entity.getPfnumber());
+			saveOrUpdate(entityIcitem);
+		}
+		
+		//2 更新K3的目录及关联子目录
+		
+		//end 201503131058 需求中 规则修改了 同时排产和 K3中的目录及关联子目录都会改变
+		itemsDao.saveOrUpdate(entity);//更新时同时要更新 关联的孩子的全代码
+	}
+	
+	
+	public void saveOrUpdate(Icitems entity) throws ServiceException {
+		Long id =null;
+		if(entity.getBaseitemid()!=null){
+			id = entity.getBaseitemid();
+		}
+		entity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),
+				"yyyy-MM-dd HH:mm:ss"));
+		entity.setItemproperty(entity.getFinterid());// 设置排产物料属性
+
+		WebIdentity identity = webIdentityDao.getByPropertyt("tname",
+				"t_base_item");
+
+		if (null == identity) {
+			Struts2Utils.renderJson(" 原因：后台异常请重试!");
+		}
+
+		if (null == identity) {
+			throw new ServiceException(" 原因：后台异常请重试!");
+		}
+		entity.setBaseitemid(identity.getTnextValue());
+		entity.setDeleted((short) 0);// 默认可用
+		entity.setDetail(false);// 默认是false目录,true明细
+		entity.setOptType(1);
+		entity.setWfstatus(0);
+		entity.setFinishstatus(0);
+		//------------------begin 201505031345修改添加目录时同时存shortnumber,fullname pid flevel
+		//设置shortnumber,fullname pid flevel
+		//先查询父亲的id level
+		if("ROOT".equals(entity.getItemparentcode())){
+			entity.setFullname(entity.getItemname());//
+			entity.setFlevel("2");
+			entity.setPid(Long.valueOf("0"));
+		}else{
+			BaseItemQuery  baseItemQuery = new BaseItemQuery();
+			
+			baseItemQuery.setItemcode(entity.getItemparentcode());
+			
+		    //BaseItem  baseItem=baseItemService.getByProperty("itemcode", baseItemQuery.getItemcode());
+		    
+		    //List<BaseItem>  baseItemList=baseItemService.findList(baseItemQuery);
+		    BaseItem  baseItem= baseItemDao.getByColumn("BaseItem.getByItemCodeSingle", baseItemQuery.getItemcode());
+		    if(null==baseItem ){
+		    	throw new ServiceException(" 原因：后台异常,父级编码不存在!");
+		    }else{
+		    	entity.setFullname(baseItem .getFullname()+"_"+entity.getItemname());//
+				entity.setFlevel( (Long.valueOf(baseItem .getFlevel())+1)+"" );
+				entity.setPid( Long.valueOf(baseItem .getBaseitemid()) );
+		    }
+	    }
+	  //------------------end 201505031345修改添加目录时同时存shortnumber,fullname pid fleve
+		// 增加了排产资料信息排产中有的K3中没的
+		// entity.setInterId(identity.getTnextValue());//关联内码
+		itemBasicDao.saveOrUpdate(entity);// 排产物料基本表
+        /**保存完后更新下缓存中的数据
+		try {
+			updateBaseItemTreeCacheCategory();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			throw new ServiceException(" 原因：" + "后台异常");
+		}*/
+		// 同时保存到K3数据库一份
+		IItemOptService service = new ItemOptService();
+		// 物料基础表
+		ItemVo itemVo = new ItemVo();
+		k3ItemVo(entity, itemVo);
+		if("ROOT".equalsIgnoreCase(itemVo.getParentNumber())){
+			itemVo.setParentNumber("*");
+		}
+		TREReturn trereturn = service.saveItemDetail(itemVo);
+		if (trereturn.getnCode() != 1) {
+			throw new ServiceException(" 原因：" + trereturn.getStrInfo());
+		}
+		if(id==null){
+			operationLogDao.save(ConfigTerrence.MODEL_ITEMCODE, ConfigTerrence.OPT_ADD, "编码为："+entity.getItemcode()+"的物料代码编辑添加成功");
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_ITEMCODE, ConfigTerrence.OPT_EDIT, "编码为："+entity.getItemcode()+"的物料代码编辑修改成功");
+		}
+	}
+	
+	
+	private String BASEITEMCATEGORYKEY="itemsTree";
+	private String baseItemTree="";
+	public void updateBaseItemTreeCacheCategory()throws Exception
+	{
+	
+		BaseItemQuery  baseItemQuery = new BaseItemQuery();
+		try
+		{
+			    baseItemQuery.setBaseitemid((long)0);
+				List< BaseItem > list=baseItemService.findList(baseItemQuery);
+				List<BaseItem> baseItemList=new ArrayList< BaseItem >();
+				for( BaseItem   baseItem :list)
+				{
+					baseItemTree+="<li><span pcode="+baseItem.getItemcode()+" ref="+baseItem.getBaseitemid()
+					+" lev="+baseItem.getShortnumber()//.getShortcode()
+					+" pid="+baseItem.getPid()+" spanname="
+					+baseItem.getItemname()
+					+" ><a href=\"javascript:;\" onclick=\"setmeasureCategory("+baseItem.getBaseitemid()
+					+",'"+baseItem.getItemname()+"','"+baseItem.getItemcode()+"');\">"
+					+baseItem.getItemcode()+"("+baseItem.getItemname()+")</a></span>"
+					+loopCategoryBaseItem(baseItem)+"</li>";
+				
+				}
+				CacheService.getInstance().replace(BASEITEMCATEGORYKEY, baseItemTree);
+		
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			e.printStackTrace();
+		}
+	
+	}
+	public String loopCategoryBaseItem(BaseItem baseItem)
+	{
+		BaseItemQuery baseItemQuery = new BaseItemQuery();
+		
+		baseItemQuery.setItemparentcode(baseItem.getItemcode());
+		baseItemQuery.setDeleted((short)0);//取出未删除的
+		baseItemQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+		baseItemQuery.setSortColumns("itemcode");
+		List<BaseItem> list=baseItemService.findListv(baseItemQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+baseItemQuery.getBaseitemid()+"\">");
+			for(BaseItem  baseItems:list)
+			{
+				
+				//再次查询当前显示的节点有孩子就为文件夹,没有就为文件
+				BaseItemQuery baseItemIsHavaChildQuery = new BaseItemQuery();
+				baseItemIsHavaChildQuery.setItemparentcode(baseItems.getItemcode());
+				baseItemIsHavaChildQuery.setDeleted((short)0);//取出未删除的
+				baseItemIsHavaChildQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+				List<BaseItem> listIsHavaChild=baseItemService.findListv(baseItemIsHavaChildQuery); 
+				if(null!=listIsHavaChild&&0<listIsHavaChild.size()){//folder
+					sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"folder\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				else{//file
+				
+				//判断是否为二级代码目录,如果是右键点击显示的是添加物料属性的页面
+				//if(null!=tWebBaseItemParents.getFlevel()&&1==tWebBaseItemParents.getFlevel()){
+				//if( Integer.valueOf(baseItems.getFlevel())==2){	
+				sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"file\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	private void k3ItemVo(Icitems entity, ItemVo itemVo) {
+		/**
+		 * 必填
+		 */
+		//itemVo.setNumber(entity.getItemcode());
+		itemVo.setNumber(entity.getItemcode());//K3中存到也是全编码 K3中setFNumber后台已经存入和Number一样
+		 
+		itemVo.setShortNumber( entity.getShortNumber() );//
+		
+		itemVo.setName(entity.getItemname());
+		itemVo.setDetail(0);//非必填
+		itemVo.setDeleted(0);//非必填
+		
+		//------------------begin 201505031345修改添加目录时排产同时存shortnumber,fullname pid flevel,K3中同时存全名
+		itemVo.setFullName(entity.getFullname());//目录在K3中只在t_itemz中存,base ,core 存的是明细
+		//------------------end 201505031345修改添加目录时排产同时存shortnumber,fullname pid flevel,K3中同时存全名
+
+		itemVo.setParentNumber(entity.getItemparentcode());// 保存时可以填可以不填//现在是排产中必须有了
+	}
+	
+	/**
+	 * bak 旧的只在排产规则表中新增目录
+	 * @param entity
+	 * @throws ServiceException
+	 */
+	public void saveOrUpdateold(Items entity) throws ServiceException
+	{
+		itemsDao.saveOrUpdate(entity);
+	}
+	
+	@Transactional(readOnly=true)
+	public Items getByProperty(String proName,Object proValue) throws ServiceException
+	{
+		return itemsDao.getByProperty(proName,proValue);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Items> getListByProperty(String proName,Object proValue) throws ServiceException
+	{
+		return ( List<Items>)itemsDao.getListByProperty(proName,proValue);
+	}
+	public java.lang.Long save(Items entity) throws ServiceException
+	{
+		Long adId = itemsDao.save(entity);
+		
+		return adId;
+	}
+	/**
+	 * 排产中跟新目录树,如果有孩子,孩子的父级代码,及自己代码的父级代码也将被更新
+	 */
+	public void updateItemWithChildCode(Items entity) throws ServiceException
+	{
+		//Integer returnValue =  itemDao.update(entity);
+		
+		BaseItem baseItem=new BaseItem();
+		
+		baseItem.setItemname(entity.getItemname());
+		baseItem.setItemcode(entity.getFnumber());//记录新的规则全编码  baseItem.setItemcode 存的就是全编码
+		baseItem.setFoldnumber(entity.getOldfnumber());//记录旧的规则全编码
+		baseItem.setDetail(false);//false 0 是目录,true 1 不是目录
+		//短编码
+		baseItem.setShortnumber(entity.getItemcode());//新的短编码
+		//--->排产上:
+		//1更新排产上规则对应的当前目录的名称和代码
+		baseItemDao.updateByItemcode(baseItem);
+		//2更新排产上规则对应的当前目录的关联孩子的名称和代码
+		BaseItem baseItemChild=new BaseItem();
+		baseItemChild.setOlditemparentcode(entity.getOldfnumber());//Itemparentcode
+		baseItemChild.setItemparentcode(entity.getFnumber());
+		baseItemDao.updateItemWithChildCode(baseItemChild);
+		
+		try {
+			//updateBaseItemTreeCacheCategory();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			throw new ServiceException(" 原因：" + "后台异常");
+		}
+		
+		//--->K3上:
+		//1更新K3上规则对应的当前目录的名称和代码
+		//  K3  t_Item 中需要修改fnumber ffullnumber fshortnumber
+		
+		// 同时在K3上更新
+		IItemOptService service = new ItemOptService();
+		
+		TREReturn trereturn = service.updateItemDetail(entity);//K3中 更新 目录和关联孩子信息 ,都统一放到一个接口中了
+		if (trereturn.getnCode() != 1) {
+			throw new ServiceException( trereturn.getStrInfo());
+		}
+		
+		//2更新K3上规则对应的当前目录的关联孩子的名称和代码
+		
+ 		
+		//return returnValue;
+	}
+	
+	public Integer update(Items entity) throws ServiceException
+	{
+		Integer returnValue =  itemsDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemsDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemsDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	public Integer deleteInfoByIdoldbak(Long id) throws ServiceException
+	{
+		//String delIds = StringUtils.join(idList, ",");//以,分割id
+		 ItemsQuery query=new  ItemsQuery();
+		//String itemcode=itemDao.getById(id).getItemcode();
+		query.setParentid( id );//y 查找id 对应的物料
+		//然后设置查询条件为父编码为 当前物料编码的查询条件
+		ItemRuleQuery itemRuleQuery = new ItemRuleQuery();
+		itemRuleQuery.setItemid(id);
+		Integer returnValue=0;
+		if(itemsDao.findList(query).size()>0)//y 如果按照查询条件 返回集合 数大于0,不允许删除
+		{
+			return 0;
+		}
+		else if(itemsRuleDao.findList(itemRuleQuery).size()>0)//y  
+		{
+			return 0;
+		}
+		else
+		{    Items  entity=new  Items();
+		     entity.setItemid(Long.valueOf(id+""));
+			 entity.setDeleted((short)1);
+			//entity.setOptType(2);
+			//returnValue = itemDao.updateinfo(entity);//排产中假删除
+			 returnValue = itemsDao.update(entity);//排产中假删除
+			
+			return returnValue ;
+		}
+	}
+	
+	public Integer deleteInfoById(Long id,String fnumber) throws ServiceException
+	{
+		//String delIds = StringUtils.join(idList, ",");//以,分割id
+		 ItemsQuery query=new  ItemsQuery();
+		//String itemcode=itemDao.getById(id).getItemcode();
+		query.setParentid( id );//y 查找id 对应的物料
+		query.setDeleted((short)0);
+		//然后设置查询条件为父编码为 当前物料编码的查询条件
+		//ItemsRuleQuery itemsRuleQuery = new ItemsRuleQuery();
+		ItemRuleQuery itemRuleQuery = new ItemRuleQuery();
+		itemRuleQuery.setItemid(id);
+		
+		Integer returnValue=0;
+		if(itemsDao.findList(query).size()>0)//y 如果按照查询条件 返回集合 数大于0,不允许删除
+		{
+			return 0;
+		}
+		//else if(itemsRuleDao.findList(itemRuleQuery).size()>0)//y 
+		else if(itemRuleDao.findList(itemRuleQuery).size()>0)//y 
+		{
+			return 0;
+		}
+		else
+		{    Items  entity=new  Items();
+		     entity.setItemid(Long.valueOf(id+""));
+			 entity.setDeleted((short)1);
+			//entity.setOptType(2);
+			//returnValue = itemDao.updateinfo(entity);//排产中假删除
+			 returnValue = itemsDao.update(entity);//排产中假删除
+			
+			
+			//begin  同时删除排产和K3没有孩子的目录
+			if(baseItemService.deleteInfoByItemcode(fnumber)==1)
+			{
+				/*try {
+					updateTreeCacheCategory();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					throw new ServiceException(" 原因：系统异常请重试!");
+				}*/
+			}
+			else
+			{
+				throw new ServiceException(" 原因：物料目录中包含子数据的节点,不能删除!");
+				 
+			}
+			//end   同时删除排产和K3没有孩子的目录
+			
+			return returnValue ;
+		}
+	}
+	private String CATEGORYKEY="baseItemTree";
+	private String tree="";
+	public  void updateTreeCacheCategory( ) throws Exception
+	{
+			BaseItemQuery	baseItemQuery = new BaseItemQuery();
+		try
+		{
+			    baseItemQuery.setBaseitemid((long)0);
+				List< BaseItem > list=baseItemService.findList(baseItemQuery);
+				 List<BaseItem>  baseItemList=new ArrayList< BaseItem >();
+				for( BaseItem   baseItem :list)
+				{
+					tree+="<li><span pcode="+baseItem.getItemcode()+" ref="+baseItem.getBaseitemid()
+					+" lev="+baseItem.getShortnumber()//.getShortcode()
+					+" pid="+baseItem.getPid()+" spanname="
+					+baseItem.getItemname()
+					+" ><a href=\"javascript:;\" onclick=\"setmeasureCategory("+baseItem.getBaseitemid()
+					+",'"+baseItem.getItemname()+"','"+baseItem.getItemcode()+"');\">"
+					+baseItem.getItemcode()+"("+baseItem.getItemname()+")</a></span>"
+					+loopCategory(baseItem)+"</li>";
+				
+				}
+				CacheService.getInstance().replace(CATEGORYKEY, tree);
+		
+			 
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			 
+		}
+		 
+	
+	}
+	
+	
+	public String loopCategory(BaseItem baseItem)
+	{
+		BaseItemQuery baseItemQuery = new BaseItemQuery();
+		
+		baseItemQuery.setItemparentcode(baseItem.getItemcode());
+		baseItemQuery.setDeleted((short)0);//取出未删除的
+		baseItemQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+		baseItemQuery.setSortColumns("itemcode");
+		List<BaseItem> list=baseItemService.findListv(baseItemQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+baseItemQuery.getBaseitemid()+"\">");
+			for(BaseItem  baseItems:list)
+			{
+				
+				//再次查询当前显示的节点有孩子就为文件夹,没有就为文件
+				BaseItemQuery baseItemIsHavaChildQuery = new BaseItemQuery();
+				baseItemIsHavaChildQuery.setItemparentcode(baseItems.getItemcode());
+				baseItemIsHavaChildQuery.setDeleted((short)0);//取出未删除的
+				baseItemIsHavaChildQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+				List<BaseItem> listIsHavaChild=baseItemService.findListv(baseItemIsHavaChildQuery); 
+				if(null!=listIsHavaChild&&0<listIsHavaChild.size()){//folder
+					sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"folder\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				else{//file
+				
+				//判断是否为二级代码目录,如果是右键点击显示的是添加物料属性的页面
+				sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"file\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemsQuery query = new ItemsQuery();
+		try {
+			return itemsDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Items> findPage(Page<Items> page, ItemsQuery query) throws ServiceException
+	{
+		return itemsDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Items> findPage(Page<Items> page,String statement, ItemsQuery query) throws ServiceException
+	{
+		return itemsDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Items> findList(ItemsQuery query) throws ServiceException
+	{
+		return itemsDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Items> findList(ItemsQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemsDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Items> findList(ItemsQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemsDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Items> findAllList() throws ServiceException
+	{
+		return itemsDao.findAllList();
+	}
+	@Override
+	public List<Items> findlistDetail(ItemsQuery iQuery) throws ServiceException {
+		return itemsDao.findlistDetail(iQuery);
+	}
+	@Override
+	public List<Items> findRootItem(ItemsQuery iQuery) throws ServiceException {
+		return itemsDao.findRootItem(iQuery);
+	}
+	@Override
+	public void saveItemCode(Items entity) throws ServiceException {
+		itemsDao.update(entity);
+	}
+
+}

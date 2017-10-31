@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WorkSeq">
+
+        
+	<resultMap id="RM.WorkSeq" class="com.terrence.crm.dol.bean.WorkSeq">
+        <result property="workseqid" column="workseqid"/>
+        <result property="icmoid" column="icmoid"/>
+        <result property="itemprocedureid" column="itemprocedureid"/>
+        <result property="preorder" column="preorder"/>
+        <result property="qualified" column="qualified"/>
+        <result property="itemcode" column="itemcode"/>
+         <result property="procedurerid" column="procedurerid"/>
+         <result property="status" column="status"/>
+    </resultMap>
+	
+	<resultMap id="RM.WorkSeq.getidByIcmoid" class="com.terrence.crm.dol.bean.WorkSeq">
+        <result property="workseqid" column="workseqid"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="WorkSeq.columns">
+	    <![CDATA[
+        	t_work_seq.workseqid ,
+        	t_work_seq.icmoid ,
+        	t_work_seq.itemprocedureid ,
+        	t_work_seq.preorder ,
+        	t_work_seq.qualified ,
+        	t_work_seq.itemcode ,
+        	t_work_seq.procedurerid  ,
+        	t_work_seq.status 
+	    ]]>
+	</sql>
+	
+   <insert id="WorkSeq.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_work_seq (
+        	icmoid ,
+        	itemprocedureid ,
+        	preorder ,
+        	qualified ,
+        	itemcode ,
+        	procedurerid 
+        ) VALUES (
+        	#icmoid# ,
+        	#itemprocedureid# ,
+        	#preorder# ,
+        	#qualified# ,
+        	#itemcode# ,
+        	#procedurerid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="workseqid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="WorkSeq.update" parameterClass="com.terrence.crm.dol.bean.WorkSeq">         
+        UPDATE t_work_seq 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="icmoid">
+	        	icmoid = #icmoid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemprocedureid">
+	        	itemprocedureid = #itemprocedureid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="preorder">
+	        	preorder = #preorder# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="qualified">
+	        	qualified = #qualified# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="procedurerid">
+	        	procedurerid = #procedurerid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        workseqid = #workseqid# 
+    </update>
+    
+	<delete id="WorkSeq.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_work_seq where
+       workseqid = #workseqid# 
+    ]]>
+    </delete>
+    
+    <delete id="WorkSeq.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_work_seq 
+        WHERE
+       workseqid in ($workseqid$) 
+    ]]>
+    </delete>
+    
+    <delete id="WorkSeq.deleteByicmoid">
+    <![CDATA[
+        DELETE FROM 
+        	t_work_seq 
+        WHERE
+       icmoid in ($icmoid$) 
+    ]]>
+    </delete>
+    
+    
+    
+    <select id="WorkSeq.getById" resultMap="RM.WorkSeq">
+	    select <include refid="WorkSeq.columns"/>
+	    
+	        from t_work_seq 
+	        where 
+		        workseqid = #workseqid# 
+	    
+    </select>
+    
+	<select id="WorkSeq.getByProperty" resultMap="RM.WorkSeq">
+		select <include refid="WorkSeq.columns"/> from t_work_seq where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="WorkSeq.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="workseqid">
+	             t_work_seq.workseqid = #workseqid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="icmoid">
+	             t_work_seq.icmoid = #icmoid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemprocedureid">
+	             t_work_seq.itemprocedureid = #itemprocedureid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="preorder">
+	             t_work_seq.preorder = #preorder#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="qualified">
+	             t_work_seq.qualified = #qualified#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_work_seq.itemcode = #itemcode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="procedurerid">
+	             t_work_seq.procedurerid = #procedurerid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="status">
+	             t_work_seq.status = #status#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="WorkSeq.findPage.and">
+			<isNotEmpty prepend="AND" property="workseqid">
+	             t_work_seq.workseqid = #workseqid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="icmoid">
+	             t_work_seq.icmoid = #icmoid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemprocedureid">
+	             t_work_seq.itemprocedureid = #itemprocedureid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="preorder">
+	             t_work_seq.preorder = #preorder#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="qualified">
+	             t_work_seq.qualified = #qualified#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_work_seq.itemcode = #itemcode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="procedurerid">
+	             t_work_seq.procedurerid = #procedurerid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="status">
+	             t_work_seq.status = #status#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="WorkSeq.findList" resultMap="RM.WorkSeq">
+    	SELECT 
+    		<include refid="WorkSeq.columns"/> 
+    	FROM 
+    		t_work_seq
+		<include refid="WorkSeq.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="WorkSeq.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_work_seq
+    ]]>
+		<include refid="WorkSeq.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.WorkSeq.findPage" resultMap="RM.WorkSeq">
+    	select <include refid="WorkSeq.columns"/>	    
+	        from t_work_seq 	   
+		<include refid="WorkSeq.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="WorkSeq.findPage" resultMap="RM.WorkSeq">
+    	select <include refid="WorkSeq.columns"/>	    
+	        from t_work_seq where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       workseqid 
+	   not in(select $notTop$ 
+       workseqid 
+	   from t_work_seq <include refid="WorkSeq.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="WorkSeq.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+	<select id="WorkSeq.getidByIcmoid" resultMap="RM.WorkSeq.getidByIcmoid">
+    	SELECT 
+    		 t_work_seq.workseqid
+    	FROM 
+    		t_work_seq
+		<include refid="WorkSeq.findPage.where"/>
+		
+    </select>
+
+
+
+	
+</sqlMap>

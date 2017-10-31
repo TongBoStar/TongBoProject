@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrialRunStatus;
+import com.terrence.crm.dol.query.TrialRunStatusQuery;
+import com.terrence.crm.dol.dao.ITrialRunStatusDao;
+import com.terrence.crm.dol.service.ITrialRunStatusService;
+
+@Service
+@Transactional
+public class TrialRunStatusService extends BaseService implements ITrialRunStatusService {
+	protected static Logger logger = LoggerFactory.getLogger(TrialRunStatusService.class);
+	@Autowired
+	@Qualifier("trialRunStatusDao")
+	private ITrialRunStatusDao trialRunStatusDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrialRunStatus";
+	}
+	@Transactional(readOnly=true)
+	public TrialRunStatus getById(java.lang.Long id) throws ServiceException
+	{
+		return trialRunStatusDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrialRunStatus entity) throws ServiceException
+	{
+		trialRunStatusDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrialRunStatus entity) throws ServiceException
+	{
+		Long adId = trialRunStatusDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrialRunStatus entity) throws ServiceException
+	{
+		Integer returnValue =  trialRunStatusDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trialRunStatusDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trialRunStatusDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrialRunStatusQuery query = new TrialRunStatusQuery();
+		try {
+			return trialRunStatusDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialRunStatus> findPage(Page<TrialRunStatus> page, TrialRunStatusQuery query) throws ServiceException
+	{
+		return trialRunStatusDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialRunStatus> findPage(Page<TrialRunStatus> page,String statement, TrialRunStatusQuery query) throws ServiceException
+	{
+		return trialRunStatusDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialRunStatus> findList(TrialRunStatusQuery query) throws ServiceException
+	{
+		return trialRunStatusDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialRunStatus> findList(TrialRunStatusQuery query,Integer pageSize) throws ServiceException
+	{
+		return trialRunStatusDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrialRunStatus> findList(TrialRunStatusQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trialRunStatusDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialRunStatus> findAllList() throws ServiceException
+	{
+		return trialRunStatusDao.findAllList();
+	}
+	@Override
+	public void saveStatus(TrialRunStatus entity) throws ServiceException {
+		if(entity.getStatusid()==null){
+			trialRunStatusDao.save(entity);
+		}else{
+
+			trialRunStatusDao.update(entity);
+		}
+	}
+
+}

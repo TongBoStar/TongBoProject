@@ -1,0 +1,316 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.bean.Process;
+import com.terrence.crm.dol.bean.WorkStep;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IItemVerDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.dao.IProcessDao;
+import com.terrence.crm.dol.dao.IWorkStepDao;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+import com.terrence.crm.dol.query.WorkStepQuery;
+import com.terrence.crm.dol.service.IWorkStepService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class WorkStepService extends BaseService implements IWorkStepService {
+	protected static Logger logger = LoggerFactory.getLogger(WorkStepService.class);
+	@Autowired
+	@Qualifier("workStepDao")
+	private IWorkStepDao workStepDao;
+	
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("processDao")
+	private IProcessDao processDao;
+	@Autowired
+	@Qualifier("itemVerDao")
+	private IItemVerDao itemVerDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "WorkStep";
+	}
+	@Transactional(readOnly=true)
+	public WorkStep getById(java.lang.Long id) throws ServiceException
+	{
+		return workStepDao.getById(id);
+	}
+	
+	public void saveOrUpdate(WorkStep entity) throws ServiceException
+	{
+		//System.out.println("explain"+entity.getExplain());
+		//System.out.println("keypoint"+entity.getKeypoint());
+		Long itemprocessid=entity.getItemprocessid();
+		ItemProcess itemprocess = itemProcessDao.getById(itemprocessid);
+		/**begin修改审核状态和完成状态**/
+		ItemVer itemVer=new  ItemVer();
+		itemVer.setFverid(entity.getFverid());
+		itemVer.setFinishstatus(0);
+		itemVer.setWfstatus(BaseItem.ISHAVE);//待审核
+		itemVerDao.update(itemVer);
+		
+		/*	BaseItem baseItem=new BaseItem();
+			baseItem.setBaseitemid(itemprocess.getItemid());
+			baseItem.setWfstatus(BaseItem.ISHAVE);//待审核
+			baseItem.setFinishstatus(0);//未完成
+			baseItemDao.update(baseItem);
+		*/
+		/**end修改审核状态和完成状态**/
+		
+		entity.setItemprocessid(itemprocessid);
+		entity.setItemid(itemprocess.getItemid());
+		//System.out.println("id:"+itemprocess.getItemid());
+		entity.setProcessid(itemprocess.getProcessid());
+		
+		//itemprocess.setExplain(entity.getExplain());
+		itemprocess.setTechnique(entity.getTechnique());
+		itemprocess.setKeypoint(entity.getKeypoint());
+		itemprocess.setProgramname(entity.getProgramname());//文件名
+		itemprocess.setProgramfile(entity.getFilepath());//文件路径
+		itemprocess.setProgramnameinside(entity.getProgramnameinside());//内部程序文件名称
+		itemprocess.setDeviceid(entity.getDeviceid());
+		itemprocess.setAdminid(SpringSecurityUtils.getCurrentUserId());//操作员
+		//--获取所有工步的工作内容----------
+		long contentNumber=1;
+		String allContent="";
+		for(String content:entity.getStepcontentlist()){
+			if(contentNumber==1){
+				allContent+=""+contentNumber+"."+content;
+			}else{
+				allContent+="\r\n"+contentNumber+"."+content;
+			}
+			contentNumber++;
+		}
+		itemprocess.setExplain(allContent);
+		//-------------------------------
+		//-取总调试时间给首检时间,取总加工时间给加工时间------然后修------------------------
+		double allDebugtime=0;	
+		double allWorktime=0;	
+		for(int i=0;i<entity.getDebugtimelist().length;i++){
+			allDebugtime+=entity.getDebugtimelist()[i];
+			allWorktime+=entity.getWorktimelist()[i];
+		}
+		itemprocess.setPreparemins(allDebugtime);//准备时长
+		itemprocess.setProcessmins(allWorktime);//加工时长
+		double price=0;
+		double prepareprice=0;
+		
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemprocedureid(itemprocess.getItemprocedureid());
+		
+//		price=procedureDao.getById(itemProcedureDao.findList(itemProcedureQuery).get(0).getProcedureid()).getPrice();
+		Process pp = processDao.getById(itemprocess.getProcessid());
+		
+		price=pp.getPrice();//取工作中心的价格
+		prepareprice=pp.getDebugprice()==null?0:pp.getDebugprice();
+		itemprocess.setReservefund(prepareprice*allDebugtime);//准备金
+		itemprocess.setWage(price*allWorktime);//计件工资
+		
+		//--------------------------------
+		itemProcessDao.update(itemprocess);//更新技术要求和工作重点
+		
+		//System.out.println("length:"+entity.getStepcontentlist().length);
+		for(int i=0;i<entity.getStepcontentlist().length;i++){//添加||修改--工步
+			entity.setStepid(entity.getStepidlist()[i]);
+			entity.setStepname("无");
+			entity.setStepcontent(entity.getStepcontentlist()[i]);
+		//	entity.setRev(entity.getRevlist()[i]);
+			entity.setFeedval(entity.getFeedvallist()[i]);
+			entity.setKinfeval(entity.getKinfevallist()[i]);
+		//	entity.setKinfeno(entity.getKinfenolist()[i]);
+			entity.setOrderid(i);//排序字段
+			entity.setBladeid(entity.getBladeidlist()[i]);
+			entity.setBladename(entity.getBladenamelist()[i]);
+			entity.setBladecode(entity.getBladecodelist()[i]);
+//			entity.setKinfeid(entity.getKinfeidlist()[i]);
+//			entity.setKinfename(entity.getKinfenamelist()[i]);
+//			entity.setKinfecode(entity.getKinfecodelist()[i]);
+			if(null==entity.getKinfenolist()[i]||"".equals(entity.getKinfenolist()[i])){
+				entity.setKinfeno("无");
+			}else{
+				entity.setKinfeno(entity.getKinfenolist()[i]);
+			}
+			if(null==entity.getKinfeidlist()[i]){
+				entity.setKinfeid(-1L);
+				entity.setKinfename("无");
+				entity.setKinfecode("无");
+			}else{
+				entity.setKinfeid(entity.getKinfeidlist()[i]);
+				entity.setKinfename(entity.getKinfenamelist()[i]);
+				entity.setKinfecode(entity.getKinfecodelist()[i]);
+			}
+			
+			if("".equals(entity.getHiltnamelist()[i])){
+				entity.setHiltname("无");
+				entity.setHiltcode("无");
+			}else{
+				entity.setHiltname(entity.getHiltnamelist()[i]);
+				entity.setHiltcode(entity.getHiltcodelist()[i]);
+			}
+			if(null==entity.getRevlist()[i]||"".equals(entity.getRevlist()[i])){
+				entity.setRev(0D);
+			}else{
+				entity.setRev(entity.getRevlist()[i]);
+			}
+			
+			
+			entity.setDebugtime(entity.getDebugtimelist()[i]);
+			entity.setWorktime(entity.getWorktimelist()[i]);
+			entity.setWastage(entity.getWastagelist()[i]);
+			//System.out.println(entity.toString());
+			entity.setSrcfile(entity.getTdfilename()[i]);//路径
+			entity.setStepfilename(entity.getTdprogramfile()[i]);//文件名
+			entity.setFilenameinside(entity.getTdprogramnameinside()[i]);//内部名称
+			
+			
+			workStepDao.saveOrUpdate(entity);
+		}
+		
+	}
+	
+	public java.lang.Long save(WorkStep entity) throws ServiceException
+	{
+		Long adId = workStepDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(WorkStep entity) throws ServiceException
+	{
+		Integer returnValue =  workStepDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = workStepDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = workStepDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WorkStepQuery query = new WorkStepQuery();
+		try {
+			return workStepDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkStep> findPage(Page<WorkStep> page, WorkStepQuery query) throws ServiceException
+	{
+		return workStepDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkStep> findPage(Page<WorkStep> page,String statement, WorkStepQuery query) throws ServiceException
+	{
+		return workStepDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkStep> findList(WorkStepQuery query) throws ServiceException
+	{
+		return workStepDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkStep> findList(WorkStepQuery query,Integer pageSize) throws ServiceException
+	{
+		return workStepDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<WorkStep> findList(WorkStepQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return workStepDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkStep> findAllList() throws ServiceException
+	{
+		return workStepDao.findAllList();
+	}
+	@Override
+	public void updateStepUp(WorkStep entity) {
+					
+		WorkStepQuery wQuery=new WorkStepQuery();
+		wQuery.setItemprocessid(workStepDao.getById(entity.getStepid()).getItemprocessid());
+		wQuery.setOrderid(entity.getOrderid().intValue()-1);
+			
+		WorkStep wsp=workStepDao.findList(wQuery).get(0);
+		wsp.setOrderid(wsp.getOrderid().intValue()+1);
+		entity.setOrderid(entity.getOrderid().intValue()-1);
+		
+		workStepDao.update(wsp);
+		workStepDao.update(entity);
+		
+	}
+	@Override
+	public void updateStepDown(WorkStep entity) {
+		
+		WorkStepQuery wQuery=new WorkStepQuery();
+		wQuery.setItemprocessid(workStepDao.getById(entity.getStepid()).getItemprocessid());
+		wQuery.setOrderid(entity.getOrderid().intValue()+1);
+			
+		WorkStep wsp=workStepDao.findList(wQuery).get(0);
+		wsp.setOrderid(wsp.getOrderid().intValue()-1);
+		entity.setOrderid(entity.getOrderid().intValue()+1);
+		
+		workStepDao.update(wsp);
+		workStepDao.update(entity);
+		
+	}
+
+}

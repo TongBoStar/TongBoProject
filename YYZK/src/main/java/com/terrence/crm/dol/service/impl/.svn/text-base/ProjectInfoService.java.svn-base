@@ -1,0 +1,1643 @@
+package com.terrence.crm.dol.service.impl;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFPatriarch;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.Region;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProjectBom;
+import com.terrence.crm.dol.bean.ProjectInfo;
+import com.terrence.crm.dol.dao.IProjectBomDao;
+import com.terrence.crm.dol.dao.IProjectInfoDao;
+import com.terrence.crm.dol.query.ProjectBomQuery;
+import com.terrence.crm.dol.query.ProjectInfoQuery;
+import com.terrence.crm.dol.service.IProjectInfoService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+@Service
+@Transactional
+public class ProjectInfoService extends BaseService implements IProjectInfoService {
+	@Autowired
+	@Qualifier("projectInfoDao")
+	private IProjectInfoDao projectInfoDao;
+	@Autowired
+	@Qualifier("projectBomDao")
+	private IProjectBomDao projectBomDao;
+	
+	@Override
+	public ProjectInfo getById(Long id) throws ServiceException {
+		return projectInfoDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProjectInfo entity) throws ServiceException {
+		projectInfoDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(ProjectInfo entity) throws ServiceException {
+		Long result = projectInfoDao.save(entity);
+		operationLogDao.save(ConfigTerrence.MODEL_PROJECTINFO, ConfigTerrence.OPT_EDIT, "主键为："+result+"的项目修改成功");
+		return result;
+	}
+	@Override
+	public Integer update(ProjectInfo entity) throws ServiceException {
+		Integer result = projectInfoDao.update(entity);
+		operationLogDao.save(ConfigTerrence.MODEL_PROJECTINFO, ConfigTerrence.OPT_EDIT, "主键为："+entity.getId()+"的项目修改成功");
+		return result;
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return projectInfoDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		/*String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = projectInfoDao.deleteByMultipleId(delIds);
+		return returnValue;*/
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = projectInfoDao.deleteByMultipleId(delIds);
+		if(idList!=null&&idList.size()>0){
+			for(int i=0;i<idList.size();i++){
+				if(idList.get(i)!=null&&!"".equals(idList.get(i))){
+					ProjectBomQuery query = new ProjectBomQuery();
+					query.setInfoid(idList.get(i));
+					this.projectBomDao.deleteByInfoId(query);
+				}
+			}
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_PROJECTINFO, ConfigTerrence.OPT_DEL, "主键为："+delIds+"的项目删除成功");
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectInfo> findPage(Page<ProjectInfo> page, ProjectInfoQuery query) throws ServiceException{
+		return projectInfoDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectInfo> findPage(Page<ProjectInfo> page,String statement, ProjectInfoQuery query) throws ServiceException{
+		return projectInfoDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectInfo> findList(ProjectInfoQuery query) throws ServiceException{
+		return projectInfoDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectInfo> findList(ProjectInfoQuery query,Integer pageSize) throws ServiceException{
+		return projectInfoDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectInfo> findList(ProjectInfoQuery query,String statement,Integer pageSize) throws ServiceException{
+		return projectInfoDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectInfo> findAllList() throws ServiceException{
+		return projectInfoDao.findAllList();
+	}
+	
+	
+	
+	/*public void exportExcel2007(HttpServletResponse response,List<Order> orderList) throws ServiceException, IOException {
+		// 创建一个excel文件
+		XSSFWorkbook wb = new XSSFWorkbook();
+		// 创建一个sheet对象
+		XSSFSheet sheet = wb.createSheet("销售订单序时簿");
+		createHeadAndStyle(sheet,wb);
+		Order order = null;
+		XSSFRow row = null;
+		Integer disc = null;
+		if(null!=orderList){
+			for (int i=0;i<orderList.size();i++) {
+				order = orderList.get(i);
+				row = sheet.createRow(i+1);
+				createCell(wb, row, 0, order.getCreatetimeString());
+				createCell(wb, row, 1, order.getProjectname());
+				createCell(wb, row, 2, order.getProduct().getItemcode());
+				createCell(wb, row, 3, order.getProduct().getItemname());
+				createCell(wb, row, 4, order.getProduct().getItemmode());
+				createCell(wb, row, 5, order.getProduct().getUnitname());
+				createCell(wb, row, 6, String.valueOf(order.getProduct().getAmount()));
+				createCell(wb, row, 7, order.getMocode());
+				if(null==order.getProduct().getDiscountRate()){
+					disc = 100;
+				}
+				createCell(wb, row, 8, String.valueOf(order.getProduct().getFtaxprice()*disc/100));
+				createCell(wb, row, 9, String.valueOf(order.getProduct().getFtaxprice()*order.getProduct().getAmount()*disc/100));
+			}
+			wb.write(response.getOutputStream());
+		}
+	}*/
+	/**
+	 * 创建表头和样式
+	 * @param sheet sheet对象
+	 * @param wb excel表格
+	 */
+	public void createHeadAndStyle(XSSFSheet sheet,XSSFWorkbook wb,int i){
+		// 创建第一行
+	    XSSFRow row = sheet.createRow(i);
+		/*// 设置单元格宽度
+	    sheet.setColumnWidth(0, 4000);;// 调整第1列的宽度
+	    sheet.setColumnWidth(1, 9000);// 调整第2列的宽度
+	    sheet.setColumnWidth(2, 8000);// 调整第3列的宽度
+	    sheet.setColumnWidth(3, 5000);// 调整第4列的宽度
+	    sheet.setColumnWidth(4, 5000);// 调整第5列的宽度
+		sheet.autoSizeColumn(5);// 调整第6列的宽度
+		sheet.autoSizeColumn(6);// 调整第7列的宽度
+		sheet.setColumnWidth(7, 5000);// 调整第8列的宽度
+		sheet.setColumnWidth(8, 5000);// 调整第9列的宽度
+		sheet.setColumnWidth(9, 5000);// 调整第10列的宽度
+		// 设置单元格
+		createCell(wb, row, 0, "日期");
+		createCell(wb, row, 1, "项目");
+		createCell(wb, row, 2, "产品代码");
+		createCell(wb, row, 3, "产品名称");
+		createCell(wb, row, 4, "规格型号");
+		createCell(wb, row, 5, "单位");
+		createCell(wb, row, 6, "数量");
+		createCell(wb, row, 7, "制令号");
+		createCell(wb, row, 8, "实际含税单价");
+		createCell(wb, row, 9, "价税合计");*/
+	}
+	/**
+	 * 创建单元格
+	 * @param wb excel表格
+	 * @param row 行
+	 * @param col 列
+	 * @param val 内容
+	 */
+	public void createCell(XSSFWorkbook wb,XSSFRow row,int cellNum,String val,String cellType){
+		//创建一个celll单元格
+		XSSFCell cell=row.createCell(cellNum);
+        cell.setCellValue(val);
+        //创建样式
+        XSSFCellStyle cellstyle=wb.createCellStyle();
+        cellstyle.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        cellstyle.setBorderBottom(XSSFCellStyle.BORDER_THIN); //下边框    
+        cellstyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);//左边框    
+        cellstyle.setBorderTop(XSSFCellStyle.BORDER_THIN);//上边框    
+        cellstyle.setBorderRight(XSSFCellStyle.BORDER_THIN);//右边框
+        cellstyle.setWrapText(true);//设置自动换行
+        XSSFFont font = wb.createFont();
+        font.setFontName("宋体");
+        font.setFontHeightInPoints((short)12);
+        cellstyle.setFont(font);
+        //项目信息及参数标题
+        XSSFCellStyle cellstyle1=wb.createCellStyle();
+        cellstyle1.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle1.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        cellstyle1.setBorderTop(XSSFCellStyle.BORDER_DOUBLE);//上边框为双边框
+        XSSFFont font1 = wb.createFont();
+        font1.setFontName("黑体");
+        font1.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);//粗体
+        font1.setFontHeightInPoints((short)16);
+        cellstyle1.setFont(font1);
+        //设备清单列表表头样式
+        XSSFCellStyle cellstyle2=wb.createCellStyle();
+        cellstyle2.setWrapText(true);//自动换行
+	    XSSFFont font2 = wb.createFont();
+	    font2.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);//粗体
+	    font2.setFontHeightInPoints((short) 11);//设置字体大小
+	    cellstyle2.setFont(font2);
+	    cellstyle2.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+	    cellstyle2.setBorderBottom(XSSFCellStyle.BORDER_THIN); //下边框    
+	    cellstyle2.setBorderLeft(XSSFCellStyle.BORDER_THIN);//左边框    
+	    cellstyle2.setBorderTop(XSSFCellStyle.BORDER_THIN);//上边框    
+	    cellstyle2.setBorderRight(XSSFCellStyle.BORDER_THIN);//右边框
+	    //列表內容
+	    XSSFCellStyle cellstyle3=wb.createCellStyle();
+	    cellstyle3.setWrapText(true);//自动换行
+	    XSSFFont font3 = wb.createFont();
+	    font3.setFontHeightInPoints((short) 11);//设置字体大小
+	    cellstyle3.setFont(font3);
+	    cellstyle3.setAlignment(XSSFCellStyle.ALIGN_CENTER);
+	    cellstyle3.setBorderBottom(XSSFCellStyle.BORDER_THIN); //下边框    
+	    cellstyle3.setBorderLeft(XSSFCellStyle.BORDER_THIN);//左边框    
+	    cellstyle3.setBorderTop(XSSFCellStyle.BORDER_THIN);//上边框    
+	    cellstyle3.setBorderRight(XSSFCellStyle.BORDER_THIN);//右边框
+	    
+	    //设备清单表头信息
+	    XSSFCellStyle cellstyle4=wb.createCellStyle();
+        cellstyle4.setAlignment(XSSFCellStyle.ALIGN_LEFT);//居中对齐
+        //cellstyle4.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        XSSFFont font4 = wb.createFont();
+        font4.setFontName("宋体");
+        font4.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);//粗体
+        font4.setFontHeightInPoints((short)10);
+        font4.setUnderline(Font.U_SINGLE);
+        cellstyle4.setFont(font4);
+        //设备清单标题格式
+        XSSFCellStyle cellstyle5=wb.createCellStyle();
+        cellstyle5.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle5.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        XSSFFont font5 = wb.createFont();
+        font5.setFontName("黑体");
+        font5.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);//粗体
+        font5.setFontHeightInPoints((short)16);
+        cellstyle5.setFont(font1);
+        
+        if(cellType!=null&&cellType.equals("0")){
+        	cell.setCellStyle(cellstyle);//给单元格设置样式
+        }else if(cellType!=null&&cellType.equals("1")){
+        	//标题
+        	cell.setCellStyle(cellstyle1);
+        }else if(cellType!=null&&cellType.equals("2")){
+        	cell.setCellStyle(cellstyle2);
+        }else if(cellType!=null&&cellType.equals("3")){
+        	cell.setCellStyle(cellstyle3);
+        }else if(cellType!=null&&cellType.equals("4")){
+        	cell.setCellStyle(cellstyle4);
+        }else if(cellType!=null&&cellType.equals("5")){
+        	cell.setCellStyle(cellstyle5);
+        }else{
+        	cell.setCellStyle(cellstyle);
+        }
+	}
+	/**
+	 * 导出项目信息及参数
+	 * @throws Exception 
+	 */
+	@Override
+	public void exportProjectInfo2007(HttpServletResponse response,
+			ProjectInfo entity, String realPath) throws Exception {
+		// 创建一个excel文件
+		XSSFWorkbook wb = new XSSFWorkbook();
+		createSheet1(wb,entity,realPath);
+		wb.write(response.getOutputStream());
+		
+	}
+	/**
+	 * 导出设备清单
+	 */
+	@Override
+	public void exportProjectDetail2007(HttpServletResponse response,
+			ProjectInfo entity, List<ProjectBom> bomList, String realPath,
+			String exportCols) throws Exception{
+		XSSFWorkbook wb = new XSSFWorkbook();
+		createSheet2(wb,entity,bomList,realPath,exportCols);
+		wb.write(response.getOutputStream());
+		
+	}
+	/**
+	 * 导出项目信息和设备清单
+	 */
+	@Override
+	public void exportProjectAll2007(HttpServletResponse response,
+			ProjectInfo entity, List<ProjectBom> bomList, String realPath,
+			String exportCols) throws Exception {
+		XSSFWorkbook wb = new XSSFWorkbook();
+		createSheet1(wb,entity,realPath);
+		createSheet2(wb,entity,bomList,realPath,exportCols);
+		wb.write(response.getOutputStream());
+	} 
+	private void createSheet2(XSSFWorkbook wb,ProjectInfo entity, List<ProjectBom> bomList,String realPath,String exportCols) throws Exception{
+		// 创建一个sheet对象
+		XSSFSheet sheet2 = wb.createSheet("设备清单");
+		int[] widths = new int[]{46,64,69,73,79,63,78,72,64,80};
+		for(int i=0;i<widths.length;i++){
+			sheet2.setColumnWidth((short)i, (short)(widths[i]*32));
+		}
+		//1、导入图片
+		XSSFRow row0 = sheet2.createRow(0);
+		row0.setHeight((short)(19*15));
+		XSSFRow row1 = sheet2.createRow(1);
+		row1.setHeight((short)(19*15));
+		XSSFRow row2 = sheet2.createRow(2);
+		row2.setHeight((short)(19*15));
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		// 将图片写入流中
+		BufferedImage bufferImg = ImageIO.read(new File(realPath+"images\\excelLogo2.png"));
+		ImageIO.write(bufferImg, "PNG", outStream);
+		// 利用HSSFPatriarch将图片写入EXCEL
+		XSSFDrawing patri = sheet2.createDrawingPatriarch();
+		XSSFClientAnchor anchor = new XSSFClientAnchor(5, 5, 5, 5,(short) 7, 0, (short) 10, 2);
+		patri.createPicture(anchor, wb.addPicture(
+		outStream.toByteArray(), HSSFWorkbook.PICTURE_TYPE_PNG));
+		//2、拼表头的信息
+		XSSFRow row3 = sheet2.createRow(3);
+		row3.setHeight((short)(27*15));
+		createCell(wb, row3, 0, "分项报价表","5");
+		for(int i=1;i<10;i++){
+			createCell(wb, row3, i, "","5");
+		}
+		CellRangeAddress region = new CellRangeAddress(3,3,0,9);
+		sheet2.addMergedRegion(region); 
+		
+		
+		String userName = "用户名称：";
+		String date = "报价日期：";
+		String vision = "版 本 号：";
+		String projectName = "项目名称：";
+		String data1 = "有 效 期：";
+		String no = "报价单号：";
+		String productType="产品型号：";
+		String unit = "价格单位：";
+		String num="折扣系数：";
+		if(entity!=null&&entity.getUserName()!=null){
+			userName = userName+entity.getUserName();
+		}
+		if(entity!=null&&entity.getQuoteOrderDate()!=null&&entity.getQuoteOrderDate().length()>=10){
+			date = date+entity.getQuoteOrderDate().substring(0, 10);
+		}
+		if(entity!=null&&entity.getVersion()!=null){
+			vision = vision+entity.getVersion();
+		}
+		if(entity!=null&&entity.getProjectName()!=null){
+			projectName = projectName+entity.getProjectName();
+		}
+		if(entity!=null&&entity.getValidityDate()!=null){
+			data1 = data1+entity.getValidityDate()+"天";
+		}else{
+			data1 = data1+"天";
+		}
+		if(entity!=null&&entity.getQuoteOrderNo()!=null){
+			no = no+entity.getQuoteOrderNo();
+		}
+		if(entity!=null&&entity.getProductMode()!=null){
+			productType = productType+entity.getProductMode();
+		}
+		if(entity!=null&&entity.getPriceUnit()!=null&&entity.getPriceUnit().equals("1")){
+			unit = unit+"RMB";
+		}else if(entity!=null&&entity.getPriceUnit()!=null&&entity.getPriceUnit().equals("2")){
+			unit = unit+"USD$";
+		}
+		if(entity!=null&&entity.getDiscountCoeff()!=null){
+			num = num+entity.getDiscountCoeff();
+		}
+		XSSFRow row4 = sheet2.createRow(4);
+		row4.setHeight((short)(10*15));
+		XSSFRow row5 = sheet2.createRow(5);
+		row5.setHeight((short)(19*15));
+		createCell(wb, row5, 0, userName,"4");
+		createCell(wb, row5, 1,"" ,"4");
+		createCell(wb, row5, 2,"" ,"4");
+		createCell(wb, row5, 3,"" ,"4");
+		createCell(wb, row5, 4, date,"4");
+		createCell(wb, row5, 5,"" ,"4");
+		createCell(wb, row5, 6,"" ,"4");
+		createCell(wb, row5, 7, vision,"4");
+		createCell(wb, row5, 8,"" ,"4");
+		createCell(wb, row5, 9,"" ,"4");
+		CellRangeAddress region51 = new CellRangeAddress(5,5,0,3);
+		sheet2.addMergedRegion(region51); 
+		CellRangeAddress region52 = new CellRangeAddress(5,5,4,6);
+		sheet2.addMergedRegion(region52); 
+		CellRangeAddress region53 = new CellRangeAddress(5,5,7,9);
+		sheet2.addMergedRegion(region53); 
+		XSSFRow row6 = sheet2.createRow(6);
+		row6.setHeight((short)(19*15));
+		createCell(wb, row6, 0, projectName,"4");
+		createCell(wb, row6, 1,"" ,"4");
+		createCell(wb, row6, 2,"" ,"4");
+		createCell(wb, row6, 3,"" ,"4");
+		createCell(wb, row6, 4, data1,"4");
+		createCell(wb, row6, 5,"" ,"4");
+		createCell(wb, row6, 6,"" ,"4");
+		createCell(wb, row6, 7, no,"4");
+		createCell(wb, row6, 8,"" ,"4");
+		createCell(wb, row6, 9,"" ,"4");
+		CellRangeAddress region4 = new CellRangeAddress(6,6,0,3);
+		sheet2.addMergedRegion(region4); 
+		CellRangeAddress region5 = new CellRangeAddress(6,6,4,6);
+		sheet2.addMergedRegion(region5); 
+		CellRangeAddress region6 = new CellRangeAddress(6,6,7,9);
+		sheet2.addMergedRegion(region6); 
+		
+		XSSFRow row7 = sheet2.createRow(7);
+		row7.setHeight((short)(19*15));
+		createCell(wb, row7, 0, productType,"4");
+		createCell(wb, row7, 1,"" ,"4");
+		createCell(wb, row7, 2,"" ,"4");
+		createCell(wb, row7, 3,"" ,"4");
+		createCell(wb, row7, 4, unit,"4");
+		createCell(wb, row7, 5,"" ,"4");
+		createCell(wb, row7, 6,"" ,"4");
+		createCell(wb, row7, 7, num,"4");
+		createCell(wb, row7, 8,"" ,"4");
+		createCell(wb, row7, 9,"" ,"4");
+		CellRangeAddress region7 = new CellRangeAddress(7,7,0,3);
+		sheet2.addMergedRegion(region7); 
+		CellRangeAddress region8 = new CellRangeAddress(7,7,4,6);
+		sheet2.addMergedRegion(region8); 
+		CellRangeAddress region9 = new CellRangeAddress(7,7,7,9);
+		sheet2.addMergedRegion(region9); 
+		//3、列表的表头
+	    List<Integer> intlist =creatSheetHead(sheet2, wb,exportCols,9);
+	    //4、列表内容
+	    if(intlist!=null&&intlist.size()>0){
+	    	  int i=intlist.get(0);
+			  short cellNumbers=0;
+			  XSSFRow rows =null;
+			  Double bidtotalprice=0.0;
+			  Double listtotalprice=0.0;
+			  Double costtotalprice=0.0;
+			  int factorInt=-1;
+			  if(bomList!=null&&bomList.size()>0){
+				  for(int j=0;j<bomList.size();j++){
+					  ProjectBom bom = bomList.get(j);
+					  rows = sheet2.createRow(i);
+					  cellNumbers=0;
+					  if(exportCols.contains("seq")){
+						  createCell(wb, rows, cellNumbers, (j+1)+"","3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("itemcode")){
+						  createCell(wb, rows, cellNumbers, (bom.getItemcode()==null?"":bom.getItemcode()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("itemname")){
+						  createCell(wb, rows, cellNumbers, (bom.getItemname()==null?"":bom.getItemname()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("fmodel")){
+						  createCell(wb, rows, cellNumbers, (bom.getFmodel()==null?"":bom.getFmodel()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("fdescript")){
+						  createCell(wb, rows, cellNumbers, (bom.getFdescript()==null?"":bom.getFdescript()),"3");
+						  cellNumbers++;
+					  }
+					  String desc1 = (bom.getItemname()==null?"":bom.getItemname())+(bom.getFmodel()==null?"":bom.getFmodel())+(bom.getFdescript()==null?"":bom.getFdescript());
+					  String desc2 = (bom.getFmodel()==null?"":bom.getFmodel())+(bom.getFdescript()==null?"":bom.getFdescript());
+					  if(exportCols.contains("desc1")){
+						  createCell(wb, rows, cellNumbers, desc1,"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("desc2")){
+						  createCell(wb, rows, cellNumbers, desc2,"3");
+						  cellNumbers++;
+					  }
+					  
+					  
+					  if(exportCols.contains("flevel")){
+						  createCell(wb, rows, cellNumbers, (bom.getFlevel()==null?"":bom.getFlevel()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("fposition")){
+						  createCell(wb, rows, cellNumbers, (bom.getFposition()==null?"":bom.getFposition()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("fmaker")){
+						  createCell(wb, rows, cellNumbers, (bom.getFmaker()==null?"":bom.getFmaker()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("srcarea")){
+						  createCell(wb, rows, cellNumbers, (bom.getSrcarea()==null?"":bom.getSrcarea()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("unit")){
+						  createCell(wb, rows, cellNumbers, (bom.getUnit()==null?"":bom.getUnit()),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("fnum")){
+						  createCell(wb, rows, cellNumbers, (bom.getFnum()==null?"":bom.getFnum()+""),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("bid")){
+						  createCell(wb, rows, cellNumbers, (bom.getBidprice()==null?"":bom.getBidprice()+""),"3");
+						  cellNumbers++;
+						  createCell(wb, rows, cellNumbers, (bom.getBidtotalprice()==null?"":bom.getBidtotalprice()+""),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("factor")){
+						  factorInt = cellNumbers;
+						  createCell(wb, rows, cellNumbers, (bom.getFactor()==null?"":bom.getFactor()+""),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("list")){
+						  createCell(wb, rows, cellNumbers, (bom.getListprice()==null?"":bom.getListprice()+""),"3");
+						  cellNumbers++;
+						  createCell(wb, rows, cellNumbers, (bom.getListtotalprice()==null?"":bom.getListtotalprice()+""),"3");
+						  cellNumbers++;
+					  }
+					  if(exportCols.contains("cost")){
+						  createCell(wb, rows, cellNumbers, (bom.getCostprice()==null?"":bom.getCostprice()+""),"3");
+						  cellNumbers++;
+						  createCell(wb, rows, cellNumbers, (bom.getCosttotalprice()==null?"":bom.getCosttotalprice()+""),"3");
+						  cellNumbers++;
+					  }
+					  if(bom.getListtotalprice()!=null){
+						  listtotalprice = listtotalprice+bom.getListtotalprice();
+					  }
+					  if(bom.getBidtotalprice()!=null){
+						  bidtotalprice =bidtotalprice+bom.getBidtotalprice();
+					  }
+					  if(bom.getCosttotalprice()!=null){
+						  costtotalprice= costtotalprice+bom.getCosttotalprice();
+					  }
+					i++;
+				  }
+				  if(intlist.get(1)>-1||intlist.get(2)>-1||intlist.get(2)>-1){
+					  int bidInt=intlist.get(1).intValue();
+					  int listInt=intlist.get(2).intValue();
+					  int costInt=intlist.get(3).intValue();
+					  //总计
+					  XSSFRow rowSum =sheet2.createRow(i);
+					  if(bidInt>-1){
+						  createCell(wb, rowSum, bidInt,"合计","3");
+						  createCell(wb, rowSum, (bidInt+1),bidtotalprice+"","3");
+					  }
+					  if(listInt>-1){
+						  createCell(wb, rowSum, listInt,"合计","3");
+						  createCell(wb, rowSum, (listInt+1),listtotalprice+"","3");
+					  }
+					  if(costInt>-1){
+						  createCell(wb, rowSum, costInt,"合计","3");
+						  createCell(wb, rowSum, (costInt+1),costtotalprice+"","3");
+					  }
+					  if(factorInt>-1){
+						  createCell(wb, rowSum, factorInt,"","3");
+					  }
+					  //合并单元格
+					  if(bidInt>-1){
+						  for(int m=0;m<bidInt;m++){
+							  if(m==0){
+								  createCell(wb, rowSum, m,"合计","3");
+							  }else{
+								  createCell(wb, rowSum, m,"","3");
+							  }
+						  }
+						  if(bidInt>2){
+							  CellRangeAddress region1 = new CellRangeAddress(i,i, 1,(bidInt-1));
+							  sheet2.addMergedRegion(region1); 
+						  }
+					 }
+					 if(bidInt==-1&&listInt>-1){
+						  for(int m=0;m<listInt;m++){
+							  if(m==0){
+								  createCell(wb, rowSum, m,"合计","3");
+							  }else{
+								  createCell(wb, rowSum, m,"","3");
+							  }
+						  }
+						  if(listInt>2){
+							  CellRangeAddress region1 = new CellRangeAddress(i,i, 1,(listInt-1));
+							  sheet2.addMergedRegion(region1); 
+						  }
+					  }
+					 if(bidInt==-1&&listInt==-1&&costInt>-1){
+						 if(factorInt>-1){
+							 for(int m=0;m<costInt-1;m++){
+								 if(m==0){
+									  createCell(wb, rowSum, m,"合计","3");
+								  }else{
+									  createCell(wb, rowSum, m,"","3");
+								  }
+							  }
+						 }else{
+							 for(int m=0;m<costInt;m++){
+								 if(m==0){
+									  createCell(wb, rowSum, m,"合计","3");
+								  }else{
+									  createCell(wb, rowSum, m,"","3");
+								  }
+							  }
+						 }
+						 if(costInt>2){
+							  CellRangeAddress region1 = new CellRangeAddress(i,i, 1,(costInt-1));
+							  sheet2.addMergedRegion(region1);
+						 }
+					  }
+				  }
+			  }
+			  
+	    }
+		
+	}
+	private void createSheet1(XSSFWorkbook wb,ProjectInfo entity, String realPath) throws Exception{
+		// 创建一个sheet对象
+		XSSFSheet sheet = wb.createSheet("项目信息及参数");
+		//设置列宽
+		//有int值转像素需要乘以32
+		int[] widths = new int[]{85,82,75,40,38,64,72,72,90,87};
+		for(int i=0;i<widths.length;i++){
+			sheet.setColumnWidth((short)i, (short)(widths[i]*32));
+		}
+		//1表头图片
+		XSSFRow row0 = sheet.createRow(0);
+		row0.setHeight((short)(32*15));
+		XSSFRow row1 = sheet.createRow(1);
+		row1.setHeight((short)(20*15));
+		XSSFRow row2 = sheet.createRow(2);
+		row2.setHeight((short)(20*15));
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		// 将图片写入流中
+		BufferedImage bufferImg = ImageIO.read(new File(realPath+"images\\excelLogo1.png"));
+		ImageIO.write(bufferImg, "PNG", outStream);
+		// 利用HSSFPatriarch将图片写入EXCEL
+		XSSFDrawing patri = sheet.createDrawingPatriarch();
+		XSSFClientAnchor anchor = new XSSFClientAnchor(5, 5, 5, 5,(short) 8, 0, (short) 10, 4);
+		patri.createPicture(anchor, wb.addPicture(
+		outStream.toByteArray(), HSSFWorkbook.PICTURE_TYPE_PNG));
+		//2第四行标题
+		XSSFRow row3 = sheet.createRow(3);
+		row3.setHeight((short)(32*15));
+		createCell(wb, row3, 0, "项目信息及参数","1");
+		for(int i=1;i<10;i++){
+			createCell(wb, row3, i, "","1");
+		}
+		CellRangeAddress region = new CellRangeAddress(3,3,0,9);
+		sheet.addMergedRegion(region); 
+		//3第五行空行合并单元格
+		XSSFRow row4 = sheet.createRow(4);
+		row4.setHeight((short)(14*15));
+		CellRangeAddress region1 = new CellRangeAddress(4,4, 0,9);
+		sheet.addMergedRegion(region1); 
+		//4第六行数据
+		XSSFRow row5 = sheet.createRow(5);
+		row5.setHeight((short)(33*15));
+		createCell(wb, row5, 0, "用户名称","0");
+		String userName = "";
+		String projectName = "";
+		if(entity!=null&&entity.getUserName()!=null){
+			userName = entity.getUserName();
+		}
+		if(entity!=null&&entity.getProjectName()!=null){
+			projectName = entity.getProjectName();
+		}
+		createCell(wb, row5, 1,userName ,"0");
+		createCell(wb, row5, 2,"" ,"0");
+		createCell(wb, row5, 3,"" ,"0");
+		createCell(wb, row5, 4,"" ,"0");
+		createCell(wb, row5, 5,"项目名称" ,"0");
+		createCell(wb, row5, 6,"" ,"0");
+		createCell(wb, row5, 7,projectName ,"0");
+		createCell(wb, row5, 8,"" ,"0");
+		createCell(wb, row5, 9,"" ,"0");
+		CellRangeAddress region2 = new CellRangeAddress(5,5,1,4);
+		sheet.addMergedRegion(region2); 
+		CellRangeAddress region3 = new CellRangeAddress(5,5, 5,6);
+		sheet.addMergedRegion(region3); 
+		CellRangeAddress region4 = new CellRangeAddress(5,5,7,9);
+		sheet.addMergedRegion(region4); 
+		//5第七行数据
+		XSSFRow row6 = sheet.createRow(6);
+		row6.setHeight((short)(28*15));
+		String productName="";
+		String deliveryDate = "";
+		String productMode = "";
+		if(entity!=null&&entity.getProductName()!=null){
+			productName = entity.getProductName();
+		}
+		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		if(entity!=null&&entity.getDeliveryDate()!=null&&entity.getDeliveryDate().length()>=10){
+			deliveryDate = entity.getDeliveryDate().substring(0, 10);
+		}
+		if(entity!=null&&entity.getProductMode()!=null){
+			productMode = entity.getProductMode();
+		}
+		createCell(wb, row6, 0,"产品名称" ,"0");
+		createCell(wb, row6, 1,productName ,"0");
+		createCell(wb, row6, 2,"" ,"0");
+		createCell(wb, row6, 3,"交货期" ,"0");
+		createCell(wb, row6, 4,"" ,"0");
+		createCell(wb, row6, 5,deliveryDate ,"0");
+		createCell(wb, row6, 6,"" ,"0");
+		createCell(wb, row6, 7,"产品型号" ,"0");
+		createCell(wb, row6, 8,productMode ,"0");
+		createCell(wb, row6, 9,"" ,"0");
+		CellRangeAddress region5 = new CellRangeAddress(6,6,1,2);
+		sheet.addMergedRegion(region5); 
+		CellRangeAddress region6 = new CellRangeAddress(6,6,3,4);
+		sheet.addMergedRegion(region6); 
+		CellRangeAddress region7 = new CellRangeAddress(6,6,5,6);
+		sheet.addMergedRegion(region7); 
+		CellRangeAddress region8 = new CellRangeAddress(6,6,8,9);
+		sheet.addMergedRegion(region8); 
+		
+		//6第8行数据
+		XSSFRow row7 = sheet.createRow(7);
+		row7.setHeight((short)(28*15));
+		String pressurestructurename="";
+		String meterstructurename = "";
+		String productType = "";
+		String instructNum = "";
+		if(entity!=null&&entity.getPressurestructurename()!=null){
+			pressurestructurename = entity.getPressurestructurename();
+		}
+		if(entity!=null&&entity.getMeterstructurename()!=null){
+			meterstructurename = entity.getMeterstructurename();
+		}
+		if(entity!=null&&entity.getProductType()!=null){
+			productType = entity.getProductType();
+		}
+		if(entity!=null&&entity.getInstructNum()!=null){
+			instructNum = entity.getInstructNum();
+		}
+		createCell(wb, row7, 0,"结构形式" ,"0");
+		createCell(wb, row7, 1,"调压部分" ,"0");
+		createCell(wb, row7, 2,pressurestructurename ,"0");
+		createCell(wb, row7, 3,"" ,"0");
+		createCell(wb, row7, 4,"" ,"0");
+		createCell(wb, row7, 5,"" ,"0");
+		createCell(wb, row7, 6,"产品类别" ,"0");
+		createCell(wb, row7, 7,productType ,"0");
+		createCell(wb, row7, 8,"" ,"0");
+		createCell(wb, row7, 9,"" ,"0");
+		//7第9行数据
+		XSSFRow row8 = sheet.createRow(8);
+		row8.setHeight((short)(28*15));
+		createCell(wb, row8, 0,"" ,"0");
+		createCell(wb, row8, 1,"计量部分" ,"0");
+		createCell(wb, row8, 2,meterstructurename ,"0");
+		createCell(wb, row8, 3,"" ,"0");
+		createCell(wb, row8, 4,"" ,"0");
+		createCell(wb, row8, 5,"" ,"0");
+		createCell(wb, row8, 6,"制令号" ,"0");
+		createCell(wb, row8, 7,instructNum ,"0");
+		createCell(wb, row8, 8,"" ,"0");
+		createCell(wb, row8, 9,"" ,"0");
+		CellRangeAddress region9 = new CellRangeAddress(7,8,0,0);
+		sheet.addMergedRegion(region9); 
+		CellRangeAddress region10 = new CellRangeAddress(7,7,2,5);
+		sheet.addMergedRegion(region10); 
+		CellRangeAddress region11 = new CellRangeAddress(7,7,7,9);
+		sheet.addMergedRegion(region11); 
+		CellRangeAddress region12 = new CellRangeAddress(8,8,2,5);
+		sheet.addMergedRegion(region12);
+		CellRangeAddress region13 = new CellRangeAddress(8,8,7,9);
+		sheet.addMergedRegion(region13);
+		//第10行
+		XSSFRow row9 = sheet.createRow(9);
+		row9.setHeight((short)(28*15));
+		createCell(wb, row9, 0,"设   计   指   标   与   要   求" ,"0");
+		for(int i9=1;i9<10;i9++){
+			createCell(wb, row9, i9,"" ,"0");
+		}
+		CellRangeAddress region91 = new CellRangeAddress(9,9,0,9);
+		sheet.addMergedRegion(region91);
+		//11行
+		XSSFRow row10 = sheet.createRow(10);
+		row10.setHeight((short)(28*15));
+		createCell(wb, row10, 0,"项             目" ,"0");
+		createCell(wb, row10, 1,"" ,"0");
+		createCell(wb, row10, 2,"" ,"0");
+		createCell(wb, row10, 3,"调 压 器 前" ,"0");
+		createCell(wb, row10, 4,"" ,"0");
+		createCell(wb, row10, 5,"" ,"0");
+		createCell(wb, row10, 6,"" ,"0");
+		createCell(wb, row10, 7,"调 压 器 后" ,"0");
+		createCell(wb, row10, 8,"" ,"0");
+		createCell(wb, row10, 9,"" ,"0");
+		CellRangeAddress re101 = new CellRangeAddress(10,10,0,2);
+		sheet.addMergedRegion(re101);
+		CellRangeAddress re102 = new CellRangeAddress(10,10,3,6);
+		sheet.addMergedRegion(re102);
+		CellRangeAddress re103 = new CellRangeAddress(10,10,7,9);
+		sheet.addMergedRegion(re103);
+		String designPress="";
+		String designPressa="";
+		String designTemp="℃";
+		String designTempa="℃";
+		String maxPress="";
+		String maxPressa = "";
+		String maxTemp="℃";
+		String maxTempa="℃";
+		if(entity!=null&&entity.getDesignPressunit()!=null){
+			if(entity.getDesignPress()!=null){
+				designPress = entity.getDesignPress()+entity.getDesignPressunit();
+			}else{
+				designPress = entity.getDesignPressunit();
+			}
+		}
+		if(entity!=null&&entity.getDesignPressunita()!=null){
+			if(entity.getDesignPressa()!=null){
+				designPressa = entity.getDesignPressa()+entity.getDesignPressunita();
+			}else{
+				designPressa = entity.getDesignPressunita();
+			}
+		}
+		if(entity!=null&&entity.getDesignTemp()!=null){
+			designTemp = entity.getDesignTemp()+designTemp;
+		}
+		if(entity!=null&&entity.getDesignTempa()!=null){
+			designTempa = entity.getDesignTempa()+designTempa;
+		}
+		if(entity!=null&&entity.getMaxPressunit()!=null){
+			if(entity.getMaxPress()!=null){
+				maxPress = entity.getMaxPress()+entity.getMaxPressunit();
+			}else{
+				maxPress = entity.getMaxPressunit();
+			}
+		}
+		if(entity!=null&&entity.getMaxPressunita()!=null){
+			if(entity.getMaxPressa()!=null){
+				maxPressa = entity.getMaxPressa()+entity.getMaxPressunita();
+			}else{
+				maxPressa = entity.getMaxPressunita();
+			}
+		}
+		if(entity!=null&&entity.getMaxTemp()!=null){
+			maxTemp = entity.getMaxTemp()+maxTemp;
+		}
+		if(entity!=null&&entity.getMaxTempa()!=null){
+			maxTempa = entity.getMaxTempa()+maxTempa;
+		}
+		//12行
+		XSSFRow row11 = sheet.createRow(11);
+		row11.setHeight((short)(28*15));
+		createCell(wb, row11, 0,"设  计  压  力" ,"0");
+		createCell(wb, row11, 1,"" ,"0");
+		createCell(wb, row11, 2,"" ,"0");
+		createCell(wb, row11, 3,designPress ,"0");
+		createCell(wb, row11, 4,"" ,"0");
+		createCell(wb, row11, 5,"" ,"0");
+		createCell(wb, row11, 6,"" ,"0");
+		createCell(wb, row11, 7,designPressa ,"0");
+		createCell(wb, row11, 8,"" ,"0");
+		createCell(wb, row11, 9,"" ,"0");
+		CellRangeAddress re111 = new CellRangeAddress(11,11,0,2);
+		sheet.addMergedRegion(re111);
+		CellRangeAddress re112 = new CellRangeAddress(11,11,3,6);
+		sheet.addMergedRegion(re112);
+		CellRangeAddress re113 = new CellRangeAddress(11,11,7,9);
+		sheet.addMergedRegion(re113);
+		//13行
+		XSSFRow row12 = sheet.createRow(12);
+		row12.setHeight((short)(28*15));
+		createCell(wb, row12, 0,"设  计  温  度" ,"0");
+		createCell(wb, row12, 1,"" ,"0");
+		createCell(wb, row12, 2,"" ,"0");
+		createCell(wb, row12, 3,designTemp ,"0");
+		createCell(wb, row12, 4,"" ,"0");
+		createCell(wb, row12, 5,"" ,"0");
+		createCell(wb, row12, 6,"" ,"0");
+		createCell(wb, row12, 7,designTempa ,"0");
+		createCell(wb, row12, 8,"" ,"0");
+		createCell(wb, row12, 9,"" ,"0");
+		CellRangeAddress re121 = new CellRangeAddress(12,12,0,2);
+		sheet.addMergedRegion(re121);
+		CellRangeAddress re122 = new CellRangeAddress(12,12,3,6);
+		sheet.addMergedRegion(re122);
+		CellRangeAddress re123 = new CellRangeAddress(12,12,7,9);
+		sheet.addMergedRegion(re123);
+		//14行
+		XSSFRow row13 = sheet.createRow(13);
+		row13.setHeight((short)(28*15));
+		createCell(wb, row13, 0,"最  高  工  作  压  力" ,"0");
+		createCell(wb, row13, 1,"" ,"0");
+		createCell(wb, row13, 2,"" ,"0");
+		createCell(wb, row13, 3,maxPress ,"0");
+		createCell(wb, row13, 4,"" ,"0");
+		createCell(wb, row13, 5,"" ,"0");
+		createCell(wb, row13, 6,"" ,"0");
+		createCell(wb, row13, 7,maxPressa ,"0");
+		createCell(wb, row13, 8,"" ,"0");
+		createCell(wb, row13, 9,"" ,"0");
+		CellRangeAddress re131 = new CellRangeAddress(13,13,0,2);
+		sheet.addMergedRegion(re131);
+		CellRangeAddress re132 = new CellRangeAddress(13,13,3,6);
+		sheet.addMergedRegion(re132);
+		CellRangeAddress re133 = new CellRangeAddress(13,13,7,9);
+		sheet.addMergedRegion(re133);
+		//15行
+		XSSFRow row14 = sheet.createRow(14);
+		row14.setHeight((short)(28*15));
+		createCell(wb, row14, 0,"最  高  工  作  温  度" ,"0");
+		createCell(wb, row14, 1,"" ,"0");
+		createCell(wb, row14, 2,"" ,"0");
+		createCell(wb, row14, 3,maxTemp ,"0");
+		createCell(wb, row14, 4,"" ,"0");
+		createCell(wb, row14, 5,"" ,"0");
+		createCell(wb, row14, 6,"" ,"0");
+		createCell(wb, row14, 7,maxTempa ,"0");
+		createCell(wb, row14, 8,"" ,"0");
+		createCell(wb, row14, 9,"" ,"0");
+		CellRangeAddress re141 = new CellRangeAddress(14,14,0,2);
+		sheet.addMergedRegion(re141);
+		CellRangeAddress re142 = new CellRangeAddress(14,14,3,6);
+		sheet.addMergedRegion(re142);
+		CellRangeAddress re143 = new CellRangeAddress(14,14,7,9);
+		sheet.addMergedRegion(re143);
+		//16行
+		XSSFRow row15 = sheet.createRow(15);
+		row15.setHeight((short)(28*15));
+		createCell(wb, row15, 0,"主  要  技  术  性  能  指  标  与  要  求" ,"0");
+		for(int i15=1;i15<10;i15++){
+			createCell(wb, row15, i15,"" ,"0");
+		}
+		CellRangeAddress re151 = new CellRangeAddress(15,15,0,9);
+		sheet.addMergedRegion(re151);
+		
+		String sjll1 = "";
+		if(entity!=null&&entity.getDesignFlow()!=null){
+			sjll1 = entity.getDesignFlow()+"Nm3∕h";
+		}
+		String sjll2 = "";
+		if(entity!=null&&entity.getDesignFlowRange()!=null){
+			sjll2 = entity.getDesignFlowRange()+"Nm3∕h";
+		}
+		String rkyl1 = "";
+		if(entity!=null&&entity.getInPressunit()!=null){
+			if(entity.getInPress()!=null){
+				rkyl1 = entity.getInPress()+entity.getInPressunit();
+			}else{
+				rkyl1 = entity.getInPressunit();
+			}
+		}
+		String rkyl2 = "";
+		if(entity!=null&&entity.getInPressrangeunit()!=null){
+			if(entity.getInPressrange()!=null){
+				rkyl2 = entity.getInPressrange()+entity.getInPressrangeunit();
+			}else{
+				rkyl2 = entity.getInPressrangeunit();
+			}
+		}
+		String ckyl1="";
+		if(entity!=null&&entity.getOutPressunit()!=null){
+			if(entity.getOutPress()!=null){
+				ckyl1 = entity.getOutPress()+entity.getOutPressunit();
+			}else{
+				ckyl1 = entity.getOutPressunit();
+			}
+		}
+		String ckyl2="";
+		if(entity!=null&&entity.getOutPressRangeunit()!=null){
+			if(entity.getOutPressRange()!=null){
+				ckyl2 = entity.getOutPressRange()+entity.getOutPressRangeunit();
+			}else{
+				ckyl2 = entity.getOutPressRangeunit();
+			}
+		}
+		String fsyl1="";
+		if(entity!=null&&entity.getSpreadPressunit()!=null){
+			if(entity.getSpreadPress()!=null){
+				fsyl1 = entity.getSpreadPress()+entity.getSpreadPressunit();
+			}else{
+				fsyl1 = entity.getSpreadPressunit();
+			}
+		}
+		String fsyl2="";
+		if(entity!=null&&entity.getSpreadPressRangeunit()!=null){
+			if(entity.getSpreadPressRange()!=null){
+				fsyl2 = entity.getSpreadPressRange()+entity.getSpreadPressRangeunit();
+			}else{
+				fsyl2 = entity.getSpreadPressRangeunit();
+			}
+		}
+		String qdyl1="";
+		if(entity!=null&&entity.getCutPressunit()!=null){
+			if(entity.getCutPress()!=null){
+				qdyl1 = entity.getCutPress()+entity.getCutPressunit();
+			}else{
+				qdyl1 = entity.getCutPressunit();
+			}
+		}
+		String qdyl2="";
+		if(entity!=null&&entity.getCutPressRangeunit()!=null){
+			if(entity.getCutPressRange()!=null){
+				qdyl2 = entity.getCutPressRange()+entity.getCutPressRangeunit();
+			}else{
+				qdyl2 = entity.getCutPressRangeunit();
+			}
+		}
+		String gzjz="";
+		if(entity!=null&&entity.getWorkMedia()!=null){
+			gzjz = entity.getWorkMedia();
+		}
+		String llcs="Nm3∕h";
+		if(entity!=null&&entity.getParamFolw()!=null){
+			llcs = entity.getParamFolw()+llcs;
+		}
+		String jdcs="μm";
+		if(entity!=null&&entity.getParamPrecision()!=null){
+			jdcs = entity.getParamPrecision()+jdcs;
+		}
+		
+		String hfxs="";
+		if(entity!=null&&entity.getCoefficient()!=null){
+			hfxs = entity.getCoefficient();
+		}
+		String fsyl="";
+		if(entity!=null&&entity.getAllowance()!=null){
+			fsyl = entity.getAllowance();
+		}
+		String mfcl="";
+		if(entity!=null&&entity.getSealMaterial()!=null&&entity.getSealMaterial()==1){
+			mfcl = "聚四氟乙烯";
+		}
+		if(entity!=null&&entity.getSealMaterial()!=null&&entity.getSealMaterial()==2){
+			mfcl = "金属缠绕垫";
+		}
+		String zycl1="";
+		if(entity!=null&&entity.getMainMedia1()!=null){
+			zycl1 = entity.getMainMedia1();
+		}
+		String zycl2="";
+		if(entity!=null&&entity.getMainMedia2()!=null){
+			zycl2 = entity.getMainMedia2();
+		}
+		
+		String jybl1 = "";
+		if(entity!=null&&entity.getTestRatio1()!=null){
+			jybl1 = entity.getTestRatio1();
+		}
+		String jybl2="";
+		if(entity!=null&&entity.getTestRatio2()!=null){
+			jybl2 = entity.getTestRatio2();
+		}
+		String jybl3="";
+		if(entity!=null&&entity.getTestRatio3()!=null){
+			jybl3 = entity.getTestRatio3();
+		}
+		String jybl4="";
+		if(entity!=null&&entity.getTestRatio4()!=null){
+			jybl4 = entity.getTestRatio4();
+		}
+		String jyyq1="";
+		if(entity!=null&&entity.getTestRequire1()!=null){
+			jyyq1 = entity.getTestRequire1();
+		}
+		String jyyq2="";
+		if(entity!=null&&entity.getTestRequire2()!=null){
+			jyyq2 = entity.getTestRequire2();
+		}
+		String jyyq3="";
+		if(entity!=null&&entity.getTestRequire3()!=null){
+			jyyq3 = entity.getTestRequire3();
+		}
+		String jyyq4="";
+		if(entity!=null&&entity.getTestRequire4()!=null){
+			jyyq4 = entity.getTestRequire4();
+		}
+		String jybz="";
+		if(entity!=null&&entity.getTestStandard()!=null){
+			jybz = entity.getTestStandard();
+		}
+		String qdsy1="";
+		if(entity!=null&&entity.getStrengthTestunit()!=null){
+			if(entity.getCutPressRange()!=null){
+				qdsy1 = entity.getStrengthTest()+entity.getStrengthTestunit();
+			}else{
+				qdsy1 = entity.getStrengthTestunit();
+			}
+		}
+		String qdsy2="";
+		if(entity!=null&&entity.getStrengthTestaunit()!=null){
+			if(entity.getCutPressRange()!=null){
+				qdsy2 = entity.getStrengthTesta()+entity.getStrengthTestaunit();
+			}else{
+				qdsy2 = entity.getStrengthTestaunit();
+			}
+		}
+		String qmsy1="";
+		if(entity!=null&&entity.getAirtightTestunit()!=null){
+			if(entity.getCutPressRange()!=null){
+				qmsy1 = entity.getAirtightTest()+entity.getAirtightTestunit();
+			}else{
+				qmsy1 = entity.getAirtightTestunit();
+			}
+		}
+		String qmsy2="";
+		if(entity!=null&&entity.getAirtightTestaunit()!=null){
+			if(entity.getCutPressRange()!=null){
+				qmsy2 = entity.getAirtightTesta()+entity.getAirtightTestaunit();
+			}else{
+				qmsy2 = entity.getAirtightTestaunit();
+			}
+		}
+		String syjz1="";
+		if(entity!=null&&entity.getStrengthMedia()!=null){
+			syjz1 = entity.getStrengthMedia();
+		}
+		String syjz2="";
+		if(entity!=null&&entity.getAirtightMedia()!=null){
+			syjz2 = entity.getAirtightMedia();
+		}
+		//17行
+		XSSFRow row16 = sheet.createRow(16);
+		row16.setHeight((short)(28*15));
+		createCell(wb, row16, 0,"设 计 流 量" ,"0");
+		createCell(wb, row16, 1,"" ,"0");
+		createCell(wb, row16, 2,"" ,"0");
+		createCell(wb, row16, 3,"额定值" ,"0");
+		createCell(wb, row16, 4,"" ,"0");
+		createCell(wb, row16, 5,sjll1 ,"0");
+		createCell(wb, row16, 6,"" ,"0");
+		createCell(wb, row16, 7,"范围值" ,"0");
+		createCell(wb, row16, 8,sjll2 ,"0");
+		createCell(wb, row16, 9,"" ,"0");
+		CellRangeAddress region161 = new CellRangeAddress(16,16,0,2);
+		sheet.addMergedRegion(region161);
+		CellRangeAddress region162 = new CellRangeAddress(16,16,3,4);
+		sheet.addMergedRegion(region162);
+		CellRangeAddress region163 = new CellRangeAddress(16,16,5,6);
+		sheet.addMergedRegion(region163);
+		CellRangeAddress region164 = new CellRangeAddress(16,16,8,9);
+		sheet.addMergedRegion(region164);
+		//18行
+		XSSFRow row17 = sheet.createRow(17);
+		row17.setHeight((short)(28*15));
+		createCell(wb, row17, 0,"入 口 压 力" ,"0");
+		createCell(wb, row17, 1,"" ,"0");
+		createCell(wb, row17, 2,"" ,"0");
+		createCell(wb, row17, 3,"标定值" ,"0");
+		createCell(wb, row17, 4,"" ,"0");
+		createCell(wb, row17, 5,rkyl1 ,"0");
+		createCell(wb, row17, 6,"" ,"0");
+		createCell(wb, row17, 7,"范围值" ,"0");
+		createCell(wb, row17, 8,rkyl2 ,"0");
+		createCell(wb, row17, 9,"" ,"0");
+		CellRangeAddress region171 = new CellRangeAddress(17,17,0,2);
+		sheet.addMergedRegion(region171);
+		CellRangeAddress region172 = new CellRangeAddress(17,17,3,4);
+		sheet.addMergedRegion(region172);
+		CellRangeAddress region173 = new CellRangeAddress(17,17,5,6);
+		sheet.addMergedRegion(region173);
+		CellRangeAddress region174 = new CellRangeAddress(17,17,8,9);
+		sheet.addMergedRegion(region174);
+		//19行
+		XSSFRow row18 = sheet.createRow(18);
+		row18.setHeight((short)(28*15));
+		createCell(wb, row18, 0,"出 口 压 力" ,"0");
+		createCell(wb, row18, 1,"" ,"0");
+		createCell(wb, row18, 2,"" ,"0");
+		createCell(wb, row18, 3,"设定值" ,"0");
+		createCell(wb, row18, 4,"" ,"0");
+		createCell(wb, row18, 5,ckyl1 ,"0");
+		createCell(wb, row18, 6,"" ,"0");
+		createCell(wb, row18, 7,"范围值" ,"0");
+		createCell(wb, row18, 8,ckyl2 ,"0");
+		createCell(wb, row18, 9,"" ,"0");
+		CellRangeAddress region181 = new CellRangeAddress(18,18,0,2);
+		sheet.addMergedRegion(region181);
+		CellRangeAddress region182 = new CellRangeAddress(18,18,3,4);
+		sheet.addMergedRegion(region182);
+		CellRangeAddress region183 = new CellRangeAddress(18,18,5,6);
+		sheet.addMergedRegion(region183);
+		CellRangeAddress region184 = new CellRangeAddress(18,18,8,9);
+		sheet.addMergedRegion(region184);
+		//20行
+		XSSFRow row19 = sheet.createRow(19);
+		row19.setHeight((short)(28*15));
+		createCell(wb, row19, 0,"放 散 压 力" ,"0");
+		createCell(wb, row19, 1,"" ,"0");
+		createCell(wb, row19, 2,"" ,"0");
+		createCell(wb, row19, 3,"整定值" ,"0");
+		createCell(wb, row19, 4,"" ,"0");
+		createCell(wb, row19, 5,fsyl1 ,"0");
+		createCell(wb, row19, 6,"" ,"0");
+		createCell(wb, row19, 7,"范围值" ,"0");
+		createCell(wb, row19, 8,fsyl2 ,"0");
+		createCell(wb, row19, 9,"" ,"0");
+		CellRangeAddress region191 = new CellRangeAddress(19,19,0,2);
+		sheet.addMergedRegion(region191);
+		CellRangeAddress region192 = new CellRangeAddress(19,19,3,4);
+		sheet.addMergedRegion(region192);
+		CellRangeAddress region193 = new CellRangeAddress(19,19,5,6);
+		sheet.addMergedRegion(region193);
+		CellRangeAddress region194 = new CellRangeAddress(19,19,8,9);
+		sheet.addMergedRegion(region194);
+		//21行
+		XSSFRow row20 = sheet.createRow(20);
+		row20.setHeight((short)(28*15));
+		createCell(wb, row20, 0,"切 断 压 力" ,"0");
+		createCell(wb, row20, 1,"" ,"0");
+		createCell(wb, row20, 2,"" ,"0");
+		createCell(wb, row20, 3,"设定值" ,"0");
+		createCell(wb, row20, 4,"" ,"0");
+		createCell(wb, row20, 5,qdyl1 ,"0");
+		createCell(wb, row20, 6,"" ,"0");
+		createCell(wb, row20, 7,"范围值" ,"0");
+		createCell(wb, row20, 8,qdyl2 ,"0");
+		createCell(wb, row20, 9,"" ,"0");
+		CellRangeAddress region201 = new CellRangeAddress(20,20,0,2);
+		sheet.addMergedRegion(region201);
+		CellRangeAddress region202 = new CellRangeAddress(20,20,3,4);
+		sheet.addMergedRegion(region202);
+		CellRangeAddress region203 = new CellRangeAddress(20,20,5,6);
+		sheet.addMergedRegion(region203);
+		CellRangeAddress region204 = new CellRangeAddress(20,20,8,9);
+		sheet.addMergedRegion(region204);
+		//22行
+		XSSFRow row21 = sheet.createRow(21);
+		row21.setHeight((short)(28*15));
+		createCell(wb, row21, 0,"工 作 介 质" ,"0");
+		createCell(wb, row21, 1,"" ,"0");
+		createCell(wb, row21, 2,"" ,"0");
+		createCell(wb, row21, 3,gzjz ,"0");
+		createCell(wb, row21, 4,"" ,"0");
+		createCell(wb, row21, 5,"" ,"0");
+		createCell(wb, row21, 6,"" ,"0");
+		createCell(wb, row21, 7,"" ,"0");
+		createCell(wb, row21, 8,"" ,"0");
+		createCell(wb, row21, 9,"" ,"0");
+		CellRangeAddress region211 = new CellRangeAddress(21,21,0,2);
+		sheet.addMergedRegion(region211);
+		CellRangeAddress region212 = new CellRangeAddress(21,21,3,9);
+		sheet.addMergedRegion(region212);
+		//23行
+		XSSFRow row22 = sheet.createRow(22);
+		row22.setHeight((short)(28*15));
+		createCell(wb, row22, 0,"过 滤 参 数" ,"0");
+		createCell(wb, row22, 1,"" ,"0");
+		createCell(wb, row22, 2,"" ,"0");
+		createCell(wb, row22, 3,"流  量" ,"0");
+		createCell(wb, row22, 4,llcs ,"0");
+		createCell(wb, row22, 5,"" ,"0");
+		createCell(wb, row22, 6,"" ,"0");
+		createCell(wb, row22, 7,"精  度" ,"0");
+		createCell(wb, row22, 8,jdcs ,"0");
+		createCell(wb, row22, 9,"" ,"0");
+		CellRangeAddress region221 = new CellRangeAddress(22,22,0,2);
+		sheet.addMergedRegion(region221);
+		CellRangeAddress region222 = new CellRangeAddress(22,22,3,4);
+		sheet.addMergedRegion(region222);
+		CellRangeAddress region223 = new CellRangeAddress(22,22,5,6);
+		sheet.addMergedRegion(region223);
+		CellRangeAddress region224 = new CellRangeAddress(22,22,8,9);
+		sheet.addMergedRegion(region224);
+				
+		//24行
+		XSSFRow row23 = sheet.createRow(23);
+		row23.setHeight((short)(28*15));
+		createCell(wb, row23, 0,"焊 缝 系 数" ,"0");
+		createCell(wb, row23, 1,"" ,"0");
+		createCell(wb, row23, 2,"" ,"0");
+		createCell(wb, row23, 3,hfxs ,"0");
+		createCell(wb, row23, 4,"" ,"0");
+		createCell(wb, row23, 5,"" ,"0");
+		createCell(wb, row23, 6,"" ,"0");
+		createCell(wb, row23, 7,"" ,"0");
+		createCell(wb, row23, 8,"" ,"0");
+		createCell(wb, row23, 9,"" ,"0");
+		CellRangeAddress region231 = new CellRangeAddress(23,23,0,2);
+		sheet.addMergedRegion(region231);
+		CellRangeAddress region232 = new CellRangeAddress(23,23,3,9);
+		sheet.addMergedRegion(region232);
+		//25行
+		XSSFRow row24 = sheet.createRow(24);
+		row24.setHeight((short)(28*15));
+		createCell(wb, row24, 0,"腐 蚀 余 量" ,"0");
+		createCell(wb, row24, 1,"" ,"0");
+		createCell(wb, row24, 2,"" ,"0");
+		createCell(wb, row24, 3,fsyl ,"0");
+		createCell(wb, row24, 4,"" ,"0");
+		createCell(wb, row24, 5,"" ,"0");
+		createCell(wb, row24, 6,"" ,"0");
+		createCell(wb, row24, 7,"" ,"0");
+		createCell(wb, row24, 8,"" ,"0");
+		createCell(wb, row24, 9,"" ,"0");
+		CellRangeAddress region241 = new CellRangeAddress(24,24,0,2);
+		sheet.addMergedRegion(region241);
+		CellRangeAddress region242 = new CellRangeAddress(24,24,3,9);
+		sheet.addMergedRegion(region242);
+		//26行
+		XSSFRow row25 = sheet.createRow(25);
+		row25.setHeight((short)(28*15));
+		createCell(wb, row25, 0,"密 封 材 料" ,"0");
+		createCell(wb, row25, 1,"" ,"0");
+		createCell(wb, row25, 2,"" ,"0");
+		createCell(wb, row25, 3,mfcl ,"0");
+		createCell(wb, row25, 4,"" ,"0");
+		createCell(wb, row25, 5,"" ,"0");
+		createCell(wb, row25, 6,"" ,"0");
+		createCell(wb, row25, 7,"" ,"0");
+		createCell(wb, row25, 8,"" ,"0");
+		createCell(wb, row25, 9,"" ,"0");
+		CellRangeAddress region251 = new CellRangeAddress(25,25,0,2);
+		sheet.addMergedRegion(region251);
+		CellRangeAddress region252 = new CellRangeAddress(25,25,3,9);
+		sheet.addMergedRegion(region252);
+		//27行
+		XSSFRow row26 = sheet.createRow(26);
+		row26.setHeight((short)(28*15));
+		createCell(wb, row26, 0,"主 要 材 质" ,"0");
+		createCell(wb, row26, 1,"" ,"0");
+		createCell(wb, row26, 2,"" ,"0");
+		createCell(wb, row26, 3,"钢管" ,"0");
+		createCell(wb, row26, 4,zycl1 ,"0");
+		createCell(wb, row26, 5,"" ,"0");
+		createCell(wb, row26, 6,"" ,"0");
+		createCell(wb, row26, 7,"法兰" ,"0");
+		createCell(wb, row26, 8,zycl2 ,"0");
+		createCell(wb, row26, 9,"" ,"0");
+		CellRangeAddress region261 = new CellRangeAddress(26,26,0,2);
+		sheet.addMergedRegion(region261);
+		CellRangeAddress region262 = new CellRangeAddress(26,26,3,4);
+		sheet.addMergedRegion(region262);
+		CellRangeAddress region263 = new CellRangeAddress(26,26,5,6);
+		sheet.addMergedRegion(region263);
+		CellRangeAddress region264 = new CellRangeAddress(26,26,8,9);
+		sheet.addMergedRegion(region264);
+		//28行
+		XSSFRow row27 = sheet.createRow(27);
+		row27.setHeight((short)(28*15));
+		createCell(wb, row27, 0,"无 损 检 测 比 例" ,"0");
+		createCell(wb, row27, 1,"" ,"0");
+		createCell(wb, row27, 2,"" ,"0");
+		createCell(wb, row27, 3,jybl1 ,"0");
+		createCell(wb, row27, 4,"" ,"0");
+		createCell(wb, row27, 5,"" ,"0");
+		createCell(wb, row27, 6,jybl2 ,"0");
+		createCell(wb, row27, 7,"" ,"0");
+		createCell(wb, row27, 8,jybl3 ,"0");
+		createCell(wb, row27, 9,jybl4 ,"0");
+		CellRangeAddress region271 = new CellRangeAddress(27,27,0,2);
+		sheet.addMergedRegion(region271);
+		CellRangeAddress region272 = new CellRangeAddress(27,27,3,5);
+		sheet.addMergedRegion(region272);
+		CellRangeAddress region273 = new CellRangeAddress(27,27,6,7);
+		sheet.addMergedRegion(region273);
+		//29行
+		XSSFRow row28 = sheet.createRow(28);
+		row28.setHeight((short)(28*15));
+		createCell(wb, row28, 0,"无 损 检 测 要 求" ,"0");
+		createCell(wb, row28, 1,"" ,"0");
+		createCell(wb, row28, 2,"" ,"0");
+		createCell(wb, row28, 3,jyyq1 ,"0");
+		createCell(wb, row28, 4,"" ,"0");
+		createCell(wb, row28, 5,"" ,"0");
+		createCell(wb, row28, 6,jyyq2 ,"0");
+		createCell(wb, row28, 7,"" ,"0");
+		createCell(wb, row28, 8,jyyq3 ,"0");
+		createCell(wb, row28, 9,jyyq4 ,"0");
+		CellRangeAddress region281 = new CellRangeAddress(28,28,0,2);
+		sheet.addMergedRegion(region281);
+		CellRangeAddress region282 = new CellRangeAddress(28,28,3,5);
+		sheet.addMergedRegion(region282);
+		CellRangeAddress region283 = new CellRangeAddress(28,28,6,7);
+		sheet.addMergedRegion(region283);
+		//30行
+		XSSFRow row29 = sheet.createRow(29);
+		row29.setHeight((short)(28*15));
+		createCell(wb, row29, 0,"无 损 检 测 标 准 " ,"0");
+		createCell(wb, row29, 1,"" ,"0");
+		createCell(wb, row29, 2,"" ,"0");
+		createCell(wb, row29, 3,jybz ,"0");
+		createCell(wb, row29, 4,"" ,"0");
+		createCell(wb, row29, 5,"" ,"0");
+		createCell(wb, row29, 6,"" ,"0");
+		createCell(wb, row29, 7,"" ,"0");
+		createCell(wb, row29, 8,"" ,"0");
+		createCell(wb, row29, 9,"" ,"0");
+		CellRangeAddress region291 = new CellRangeAddress(29,29,0,2);
+		sheet.addMergedRegion(region291);
+		CellRangeAddress region292 = new CellRangeAddress(29,29,3,9);
+		sheet.addMergedRegion(region292);
+		//31行
+		XSSFRow row30 = sheet.createRow(30);
+		row30.setHeight((short)(28*15));
+		createCell(wb, row30, 0,"强 度 试 验 " ,"0");
+		createCell(wb, row30, 1,"" ,"0");
+		createCell(wb, row30, 2,"" ,"0");
+		createCell(wb, row30, 3,"调压器前："+qdsy1 ,"0");
+		createCell(wb, row30, 4,"" ,"0");
+		createCell(wb, row30, 5,"" ,"0");
+		createCell(wb, row30, 6,"" ,"0");
+		createCell(wb, row30, 7,"调压器后："+qdsy2 ,"0");
+		createCell(wb, row30, 8,"" ,"0");
+		createCell(wb, row30, 9,"" ,"0");
+		CellRangeAddress region301 = new CellRangeAddress(30,30,0,2);
+		sheet.addMergedRegion(region301);
+		CellRangeAddress region302 = new CellRangeAddress(30,30,3,6);
+		sheet.addMergedRegion(region302);
+		CellRangeAddress region303 = new CellRangeAddress(30,30,7,9);
+		sheet.addMergedRegion(region303);
+		//32行
+		XSSFRow row31 = sheet.createRow(31);
+		row31.setHeight((short)(28*15));
+		createCell(wb, row31, 0,"气 密 性 试 验  " ,"0");
+		createCell(wb, row31, 1,"" ,"0");
+		createCell(wb, row31, 2,"" ,"0");
+		createCell(wb, row31, 3,"调压器前："+qmsy1 ,"0");
+		createCell(wb, row31, 4,"" ,"0");
+		createCell(wb, row31, 5,"" ,"0");
+		createCell(wb, row31, 6,"" ,"0");
+		createCell(wb, row31, 7,"调压器后："+qmsy2 ,"0");
+		createCell(wb, row31, 8,"" ,"0");
+		createCell(wb, row31, 9,"" ,"0");
+		CellRangeAddress region311 = new CellRangeAddress(31,31,0,2);
+		sheet.addMergedRegion(region311);
+		CellRangeAddress region312 = new CellRangeAddress(31,31,3,6);
+		sheet.addMergedRegion(region312);
+		CellRangeAddress region313 = new CellRangeAddress(31,31,7,9);
+		sheet.addMergedRegion(region313);
+		//33行
+		XSSFRow row32 = sheet.createRow(32);
+		row32.setHeight((short)(28*15));
+		createCell(wb, row32, 0,"试 验 介 质" ,"0");
+		createCell(wb, row32, 1,"" ,"0");
+		createCell(wb, row32, 2,"" ,"0");
+		createCell(wb, row32, 3,"强度试验：" ,"0");
+		createCell(wb, row32, 4,"" ,"0");
+		createCell(wb, row32, 5,"" ,"0");
+		createCell(wb, row32, 6,syjz1 ,"0");
+		createCell(wb, row32, 7,"气密性试验：" ,"0");
+		createCell(wb, row32, 8,"" ,"0");
+		createCell(wb, row32, 9,syjz2 ,"0");
+		CellRangeAddress region321 = new CellRangeAddress(32,32,0,2);
+		sheet.addMergedRegion(region321);
+		CellRangeAddress region322 = new CellRangeAddress(32,32,3,5);
+		sheet.addMergedRegion(region322);
+		CellRangeAddress region323 = new CellRangeAddress(32,32,7,8);
+		sheet.addMergedRegion(region323);
+		//35行
+		XSSFRow row33 = sheet.createRow(33);
+		row33.setHeight((short)(7*15));
+		for(int i33=0;i33<10;i33++){
+			createCell(wb, row33, i33,"" ,"0");
+		}
+		CellRangeAddress region331 = new CellRangeAddress(33,33,0,9);
+		sheet.addMergedRegion(region331);
+		//35行
+		XSSFRow row34 = sheet.createRow(34);
+		row34.setHeight((short)(28*15));
+		createCell(wb, row34, 0,"设计" ,"0");
+		createCell(wb, row34, 1,"" ,"0");
+		createCell(wb, row34, 2,"" ,"0");
+		createCell(wb, row34, 3,"校核" ,"0");
+		createCell(wb, row34, 4,"" ,"0");
+		createCell(wb, row34, 5,"" ,"0");
+		createCell(wb, row34, 6,"" ,"0");
+		createCell(wb, row34, 7,"审核" ,"0");
+		createCell(wb, row34, 8,"" ,"0");
+		createCell(wb, row34, 9,"" ,"0");
+		CellRangeAddress region341 = new CellRangeAddress(34,34,3,4);
+		sheet.addMergedRegion(region341);
+	}
+	
+	private List<Integer> creatSheetHead(XSSFSheet sheet, XSSFWorkbook wb,String exportCols,int rowNum) {
+		List<Integer> list = new ArrayList<Integer>();
+		XSSFRow row = sheet.createRow(rowNum);
+		int i = 0;
+		int bidInt = -1;
+		int listInt = -1;
+		int costInt = -1;
+		int factorInt = -1;
+		int allCol = -1;
+		if (exportCols.contains("seq")) {
+			createCell(wb, row, i, "序号", "2");
+			i++;
+		}
+		if (exportCols.contains("itemcode")) {
+			createCell(wb, row, i, "物料代码", "2");
+			i++;
+		}
+		if (exportCols.contains("itemname")) {
+			createCell(wb, row, i, "货物名称", "2");
+			i++;
+		}
+		if (exportCols.contains("fmodel")) {
+			createCell(wb, row, i, "规格型号", "2");
+			i++;
+		}
+		if (exportCols.contains("fdescript")) {
+			createCell(wb, row, i, "性能描述", "2");
+			i++;
+		}
+		if (exportCols.contains("desc1")) {
+			createCell(wb, row, i, "名称+规格型号+性能描述", "2");
+			i++;
+		}
+		if (exportCols.contains("desc2")) {
+			createCell(wb, row, i, "规格型号+性能描述", "2");
+			i++;
+		}
+		if (exportCols.contains("flevel")) {
+			createCell(wb, row, i, "压力等级", "2");
+			i++;
+		}
+		if (exportCols.contains("fposition")) {
+			createCell(wb, row, i, "位号", "2");
+			i++;
+		}
+		if (exportCols.contains("fmaker")) {
+			createCell(wb, row, i, "生产商名称", "2");
+			i++;
+		}
+		if (exportCols.contains("srcarea")) {
+			createCell(wb, row, i, "原产地", "2");
+			i++;
+		}
+		if (exportCols.contains("unit")) {
+			createCell(wb, row, i, "单位", "2");
+			i++;
+		}
+		if (exportCols.contains("fnum")) {
+			createCell(wb, row, i, "数量", "2");
+			i++;
+		}
+		if (exportCols.contains("bid")) {
+			bidInt = i;
+			createCell(wb, row, i, "投标价", "2");
+			i++;
+			createCell(wb, row, i, "", "2");
+			i++;
+		}
+		if (exportCols.contains("factor")) {
+			factorInt = i;
+			createCell(wb, row, i, "系数", "2");
+			i++;
+		}
+		if (exportCols.contains("list")) {
+			listInt = i;
+			createCell(wb, row, i, "列表价", "2");
+			i++;
+			createCell(wb, row, i, "", "2");
+			i++;
+		}
+		if (exportCols.contains("cost")) {
+			costInt = i;
+			createCell(wb, row, i, "成本价", "2");
+			i++;
+			createCell(wb, row, i, "", "2");
+			allCol = i;
+			i++;
+		}
+		if (bidInt != -1 || listInt != -1 || costInt != -1) {
+			list.add(11);
+			list.add(bidInt);
+			list.add(listInt);
+			list.add(costInt);
+			list.add(allCol);
+			XSSFRow row1 = sheet.createRow(rowNum + 1);
+			if (bidInt > -1) {
+				createCell(wb, row1, bidInt, "单价", "2");
+				createCell(wb, row1, (bidInt + 1), "总价", "2");
+				CellRangeAddress region = new CellRangeAddress(rowNum, rowNum,
+						bidInt, (bidInt + 1));
+				sheet.addMergedRegion(region);
+
+				for (int t1 = 0; t1 < bidInt; t1++) {
+					createCell(wb, row1, t1, "", "2");
+					CellRangeAddress region1 = new CellRangeAddress(rowNum,
+							rowNum + 1, t1, t1);
+					sheet.addMergedRegion(region1);
+				}
+			}
+			if (listInt > -1) {
+				createCell(wb, row1, listInt, "单价", "2");
+				createCell(wb, row1, (listInt + 1), "总价", "2");
+				CellRangeAddress region2 = new CellRangeAddress(rowNum, rowNum,
+						listInt, (listInt + 1));
+				sheet.addMergedRegion(region2);
+			}
+			if (costInt > -1) {
+				createCell(wb, row1, costInt, "单价", "2");
+				createCell(wb, row1, (costInt + 1), "总价", "2");
+				CellRangeAddress region2 = new CellRangeAddress(rowNum, rowNum,
+						costInt, (costInt + 1));
+				sheet.addMergedRegion(region2);
+			}
+			if (factorInt > -1) {
+				createCell(wb, row1, factorInt, "", "2");
+				CellRangeAddress region2 = new CellRangeAddress(rowNum,
+						rowNum + 1, factorInt, factorInt);
+				sheet.addMergedRegion(region2);
+			}
+			if (bidInt == -1 && listInt > -1) {
+				for (int t1 = 0; t1 < listInt; t1++) {
+					createCell(wb, row1, t1, "", "2");
+					CellRangeAddress region2 = new CellRangeAddress(rowNum,
+							rowNum + 1, t1, t1);
+					sheet.addMergedRegion(region2);
+				}
+			}
+			if (bidInt == -1 && listInt == -1 && costInt > -1) {
+				for (int t1 = 0; t1 < costInt; t1++) {
+					createCell(wb, row1, t1, "", "2");
+					CellRangeAddress region2 = new CellRangeAddress(rowNum,
+							rowNum + 1, t1, t1);
+					sheet.addMergedRegion(region2);
+				}
+			}
+		} else {
+			list.add(10);
+			list.add(bidInt);
+			list.add(listInt);
+			list.add(costInt);
+			list.add(allCol);
+		}
+		return list;
+	}
+}

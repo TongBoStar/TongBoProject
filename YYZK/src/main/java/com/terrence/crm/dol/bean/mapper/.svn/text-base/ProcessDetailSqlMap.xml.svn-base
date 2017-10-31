@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProcessDetail">
+
+<resultMap id="RM.ProcessDetail" class="com.terrence.crm.dol.bean.ProcessDetail">
+	<result property="id" column="id"/>
+	<result property="processId" column="processId"/>
+	<result property="nodeName" column="nodeName"/>
+	<result property="nodeSeq" column="nodeSeq"/>
+	<result property="nodeType" column="nodeType"/>
+	<result property="processHandleList" column="id" select="ProcessHandle.find.processHandles"/>
+</resultMap>
+<resultMap id="RM.ProcessHandle.relative" class="com.terrence.crm.dol.bean.ProcessHandle">
+	<result property="id" column="id"/>
+	<result property="nodeId" column="nodeId"/>
+	<result property="handler" column="handler"/>
+	<result property="handlerName" column="handlerName"/>
+	<result property="dispatchdep" column="dispatchdep"/>
+	<result property="dispatchdepName" column="dispatchdepName"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ProcessDetail.columns">
+	<![CDATA[
+		t_process_detail.id ,
+		t_process_detail.processId ,
+		t_process_detail.nodeName ,
+		t_process_detail.nodeSeq ,
+		t_process_detail.nodeType
+	]]>
+</sql>
+
+<insert id="ProcessDetail.insert" >
+	<![CDATA[
+	INSERT INTO t_process_detail (
+		processId,
+		nodeName,
+		nodeSeq,
+		nodeType
+	) VALUES (
+		#processId#,
+		#nodeName#,
+		#nodeSeq#,
+		#nodeType#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ProcessDetail.update" parameterClass="com.terrence.crm.dol.bean.ProcessDetail"> 
+	UPDATE t_process_detail 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="processId">
+			processId = #processId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="nodeName">
+			nodeName = #nodeName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="nodeSeq">
+			nodeSeq = #nodeSeq# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="nodeType">
+			nodeType = #nodeType# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ProcessDetail.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_process_detail.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="processId">
+			t_process_detail.processId = #processId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeName">
+			t_process_detail.nodeName = #nodeName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeSeq">
+			t_process_detail.nodeSeq = #nodeSeq# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeType">
+			t_process_detail.nodeType = #nodeType# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ProcessDetail.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_process_detail.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="processId">
+		t_process_detail.processId = #processId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeName">
+		t_process_detail.nodeName = #nodeName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeSeq">
+		t_process_detail.nodeSeq = #nodeSeq# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeType">
+		t_process_detail.nodeType = #nodeType# 
+	</isNotEmpty>
+</sql>
+
+<select id="ProcessDetail.getById" resultMap="RM.ProcessDetail">
+	select <include refid="ProcessDetail.columns"/> from t_process_detail where id=#id#
+</select>
+
+<select id="ProcessDetail.getByProperty" resultMap="RM.ProcessDetail">
+	select <include refid="ProcessDetail.columns"/> from t_process_detailwhere $propertyName$=#propertyValue#
+</select>
+
+<delete id="ProcessDetail.delete">
+	<![CDATA[
+		DELETE FROM t_process_detail WHERE id=#id#
+	]]>
+</delete>
+<delete id="ProcessDetail.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_process_detail WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ProcessDetail.findPage.count" resultClass="long">
+	select count(*) from t_process_detail <include refid="ProcessDetail.findPage.where"/>
+</select>
+
+<select id="ProcessDetail.findPage" resultMap="RM.ProcessDetail">
+	select <include refid="ProcessDetail.columns"/> 
+		from t_process_detail 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_process_detail <include refid="ProcessDetail.findPage.where"/>
+			 ORDER BY nodeSeq asc 
+		)
+	</isNotEmpty> 
+	<include refid="ProcessDetail.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY nodeSeq asc 
+	</isNotEmpty>
+</select>
+
+<select id="ProcessDetail.findList" resultMap="RM.ProcessDetail">
+	SELECT <include refid="ProcessDetail.columns"/> FROM t_process_detail
+	<include refid="ProcessDetail.findPage.where"/>
+	 ORDER BY nodeSeq asc 
+</select>
+<select id="ProcessHandle.find.processHandles" resultMap="RM.ProcessHandle.relative">
+	SELECT id,nodeId,handler,ta.adminName handlerName,td.teamname dispatchdepName ,dispatchdep 
+	FROM t_process_handle tph 
+	left join t_admin ta on tph.handler = ta.adminId 
+	left join t_department td on tph.dispatchdep = td.teamid 
+	where nodeId = #id# 
+</select>
+<select id="ProcessDetail.findByTaskCode" resultMap="RM.ProcessDetail">
+	select <include refid="ProcessDetail.columns"/> from t_process_detail where processId=(select id from t_process_define 
+	where id = (select processIds from t_process_task where taskCode=#taskCode#)) order by nodeSeq asc
+</select>
+</sqlMap>

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.MeasureTool;
+import com.terrence.crm.dol.dao.IMeasureToolDao;
+
+@Repository
+public class MeasureToolDao extends BaseIbatisDao<MeasureTool,java.lang.Long> implements IMeasureToolDao{
+
+		
+	public void saveOrUpdate(MeasureTool entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "MeasureTool";
+	}
+	public MeasureTool getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (MeasureTool)this.getSqlMapClientTemplate().queryForObject("MeasureTool.getByProperty", map);		
+	}
+
+}

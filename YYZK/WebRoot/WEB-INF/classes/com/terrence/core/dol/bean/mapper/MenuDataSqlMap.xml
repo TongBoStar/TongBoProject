@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+   <resultMap id="RM.MenuData" class="com.terrence.core.dol.bean.MenuData">
+       <result property="id" column="id"/>
+       <result property="menuId" column="menuId"/>
+       <result property="name" column="name"/>
+       <result property="sql" column="sql"/>
+       <result property="remark" column="remark"/>
+       <result property="grade" column="grade"/>
+   </resultMap>
+
+   <sql id="MenuData.columns">
+       <![CDATA[
+           id,menuId,name,sql,remark,grade
+       ]]>
+   </sql>
+
+
+   <insert id="MenuData.insert" >
+   <![CDATA[
+       INSERT INTO core_menu_data
+       (
+        menuId
+        ,name
+        ,sql
+        ,remark
+        ,grade
+
+       )
+       VALUES
+       (
+        #menuId#
+        ,#name#
+        ,#sql#
+        ,#remark#
+        ,#grade#
+
+       )
+   ]]>
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="MenuData.update" >
+       UPDATE core_menu_data 
+       <dynamic prepend="SET">
+       <isNotEmpty prepend="," property="menuId">
+           menuId = #menuId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="name">
+           name = #name# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="sql">
+           sql = #sql# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="remark">
+           remark = #remark# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="grade">
+           grade = #grade# 
+       </isNotEmpty>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+
+   <delete id="MenuData.delete">
+       <![CDATA[
+       DELETE FROM core_menu_data WHERE
+       id = #id# 
+       ]]>
+   </delete>
+
+   <select id="MenuData.getById" resultMap="RM.MenuData">
+       SELECT <include refid="MenuData.columns"/>
+       <![CDATA[
+       FROM core_menu_data 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+
+   <sql id="MenuData.findPage.where">
+           <isNotEmpty prepend="AND" property="id">
+               id = #id#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="menuId">
+               menuId = #menuId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="name">
+               name = #name#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="sql">
+               sql = #sql#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="remark">
+               remark = #remark#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="grade">
+               grade = #grade#
+           </isNotEmpty>
+   </sql>
+
+   <select id="MenuData.findPage.count" resultClass="long">
+       SELECT count(*) FROM core_menu_data where 1=1 <include refid="MenuData.findPage.where"/>
+   </select>
+
+   <select id="MenuData.findPage" resultMap="RM.MenuData">
+       SELECT <include refid="MenuData.columns"/> 
+       FROM core_menu_data where 1=1 <include refid="MenuData.findPage.where"/>
+           <isNotEmpty property="notTop"> and
+               id not in(select $notTop$ id from core_menu_data where 1=1 <include refid="MenuData.findPage.where"/>) 
+           </isNotEmpty>  
+           <isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+           </isNotEmpty>
+   </select>
+
+   <select id="MenuData.findList" resultMap="RM.MenuData">
+       SELECT <include refid="MenuData.columns"/> 
+       FROM core_menu_data where 1=1 <include refid="MenuData.findPage.where"/>
+       <isNotEmpty property="sortColumns">
+       ORDER BY $sortColumns$
+       </isNotEmpty>
+   </select>
+
+</sqlMap>

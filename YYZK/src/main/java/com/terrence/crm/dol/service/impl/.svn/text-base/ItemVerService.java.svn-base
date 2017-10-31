@@ -1,0 +1,190 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.query.ItemVerQuery;
+import com.terrence.crm.dol.dao.IItemVerDao;
+import com.terrence.crm.dol.service.IItemVerService;
+
+@Service
+@Transactional
+public class ItemVerService extends BaseService implements IItemVerService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemVerService.class);
+	@Autowired
+	@Qualifier("itemVerDao")
+	private IItemVerDao itemVerDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemVer";
+	}
+	@Transactional(readOnly=true)
+	public ItemVer getById(java.lang.Long id) throws ServiceException
+	{
+		return itemVerDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemVer entity) throws ServiceException
+	{
+		itemVerDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ItemVer entity) throws ServiceException
+	{
+		Long adId = itemVerDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemVer entity) throws ServiceException
+	{
+		Integer returnValue =  itemVerDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemVerDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemVerDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemVerQuery query = new ItemVerQuery();
+		try {
+			return itemVerDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemVer> findPage(Page<ItemVer> page, ItemVerQuery query) throws ServiceException
+	{
+		return itemVerDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemVer> findPage(Page<ItemVer> page,String statement, ItemVerQuery query) throws ServiceException
+	{
+		return itemVerDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemVer> findList(ItemVerQuery query) throws ServiceException
+	{
+		return itemVerDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemVer> findList(ItemVerQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemVerDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemVer> findList(ItemVerQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemVerDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemVer> findAllList() throws ServiceException
+	{
+		return itemVerDao.findAllList();
+	}
+	@Override
+	public void saveAlone(ItemVerQuery itemVerQuery) throws ServiceException {
+		itemVerQuery.setSortColumns("fversion");//按版本排序
+		List<ItemVer> itemVerList=new ArrayList<ItemVer>();
+		
+		 itemVerList = itemVerDao.findList(itemVerQuery);
+		 if(itemVerList.size()>0){//已存在工艺版本
+			 ItemVer itemVer = itemVerList.get(itemVerList.size()-1);
+			 Double lastVersion = Double.valueOf(itemVer.getFversion());
+			 
+			 ItemVer addItemVer=new ItemVer();
+			 itemVer.setBaseitemid(itemVerQuery.getBaseitemid());
+			 itemVer.setItemcode(itemVerQuery.getItemcode());
+			 itemVer.setIsdefault(ItemVer.UN_DEFAULTVERSION);//默认版本
+			 itemVer.setFversion(""+((int)((lastVersion+0.1)*10))/10.0);	
+			 itemVerDao.save(itemVer);
+			 
+		 }else{//不存在版本--新添加版本为默认版本
+			 ItemVer itemVer=new ItemVer();
+			 itemVer.setBaseitemid(itemVerQuery.getBaseitemid());
+			 itemVer.setItemcode(itemVerQuery.getItemcode());
+			 itemVer.setIsdefault(ItemVer.DEFAULTVERSION);//默认版本
+			 itemVer.setFversion("1.0");
+			 itemVerDao.save(itemVer);
+		 }
+		 
+		
+	}
+	@Override
+	public void updateTodefault(ItemVerQuery itemVerQuery)
+			throws ServiceException {
+		List<ItemVer> itemverList = new ArrayList<ItemVer>();
+		
+		ItemVerQuery verQuery=new ItemVerQuery();
+		verQuery.setBaseitemid(itemVerQuery.getBaseitemid());
+		verQuery.setIsdefault(1);
+		itemverList=itemVerDao.findList(verQuery);
+		if(itemverList.size()>0){
+//			ItemVer itemVer=itemverList.get(0);//修改 :20150826
+//			itemVer.setIsdefault(0);
+//			itemVerDao.update(itemVer);
+			for(int sq=0;sq<itemverList.size();sq++){
+				ItemVer itemVer=itemverList.get(sq);
+				itemVer.setIsdefault(0);
+				itemVerDao.update(itemVer);
+			}
+			
+		}	
+		
+		ItemVer updateVer = itemVerDao.getById(itemVerQuery.getFverid());
+		updateVer.setIsdefault(1);
+		itemVerDao.update(updateVer);
+		
+	}
+	@Override
+	public Long saveToTask(ItemVerQuery itemVerQuery) throws ServiceException {
+			 ItemVer itemVer=new ItemVer();
+			 itemVer.setBaseitemid(itemVerQuery.getBaseitemid());
+			 itemVer.setItemcode(itemVerQuery.getItemcode());
+			 itemVer.setIsdefault(ItemVer.DEFAULTVERSION);//默认版本
+			 itemVer.setFversion("1.0");
+		return itemVerDao.save(itemVer);
+	}
+
+}

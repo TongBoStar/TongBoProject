@@ -1,0 +1,61 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdKey;
+import com.terrence.crm.dol.dao.IPdKeyDao;
+import com.terrence.crm.dol.query.PdKeyQuery;
+
+@Repository
+public class PdKeyDao extends BaseIbatisDao<PdKey,java.lang.Long> implements IPdKeyDao{
+
+		
+	public void saveOrUpdate(PdKey entity) {
+		if(entity.getPdkeyid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdKey";
+	}
+	public PdKey getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdKey)this.getSqlMapClientTemplate().queryForObject("PdKey.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteBycode(String statement, String code) {
+		this.getSqlMapClientTemplate().delete(statement, code);
+	}
+
+	@Override
+	public List<PdKey> findItemKey(PdKeyQuery pdKeyQuery) {
+		return this.getSqlMapClientTemplate().queryForList("PdKey.list.findItemKey", pdKeyQuery);
+	}
+
+	@Override
+	public void delData(PdKeyQuery pdKeyQuery) {
+		this.getSqlMapClientTemplate().delete("PdKey.delete.data.pK",pdKeyQuery);
+	}
+
+	@Override
+	public List<PdKey> findMainKey(PdKeyQuery pdKeyQuery) {
+		return this.getSqlMapClientTemplate().queryForList("PdKey.find.mainKey.data",pdKeyQuery);
+	}
+
+}

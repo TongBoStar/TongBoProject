@@ -1,0 +1,76 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PurchasePlan;
+import com.terrence.crm.dol.dao.IPurchasePlanDao;
+import com.terrence.crm.dol.query.PurchasePlanQuery;
+import com.terrence.crm.dol.service.IPurchasePlanService;
+@Service
+@Transactional
+public class PurchasePlanService implements IPurchasePlanService {
+	@Autowired
+	@Qualifier("purchasePlanDao")
+	private IPurchasePlanDao purchasePlanDao;
+	@Override
+	public PurchasePlan getById(Long id) throws ServiceException {
+		return purchasePlanDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(PurchasePlan entity) throws ServiceException {
+		purchasePlanDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(PurchasePlan entity) throws ServiceException {
+		return purchasePlanDao.save(entity);
+	}
+	@Override
+	public Integer update(PurchasePlan entity) throws ServiceException {
+		return purchasePlanDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return purchasePlanDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = purchasePlanDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<PurchasePlan> findPage(Page<PurchasePlan> page, PurchasePlanQuery query) throws ServiceException{
+		return purchasePlanDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PurchasePlan> findPage(Page<PurchasePlan> page,String statement, PurchasePlanQuery query) throws ServiceException{
+		return purchasePlanDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchasePlan> findList(PurchasePlanQuery query) throws ServiceException{
+		return purchasePlanDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchasePlan> findList(PurchasePlanQuery query,Integer pageSize) throws ServiceException{
+		return purchasePlanDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchasePlan> findList(PurchasePlanQuery query,String statement,Integer pageSize) throws ServiceException{
+		return purchasePlanDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PurchasePlan> findAllList() throws ServiceException{
+		return purchasePlanDao.findAllList();
+	}
+	@Override
+	public void closeDate(PurchasePlan entity) {
+		entity.setFstatus(100);
+		entity.setFstatusDesc("已关闭");
+		purchasePlanDao.update(entity);
+	}
+}

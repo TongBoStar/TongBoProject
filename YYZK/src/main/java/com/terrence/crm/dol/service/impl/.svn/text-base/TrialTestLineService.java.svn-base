@@ -1,0 +1,173 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyCheck;
+import com.terrence.crm.dol.bean.TrailCheckNums;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.bean.TrialTestLine;
+import com.terrence.crm.dol.dao.IAssemblyCheckDao;
+import com.terrence.crm.dol.dao.ITrailCheckNumsDao;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.dao.ITrialPdDao;
+import com.terrence.crm.dol.dao.ITrialTestLineDao;
+import com.terrence.crm.dol.dao.impl.TrialDao;
+import com.terrence.crm.dol.query.AssemblyCheckQuery;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+import com.terrence.crm.dol.query.TrialTestLineQuery;
+import com.terrence.crm.dol.service.ITrialPdService;
+import com.terrence.crm.dol.service.ITrialTestLineService;
+@Service
+@Transactional
+public class TrialTestLineService implements ITrialTestLineService {
+	@Autowired
+	@Qualifier("trialTestLineDao")
+	private ITrialTestLineDao trialTestLineDao;
+	@Autowired
+	@Qualifier("assemblyCheckDao")
+	private IAssemblyCheckDao assemblyCheckDao;
+	@Autowired
+	@Qualifier("trailCheckNumsDao")
+	private ITrailCheckNumsDao trailCheckNumsDao;
+	@Autowired
+	@Qualifier("trialPdDao")
+	private ITrialPdDao trialPdDao;
+	
+	@Autowired
+	@Qualifier("trailPdStepDao")
+	private ITrailPdStepDao trailPdStepDao;
+	
+	
+	
+	
+	@Override
+	public TrialTestLine getById(Long id) throws ServiceException {
+		return trialTestLineDao.getById(id);
+	}
+
+	@Override
+	public void saveOrUpdate(TrialTestLine entity) throws ServiceException {
+		trialTestLineDao.saveOrUpdate(entity);
+	}
+
+	@Override
+	public Long save(TrialTestLine entity) throws ServiceException {
+		return trialTestLineDao.save(entity);
+	}
+
+	@Override
+	public Integer update(TrialTestLine entity) throws ServiceException {
+		AssemblyCheckQuery query = new AssemblyCheckQuery();
+		AssemblyCheck assemblyCheck = null;
+		query.setSeqno(entity.getSerialnumber());
+		List<AssemblyCheck> list = assemblyCheckDao.findList(query);
+		Long checkid = null;
+		Long checktimeid = null;
+		if(list.size()>0){
+			assemblyCheck = list.get(0);
+			checkid = assemblyCheck.getCheckid();
+			assemblyCheck.setFtimes(assemblyCheck.getFtimes()+1);
+			assemblyCheckDao.update(assemblyCheck);
+		}else{
+			assemblyCheck = new AssemblyCheck();
+			assemblyCheck.setFtimes(1);
+			assemblyCheck.setSeqno(entity.getSerialnumber());
+			assemblyCheck.setItemcode(entity.getItemcode());
+			checkid = assemblyCheckDao.save(assemblyCheck);
+		}
+		TrailCheckNums trailCheckNums = new TrailCheckNums();
+		trailCheckNums.setCheckid(checkid);
+		trailCheckNums.setCreatedate(new Date());
+		trailCheckNums.setItemcode(entity.getItemcode());
+		trailCheckNums.setItemseq(entity.getSerialnumber());
+		checktimeid = trailCheckNumsDao.save(trailCheckNums);
+		entity.setChecktimeid(checktimeid);
+		
+		//TrialTestLine testLine =new TrialTestLine(); 
+		//testLine=trialTestLineDao.getById(entity.getTrialid());
+		//if(assemblyCheck.getFtimes().intValue()>1){//已存在检测次数
+			entity.setTesttimes(assemblyCheck.getFtimes());
+		//}else{//新添加的授权--检测次数为1
+		//	entity.setTesttimes(1);
+		//}
+		
+		TrailPdStepQuery trailPdStepquery=new TrailPdStepQuery();
+		if(entity.getTplid()==null){//模板为空
+			throw new ServiceException("模板不能为空！！"); 
+		}else{
+			trailPdStepquery.setTplid(entity.getTplid());
+		}
+		List<TrailPdStep> tpsteplist =new ArrayList<TrailPdStep>();
+		tpsteplist=trailPdStepDao.findList(trailPdStepquery);
+		
+		int stepsize = tpsteplist.size();
+		String stepstr="";
+		for(int k=0;k<stepsize;k++){
+			if(k==(stepsize-1)){
+				stepstr+=tpsteplist.get(k).getStepid();
+			}else{
+				stepstr+=tpsteplist.get(k).getStepid()+",";
+			}
+		}
+		
+		entity.setStepids(stepstr);//当前测试模板的步骤id
+		
+		return trialTestLineDao.update(entity);
+	}
+
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return trialTestLineDao.deleteById(id);
+	}
+
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Page<TrialTestLine> findPage(Page<TrialTestLine> page,
+			TrialTestLineQuery query) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<TrialTestLine> findList(TrialTestLineQuery query)
+			throws ServiceException {
+		return trialTestLineDao.findList(query);
+	}
+
+	@Override
+	public List<TrialTestLine> findList(TrialTestLineQuery query, Integer pageSize)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<TrialTestLine> findAllList() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+}

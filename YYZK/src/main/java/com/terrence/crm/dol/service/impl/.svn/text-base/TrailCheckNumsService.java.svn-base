@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailCheckNums;
+import com.terrence.crm.dol.query.TrailCheckNumsQuery;
+import com.terrence.crm.dol.dao.ITrailCheckNumsDao;
+import com.terrence.crm.dol.service.ITrailCheckNumsService;
+
+@Service
+@Transactional
+public class TrailCheckNumsService extends BaseService implements ITrailCheckNumsService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailCheckNumsService.class);
+	@Autowired
+	@Qualifier("trailCheckNumsDao")
+	private ITrailCheckNumsDao trailCheckNumsDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailCheckNums";
+	}
+	@Transactional(readOnly=true)
+	public TrailCheckNums getById(java.lang.Long id) throws ServiceException
+	{
+		return trailCheckNumsDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailCheckNums entity) throws ServiceException
+	{
+		trailCheckNumsDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailCheckNums entity) throws ServiceException
+	{
+		Long adId = trailCheckNumsDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailCheckNums entity) throws ServiceException
+	{
+		Integer returnValue =  trailCheckNumsDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailCheckNumsDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailCheckNumsDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailCheckNumsQuery query = new TrailCheckNumsQuery();
+		try {
+			return trailCheckNumsDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailCheckNums> findPage(Page<TrailCheckNums> page, TrailCheckNumsQuery query) throws ServiceException
+	{
+		return trailCheckNumsDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailCheckNums> findPage(Page<TrailCheckNums> page,String statement, TrailCheckNumsQuery query) throws ServiceException
+	{
+		return trailCheckNumsDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailCheckNums> findList(TrailCheckNumsQuery query) throws ServiceException
+	{
+		return trailCheckNumsDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailCheckNums> findList(TrailCheckNumsQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailCheckNumsDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailCheckNums> findList(TrailCheckNumsQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailCheckNumsDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailCheckNums> findAllList() throws ServiceException
+	{
+		return trailCheckNumsDao.findAllList();
+	}
+
+}

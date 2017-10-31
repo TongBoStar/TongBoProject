@@ -1,0 +1,139 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Rewardnotes;
+import com.terrence.crm.dol.query.RewardnotesQuery;
+import com.terrence.crm.dol.dao.IRewardnotesDao;
+import com.terrence.crm.dol.service.IRewardnotesService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class RewardnotesService extends BaseService implements IRewardnotesService {
+	protected static Logger logger = LoggerFactory.getLogger(RewardnotesService.class);
+	@Autowired
+	@Qualifier("rewardnotesDao")
+	private IRewardnotesDao rewardnotesDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Rewardnotes";
+	}
+	@Transactional(readOnly=true)
+	public Rewardnotes getById(java.lang.Long id) throws ServiceException
+	{
+		return rewardnotesDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Rewardnotes entity) throws ServiceException
+	{
+		System.out.println(entity.getFnotes());
+		//entity.setFnotes(entity.getFnotes().replaceAll("\r\n", "<br/>"));
+		entity.setFnotes(entity.getFnotes());
+		System.out.println(entity.getFnotes());
+		entity.setCreatedate(DateConvertUtils.getCurrentDate());
+		entity.setAdminid(SpringSecurityUtils.getCurrentUserId());
+		rewardnotesDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Rewardnotes entity) throws ServiceException
+	{
+		System.out.println(entity.getFnotes());
+		//entity.setFnotes(entity.getFnotes().replaceAll("\r\n", "<br/>"));
+		entity.setFnotes(entity.getFnotes());
+		System.out.println(entity.getFnotes());
+		entity.setCreatedate(DateConvertUtils.getCurrentDate());
+		entity.setAdminid(SpringSecurityUtils.getCurrentUserId());
+		Long adId = rewardnotesDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Rewardnotes entity) throws ServiceException
+	{
+		Integer returnValue =  rewardnotesDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = rewardnotesDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = rewardnotesDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		RewardnotesQuery query = new RewardnotesQuery();
+		try {
+			return rewardnotesDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Rewardnotes> findPage(Page<Rewardnotes> page, RewardnotesQuery query) throws ServiceException
+	{
+		return rewardnotesDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Rewardnotes> findPage(Page<Rewardnotes> page,String statement, RewardnotesQuery query) throws ServiceException
+	{
+		return rewardnotesDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Rewardnotes> findList(RewardnotesQuery query) throws ServiceException
+	{
+		return rewardnotesDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Rewardnotes> findList(RewardnotesQuery query,Integer pageSize) throws ServiceException
+	{
+		return rewardnotesDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Rewardnotes> findList(RewardnotesQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return rewardnotesDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Rewardnotes> findAllList() throws ServiceException
+	{
+		return rewardnotesDao.findAllList();
+	}
+
+}

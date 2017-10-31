@@ -1,0 +1,680 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.sun.star.uno.RuntimeException;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.CheckDataDetail;
+import com.terrence.crm.dol.bean.OpcDetail;
+import com.terrence.crm.dol.bean.Team;
+import com.terrence.crm.dol.bean.TrailCheckNums;
+import com.terrence.crm.dol.bean.TrailTabRecord;
+import com.terrence.crm.dol.bean.Trial;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.query.AdttQuery;
+import com.terrence.crm.dol.query.TrailCheckNumsQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.query.TrialQuery;
+import com.terrence.crm.dol.service.IAdttService;
+import com.terrence.crm.dol.service.IOpcService;
+import com.terrence.crm.dol.service.ITeamService;
+import com.terrence.crm.dol.service.ITrailCheckNumsService;
+import com.terrence.crm.dol.service.ITrialDeviceService;
+import com.terrence.crm.dol.service.impl.TrailCheckNumsService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/opc")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "opc." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class OpcAction extends CrudActionSupport  implements ApplicationContextAware{
+	
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	@Autowired
+	@Qualifier("opcService")
+	private IOpcService opcService;
+	@Autowired
+	@Qualifier("trialDeviceService")
+	private ITrialDeviceService trialDeviceService;
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	/** 分页器 */
+	private Page<TrailCheckNums> page = new Page<TrailCheckNums>();
+	
+	private TrailCheckNumsQuery trailCheckNumsQuery;
+	@Autowired
+	@Qualifier("trailCheckNumsService")
+	private ITrailCheckNumsService trailCheckNumsService;
+	
+	private ApplicationContext ctx;
+	
+	private Long deviceId;
+	private java.util.Map<String, String>  deviceMap;
+	
+	private String fename;
+	private String valueData;
+	private List<String> projectDataList;
+	
+	private Integer isDo;
+	
+	private String itemcode;
+	private String serialNumber;
+	private Long checkid;
+	private String xlsPath;
+	
+	private String groupName;
+	private List<TrailTabRecord> trailTabRecordList;
+	/**取出坐标的最大值*/
+	private Integer tabRecordMaxValue;
+	private String longTime;
+	private Integer updateCount;
+	
+	private Long tplid;
+	private Integer isfirst;
+	private SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
+	private String fieldName;
+	private Long modelid;
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	public void  prepareReaddeviceinfo() throws Exception{
+		prepareModel();
+	}
+	// -------------------自定义方法
+	/**
+	 *<p>读取PLC设备数据<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-27下午3:36:38
+	 * @return
+	 */
+	public String readdeviceinfo() {
+		try {
+			deviceMap= opcService.readdeviceinfo(deviceId,isfirst);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据读取成功";
+		} catch (Exception e) {
+			e.getStackTrace();
+			resultInfo[0] = "0";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	public String loadAllDeviceDetail() {
+		try {
+			updateCount =opcService.loadAllDeviceDetail(deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据初始化成功";
+		} catch (Exception e) {
+			e.getStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	
+	public String opendevicestatus() {
+		
+        try {
+			
+			opcService.updateDeviceStatus("1",fename,TerrcnceConstants.TAG_VALUE,deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备开启成功";
+		} catch (Exception e) {
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备开启失败";
+		}
+     
+		return JSON;
+		
+	}
+	public void prepareColseDeviceStatus() throws Exception {
+		prepareModel();
+	}
+	public String colseDeviceStatus()throws Exception {
+		
+		try {
+			opcService.updateDeviceStatus("0",fename,TerrcnceConstants.TAG_VALUE,deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备关闭成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "设备关闭失败";
+		}
+		return JSON;
+		
+	}
+	
+	
+	public String saveProjectData(){
+		
+		try {
+			opcService.saveProjectData(deviceId,tplid, groupName);
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备检测项目保存成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "设备项目检测保存失败";
+		}
+		return JSON;
+	}
+	public String cleanProjectData(){
+		
+		try {
+			opcService.cleanProjectData(deviceId,tplid, groupName);
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备检测数据清空成功！";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "设备检测数据清空失败！";
+		}
+		return JSON;
+	}
+	public String writeFeiBuData(){
+		
+		try {
+			opcService.updateDeviceStatus(valueData,fename,groupName, deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "设备分步写入成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "设备分步写入失败";
+		}
+		return JSON;
+	}
+	public String saveGlobalData(){
+		try {
+			opcService.saveGlobalData(deviceId,isDo,checkid,tplid,serialNumber,itemcode);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据保存成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+
+	
+	public String saveCheckRecord(){
+		try {
+			checkid = opcService.saveCheckRecord(itemcode,serialNumber);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据保存成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	public String numsMaxId(){
+		try {
+			checkid = opcService.numsMaxId(itemcode,serialNumber);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据保存成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	public String findTraliTabRecord(){
+		try {
+		trailTabRecordList=	opcService.findTraliTabRecordList(itemcode,serialNumber,deviceId);
+		tabRecordMaxValue = opcService.findTabRecordMaxValue(itemcode,serialNumber,deviceId);
+		longTime = opcService.findLongTime(itemcode,serialNumber,deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据查询成功！";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	public String findTraliTabRecordHighChar(){
+		try {
+			trailTabRecordList=	opcService.findTraliTabRecordHighChar(checkid,deviceId);
+			tabRecordMaxValue = opcService.findTabRecordMaxValue(itemcode,serialNumber,deviceId);
+			longTime = opcService.findLongTime(itemcode,serialNumber,deviceId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "数据查询成功！";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		
+		return JSON;
+	}
+	public String listTrialReacod() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("checktimeid");
+			page.setOrder(Page.DESC);
+		}
+		if(trailCheckNumsQuery == null) {
+			trailCheckNumsQuery = new TrailCheckNumsQuery();
+		}
+		
+		try {
+			//page = trialService.findPage(page, trialQuery);
+			page = trailCheckNumsService.findPage(page, trailCheckNumsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String parsexls() {
+		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties");
+		Properties props = new Properties();
+		try {
+			props.load(inputStream);
+			xlsPath= props.getProperty("upload.bashPath")+xlsPath;
+//			List<String> list = opcService.readXls(xlsPath,deviceId);
+//			Map<String,List<String>> sqlMap = opcService.readFlowXls(xlsPath,tplid,serialNumber);
+//			checkid = opcService.saveCheckRecord(itemcode,serialNumber);
+//			opcService.saveXlsInfo(deviceId,checkid,tplid, serialNumber, itemcode,list,sqlMap);
+			
+			opcService.saveAndDealXls(xlsPath, deviceId, tplid, serialNumber, itemcode);
+			resultInfo[0] = "0";
+			resultInfo[1] = "上传并保存成功!";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public String findChartColumns() {
+		try {
+			Map<String, Object> map = opcService.findChartColumns(modelid);
+			Struts2Utils.renderJson(map);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功!";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	@Override
+	public Adtt getModel() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String list() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String save() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String delete() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String show() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void prepareModel() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Page<TrailCheckNums> getPage() {
+		return page;
+	}
+
+	public void setPage(Page<TrailCheckNums> page) {
+		this.page = page;
+	}
+
+	public TrailCheckNumsQuery getTrailCheckNumsQuery() {
+		return trailCheckNumsQuery;
+	}
+
+	public void setTrailCheckNumsQuery(TrailCheckNumsQuery trailCheckNumsQuery) {
+		this.trailCheckNumsQuery = trailCheckNumsQuery;
+	}
+
+	public Long getDeviceId() {
+		return deviceId;
+	}
+
+	public void setDeviceId(Long deviceId) {
+		this.deviceId = deviceId;
+	}
+
+	public java.util.Map<String, String> getDeviceMap() {
+		return deviceMap;
+	}
+
+	public void setDeviceMap(java.util.Map<String, String> deviceMap) {
+		this.deviceMap = deviceMap;
+	}
+	
+
+	public String getFename() {
+		return fename;
+	}
+
+	public void setFename(String fename) {
+		this.fename = fename;
+	}
+
+	public List<String> getProjectDataList() {
+		return projectDataList;
+	}
+
+	public void setProjectDataList(List<String> projectDataList) {
+		this.projectDataList = projectDataList;
+	}
+
+	public Integer getIsDo() {
+		return isDo;
+	}
+
+	public void setIsDo(Integer isDo) {
+		this.isDo = isDo;
+	}
+
+	public String getValueData() {
+		return valueData;
+	}
+
+	public void setValueData(String valueData) {
+		this.valueData = valueData;
+	}
+
+	public String getItemcode() {
+		return itemcode;
+	}
+
+	public void setItemcode(String itemcode) {
+		this.itemcode = itemcode;
+	}
+
+	public String getSerialNumber() {
+		return serialNumber;
+	}
+
+	public void setSerialNumber(String serialNumber) {
+		this.serialNumber = serialNumber;
+	}
+
+	public Long getCheckid() {
+		return checkid;
+	}
+
+	public void setCheckid(Long checkid) {
+		this.checkid = checkid;
+	}
+
+	public List<TrailTabRecord> getTrailTabRecordList() {
+		return trailTabRecordList;
+	}
+
+	public void setTrailTabRecordList(List<TrailTabRecord> trailTabRecordList) {
+		this.trailTabRecordList = trailTabRecordList;
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
+
+	public Integer getTabRecordMaxValue() {
+		return tabRecordMaxValue;
+	}
+
+	public void setTabRecordMaxValue(Integer tabRecordMaxValue) {
+		this.tabRecordMaxValue = tabRecordMaxValue;
+	}
+
+	public String getLongTime() {
+		return longTime;
+	}
+
+	public void setLongTime(String longTime) {
+		this.longTime = longTime;
+	}
+
+	public Integer getUpdateCount() {
+		return updateCount;
+	}
+
+	public void setUpdateCount(Integer updateCount) {
+		this.updateCount = updateCount;
+	}
+
+	public Long getTplid() {
+		return tplid;
+	}
+
+	public void setTplid(Long tplid) {
+		this.tplid = tplid;
+	}
+
+	public Integer getIsfirst() {
+		return isfirst;
+	}
+
+	public void setIsfirst(Integer isfirst) {
+		this.isfirst = isfirst;
+	}
+
+	public String getXlsPath() {
+		return xlsPath;
+	}
+
+	public void setXlsPath(String xlsPath) {
+		this.xlsPath = xlsPath;
+	}
+
+	public String getFieldName() {
+		return fieldName;
+	}
+
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
+	}
+
+	public Long getModelid() {
+		return modelid;
+	}
+
+	public void setModelid(Long modelid) {
+		this.modelid = modelid;
+	}
+	
+}

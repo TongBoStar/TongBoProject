@@ -1,0 +1,137 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.Productpl;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.ProductplQuery;
+import com.terrence.crm.dol.dao.IProductplDao;
+import com.terrence.crm.dol.service.IProductplService;
+
+@Service
+@Transactional
+public class ProductplService extends BaseService implements IProductplService {
+	protected static Logger logger = LoggerFactory.getLogger(ProductplService.class);
+	@Autowired
+	@Qualifier("productplDao")
+	private IProductplDao productplDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Productpl";
+	}
+	@Transactional(readOnly=true)
+	public Productpl getById(java.lang.Long id) throws ServiceException
+	{
+		return productplDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Productpl entity) throws ServiceException
+	{
+		productplDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Productpl entity) throws ServiceException
+	{
+		Long adId = productplDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Productpl entity) throws ServiceException
+	{
+		Integer returnValue =  productplDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = productplDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = productplDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProductplQuery query = new ProductplQuery();
+		try {
+			return productplDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Productpl> findPage(Page<Productpl> page, ProductplQuery query) throws ServiceException
+	{
+		return productplDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Productpl> findPage(Page<Productpl> page,String statement, ProductplQuery query) throws ServiceException
+	{
+		return productplDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Productpl> findList(ProductplQuery query) throws ServiceException
+	{
+		return productplDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Productpl> findList(ProductplQuery query,Integer pageSize) throws ServiceException
+	{
+		return productplDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Productpl> findList(ProductplQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return productplDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Productpl> findAllList() throws ServiceException
+	{
+		return productplDao.findAllList();
+	}
+	/**
+	 * 通过ProductId查找PL产品
+	 * @param adminQuery
+	 * @return
+	 */
+	public List<Productpl> findProductplId(ProductplQuery  productplQuery) {
+		return productplDao.findProductplId(productplQuery);
+	}
+	@Override
+	public List<Productpl> findListHistory(ProductplQuery productplQuery) {
+		return productplDao.findList("Productpl.getByProductId.History",productplQuery);
+	}
+}

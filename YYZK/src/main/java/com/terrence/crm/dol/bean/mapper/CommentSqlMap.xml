@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Comment">
+
+<resultMap id="RM.Comment" class="com.terrence.crm.dol.bean.Comment">
+	<result property="id" column="id"/>
+	<result property="userForId" column="userForId"/>
+	<result property="userToId" column="userToId"/>
+	<result property="orderId" column="orderId"/>
+	<result property="itemId" column="itemId"/>
+	<result property="commentContent" column="commentContent"/>
+	<result property="stars" column="stars"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="userForName" column="userForName"/>
+	<result property="userToName" column="userToName"/>
+	<result property="orderCode" column="orderCode"/>
+	<result property="imgs" column="imgs"/>
+	<result property="item" resultMap="RM.Comment.Item"/>
+</resultMap>
+<resultMap id="RM.Comment.Item" class="com.terrence.crm.dol.bean.Item">
+	<result property="itemName" column="itemName"/>
+	<result property="itemPriceAux" column="itemPriceAux"/>
+	<result property="consumTimes" column="consumTimes"/>
+	<result property="serviceType" column="serviceType"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Comment.columns">
+	<![CDATA[
+		t_comment.id ,
+		t_comment.userForId ,
+		t_comment.userToId ,
+		t_comment.orderId ,
+		t_comment.itemId ,
+		t_comment.commentContent ,
+		t_comment.stars ,
+		t_comment.createTime ,
+		t_comment.modifyTime
+	]]>
+</sql>
+
+<insert id="Comment.insert" >
+	<![CDATA[
+	INSERT INTO t_comment (
+		userForId,
+		userToId,
+		orderId,
+		itemId,
+		commentContent,
+		stars,
+		createTime,
+		modifyTime
+	) VALUES (
+		#userForId#,
+		#userToId#,
+		#orderId#,
+		#itemId#,
+		#commentContent#,
+		#stars#,
+		#createTime#,
+		#modifyTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Comment.update" parameterClass="com.terrence.crm.dol.bean.Comment"> 
+	UPDATE t_comment 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="userForId">
+			userForId = #userForId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="userToId">
+			userToId = #userToId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="orderId">
+			orderId = #orderId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemId">
+			itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="commentContent">
+			commentContent = #commentContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stars">
+			stars = #stars# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Comment.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_comment.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userForId">
+			t_comment.userForId = #userForId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userToId">
+			t_comment.userToId = #userToId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orderId">
+			t_comment.orderId = #orderId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemId">
+			t_comment.itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="commentContent">
+			t_comment.commentContent = #commentContent# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stars">
+			t_comment.stars = #stars# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_comment.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_comment.modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Comment.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_comment.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userForId">
+		t_comment.userForId = #userForId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userToId">
+		t_comment.userToId = #userToId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="orderId">
+		t_comment.orderId = #orderId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemId">
+		t_comment.itemId = #itemId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="commentContent">
+		t_comment.commentContent = #commentContent# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stars">
+		t_comment.stars = #stars# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_comment.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_comment.modifyTime = #modifyTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="Comment.getById" resultMap="RM.Comment">
+	select <include refid="Comment.columns"/> ,t_order.orderCode,
+	ta1.adminName userForName,ta2.adminName userToName ,t_item.itemName,t_item.serviceType,
+	t_item.itemPriceAux,t_item.consumTimes ,t_ci.imgs  
+	from t_comment 
+	left join t_order on t_comment.orderId = t_order.id 
+	left join t_item on t_comment.itemId = t_item.id 
+	left join t_admin ta1 on t_comment.userForId = ta1.adminId 
+	left join t_admin ta2 on t_comment.userToId = ta2.adminId 
+	left join (select count(commentId) imgs,commentId from t_comment_img group by commentId) t_ci on t_comment.id = t_ci.commentId 
+	where t_comment.id=#id#
+</select>
+
+<select id="Comment.getByProperty" resultMap="RM.Comment">
+	select <include refid="Comment.columns"/> from t_comment where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Comment.delete">
+	<![CDATA[
+		DELETE FROM t_comment WHERE id=#id#
+	]]>
+</delete>
+<delete id="Comment.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_comment WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Comment.findPage.count" resultClass="long">
+	select count(*) from t_comment <include refid="Comment.findPage.where"/>
+</select>
+
+<select id="Comment.findPage" resultMap="RM.Comment">
+	select <include refid="Comment.columns"/> ,t_order.orderCode,
+	ta1.adminName userForName,ta2.adminName userToName ,t_item.itemName,t_item.serviceType,
+	t_item.itemPriceAux,t_item.consumTimes ,t_ci.imgs  
+	from t_comment 
+	left join t_order on t_comment.orderId = t_order.id 
+	left join t_item on t_comment.itemId = t_item.id 
+	left join t_admin ta1 on t_comment.userForId = ta1.adminId 
+	left join t_admin ta2 on t_comment.userToId = ta2.adminId 
+	left join (select count(commentId) imgs,commentId from t_comment_img group by commentId) t_ci on t_comment.id = t_ci.commentId 
+	<include refid="Comment.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Comment.findList" resultMap="RM.Comment">
+	SELECT <include refid="Comment.columns"/>,t_order.orderCode,
+	ta1.adminName userForName,ta2.adminName userToName ,t_item.itemName,t_item.serviceType,
+	t_item.itemPriceAux,t_item.consumTimes ,t_ci.imgs  
+	from t_comment 
+	left join t_order on t_comment.orderId = t_order.id 
+	left join t_item on t_comment.itemId = t_item.id 
+	left join t_admin ta1 on t_comment.userForId = ta1.adminId 
+	left join t_admin ta2 on t_comment.userToId = ta2.adminId 
+	left join (select count(commentId) imgs,commentId from t_comment_img group by commentId) t_ci on t_comment.id = t_ci.commentId 
+	<include refid="Comment.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

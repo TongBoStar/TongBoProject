@@ -1,0 +1,102 @@
+package com.terrence.crm.dol.service.impl;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.HelpFiles;
+import com.terrence.crm.dol.dao.IHelpFilesDao;
+import com.terrence.crm.dol.query.HelpFilesQuery;
+import com.terrence.crm.dol.service.IHelpFilesService;
+@Service
+@Transactional
+public class HelpFilesService implements IHelpFilesService {
+	@Autowired
+	@Qualifier("helpFilesDao")
+	private IHelpFilesDao helpFilesDao;
+	@Override
+	public HelpFiles getById(Long id) throws ServiceException {
+		return helpFilesDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(HelpFiles entity) throws ServiceException {
+		helpFilesDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(HelpFiles entity) throws ServiceException {
+		return helpFilesDao.save(entity);
+	}
+	@Override
+	public Integer update(HelpFiles entity) throws ServiceException {
+		return helpFilesDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return helpFilesDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = helpFilesDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<HelpFiles> findPage(Page<HelpFiles> page, HelpFilesQuery query) throws ServiceException{
+		return helpFilesDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<HelpFiles> findPage(Page<HelpFiles> page,String statement, HelpFilesQuery query) throws ServiceException{
+		return helpFilesDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<HelpFiles> findList(HelpFilesQuery query) throws ServiceException{
+		return helpFilesDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<HelpFiles> findList(HelpFilesQuery query,Integer pageSize) throws ServiceException{
+		return helpFilesDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HelpFiles> findList(HelpFilesQuery query,String statement,Integer pageSize) throws ServiceException{
+		return helpFilesDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HelpFiles> findAllList() throws ServiceException{
+		return helpFilesDao.findAllList();
+	}
+	@Override
+	public void downLoadFiles(HttpServletResponse response, String filePath) {
+		String path = filePath;
+		File file = new File(path);
+		if(file.exists()){
+			InputStream is = null;
+			try {
+				is = new BufferedInputStream(new FileInputStream(file));
+				byte[] buff = new byte[is.available()];
+				is.read(buff);
+				is.close();
+	            BufferedOutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+	            toClient.write(buff);
+	            toClient.flush();
+	            toClient.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}

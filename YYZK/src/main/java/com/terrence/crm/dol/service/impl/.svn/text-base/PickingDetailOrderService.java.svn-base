@@ -1,0 +1,299 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.PickingDetailQuery;
+import com.terrence.crm.dol.service.IPickingDetailService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class PickingDetailOrderService extends BaseService implements IPickingDetailService {
+	protected static Logger logger = LoggerFactory.getLogger(PickingDetailOrderService.class);
+	@Autowired
+	@Qualifier("pickingDetailDao")
+	private IPickingDetailDao pickingDetailDao;
+	
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PickingDetail";
+	}
+	@Transactional(readOnly=true)
+	public PickingDetail getById(java.lang.Long id) throws ServiceException
+	{
+		return pickingDetailDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PickingDetail entity) throws ServiceException
+	{
+		pickingDetailDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PickingDetail entity) throws ServiceException
+	{
+		Long adId = pickingDetailDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PickingDetail entity) throws ServiceException
+	{
+		Integer returnValue =  pickingDetailDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pickingDetailDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pickingDetailDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PickingDetailQuery query = new PickingDetailQuery();
+		try {
+			return pickingDetailDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PickingDetail> findPage(Page<PickingDetail> page, PickingDetailQuery query) throws ServiceException
+	{
+		return pickingDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PickingDetail> findPage(Page<PickingDetail> page,String statement, PickingDetailQuery query) throws ServiceException
+	{
+		return pickingDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PickingDetail> findList(PickingDetailQuery query) throws ServiceException
+	{
+		return pickingDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PickingDetail> findList(PickingDetailQuery query,Integer pageSize) throws ServiceException
+	{
+		return pickingDetailDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PickingDetail> findList(PickingDetailQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pickingDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PickingDetail> findAllList() throws ServiceException
+	{
+		return pickingDetailDao.findAllList();
+	}
+	@Override
+	public void saveToOut(PickingDetail entity) throws ServiceException {//保存调拨单
+
+		Picking picking=new Picking();
+			
+			Long picktype=entity.getPickingtype();//领料单类型
+			//---领料单号-------------
+			
+			Icbillno icbillno = icbillnoDao.getById(picktype);
+			String fbillno=icbillno.getFpreletter()+(icbillno.getFcurno()+1);
+			Icbillno updateicbillno=new Icbillno();
+			updateicbillno.setFbillid(picktype);
+			updateicbillno.setFcurno(icbillno.getFcurno()+1);
+			icbillnoDao.update(updateicbillno);
+			//------------
+			Long realid = SpringSecurityUtils.getCurrentUserId();
+			picking.setEmpid(entity.getReqtakeid());//领料人
+			picking.setFbillerid(realid);//制单人
+			picking.setFsmanagerid(realid);//保管人
+			picking.setFtrantype(41L);//单据类型--调拨单
+			picking.setFpurposeid(12000L);//领料类型
+			picking.setFdeptid(adminDao.getById(entity.getReqtakeid()).getTeamid().longValue());//领料部门
+			picking.setFstatus(0);//审核状态
+			picking.setFfmanagerid(realid);//验收人
+			picking.setFdate(DateConvertUtils.getCurrentDateTime());//制单日期
+			picking.setFbillno(fbillno);//领料单号
+			picking.setIserp(entity.getIserp());////是否erp入库---1:是,0:否
+			picking.setNotes(entity.getNotes());//备注
+			picking.setFreftype(12561);//--调拨单--成本调拨
+			Long pickid = pickingDao.save(picking, "Picking.insert.Tools");
+		//--领料表头添加END--------------------------------------------------------
+		//--领料单明细添加BEGIN--------------------------------------------------------
+			String[] codelist=entity.getCodelist(); 
+			String[] namelist=entity.getNamelist(); 
+			String[] formatnolist=entity.getFormatnolist(); 
+			String[] unitnamelist=entity.getUnitnamelist(); 
+			String[] stockidlist=entity.getStockidlist(); 
+			String[] batchnolist=entity.getBatchnolist(); 
+			Integer[] dbnolist=entity.getDbnolist();
+			Double[] tdfqty=entity.getTdfqty();
+			Long[] instock= entity.getInstock();
+			
+			PickingDetail pickingDetail=null;
+			int ll = codelist.length;
+			InventoryBatchQuery	inventoryBatchQuery=new InventoryBatchQuery();
+			List<Long> detailidlist=new ArrayList<Long>();
+			for(int i=0;i<ll;i++){
+				pickingDetail=new PickingDetail();
+				pickingDetail.setPickingid(pickid);
+				pickingDetail.setItemcode(codelist[i]);
+				pickingDetail.setItemname(namelist[i]);
+				pickingDetail.setItemmode(formatnolist[i]);
+				pickingDetail.setFqty(tdfqty[i]);
+				
+				
+				pickingDetail.setFentryid(i);
+				BaseItem baseitem = baseItemDao.getByProperty("itemcode", codelist[i]);//.getFitemid().intValue()
+				if(null!=baseitem.getIsbatch()&&baseitem.getIsbatch()==1){
+					pickingDetail.setBatchno(batchnolist[i]);
+				}
+				//pickingDetail.setFitemid(baseitem.getFitemid().intValue());
+				pickingDetail.setFscstockid(Long.valueOf(stockidlist[i]));
+				pickingDetail.setDbno(dbnolist[i]);
+				pickingDetail.setIssn(baseitem.getFissnmanager());//  是否序列号管理
+				pickingDetail.setFdcstockid(instock[i].intValue());
+				
+				//---添加锁库
+				inventoryBatchQuery=new InventoryBatchQuery();
+				inventoryBatchQuery.setItemcode(codelist[i]);
+				inventoryBatchQuery.setDbno(dbnolist[i]);
+				inventoryBatchQuery.setFitemid(Integer.valueOf(stockidlist[i]));
+				if(null!=baseitem.getIsbatch()&&baseitem.getIsbatch()==1){
+					inventoryBatchQuery.setBatchno(batchnolist[i]+"");	
+				}
+				InventoryBatch inventoryBatch = inventoryBatchDao.getByEntity("InventoryBatch.getByEntity.real", inventoryBatchQuery);//查询要锁库的数据
+				inventoryBatch.setFqtylock((inventoryBatch.getFqtylock()==null?0:inventoryBatch.getFqtylock())+tdfqty[i]);
+				inventoryBatchDao.update(inventoryBatch);
+				//--添加锁库END-------------------------------
+				
+				Long pickingDetailid = pickingDetailDao.save(pickingDetail);
+				//记录序列号管理的物料
+				if(baseitem.getFissnmanager()==1){
+					detailidlist.add(pickingDetailid);
+				}
+				
+			}
+			
+		//-处理序列号--snstrlist-----------------------------
+			String[] snstrlist=null;
+			snstrlist=entity.getSnstrlist();
+			int idsize = detailidlist.size();
+			if(detailidlist.size()>0){
+				for(int i=0;i<idsize;i++){
+					Long detailid = detailidlist.get(i);
+					String[] snalone = snstrlist[i].split(",");
+					for(String snid:snalone){
+						Icserial snentity=new Icserial();
+						snentity.setSerialid(Long.valueOf(snid));
+						snentity.setLockstatus(1);//锁库
+						snentity.setFinterid(detailid);
+						snentity.setFsnlistid(detailid);
+						snentity.setFtrantypeid(picking.getFtrantype());
+						icserialDao.update(snentity);
+					}
+				}	
+			}
+			
+	}
+	@Override
+	public void deleteBydetailid(Long pickingDetailId) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void saveToAdd(PickingDetail entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void saveToNewfqty(PickingDetail entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void saveToNewsn(PickingDetail entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public List<PickingDetail> findReturn(PickingDetailQuery pickingDetailQuery)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void saveReturn(PickingDetail entity) throws ServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

@@ -1,0 +1,156 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.query.PorequestQuery;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+
+@Repository
+public class PorequestDao extends BaseIbatisDao<Porequest,java.lang.Long> implements IPorequestDao{
+
+		
+	public void saveOrUpdate(Porequest entity) {
+		if(entity.getFinterid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Porequest";
+	}
+	public Porequest getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Porequest)this.getSqlMapClientTemplate().queryForObject("Porequest.getByProperty", map);		
+	}
+
+	@Override
+	public Porequest findPQDetail(PorequestQuery porequestQuery) {
+		return (Porequest) this.getSqlMapClientTemplate().queryForObject("Porequest.find.PQDetail",porequestQuery);
+	}
+
+
+	@Override
+	public void updateforPoAudit(String auditIds, Porequest porequest) {
+		porequest.setFinterids(auditIds);
+		porequest.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统日期
+		porequest.setCheckid(SpringSecurityUtils.getCurrentUserId());//审核人ID
+		this.getSqlMapClientTemplate().update("Porequest.update.forAudit", porequest);
+	}
+
+	@Override
+	public List<Porequest> findListaudit(Porequest porequest) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.List.auditlist", porequest);
+	}
+
+	@Override
+	public Porequest findPQtasks(PorequestQuery porequestQuery) {
+		return (Porequest) this.getSqlMapClientTemplate().queryForObject("Porequest.find.tasks", porequestQuery);
+	}
+
+	@Override
+	public void updateforPoUNAudit(String auditIds, Porequest porequest) {//反审
+		porequest.setFinterids(auditIds);
+		 this.getSqlMapClientTemplate().update("Porequest.update.forAudit", porequest);
+	}
+
+	@Override
+	public void updateforclose(String auditIds, Porequest porequest) {//关闭
+		porequest.setFinterids(auditIds);
+		 this.getSqlMapClientTemplate().update("Porequest.update.forAudit", porequest);
+	}
+
+	@Override
+	public void updateforUNclose(String auditIds, Porequest porequest) {//反关闭
+		porequest.setFinterids(auditIds);
+		 this.getSqlMapClientTemplate().update("Porequest.update.forAudit", porequest);
+	}
+
+	@Override
+	public Porequest findDetil(Long porequestId) {
+		return (Porequest) this.getSqlMapClientTemplate().queryForObject("Porequest.findDetail", porequestId);
+	}
+
+	@Override
+	public List<Porequest> findpno(PorequestQuery porequestQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.porequest.no", porequestQuery);
+	}
+
+	@Override
+	public void deletePFid(Porequest porequest) {
+		this.getSqlMapClientTemplate().delete("Porequest.delete.Pid", porequest);
+	}
+
+	@Override
+	public List<Porequest> findListall(Porequest porequest) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.porequest.no", porequest);
+	}
+
+	@Override
+	public void updateCheck(Porequest porequest) {
+		this.getSqlMapClientTemplate().update("Porequest.update", porequest);
+		
+	}
+
+	@Override
+	public void updateClosed(Porequest porequest) {
+		this.getSqlMapClientTemplate().update("Porequest.update.isclose", porequest);
+	}
+
+	@Override
+	public void updateIclose(Porequest porequest) {
+		this.getSqlMapClientTemplate().update("Porequest.update.isclose", porequest);
+	}
+
+	@Override
+	public void updateDetailstatus(Porequest entity) {
+		this.getSqlMapClientTemplate().update("Porequest.update.isclose", entity);
+		
+	}
+
+	@Override
+	public List<Porequest> findppList(Porequest pp) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.porequest.no",pp);
+	}
+
+	@Override
+	public List<Porequest> findAllIntasks(Porequest ppp) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.porequest.no",ppp);
+	}
+
+	@Override
+	public List<Porequest> findJected(Porequest porequest) {
+		return this.getSqlMapClientTemplate().queryForList("Porequest.find.jected", porequest);
+	}
+
+	@Override
+	public Porequest findPorequestEntity(PorequestQuery porequestQuery) {
+		return (Porequest) this.getSqlMapClientTemplate().queryForObject("Porequet.find.porequestEntity",porequestQuery );
+	}
+
+	@Override
+	public List<Porequest> findtongdata(Porequest porequest) {
+		return this.getSqlMapClientTemplate().queryForList("Porequet.finddata.tongdata", porequest);
+	}
+
+	
+
+
+	
+}

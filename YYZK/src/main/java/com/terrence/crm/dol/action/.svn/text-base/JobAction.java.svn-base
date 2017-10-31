@@ -1,0 +1,593 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.userdetails.User;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.query.JobQuery;
+import com.terrence.crm.dol.service.IJobService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Job;
+import com.terrence.crm.dol.bean.security.AdminSession;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/job")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "job." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class JobAction extends CrudActionSupport<Job>  implements ApplicationContextAware{
+	
+	@Autowired
+	@Qualifier("jobService")
+	private IJobService jobService;
+	
+	private Job entity;
+
+	private JobQuery jobQuery;
+	
+	
+	private java.lang.Long jobId;
+	private java.lang.Long taskId;
+	
+	public java.lang.Long getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(java.lang.Long taskId) {
+		this.taskId = taskId;
+	}
+
+	/** 分页器 */
+	private Page<Job> page = new Page<Job>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Job> jobList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (jobId != null ) {
+			entity = jobService.getById(jobId);
+		} else {
+			entity = new Job();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			jobService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("jobId");
+			page.setOrder(Page.DESC);
+		}
+		if(jobQuery == null) {
+			jobQuery = new JobQuery();
+		}
+		
+		try {
+			page = jobService.findPage(page, jobQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+	
+		try {
+			jobService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = jobService.getById(jobId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+public void prepareSaveJobStatus() throws Exception {
+	prepareModel();
+}
+public String saveJobStatus() throws Exception {
+	
+	try {
+			//show();
+//			System.out.println(entity.toString());
+//			Integer status=-1;
+//			status=entity.getStatus();
+//			if(status.intValue()==0){//0:未开工---1:已开工----2:已完成
+//				entity.setStatus(1);
+//			}else if(status.intValue()==1){
+//				entity.setStatus(2);
+//			}
+			jobService.update(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询失败";
+	}
+	return JSON;
+}
+
+	
+	public String listAll() throws Exception {
+		try{
+			jobList = jobService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	//-----------------删除单条job
+	public String deleteAlonejob()throws Exception{
+	try{
+		if(checkedIdList==null){
+			jobService.deleteById(jobId);	
+		}else{
+			for(long id:checkedIdList){
+				jobService.deleteById(id);
+				}
+		}
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功";
+	} catch(ServiceException e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = e.getMessage();
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询失败";
+	}
+		return JSON;
+	}
+//==自定义查询获取当前用户任务========================
+
+	public String listToAdminJob()throws Exception{
+
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("jobId");
+			page.setOrder(Page.DESC);
+		}
+		if(jobQuery == null) {
+			jobQuery = new JobQuery();
+		}
+		
+		try {
+			//--获得当前用户-----------------------
+			List<Job> list=new ArrayList<Job>();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			if(adminSession.getAdmin().getType().intValue()==1){//管理员可见---type==1（管理员）
+				page = jobService.findPage(page, jobQuery);
+			}else{//非管理员---只可见自己的任务
+				jobQuery.setEmpid(adminSession.getAdmin().getAdminId());
+				page = jobService.findPage(page, jobQuery);
+				for(Job jo:page.getResult()){
+					if(jo.getEmpid().equals(adminSession.getAdmin().getAdminId())){
+						//System.out.println("==比对OK");
+							list.add(jo);
+					}
+				}
+				page.setResult(list);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+		
+	}
+	
+//====================================================================================	
+	public void prepareSaveJob() throws Exception {
+		prepareModel();
+	}
+	public String saveJob() throws Exception {
+		try{
+			Long id = jobService.save(entity);
+			
+			if(id==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "任务名已存在，请重新编辑！";				
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = ""+id;	
+			}
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareSaveNext() throws Exception {
+		prepareModel();
+	}
+	public String saveNext() throws Exception {
+		try{
+			
+			String id = jobService.saveNext(entity);
+			if(id.equals("false")){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "任务名已存在，请重新编辑！";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = ""+id;	
+			}
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//==================================
+	public String showByTaskId() throws Exception {
+		try{
+			entity = jobService.findByTaskId(taskId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//----------------------
+	public void prepareUpdateByJobid() throws Exception {
+		prepareModel();
+	}
+	public String updateByJobid(){
+		try{
+			//System.out.println(entity.toString());
+			
+			jobService.update(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+	//-------------------------
+	
+	public void prepareListJobLogs() throws Exception {
+		prepareModel();
+	}
+	public String ListJobLogs(){
+		try{
+			jobList=jobService.findListLogs(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Job getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public JobQuery getJobQuery() {
+		return jobQuery;
+	}
+
+	
+	public void setJobQuery(JobQuery jobQuery) {
+		this.jobQuery = jobQuery;
+	}
+
+	public void setJobId(java.lang.Long jobId) {
+		this.jobId = jobId;
+	}
+	
+	
+	public java.lang.Long getJobId() {
+		return this.jobId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Job> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Job> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Job> getJobList() {
+		return jobList;
+	}
+	
+	
+}

@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CirculationRaw;
+import com.terrence.crm.dol.dao.ICirculationRawDao;
+
+@Repository
+public class CirculationRawDao extends BaseIbatisDao<CirculationRaw,java.lang.Long> implements ICirculationRawDao{
+
+		
+	public void saveOrUpdate(CirculationRaw entity) {
+		if(entity.getRawid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CirculationRaw";
+	}
+	public CirculationRaw getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CirculationRaw)this.getSqlMapClientTemplate().queryForObject("CirculationRaw.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByCirculationid(Long circulationid) {
+		this.getSqlMapClientTemplate().delete("CirculationRaw.deleteByCirculationid", circulationid);
+	}
+
+}

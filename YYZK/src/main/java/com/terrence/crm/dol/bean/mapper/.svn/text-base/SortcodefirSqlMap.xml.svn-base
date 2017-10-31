@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Sortcodefir">
+
+        
+	<resultMap id="RM.Sortcodefir" class="com.terrence.crm.dol.bean.Sortcodefir">
+        <result property="firid" column="firid"/>
+        <result property="fircode" column="fircode"/>
+        <result property="firname" column="firname"/>
+        <result property="fiedesc" column="fiedesc"/>
+        <result property="firenable" column="firenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+    </resultMap>
+	<resultMap id="RM.Sortcodefir.list" class="com.terrence.crm.dol.bean.Sortcodefir">
+        <result property="firid" column="firid"/>
+        <result property="fircode" column="fircode"/>
+        <result property="firname" column="firname"/>
+        <result property="fiedesc" column="fiedesc"/>
+        <result property="firenable" column="firenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="admin" resultMap="admin.name"/>
+    </resultMap>
+	  
+	 <resultMap id="admin.name" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.Sortcodefir" id="RM.Sortcodefir.SortcodeSec">
+    	<result property="firid" column="firid"/>
+    	<result property="sortcodesec" resultMap="RM.Sortcodefir.SortcodeSec.Detail"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.Sortcodesec" id="RM.Sortcodefir.SortcodeSec.Detail">
+    	<result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+    </resultMap>
+    
+    
+	<resultMap id="RM.Sortcodefir.list.includeParent" class="com.terrence.crm.dol.bean.Sortcodefir">
+        <result property="firid" column="firid"/>
+        <result property="fircode" column="fircode"/>
+        <result property="firname" column="firname"/>
+        <result property="fiedesc" column="fiedesc"/>
+        <result property="parentid" column="parentid"/>
+        <result property="levels" column="levels"/>
+        <result property="parentname" column="parentname"/>
+    </resultMap>
+    <resultMap id="RM.Sortcodefir.SortSec" class="com.terrence.crm.dol.bean.Sortcodefir">
+        <result property="firid" column="firid"/>
+        <result property="fircode" column="fircode"/>
+        <result property="firname" column="firname"/>
+        <result property="fiedesc" column="fiedesc"/>
+        <result property="firenable" column="firenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="seclist" column="firid" select="Sortcodefir.SortcodeSec"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.Sortcodesec" id="RM.Sortcodefir.SortcodeSec">
+    	<result property="secid" column="secid"/>
+        <result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+        <result property="secdesc" column="secdesc"/>
+        <result property="secenable" column="secenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="firid" column="firid"/>
+    </resultMap>
+    
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Sortcodefir.columns">
+	    <![CDATA[
+        	t_sortcodefir.firid ,
+        	t_sortcodefir.fircode ,
+        	t_sortcodefir.firname ,
+        	t_sortcodefir.fiedesc ,
+        	t_sortcodefir.firenable ,
+        	t_sortcodefir.emplid ,
+        	t_sortcodefir.lastupdate 
+	    ]]>
+	</sql>
+	
+   <insert id="Sortcodefir.insert" >
+  
+       INSERT INTO
+        t_sortcodefir (
+        lastupdate 
+         <dynamic prepend="">
+         	<isNotEmpty prepend="," property="fircode">
+         		fircode
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="firname">
+         		firname
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="fiedesc">
+         		fiedesc
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="firenable">
+         		firenable
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="emplid">
+         		emplid
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="parentid">
+         		parentid
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="levels">
+         		levels
+         	</isNotEmpty>
+         	
+         </dynamic>
+        
+        	
+        ) VALUES (
+        	CONVERT(varchar, getdate(), 120 ) 
+        	 <dynamic prepend="">
+         	<isNotEmpty prepend="," property="fircode">
+         		#fircode#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="firname">
+         		#firname#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="fiedesc">
+         		#fiedesc#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="firenable">
+         		#firenable#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="emplid">
+         		#emplid#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="parentid">
+         		#parentid#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="levels">
+         		#levels#
+         	</isNotEmpty>
+         	
+         </dynamic>
+        	
+        
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="firid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Sortcodefir.update" parameterClass="com.terrence.crm.dol.bean.Sortcodefir">         
+        UPDATE t_sortcodefir 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fircode">
+	        	fircode = #fircode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="firname">
+	        	firname = #firname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fiedesc">
+	        	fiedesc = #fiedesc# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="firenable">
+	        	firenable = #firenable# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="emplid">
+	        	emplid = #emplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lastupdate">
+	        	lastupdate = #lastupdate# 
+	        </isNotEmpty>
+	        
+	        <isNotEmpty prepend="," property="parentid">
+         		parentid=#parentid#
+         	</isNotEmpty>
+         	<isNotEmpty prepend="," property="levels">
+         		levels=#levels#
+         	</isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        firid = #firid# 
+    </update>
+    
+	<delete id="Sortcodefir.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_sortcodefir where
+       firid = #firid# 
+    ]]>
+    </delete>
+    
+    <delete id="Sortcodefir.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_sortcodefir 
+        WHERE
+       firid in ($firid$) 
+    ]]>
+    </delete>
+    
+   <!--  <select id="Sortcodefir.getById" resultMap="RM.Sortcodefir">
+	    select <include refid="Sortcodefir.columns"/>
+	    
+	        from t_sortcodefir 
+	        where 
+		        firid = #firid# 
+	    
+    </select>--> 
+    
+     <select id="Sortcodefir.getById" resultMap="RM.Sortcodefir.list">
+	    select <include refid="Sortcodefir.columns"/>,t_admin.adminName
+	    
+	        from t_sortcodefir left join t_admin on t_sortcodefir.emplid = t_admin.adminId
+	        where 
+		        firid = #firid# 
+	    
+    </select>
+    <select id="Sortcodefir.getById.includeparent" resultMap="RM.Sortcodefir.list.includeParent">
+	    select 
+        	t_sortcodefir.firid ,
+        	t_sortcodefir.fircode ,
+        	t_sortcodefir.firname ,
+        	t_sortcodefir.fiedesc ,
+        	t_sortcodefir.parentid,
+        	t_sortcodefir.levels,
+        	tt.firname parentname
+	        from t_sortcodefir left join (select firid,firname from t_sortcodefir) tt
+	        on t_sortcodefir.parentid=tt.firid
+	        where 
+		        t_sortcodefir.firid = #firid# 
+	    
+    </select>
+    
+	<select id="Sortcodefir.getByProperty" resultMap="RM.Sortcodefir">
+		select <include refid="Sortcodefir.columns"/> from t_sortcodefir where $propertyName$=#propertyValue#
+	</select>
+	<select id="Sortcodefir.getByFircode" resultMap="RM.Sortcodefir.SortSec">
+		select <include refid="Sortcodefir.columns"/> from t_sortcodefir where t_sortcodefir.fircode=#fircode#
+	</select>
+	<select id="Sortcodefir.SortcodeSec" resultMap="RM.Sortcodefir.SortcodeSec">
+		select secid,seccode,secname,secdesc,secenable,emplid,lastupdate,firid  from t_sortcodesec where t_sortcodesec.firid =#firid#
+	</select>
+	<sql id="Sortcodefir.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="firid">
+	             t_sortcodefir.firid = #firid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fircode">
+	             t_sortcodefir.fircode = #fircode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="firname">
+	             t_sortcodefir.firname like ('%$firname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fiedesc">
+	             t_sortcodefir.fiedesc = #fiedesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="firenable">
+	             t_sortcodefir.firenable = #firenable#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="emplid">
+	             t_sortcodefir.emplid = #emplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lastupdateBegin">
+	             t_sortcodefir.lastupdate &gt;= #lastupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastupdateEnd">
+	             t_sortcodefir.lastupdate &lt;= #lastupdateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Sortcodefir.findPage.and">
+			<isNotEmpty prepend="AND" property="firid">
+	             t_sortcodefir.firid = #firid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fircode">
+	             t_sortcodefir.fircode = #fircode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="firname">
+	            t_sortcodefir.firname like ('%$firname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fiedesc">
+	             t_sortcodefir.fiedesc = #fiedesc#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="firenable">
+	             t_sortcodefir.firenable = #firenable#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="emplid">
+	             t_sortcodefir.emplid = #emplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lastupdateBegin">
+	             t_sortcodefir.lastupdate &gt;= #lastupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastupdateEnd">
+	             t_sortcodefir.lastupdate &lt;= #lastupdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="and" property="sortcodesec.secname">
+	       		t_sortcodesec.secname=#sortcodesec.secname# 
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Sortcodefir.Entity" resultMap="RM.Sortcodefir">
+    	SELECT 	<include refid="Sortcodefir.columns"/> FROM t_sortcodefir <include refid="Sortcodefir.findPage.where"/>
+    </select>
+    <select id="Sortcodefir.SortcodeSec.Entity" resultMap="RM.Sortcodefir.SortcodeSec">
+    	select t_sortcodefir.firid,t_sortcodesec.seccode ,t_sortcodesec.secname from t_sortcodefir,t_sortcodesec where t_sortcodefir.firid=t_sortcodesec.firid 
+		<include refid="Sortcodefir.findPage.and"/>
+    </select>
+    <select id="Sortcodefir.findList" resultMap="RM.Sortcodefir">
+    	SELECT 
+    		<include refid="Sortcodefir.columns"/> 
+    	FROM 
+    		t_sortcodefir
+		<include refid="Sortcodefir.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Sortcodefir.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_sortcodefir
+    ]]>
+		<include refid="Sortcodefir.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Sortcodefir.findPage" resultMap="RM.Sortcodefir">
+    	select <include refid="Sortcodefir.columns"/>	    
+	        from t_sortcodefir 	   
+		<include refid="Sortcodefir.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sortcodefir.findPage" resultMap="RM.Sortcodefir">
+    	select <include refid="Sortcodefir.columns"/>	    
+	        from t_sortcodefir where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       firid 
+	   not in(select $notTop$ 
+       firid 
+	   from t_sortcodefir <include refid="Sortcodefir.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Sortcodefir.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SortCodeFind" resultMap="RM.Sortcodefir">
+		select <include refid="Sortcodefir.columns"/>	    
+	        from t_sortcodefir where firname = #firname#
+	</select>
+	
+	  <select id="SortCodefir.find.firCode" resultMap="RM.Sortcodefir">
+		select <include refid="Sortcodefir.columns"/>	    
+	        from t_sortcodefir where fircode = #fircode#
+	</select>
+</sqlMap>

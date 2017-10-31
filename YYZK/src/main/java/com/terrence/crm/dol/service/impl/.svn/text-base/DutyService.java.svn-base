@@ -1,0 +1,171 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.bean.Duty;
+import com.terrence.crm.dol.query.DutyQuery;
+import com.terrence.crm.dol.dao.IDutyDao;
+import com.terrence.crm.dol.service.IDutyService;
+
+@Service
+@Transactional
+public class DutyService extends BaseService implements IDutyService {
+	protected static Logger logger = LoggerFactory.getLogger(DutyService.class);
+	@Autowired
+	@Qualifier("dutyDao")
+	private IDutyDao dutyDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Duty";
+	}
+	@Transactional(readOnly=true)
+	public Duty getById(java.lang.Long id) throws ServiceException
+	{
+		return dutyDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Duty entity) throws ServiceException
+	{
+		dutyDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Duty entity) throws ServiceException
+	{
+		Long adId = dutyDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Duty entity) throws ServiceException
+	{
+		Integer returnValue =  dutyDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = dutyDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = dutyDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DutyQuery query = new DutyQuery();
+		try {
+			return dutyDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Duty> findPage(Page<Duty> page, DutyQuery query) throws ServiceException
+	{
+		return dutyDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Duty> findPage(Page<Duty> page,String statement, DutyQuery query) throws ServiceException
+	{
+		return dutyDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Duty> findList(DutyQuery query) throws ServiceException
+	{
+		return dutyDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Duty> findList(DutyQuery query,Integer pageSize) throws ServiceException
+	{
+		return dutyDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Duty> findList(DutyQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return dutyDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Duty> findAllList() throws ServiceException
+	{
+		return dutyDao.findAllList();
+	}
+	@Override
+	public List<Duty> findDutyList(DutyQuery dutyQuery) {
+		List<Duty> returnlist=new ArrayList<Duty>();
+		dutyList(0L,dutyDao.findDutyList(dutyQuery),0,returnlist);
+		
+		for(Duty tt:returnlist){
+			System.out.println(tt.getDutyname());
+		}
+		return returnlist;
+	}
+	
+	/**
+	 * 查找职位
+	 * @param dutyQuery
+	 * @return
+	 */
+	@Override
+	public List<Duty> findDutyListInfo(DutyQuery dutyQuery) {
+		List<Duty> returnlist=dutyDao.findDutyList(dutyQuery);
+		return returnlist;
+	}
+	
+	public void dutyList(Long superior,List<Duty> dutyList,int n,List<Duty> returnlist){
+		for(Duty t:dutyList){
+			if(t.getParentid()!=null&&t.getParentid().intValue()==superior.intValue()){
+				String space="";
+				if(superior.intValue()!=0){
+					for(int i=1;i<t.getDutylevel();i++){
+						System.out.print("  ");
+						space+="&nbsp&nbsp&nbsp";
+					}
+				}
+				System.out.println("--"+t.getDutyname());
+				
+				t.setDutyname(space+t.getDutyname());
+				returnlist.add(t);
+				dutyList(t.getDutyid(),dutyList,0,returnlist);
+			}else{
+				n++;
+				if(n==dutyList.size()){
+					return;
+				}
+			}
+		}
+	}
+
+}

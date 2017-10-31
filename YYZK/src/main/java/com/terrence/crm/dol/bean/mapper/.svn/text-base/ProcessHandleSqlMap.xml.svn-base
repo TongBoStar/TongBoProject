@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProcessHandle">
+
+<resultMap id="RM.ProcessHandle" class="com.terrence.crm.dol.bean.ProcessHandle">
+	<result property="id" column="id"/>
+	<result property="nodeId" column="nodeId"/>
+	<result property="handler" column="handler"/>
+	<result property="dispatchdep" column="dispatchdep"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ProcessHandle.columns">
+	<![CDATA[
+		t_process_handle.id ,
+		t_process_handle.nodeId ,
+		t_process_handle.handler ,
+		t_process_handle.dispatchdep
+	]]>
+</sql>
+
+<insert id="ProcessHandle.insert" >
+	<![CDATA[
+	INSERT INTO t_process_handle (
+		nodeId,
+		handler,
+		dispatchdep
+	) VALUES (
+		#nodeId#,
+		#handler#,
+		#dispatchdep#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ProcessHandle.update" parameterClass="com.terrence.crm.dol.bean.ProcessHandle"> 
+	UPDATE t_process_handle 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="nodeId">
+			nodeId = #nodeId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="handler">
+			handler = #handler# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="dispatchdep">
+			dispatchdep = #dispatchdep# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ProcessHandle.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_process_handle.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeId">
+			t_process_handle.nodeId = #nodeId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="handler">
+			t_process_handle.handler = #handler# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="dispatchdep">
+			t_process_handle.dispatchdep = #dispatchdep# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ProcessHandle.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_process_handle.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeId">
+		t_process_handle.nodeId = #nodeId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="handler">
+		t_process_handle.handler = #handler# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="dispatchdep">
+		t_process_handle.dispatchdep = #dispatchdep# 
+	</isNotEmpty>
+</sql>
+
+<select id="ProcessHandle.getById" resultMap="RM.ProcessHandle">
+	select <include refid="ProcessHandle.columns"/> from t_process_handle where id=#id#
+</select>
+
+<select id="ProcessHandle.getByProperty" resultMap="RM.ProcessHandle">
+	select <include refid="ProcessHandle.columns"/> from t_process_handlewhere $propertyName$=#propertyValue#
+</select>
+
+<delete id="ProcessHandle.delete">
+	<![CDATA[
+		DELETE FROM t_process_handle WHERE id=#id#
+	]]>
+</delete>
+<delete id="ProcessHandle.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_process_handle WHERE id in ($id$)
+	]]>
+</delete>
+
+<delete id="ProcessHandle.deleteByNodeId">
+	DELETE FROM t_process_handle WHERE nodeId in ($id$)
+</delete>
+
+<select id="ProcessHandle.findPage.count" resultClass="long">
+	select count(*) from t_process_handle <include refid="ProcessHandle.findPage.where"/>
+</select>
+
+<select id="ProcessHandle.findPage" resultMap="RM.ProcessHandle">
+	select <include refid="ProcessHandle.columns"/> 
+		from t_process_handle 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_process_handle <include refid="ProcessHandle.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="ProcessHandle.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ProcessHandle.findList" resultMap="RM.ProcessHandle">
+	SELECT <include refid="ProcessHandle.columns"/> FROM t_process_handle
+	<include refid="ProcessHandle.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

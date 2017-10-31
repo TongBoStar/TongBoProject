@@ -1,0 +1,1348 @@
+package com.terrence.crm.dol.service.impl;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BomDrawTitle;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.bean.PlanTask;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProductmanageTask;
+import com.terrence.crm.dol.bean.StoreroomTask;
+import com.terrence.crm.dol.dao.IBomDrawTitleDao;
+import com.terrence.crm.dol.dao.IDesignAssistDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.dao.IPlanTaskDao;
+import com.terrence.crm.dol.dao.IProductmanageTaskDao;
+import com.terrence.crm.dol.dao.IStoreroomTaskDao;
+import com.terrence.crm.dol.query.BomDrawTitleQuery;
+import com.terrence.crm.dol.query.DesignAssistQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.query.PlanTaskQuery;
+import com.terrence.crm.dol.query.ProductmanageTaskQuery;
+import com.terrence.crm.dol.query.StoreroomTaskQuery;
+import com.terrence.crm.dol.service.IDesignAssistService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.PropertiesUtil;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class DesignAssistService extends BaseService implements IDesignAssistService {
+	@Autowired
+	@Qualifier("designAssistDao")
+	private IDesignAssistDao designAssistDao;
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("productmanageTaskDao")
+	private IProductmanageTaskDao productmanageTaskDao;
+	@Autowired
+	@Qualifier("storeroomTaskDao")
+	private IStoreroomTaskDao storeroomTaskDao;
+	@Autowired
+	@Qualifier("planTaskDao")
+	private IPlanTaskDao planTaskDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("bomDrawTitleDao")
+	private IBomDrawTitleDao bomDrawTitleDao;
+	
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	@Override
+	public DesignAssist getById(Long id) throws ServiceException {
+		DesignAssist da = designAssistDao.getById(id);
+		ModelListQuery mquery = new ModelListQuery();
+		mquery.setDesignassistId(id);
+		mquery.setModelMark("t_bracket_list");
+		mquery.setSortColumns("t_bracket_list.bdtId desc");
+		da.setBracketLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_bait_list");
+		mquery.setSortColumns("t_bait_list.bdtId desc");
+		da.setBaitLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assweld_list");
+		mquery.setSortColumns("t_assweld_list.bdtId desc");
+		da.setAssweldLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assemble_list");
+		mquery.setSortColumns("t_assemble_list.bdtId desc");
+		da.setAssembleLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_delivery_list");
+		mquery.setSortColumns("t_delivery_list.bdtId desc");
+		da.setDeliveryLists(modelListDao.findList(mquery));
+		return da;
+	}
+	@Override
+	public void saveOrUpdate(DesignAssist entity) throws ServiceException {
+		entity.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+		entity.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+		entity.setCreateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		if(null!=entity&&null!=entity.getId()){
+			update(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_EDIT, "修改技术支持成功(ID:"+entity.getId()+")");
+		}else{
+			entity.setFstatus(0);
+			entity.setDesignAssistCode(icbillnoDao.genflowcode("DA"));
+			Long id = save(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_ADD, "添加技术支持成功(ID:"+id+",名称："+entity.getProductCode()+")");
+		}
+	}
+	@Override
+	public Long save(DesignAssist entity) throws ServiceException {
+		return designAssistDao.save(entity);
+	}
+	@Override
+	public Integer update(DesignAssist entity) throws ServiceException {
+		return designAssistDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return designAssistDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = designAssistDao.deleteByMultipleId(delIds);
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_DEL, "删除技术支持成功(删除的ID:"+delIds+")");
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<DesignAssist> findPage(Page<DesignAssist> page, DesignAssistQuery query) throws ServiceException{
+		return designAssistDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DesignAssist> findPage(Page<DesignAssist> page,String statement, DesignAssistQuery query) throws ServiceException{
+		return designAssistDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DesignAssist> findList(DesignAssistQuery query) throws ServiceException{
+		return designAssistDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DesignAssist> findList(DesignAssistQuery query,Integer pageSize) throws ServiceException{
+		return designAssistDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DesignAssist> findList(DesignAssistQuery query,String statement,Integer pageSize) throws ServiceException{
+		return designAssistDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DesignAssist> findAllList() throws ServiceException{
+		return designAssistDao.findAllList();
+	}
+	@Override
+	public void exeProcess(DesignAssist entity, ProcessExetask processExetask) throws Exception{
+		designAssistDao.getById(entity.getId());
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,1);//需要分发节点
+		if(!(Boolean)map.get("flag")){//流程有异常
+			throw new ServiceException((String)map.get("msg"));
+		}else if((Boolean)map.get("rebackTag")){//被驳回
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+			changeMessage(entity,processExetask.getTaskCode(),map);//向系统消息中添加数据
+		}else if((Boolean)map.get("flag")){//是正常的往下执行的流程
+			Integer step = (Integer)map.get("step");//获取下一步的序号
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");//获取下一步的名称和执行人
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);//修改表头中对应的标签的信息
+			changeMessage(entity,processExetask.getTaskCode(),map);//向系统消息中添加数据
+			if((Boolean)map.get("endTag")){//如果审批流程结束，则进入下发流程
+				DesignAssist da = designAssistDao.getById(entity.getId());
+				String pushTime = DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+				SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddhhmm");
+				String dateCode = sf.format(new Date()).substring(2, 12);
+				/**下发到指定的生产管理部门*/
+				List<Long> deps = (List<Long>)(map.get("handleDepIds"));//获取下发的部门
+				ProductmanageTaskQuery productmanageTaskQuery = new ProductmanageTaskQuery();
+				productmanageTaskQuery.setSourceId(da.getId());
+				List<ProductmanageTask> productmanageTasks = productmanageTaskDao.findList(productmanageTaskQuery);
+				if(null!=productmanageTasks&&productmanageTasks.size()>0){//如果是别的tab页已经下发过某个部门，则是进行更新
+					for(ProductmanageTask productmanageTask:productmanageTasks){
+						findCodeByProssCode(processExetask.getTaskCode(),productmanageTask,da);
+						if(deps.contains(productmanageTask.getBelongDepId())){
+							productmanageTaskDao.update(productmanageTask);
+							deps.remove(productmanageTask.getBelongDepId());
+						}
+					}
+					if(deps.size()>0){
+						for(Long lo:deps){
+							ProductmanageTask pt = new ProductmanageTask();
+							pt.setProductTaskCode("PROD"+dateCode);
+							pt.setBelongDepId(lo);
+							pt.setSourceId(da.getId());
+							pt.setSourceCode(da.getDesignAssistCode());
+							pt.setFcount(da.getFcount());
+							pt.setProductModel(da.getProductModel());
+							pt.setProductName(da.getProductName());
+							pt.setMakeNumberCode(da.getMakeNumberCode());
+							pt.setProductTaskCode(da.getDesignAssistCode());
+							pt.setCreateTime(pushTime);
+							pt.setCreaterId(da.getCreaterId());
+							pt.setCreaterName(da.getCreaterName());
+							pt.setProductCode(da.getProductCode());
+							pt.setProjectName(da.getProjectName());
+							findCodeByProssCode(processExetask.getTaskCode(),pt,da);
+							productmanageTaskDao.save(pt);
+						}
+					}
+				}else{//如果是别的tab页已经下发过某个部门，则是进行添加
+					for(Long lo:(List<Long>)(map.get("handleDepIds"))){
+						ProductmanageTask pt = new ProductmanageTask();
+						pt.setProductTaskCode("PROD"+dateCode);
+						pt.setBelongDepId(lo);
+						pt.setSourceId(da.getId());
+						pt.setSourceCode(da.getDesignAssistCode());
+						pt.setFcount(da.getFcount());
+						pt.setProductModel(da.getProductModel());
+						pt.setProductName(da.getProductName());
+						pt.setMakeNumberCode(da.getMakeNumberCode());
+						pt.setProductTaskCode(da.getDesignAssistCode());
+						pt.setCreateTime(pushTime);
+						pt.setCreaterId(da.getCreaterId());
+						pt.setCreaterName(da.getCreaterName());
+						pt.setPlanendtime(da.getPlanendtime());
+						pt.setProductCode(da.getProductCode());
+						pt.setFstatus(0);
+						pt.setProjectName(da.getProjectName());
+						findCodeByProssCode(processExetask.getTaskCode(),pt,da);
+						productmanageTaskDao.save(pt);
+					}
+				}
+				/**下发到库房*/
+				StoreroomTaskQuery storeroomTaskQuery = new StoreroomTaskQuery();
+				storeroomTaskQuery.setSourceId(da.getId());
+				List<StoreroomTask> storeroomTasks = storeroomTaskDao.findList(storeroomTaskQuery);
+				if(null!=storeroomTasks&&storeroomTasks.size()>0){
+					StoreroomTask storeroomTask = storeroomTasks.get(0);
+					findCodeByProssCode(processExetask.getTaskCode(),storeroomTask,da);
+					storeroomTaskDao.update(storeroomTask);
+				}else{
+					StoreroomTask st = new StoreroomTask();
+					st.setStoreTaskCode(icbillnoDao.genflowcode("STORE"));
+					st.setSourceCode(da.getDesignAssistCode());
+					st.setSourceId(da.getId());
+					st.setProductCode(da.getProductCode());
+					st.setFcount(da.getFcount());
+					st.setProductModel(da.getProductModel());
+					st.setProductName(da.getProductName());
+					st.setMakeNumberCode(da.getMakeNumberCode());
+					st.setCreaterId(da.getCreaterId());
+					st.setCreaterName(da.getCreaterName());
+					st.setCreateTime(pushTime);
+					st.setPlanendtime(da.getPlanendtime());
+					st.setFstatus(0);
+					st.setProjectName(da.getProjectName());
+					findCodeByProssCode(processExetask.getTaskCode(),st,da);
+					storeroomTaskDao.save(st);
+				}
+				/**下发到采购部形成采购任务单*/
+				PlanTaskQuery planTaskQuery = new PlanTaskQuery();
+				planTaskQuery.setSourceId(da.getId());
+				List<PlanTask> planTasks = planTaskDao.findList(planTaskQuery);
+				if(null!=planTasks&&planTasks.size()>0){
+					PlanTask planTask = planTasks.get(0);
+					findCodeByProssCode(processExetask.getTaskCode(),planTask,da);
+					planTaskDao.update(planTask);
+				}else{
+					PlanTask pt = new PlanTask();
+					pt.setPlanTaskCode(icbillnoDao.genflowcode("PTASK"));
+					pt.setSourceCode(da.getDesignAssistCode());
+					pt.setSourceId(da.getId());
+					pt.setProductCode(da.getProductCode());
+					pt.setFcount(da.getFcount());
+					pt.setProductModel(da.getProductModel());
+					pt.setProductName(da.getProductName());
+					pt.setMakeNumberCode(da.getMakeNumberCode());
+					pt.setCreateTime(pushTime);
+					pt.setCreaterId(da.getCreaterId());
+					pt.setCreaterName(da.getCreaterName());
+					pt.setAddStatus(1);
+					pt.setFstatus(0);
+					pt.setPlanendtime(da.getPlanendtime());
+					pt.setProjectName(da.getProjectName());
+					findCodeByProssCode(processExetask.getTaskCode(),pt,da);
+					planTaskDao.save(pt);
+				}
+			}
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		designAssistDao.update(entity);
+	}
+	public void dispatchStatus(DesignAssist entity,String mark,Integer step,String desc){
+		String modelname = "";
+		if(mark.equals("TO_BRACKET_TASK")){
+			entity.setBracketStatus(step);
+			entity.setBracketStatusDesc(desc);
+			modelname = "支架下料";
+		}else if(mark.equals("TO_BAIT_TASK")){
+			entity.setBaitStatus(step);
+			entity.setBaitStatusDesc(desc);
+			modelname = "下料";
+		}else if(mark.equals("TO_ASSWELD_TASK")){
+			entity.setAssweldStatus(step);
+			entity.setAssweldStatusDesc(desc);
+			modelname = "组焊";
+		}else if(mark.equals("TO_ASSEMBLE_TASK")){
+			entity.setAssembleStatus(step);
+			entity.setAssembleStatusDesc(desc);
+			modelname = "装配";
+		}else if(mark.equals("TO_DELIVERY_TASK")){
+			entity.setDeliveryStatus(step);
+			entity.setDeliveryStatusDesc(desc);
+			modelname = "发货";
+		}else{
+			
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_EXAMINE, "审核技术支持("+modelname+")成功(ID:"+entity.getId()+")");
+	}
+	//更新和保存系统消息
+	public void changeMessage(DesignAssist entity,String mark,Map<String,Object> map){
+		DesignAssist da = designAssistDao.getById(entity.getId());
+		if(mark.equals("TO_BRACKET_TASK")){
+			saveOrupdateMessage(da,"TO_BRACKET_TASK",map,"技术任务支架下料待审核",1);
+		}else if(mark.equals("TO_BAIT_TASK")){
+			saveOrupdateMessage(da,"TO_BAIT_TASK",map,"技术任务下料待审核",1);
+		}else if(mark.equals("TO_ASSWELD_TASK")){
+			saveOrupdateMessage(da,"TO_ASSWELD_TASK",map,"技术任务组焊待审核",1);
+		}else if(mark.equals("TO_ASSEMBLE_TASK")){
+			saveOrupdateMessage(da,"TO_ASSEMBLE_TASK",map,"技术任务装配待审核",1);
+		}else if(mark.equals("TO_DELIVERY_TASK")){
+			saveOrupdateMessage(da,"TO_DELIVERY_TASK",map,"技术任务发货待审核",1);
+		}else{
+			
+		}
+	}
+	public void saveOrupdateMessage(DesignAssist da,String mark,Map<String,Object> map,String mesname,Integer mestype){
+		//1先将原来的消息更新为status=2
+		MessageQuery query = new MessageQuery();
+		query.setFbillid(da.getId());
+		query.setProcessname(mark);
+		query.setSortColumns("id");
+		List<Message> lists = messageDao.findList(query);
+		if(lists!=null&&lists.size()>0){
+			Message mes = lists.get(lists.size()-1);
+			mes.setStatus(2);
+			mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+			this.messageDao.update(mes);
+		}
+		//2如果有当前执行人则插入数据
+		if(map!=null&&map.get("handlerIds")!=null){
+			List<Long> handlerIds = new ArrayList<Long>();
+			handlerIds = (List<Long>) map.get("handlerIds");
+			String empids="";
+			if(handlerIds!=null&&handlerIds.size()>0){
+				for(int i=0;i<handlerIds.size();i++){
+					if(i==handlerIds.size()-1){
+						empids +=handlerIds.get(i);
+					}else{
+						empids +=handlerIds.get(i)+",";
+					}
+				}
+			}
+			if(empids!=null&&!empids.equals("")){
+				Message message = new Message();
+				message.setName(mesname);//消息名称
+				message.setContent("单据编号："+da.getDesignAssistCode()+";产品编码："+da.getProductCode()+";产品名称："+da.getProductName()+";制令号："+da.getMakeNumberCode());//消息内容
+				message.setType(mestype);//单据类型
+				message.setFbillno(da.getDesignAssistCode());//单据编号
+				message.setFbillid(da.getId());//单据主键
+				message.setUrl("designassist/designassistlist.htm");//链接地址
+				message.setStatus(1);//消息状态(1未处理2已处理)
+				message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+				message.setEmpids(empids);//执行人
+				message.setProcessname(mark);//流程名称
+				this.messageDao.save(message);
+			}
+		}
+	}
+	public void findCodeByProssCode(String mark,StoreroomTask storeroomTask,DesignAssist da){
+		if(mark.equals("TO_BRACKET_TASK")){
+			storeroomTask.setBracketStatus(0);
+			storeroomTask.setBracketDate(da.getBracketDate());
+			storeroomTask.setBracketStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_BAIT_TASK")){
+			storeroomTask.setBaitStatus(0);
+			storeroomTask.setBaitDate(da.getBaitDate());
+			storeroomTask.setBaitStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSWELD_TASK")){
+			storeroomTask.setAssweldStatus(0);
+			storeroomTask.setAssweldDate(da.getAssweldDate());
+			storeroomTask.setAssweldStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSEMBLE_TASK")){
+			storeroomTask.setAssembleStatus(0);
+			storeroomTask.setAssembleDate(da.getAssembleDate());
+			storeroomTask.setAssembleStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_DELIVERY_TASK")){
+			storeroomTask.setDeliveryStatus(0);
+			storeroomTask.setDeliveryDate(da.getDeliveryDate());
+			storeroomTask.setDeliveryStatusDesc("下推初始化!");
+		}else{
+			
+		}
+	}
+	public void findCodeByProssCode(String mark,PlanTask planTask,DesignAssist da){
+		if(mark.equals("TO_BRACKET_TASK")){
+			planTask.setBracketStatus(0);
+			planTask.setBracketDate(da.getBracketDate());
+			planTask.setBracketStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_BAIT_TASK")){
+			planTask.setBaitStatus(0);
+			planTask.setBaitDate(da.getBaitDate());
+			planTask.setBaitStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSWELD_TASK")){
+			planTask.setAssweldStatus(0);
+			planTask.setAssweldDate(da.getAssweldDate());
+			planTask.setAssweldStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSEMBLE_TASK")){
+			planTask.setAssembleStatus(0);
+			planTask.setAssembleDate(da.getAssembleDate());
+			planTask.setAssembleStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_DELIVERY_TASK")){
+			planTask.setDeliveryStatus(0);
+			planTask.setDeliveryDate(da.getDeliveryDate());
+			planTask.setDeliveryStatusDesc("下推初始化!");
+		}else{
+			
+		}
+	}
+	public void findCodeByProssCode(String mark,ProductmanageTask productmanageTask,DesignAssist da){
+		if(mark.equals("TO_BRACKET_TASK")){
+			productmanageTask.setBracketStatus(0);
+			productmanageTask.setBracketDate(da.getBracketDate());
+			productmanageTask.setBracketStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_BAIT_TASK")){
+			productmanageTask.setBaitStatus(0);
+			productmanageTask.setBaitDate(da.getBaitDate());
+			productmanageTask.setBaitStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSWELD_TASK")){
+			productmanageTask.setAssweldStatus(0);
+			productmanageTask.setAssweldDate(da.getAssweldDate());
+			productmanageTask.setAssweldStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_ASSEMBLE_TASK")){
+			productmanageTask.setAssembleStatus(0);
+			productmanageTask.setAssembleDate(da.getAssembleDate());
+			productmanageTask.setAssembleStatusDesc("下推初始化!");
+		}else if(mark.equals("TO_DELIVERY_TASK")){
+			productmanageTask.setDeliveryStatus(0);
+			productmanageTask.setDeliveryDate(da.getDeliveryDate());
+			productmanageTask.setDeliveryStatusDesc("下推初始化!");
+		}else{
+			
+		}
+	}
+	@Override
+	public void closeToJson(List<Long> checkedIdList, DesignAssist entity) {
+		DesignAssist temp = null;
+		for(Long id:checkedIdList){
+			temp = new DesignAssist();
+			temp.setId(id);
+			temp.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			temp.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+			temp.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+			temp.setFstatus(entity.getFstatus());
+			designAssistDao.update(temp);
+		}
+		String ids = StringUtils.join(checkedIdList, ",");
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_EXAMINE, "关闭单据(ID:"+ids+")");
+	}
+	@Override
+	public void unexamine(DesignAssistQuery designAssistQuery) throws Exception {
+		DesignAssist designAssist = designAssistDao.getById(designAssistQuery.getId());
+		ProductmanageTaskQuery ptquery = new ProductmanageTaskQuery();
+		ptquery.setSourceId(designAssistQuery.getId());
+		List<ProductmanageTask> productmanageTasks = productmanageTaskDao.findList(ptquery);
+		StoreroomTaskQuery stquery = new StoreroomTaskQuery();
+		stquery.setSourceId(designAssistQuery.getId());
+		List<StoreroomTask> storeroomTasks = storeroomTaskDao.findList(stquery);
+		PlanTaskQuery pltquery = new PlanTaskQuery();
+		pltquery.setSourceId(designAssistQuery.getId());
+		List<PlanTask> planTasks = planTaskDao.findList(pltquery);
+		String exceptions = "";
+		ProductmanageTask ptentity = productmanageTasks.get(0);
+		StoreroomTask stentity = storeroomTasks.get(0);
+		PlanTask pltentity = planTasks.get(0);
+		String unexaminemark = "";
+		if(null!=storeroomTasks&&storeroomTasks.size()==1){
+			if(designAssistQuery.getFmark().trim().equals("bracket")){
+				unexaminemark = "支架下料";
+				if(null!=ptentity.getBracketStatus()&&ptentity.getBracketStatus().intValue()>=99){
+					exceptions += "生产任务 ";
+				}
+				if(null!=stentity.getBracketStatus()&&stentity.getBracketStatus().intValue()==100){
+					exceptions += "库房任务 ";
+				}
+				if(null!=pltentity.getBracketStatus()&&pltentity.getBracketStatus().intValue()==100){
+					exceptions += "采购任务 ";
+				}
+				if(!exceptions.equals("")){
+					throw new ServiceException(exceptions+"中有已经进行的任务，请到对应的列表中反审!");
+				}else{
+					ptentity.setBracketStatus(101);
+					productmanageTaskDao.update(ptentity);
+					stentity.setBracketStatus(101);
+					storeroomTaskDao.update(stentity);
+					pltentity.setBracketStatus(101);
+					planTaskDao.update(pltentity);
+					designAssist.setBracketStatus(0);
+					designAssist.setBracketStatusDesc("反审");
+					designAssistDao.update(designAssist);
+				}
+			}else if(designAssistQuery.getFmark().trim().equals("bait")){
+				unexaminemark = "下料";
+				if(null!=ptentity.getBaitStatus()&&ptentity.getBaitStatus().intValue()>=99){
+					exceptions += "生产任务 ";
+				}
+				if(null!=stentity.getBaitStatus()&&stentity.getBaitStatus().intValue()==100){
+					exceptions += "库房任务 ";
+				}
+				if(null!=pltentity.getBaitStatus()&&pltentity.getBaitStatus().intValue()==100){
+					exceptions += "采购任务 ";
+				}
+				if(!exceptions.equals("")){
+					throw new ServiceException(exceptions+"中有已经进行的下料任务，请到对应的列表中反审!");
+				}else{
+					ptentity.setBaitStatus(null);
+					productmanageTaskDao.update(ptentity);
+					stentity.setBaitStatus(null);
+					storeroomTaskDao.update(stentity);
+					pltentity.setBaitStatus(null);
+					planTaskDao.update(pltentity);
+					designAssist.setBaitStatus(0);
+					designAssist.setBaitStatusDesc("反审");
+					designAssistDao.update(designAssist);
+				}
+			}else if(designAssistQuery.getFmark().trim().equals("assweld")){
+				unexaminemark = "组焊";
+				if(null!=ptentity.getAssweldStatus()&&ptentity.getAssweldStatus().intValue()>=99){
+					exceptions += "生产任务 ";
+				}
+				if(null!=stentity.getAssweldStatus()&&stentity.getAssweldStatus().intValue()==100){
+					exceptions += "库房任务 ";
+				}
+				if(null!=pltentity.getAssweldStatus()&&pltentity.getAssweldStatus().intValue()==100){
+					exceptions += "采购任务 ";
+				}
+				if(!exceptions.equals("")){
+					throw new ServiceException(exceptions+"中有已经进行的组焊任务，请到对应的列表中反审!");
+				}else{
+					ptentity.setAssweldStatus(101);
+					productmanageTaskDao.update(ptentity);
+					stentity.setAssweldStatus(101);
+					storeroomTaskDao.update(stentity);
+					pltentity.setAssweldStatus(101);
+					planTaskDao.update(pltentity);
+					designAssist.setAssweldStatus(0);
+					designAssist.setAssweldStatusDesc("反审");
+					designAssistDao.update(designAssist);
+				}
+			}else if(designAssistQuery.getFmark().trim().equals("assemble")){
+				unexaminemark = "装配";
+				if(null!=ptentity.getAssembleStatus()&&ptentity.getAssembleStatus().intValue()>=99){
+					exceptions += "生产任务 ";
+				}
+				if(null!=stentity.getAssembleStatus()&&stentity.getAssembleStatus().intValue()==100){
+					exceptions += "库房任务 ";
+				}
+				if(null!=pltentity.getAssembleStatus()&&pltentity.getAssembleStatus().intValue()==100){
+					exceptions += "采购任务 ";
+				}
+				if(!exceptions.equals("")){
+					throw new ServiceException(exceptions+"中有已经进行的装配任务，请到对应的列表中反审!");
+				}else{
+					ptentity.setAssweldStatus(101);
+					productmanageTaskDao.update(ptentity);
+					stentity.setAssweldStatus(101);
+					storeroomTaskDao.update(stentity);
+					pltentity.setAssweldStatus(101);
+					planTaskDao.update(pltentity);
+					designAssist.setAssweldStatus(0);
+					designAssist.setAssweldStatusDesc("反审");
+					designAssistDao.update(designAssist);
+				}
+			}else if(designAssistQuery.getFmark().trim().equals("delivery")){
+				unexaminemark = "发货";
+				if(null!=ptentity.getDeliveryStatus()&&ptentity.getDeliveryStatus().intValue()>=99){
+					exceptions += "生产任务 ";
+				}
+				if(null!=stentity.getDeliveryStatus()&&stentity.getDeliveryStatus().intValue()==100){
+					exceptions += "库房任务 ";
+				}
+				if(null!=pltentity.getDeliveryStatus()&&pltentity.getDeliveryStatus().intValue()==100){
+					exceptions += "采购任务 ";
+				}
+				if(!exceptions.equals("")){
+					throw new ServiceException(exceptions+"中有已经进行的装配任务，请到对应的列表中反审!");
+				}else{
+					ptentity.setDeliveryStatus(101);
+					productmanageTaskDao.update(ptentity);
+					stentity.setDeliveryStatus(101);
+					storeroomTaskDao.update(stentity);
+					pltentity.setDeliveryStatus(101);
+					planTaskDao.update(pltentity);
+					designAssist.setDeliveryStatus(0);
+					designAssist.setDeliveryStatusDesc("反审");
+					designAssistDao.update(designAssist);
+				}
+			}
+		}else{
+			throw new ServiceException("单据存在异常,生产任务、库房任务、采购任务中没有此单据或者有多个此单据!");
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_EXAMINE, "反审单据(技术支持ID:"+designAssistQuery.getId()+",反审对象:"+unexaminemark+")");
+	}
+	/**
+	 * 导出为excel2007格式，与之前纸质版一样
+	 */
+	@Override
+	public void exportAllExcel2007(HttpServletResponse response,DesignAssist entity) throws Exception {
+		try {
+			XSSFWorkbook wb = new XSSFWorkbook();
+			createSheet(wb,entity,"支架");
+			createSheet(wb,entity,"下料");
+			createSheet(wb,entity,"组焊");
+			createSheet(wb,entity,"装配");
+			createSheet(wb,entity,"发货");
+			wb.write(response.getOutputStream());
+			//http://blog.csdn.net/dac55300424/article/details/9332317
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 创建sheet
+	 * @param wb 表格对象
+	 * @param entity 导出的实体对象
+	 * @param sheetName sheet名称
+	 * @throws Exception 异常对象
+	 */
+	private void createSheet(XSSFWorkbook wb, DesignAssist entity,String sheetName) throws Exception{
+		ModelList modelList = null;
+		List<ModelList> modelLists = null;
+		XSSFSheet sheet = wb.createSheet(sheetName);
+		if(sheet.getSheetName().equals("支架")){
+			modelLists = entity.getBracketLists();
+		}else if(sheet.getSheetName().equals("下料")){
+			modelLists = entity.getBaitLists();
+		}else if(sheet.getSheetName().equals("组焊")){
+			modelLists = entity.getAssweldLists();
+		}else if(sheet.getSheetName().equals("装配")){
+			modelLists = entity.getAssembleLists();
+		}else{
+			modelLists = entity.getDeliveryLists();
+		}
+		createHead(wb,entity,sheet);
+		if(null!=modelLists&&modelLists.size()>0){
+			String fileName = "";
+			int inrow = 8;
+			// 创建一个sheet对象
+			for(int i=0;i<modelLists.size();i++){
+				modelList = modelLists.get(i);
+				if(fileName.equals("")||!modelList.getFileName().equals(fileName)){
+					XSSFRow row = sheet.createRow(inrow);
+					row.setHeight((short) (15.625*28));
+					createCell(wb, row, 0, modelList.getFileName());
+					CellRangeAddress regionrow;
+					if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+						regionrow = new CellRangeAddress(inrow,inrow,0,12);
+					}else{
+						regionrow = new CellRangeAddress(inrow,inrow,0,11);
+					}
+					sheet.addMergedRegion(regionrow);
+					inrow += 1;
+					fileName = modelList.getFileName();
+				}
+				XSSFRow row = sheet.createRow(inrow);
+				row.setHeight((short) (15.625*24));
+				createCell(wb, row, 0, String.valueOf(i+1));
+				createCell(wb, row, 1, modelList.getItemcode());
+				createCell(wb, row, 2, modelList.getItemname());
+				createCell(wb, row, 3, String.valueOf(modelList.getFcount()));
+				createCell(wb, row, 4, modelList.getFmatrial());
+				createCell(wb, row, 5, modelList.getFmark());
+				if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+					createCell(wb, row, 6, String.valueOf(null==modelList.getSlen()?"":modelList.getSlen()));
+					createCell(wb, row, 7, String.valueOf(null==modelList.getAlen()?"":modelList.getAlen()));
+					createCell(wb, row, 8, modelList.getCheckno());
+					createCell(wb, row, 9, modelList.getDispenserName());
+					createCell(wb, row, 10, modelList.getReceiverName());
+					createCell(wb, row, 11, modelList.getCheckerName());
+					createCell(wb, row, 12, modelList.getBaitDate());
+					for(int j=0;j<13;j++){
+						CellRangeAddress regionrow = new CellRangeAddress(inrow,inrow,j,j);
+						sheet.addMergedRegion(regionrow);
+					}
+				}else{
+					createCell(wb, row, 6, modelList.getCheckno());
+					createCell(wb, row, 7, modelList.getDispenserName());
+					createCell(wb, row, 8, modelList.getReceiverName());
+					createCell(wb, row, 9, modelList.getCheckerName());
+					createCell(wb, row, 10,modelList.getPlanreachTime());
+					createCell(wb, row, 11, modelList.getBaitDate());
+					for(int j=0;j<12;j++){
+						CellRangeAddress regionrow = new CellRangeAddress(inrow,inrow,j,j);
+						sheet.addMergedRegion(regionrow);
+					}
+				}
+				inrow += 1;
+			}
+		}
+	}
+	/**
+	 * 创建表格标题部分
+	 * @param wb 表格对象
+	 * @param entity 导出的实体对象
+	 * @param sheet sheet对象
+	 * @throws Exception 异常对象
+	 */
+	public void createHead(XSSFWorkbook wb,DesignAssist entity,XSSFSheet sheet) throws Exception{
+		int[] widths = new int[]{4,10,15,4,6,6,4,4,5,6,6,6,8};
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			widths = new int[]{4,10,15,4,6,6,4,4,5,6,6,6,8};
+		}else{
+			widths = new int[]{4,10,15,4,6,6,5,6,6,6,8,8};
+		}
+		for(int i=0;i<widths.length;i++){
+			sheet.setColumnWidth((short)i, (short)(widths[i]*500));
+		}
+		//1、导入图片
+		XSSFRow row0 = sheet.createRow(0);
+		row0.setHeight((short)(19*15));
+		XSSFRow row1 = sheet.createRow(1);
+		row1.setHeight((short)(19*15));
+		XSSFRow row2 = sheet.createRow(2);
+		row2.setHeight((short)(19*15));
+		XSSFRow row3 = sheet.createRow(3);
+		row3.setHeight((short)(19*15));
+		/**if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			for(int i=0;i<13;i++){
+				createCell(wb, row0, i, "");
+				createCell(wb, row1, i, "");
+				createCell(wb, row2, i, "");
+				createCell(wb, row3, i, "");
+			}
+		}else{
+			for(int i=0;i<12;i++){
+				createCell(wb, row0, i, "");
+				createCell(wb, row1, i, "");
+				createCell(wb, row2, i, "");
+				createCell(wb, row3, i, "");
+			}
+		}*/
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		// 将图片写入流中
+		BufferedImage bufferImg = ImageIO.read(new File(PropertiesUtil.getPropertyValue("upload.rootPath")+"\\images\\excelLogo1.png"));
+		ImageIO.write(bufferImg, "PNG", outStream);
+		// 利用HSSFPatriarch将图片写入EXCEL
+		XSSFDrawing patri = sheet.createDrawingPatriarch();
+		XSSFClientAnchor anchor = new XSSFClientAnchor(5, 5, 5, 5,(short) 11, 0, (short) 13, 4);
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			anchor = new XSSFClientAnchor(5, 5, 5, 5,(short) 11, 0, (short) 13, 4);
+		}else{
+			anchor = new XSSFClientAnchor(5, 5, 5, 5,(short) 10, 0, (short) 12, 4);
+		}
+		patri.createPicture(anchor, wb.addPicture(outStream.toByteArray(), HSSFWorkbook.PICTURE_TYPE_PNG));
+		XSSFRow row4 = sheet.createRow(4);
+		row4.setHeight((short) (15.625*28));
+		createCell(wb, row4, 0, "产品零件汇总清单（"+sheet.getSheetName()+"）");
+		createCell(wb, row4, 1, "");
+		createCell(wb, row4, 2, "");
+		createCell(wb, row4, 3, "产品编号:");
+		createCell(wb, row4, 4, "");
+		createCell(wb, row4, 5, entity.getProductCode());
+		createCell(wb, row4, 6, "");
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			createCell(wb, row4, 7, "");
+			createCell(wb, row4, 8, "产品名称:");
+			createCell(wb, row4, 9, entity.getProductName());
+			createCell(wb, row4, 10, "");
+			createCell(wb, row4, 11, "制令号:");
+			createCell(wb, row4, 12, entity.getMakeNumberCode());
+		}else{
+			createCell(wb, row4, 7, "产品名称:");
+			createCell(wb, row4, 8, entity.getProductName());
+			createCell(wb, row4, 9, "");
+			createCell(wb, row4, 10, "制令号:");
+			createCell(wb, row4, 11, entity.getMakeNumberCode());
+		}
+		XSSFRow row5 = sheet.createRow(5);
+		row5.setHeight((short) (15.625*28));
+		createCell(wb, row5, 0, "");
+		createCell(wb, row5, 1, "");
+		createCell(wb, row5, 2, "");
+		createCell(wb, row5, 3, "产品型号:");
+		createCell(wb, row5, 4, "");
+		createCell(wb, row5, 5, entity.getProductModel());
+		createCell(wb, row5, 6, "");
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			createCell(wb, row5, 7, "");
+			createCell(wb, row5, 8, "台数:");
+			createCell(wb, row5, 9, entity.getFcount()+"");
+			createCell(wb, row5, 10, "");
+			createCell(wb, row5, 11, "下料日期:");
+			createCell(wb, row5, 12, null==entity.getBracketDate()?"":entity.getBracketDate().substring(0, 10));
+		}else{
+			createCell(wb, row5, 7, "台数:");
+			createCell(wb, row5, 8, entity.getFcount()+"");
+			createCell(wb, row5, 9, "");
+			createCell(wb, row5, 10, "下料日期:");
+			createCell(wb, row5, 11, null==entity.getBracketDate()?"":entity.getBracketDate().substring(0, 10));
+		}
+		CellRangeAddress regionrow45 = new CellRangeAddress(4,5,0,2);
+		sheet.addMergedRegion(regionrow45);
+		CellRangeAddress regioncol434 = new CellRangeAddress(4,4,3,4);
+		sheet.addMergedRegion(regioncol434);
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			CellRangeAddress regioncol4567 = new CellRangeAddress(4,4,5,7);
+			sheet.addMergedRegion(regioncol4567);
+			CellRangeAddress regioncol4910 = new CellRangeAddress(4,4,9,10);
+			sheet.addMergedRegion(regioncol4910);
+			CellRangeAddress regioncol534 = new CellRangeAddress(5,5,3,4);
+			sheet.addMergedRegion(regioncol534);
+			CellRangeAddress regioncol5567 = new CellRangeAddress(5,5,5,7);
+			sheet.addMergedRegion(regioncol5567);
+			CellRangeAddress regioncol5910 = new CellRangeAddress(5,5,9,10);
+			sheet.addMergedRegion(regioncol5910);
+		}else{
+			CellRangeAddress regioncol456 = new CellRangeAddress(4,4,5,6);
+			sheet.addMergedRegion(regioncol456);
+			CellRangeAddress regioncol4910 = new CellRangeAddress(4,4,8,9);
+			sheet.addMergedRegion(regioncol4910);
+			CellRangeAddress regioncol534 = new CellRangeAddress(5,5,3,4);
+			sheet.addMergedRegion(regioncol534);
+			CellRangeAddress regioncol556 = new CellRangeAddress(5,5,5,6);
+			sheet.addMergedRegion(regioncol556);
+			CellRangeAddress regioncol5910 = new CellRangeAddress(5,5,8,9);
+			sheet.addMergedRegion(regioncol5910);
+		}
+		XSSFRow row6 = sheet.createRow(6);
+		createCell(wb, row6, 0, "序号");
+		createCell(wb, row6, 1, "编码/标准号");
+		createCell(wb, row6, 2, "名称及规格");
+		createCell(wb, row6, 3, "数量");
+		createCell(wb, row6, 4, "材料");
+		createCell(wb, row6, 5, "备注");
+		if(sheet.getSheetName().equals("支架")||sheet.getSheetName().equals("下料")){
+			createCell(wb, row6, 6, "下料尺寸");
+			createCell(wb, row6, 7, "");
+			createCell(wb, row6, 8, "检字号");
+			createCell(wb, row6, 9, "发料人");
+			createCell(wb, row6, 10, "领料人");
+			createCell(wb, row6, 11, "检验员");
+			createCell(wb, row6, 12, "发料日期");
+			XSSFRow row7 = sheet.createRow(7);
+			createCell(wb, row7, 0, "");
+			createCell(wb, row7, 1, "");
+			createCell(wb, row7, 2, "");
+			createCell(wb, row7, 3, "");
+			createCell(wb, row7, 4, "");
+			createCell(wb, row7, 5, "");
+			createCell(wb, row7, 6, "单长");
+			createCell(wb, row7, 7, "总长");
+			createCell(wb, row7, 8, "");
+			createCell(wb, row7, 9, "");
+			createCell(wb, row7, 10, "");
+			createCell(wb, row7, 11, "");
+			createCell(wb, row7, 12, "");
+			for(int i=0;i<13;i++){
+				if(i!=6&&i!=7){
+					CellRangeAddress regionrow67 = new CellRangeAddress(6,7,i,i);
+					sheet.addMergedRegion(regionrow67);
+				}
+			}
+			CellRangeAddress regioncol667 = new CellRangeAddress(6,6,6,7);
+			sheet.addMergedRegion(regioncol667);
+		}else{
+			createCell(wb, row6, 6, "检字号");
+			createCell(wb, row6, 7, "发料人");
+			createCell(wb, row6, 8, "领料人");
+			createCell(wb, row6, 9, "检验员");
+			createCell(wb, row6, 10, "计划到货日期");
+			createCell(wb, row6, 11, "发料日期");
+			XSSFRow row7 = sheet.createRow(7);
+			createCell(wb, row7, 0, "");
+			createCell(wb, row7, 1, "");
+			createCell(wb, row7, 2, "");
+			createCell(wb, row7, 3, "");
+			createCell(wb, row7, 4, "");
+			createCell(wb, row7, 5, "");
+			createCell(wb, row7, 6, "");
+			createCell(wb, row7, 7, "");
+			createCell(wb, row7, 8, "");
+			createCell(wb, row7, 9, "");
+			createCell(wb, row7, 10, "");
+			createCell(wb, row7, 11, "");
+			for(int i=0;i<12;i++){
+				CellRangeAddress regionrow67 = new CellRangeAddress(6,7,i,i);
+				sheet.addMergedRegion(regionrow67);
+			}
+		}
+	}
+	/**
+	 * 创建表头和样式
+	 * @param sheet sheet对象
+	 * @param wb excel表格
+	 */
+	public void createHeadAndStyle(XSSFSheet sheet,XSSFWorkbook wb){
+		// 创建第一行
+	    XSSFRow row = sheet.createRow(0);
+		// 设置单元格宽度
+	    sheet.setColumnWidth(0, 4000);// 调整第1列的宽度
+	    sheet.setColumnWidth(1, 2000);// 调整第2列的宽度
+	    sheet.setColumnWidth(2, 5000);// 调整第3列的宽度
+	    sheet.setColumnWidth(3, 5000);// 调整第4列的宽度
+	    sheet.setColumnWidth(4, 5000);// 调整第5列的宽度
+		sheet.autoSizeColumn(5);// 调整第6列的宽度
+		sheet.autoSizeColumn(6);// 调整第7列的宽度
+		sheet.setColumnWidth(7, 3000);// 调整第8列的宽度
+		sheet.setColumnWidth(8, 3000);// 调整第9列的宽度
+		sheet.setColumnWidth(9, 3000);// 调整第10列的宽度
+		sheet.setColumnWidth(10, 3000);// 调整第10列的宽度
+		sheet.setColumnWidth(11, 3000);// 调整第10列的宽度
+		sheet.setColumnWidth(12, 3000);// 调整第10列的宽度
+		// 设置单元格
+		createCell(wb, row, 0, "序号");
+		createCell(wb, row, 1, "编码/标准号");
+		createCell(wb, row, 2, "名称及规格");
+		createCell(wb, row, 3, "数量");
+		createCell(wb, row, 4, "材料");
+		createCell(wb, row, 5, "备注");
+		createCell(wb, row, 6, "单长");
+		createCell(wb, row, 7, "总长");
+		createCell(wb, row, 8, "检字号");
+		createCell(wb, row, 9, "发料人");
+		createCell(wb, row, 10, "领料人");
+		createCell(wb, row, 11, "检验员");
+		createCell(wb, row, 12, "发料日期");
+	}
+	/**
+	 * 创建单元格
+	 * @param wb excel表格
+	 * @param row 行
+	 * @param col 列
+	 * @param val 内容
+	 */
+	public void createCell(XSSFWorkbook wb,XSSFRow row,int col,String val){
+		//创建一个celll单元格
+		XSSFCell cell=row.createCell(col);
+        cell.setCellValue(val);
+        //创建样式
+        XSSFCellStyle cellstyle=wb.createCellStyle();
+        cellstyle.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        cellstyle.setBorderTop(XSSFCellStyle.BORDER_THIN);//带上边框
+        cellstyle.setBorderRight(XSSFCellStyle.BORDER_THIN);//带右边框
+        cellstyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);//带下边框
+        cellstyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);//带左边框
+        //cellstyle.setBorderLeft(BorderStyle.DASH_DOT);
+        cellstyle.setWrapText(true);//设置自动换行
+        cell.setCellStyle(cellstyle);//给单元格设置样式
+        XSSFFont font = wb.createFont();
+        font.setFontName("宋体");
+        font.setFontHeightInPoints((short)12);
+        cellstyle.setFont(font);
+	}
+	@Override
+	public void changepush(List<ModelList> modelList) throws Exception {
+		ProductmanageTaskQuery ptquery = new ProductmanageTaskQuery();
+		PlanTaskQuery plquery = new PlanTaskQuery();
+		StoreroomTaskQuery stquery = new StoreroomTaskQuery();
+		DesignAssist designAssist = null;
+		if(null!=modelList&&modelList.size()>0){
+			designAssist = designAssistDao.getById(modelList.get(0).getDesignassistId());
+			String time = DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+			ModelList changemo = null;
+			for(ModelList mo:modelList){
+				if(null==mo){
+					continue;
+				}
+				changemo = new ModelList();
+				changemo.setBdtId(mo.getBdtId());
+				changemo.setDesignassistId(mo.getDesignassistId());
+				ptquery.setSourceId(mo.getDesignassistId());
+				plquery.setSourceId(mo.getDesignassistId());
+				stquery.setSourceId(mo.getDesignassistId());
+				changemo.setItemcode(mo.getItemcode());
+				changemo.setItemname(mo.getItemname());
+				changemo.setFcount(mo.getFcount());
+				changemo.setModifycount(mo.getModifycount());
+				changemo.setAlen(mo.getAlen());
+				changemo.setSlen(mo.getSlen());
+				changemo.setAweight(mo.getAweight());
+				changemo.setSweight(mo.getSweight());
+				changemo.setModelMark("t_bomchange_list");
+				changemo.setChangemark(mo.getModelMark());
+				changemo.setChangestatus(mo.getChangestatus());
+				changemo.setFmatrial(mo.getFmatrial());
+				changemo.setCreateTime(time);
+				modelListDao.save(changemo);
+				if(mo.getChangestatus().intValue()==1){
+					mo.setChangestatus(0);
+					modelListDao.update(mo);
+				}else if(mo.getChangestatus().intValue()==2){
+					mo.setChangestatus(0);
+					mo.setFcount(mo.getModifycount());
+					mo.setModifycount(null);
+					modelListDao.update(mo);
+				}else if(mo.getChangestatus().intValue()==3){
+					modelListDao.deleteByEntity(mo);
+				}else{
+					
+				}
+			}
+			List<ProductmanageTask> productmanageTasks = productmanageTaskDao.findList(ptquery);
+			if(null!=productmanageTasks&&productmanageTasks.size()>0){
+				ProductmanageTask productmanageTask = productmanageTasks.get(0);
+				if(modelList.get(0).getModelMark().equals("t_bracket_list")){
+					if(null!=productmanageTask.getBracketStatus()&&productmanageTask.getBracketStatus().intValue()==100){
+						productmanageTask.setBracketStatus(50);//变更
+					}
+					designAssist.setBracketStatus(100);
+				}else if(modelList.get(0).getModelMark().equals("t_bait_list")){
+					if(null!=productmanageTask.getBaitStatus()&&productmanageTask.getBaitStatus().intValue()==100){
+						productmanageTask.setBaitStatus(50);//变更
+					}
+					designAssist.setBaitStatus(100);
+				}else if(modelList.get(0).getModelMark().equals("t_assweld_list")){
+					if(null!=productmanageTask.getAssweldStatus()&&productmanageTask.getAssweldStatus().intValue()==100){
+						productmanageTask.setAssweldStatus(50);//变更
+					}
+					designAssist.setAssweldStatus(100);
+				}else if(modelList.get(0).getModelMark().equals("t_assemble_list")){
+					if(null!=productmanageTask.getAssembleStatus()&&productmanageTask.getAssembleStatus().intValue()==100){
+						productmanageTask.setAssembleStatus(50);//变更
+					}
+					designAssist.setAssembleStatus(100);
+				}else if(modelList.get(0).getModelMark().equals("t_delivery_list")){
+					if(null!=productmanageTask.getDeliveryStatus()&&productmanageTask.getDeliveryStatus().intValue()==100){
+						productmanageTask.setDeliveryStatus(50);//变更
+					}
+					designAssist.setDeliveryStatus(100);
+				}
+				//productmanageTask.setFstatus(-1);
+				productmanageTaskDao.update(productmanageTask);
+				designAssistDao.update(designAssist);
+			}
+			List<StoreroomTask> storeroomTasks = storeroomTaskDao.findList(stquery);
+			if(null!=storeroomTasks&&storeroomTasks.size()>0){
+				StoreroomTask storeroomTask = storeroomTasks.get(0);
+				if(modelList.get(0).getModelMark().equals("t_bracket_list")){
+					if(null!=storeroomTask.getBracketStatus()&&storeroomTask.getBracketStatus().intValue()==100){
+						storeroomTask.setBracketStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_bait_list")){
+					if(null!=storeroomTask.getBaitStatus()&&storeroomTask.getBaitStatus().intValue()==100){
+						storeroomTask.setBaitStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_assweld_list")){
+					if(null!=storeroomTask.getAssweldStatus()&&storeroomTask.getAssweldStatus().intValue()==100){
+						storeroomTask.setAssweldStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_assemble_list")){
+					if(null!=storeroomTask.getAssembleStatus()&&storeroomTask.getAssembleStatus().intValue()==100){
+						storeroomTask.setAssembleStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_delivery_list")){
+					if(null!=storeroomTask.getDeliveryStatus()&&storeroomTask.getDeliveryStatus().intValue()==100){
+						storeroomTask.setDeliveryStatus(50);//变更
+					}
+				}
+				//storeroomTask.setFstatus(-1);
+				storeroomTaskDao.update(storeroomTask);
+			}
+			List<PlanTask> planTasks = planTaskDao.findList(plquery);
+			if(null!=planTasks&&planTasks.size()>0){
+				PlanTask planTask = planTasks.get(0);
+				if(modelList.get(0).getModelMark().equals("t_bracket_list")){
+					if(null!=planTask.getBracketStatus()&&planTask.getBracketStatus().intValue()==100){
+						planTask.setBracketStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_bait_list")){
+					if(null!=planTask.getBaitStatus()&&planTask.getBaitStatus().intValue()==100){
+						planTask.setBaitStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_assweld_list")){
+					if(null!=planTask.getAssweldStatus()&&planTask.getAssweldStatus().intValue()==100){
+						planTask.setAssweldStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_assemble_list")){
+					if(null!=planTask.getAssembleStatus()&&planTask.getAssembleStatus().intValue()==100){
+						planTask.setAssembleStatus(50);//变更
+					}
+				}else if(modelList.get(0).getModelMark().equals("t_delivery_list")){
+					if(null!=planTask.getDeliveryStatus()&&planTask.getDeliveryStatus().intValue()==100){
+						planTask.setDeliveryStatus(50);//变更
+					}
+				}
+				//planTask.setFstatus(-1);
+				planTaskDao.update(planTask);
+			}
+		}
+	}
+	@Override
+	public void copyToJson(DesignAssist designAssist) throws Exception {
+		Integer start = null;
+		Integer end =  null;
+		String makecodenumber = designAssist.getMakeNumberCode();
+		Long id = designAssist.getId();
+		if(null==designAssist.getMakeNumberCodeStart()||designAssist.getMakeNumberCodeStart().equals("")){
+			start = 1;
+		}else{
+			start = Integer.valueOf(designAssist.getMakeNumberCodeStart());
+		}
+		if(null==designAssist.getMakeNumberCodeEnd()||designAssist.getMakeNumberCodeEnd().equals("")){
+			end = 1;
+		}else{
+			end = Integer.valueOf(designAssist.getMakeNumberCodeEnd());
+		}
+		if(start.intValue()>end.intValue()){
+			throw new ServiceException("结束令号不能小于开始令号!");
+		}
+		for(int i=start;i<=end;i++){
+			if(!(start.intValue()==1&&end.intValue()==1)){
+				if(i<10){
+					designAssist.setMakeNumberCode(makecodenumber+"-0"+i);
+				}else{
+					designAssist.setMakeNumberCode(makecodenumber+"-0"+i);
+				}
+			}
+			List<BomDrawTitle> bomDrawTitles = null;
+			List<ModelList> modelLists = null;
+			/*List<ModelList> bracketLists = null;
+			List<ModelList> baitLists = null;
+			List<ModelList> assweldLists = null;
+			List<ModelList> assembleLists = null;
+			List<ModelList> deliveryLists = null;*/
+			BomDrawTitleQuery bomDrawTitleQuery = new BomDrawTitleQuery();
+			ModelListQuery modelListQuery = new ModelListQuery();
+			String createTime = DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+			designAssist.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+			designAssist.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+			designAssist.setBracketDate(null);
+			designAssist.setBracketStatus(null);
+			designAssist.setBracketStatusDesc(null);
+			designAssist.setBaitDate(null);
+			designAssist.setBaitStatus(null);
+			designAssist.setBaitStatusDesc(null);
+			designAssist.setAssweldDate(null);
+			designAssist.setAssweldStatus(null);
+			designAssist.setAssweldStatusDesc(null);
+			designAssist.setAssembleDate(null);
+			designAssist.setAssembleStatus(null);
+			designAssist.setAssembleStatusDesc(null);
+			designAssist.setDeliveryDate(null);
+			designAssist.setDeliveryStatus(null);
+			designAssist.setDeliveryStatusDesc(null);
+			designAssist.setCreateTime(createTime);
+			designAssist.setFcount(1D);
+			designAssist.setDesignAssistCode(icbillnoDao.genflowcode("DA"));
+			Long designassistId = designAssistDao.save(designAssist);
+			bomDrawTitleQuery.setDesignassistId(id);
+			bomDrawTitleQuery.setSortColumns("t_bomdraw_title.bomversion desc");
+			bomDrawTitles = bomDrawTitleDao.findList(bomDrawTitleQuery);
+			Long bomdrawTitleId = null;
+			Long bomdrawTitleIdOld = null;
+			Map<Long, Long> bomMap = new HashMap<Long, Long>();
+			if(null!=bomDrawTitles&&bomDrawTitles.size()>0){
+				for(BomDrawTitle bomDrawTitle:bomDrawTitles){
+					bomDrawTitle = bomDrawTitles.get(0);
+					bomdrawTitleIdOld = bomDrawTitle.getId();
+					bomDrawTitle.setBomversion(1.1);
+					bomDrawTitle.setCreatedate(createTime);
+					bomDrawTitle.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					bomDrawTitle.setDesignassistId(designassistId);
+					bomdrawTitleId = bomDrawTitleDao.save(bomDrawTitle);
+					bomMap.put(bomdrawTitleIdOld, bomdrawTitleId);
+				}
+			}
+			modelListQuery.setDesignassistId(id);
+			modelListQuery.setModelMark("t_model_list");
+			modelLists = modelListDao.findList(modelListQuery);
+			modelListQuery.setModelMark("t_bracket_list");
+			/*bracketLists = modelListDao.findList(modelListQuery);
+			modelListQuery.setModelMark("t_bait_list");
+			baitLists = modelListDao.findList(modelListQuery);
+			modelListQuery.setModelMark("t_assweld_list");
+			assweldLists = modelListDao.findList(modelListQuery);
+			modelListQuery.setModelMark("t_assemble_list");
+			assembleLists = modelListDao.findList(modelListQuery);
+			modelListQuery.setModelMark("t_delivery_list");
+			deliveryLists = modelListDao.findList(modelListQuery);*/
+			Long modelListId = null;
+			if(null!=modelLists&&modelLists.size()>0){
+				for(ModelList modelList:modelLists){
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_model_list");
+					if(null!=modelList.getBdtId()){
+						modelList.setBdtId(bomMap.get(modelList.getBdtId()));
+					}
+					modelListId = modelListDao.save(modelList);
+					if("t_bracket_list".equals(modelList.getIsdispatch())){
+						modelList.setModelId(modelListId);
+						modelList.setModelMark("t_bracket_list");
+						modelListDao.save(modelList);
+					}else if("t_bait_list".equals(modelList.getIsdispatch())){
+						modelList.setModelId(modelListId);
+						modelList.setModelMark("t_bracket_list");
+						modelListDao.save(modelList);
+					}else if("t_assweld_list".equals(modelList.getIsdispatch())){
+						modelList.setModelId(modelListId);
+						modelList.setModelMark("t_bracket_list");
+						modelListDao.save(modelList);
+					}else if("t_assemble_list".equals(modelList.getIsdispatch())){
+						modelList.setModelId(modelListId);
+						modelList.setModelMark("t_bracket_list");
+						modelListDao.save(modelList);
+					}else if("t_delivery_list".equals(modelList.getIsdispatch())){
+						modelList.setModelId(modelListId);
+						modelList.setModelMark("t_bracket_list");
+						modelListDao.save(modelList);
+					}else{
+						
+					}
+				}
+			}
+			operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_COPY, "复制技术支持项目：ID:"+designassistId);
+			/*if(null!=bracketLists&&bracketLists.size()>0){
+				for(ModelList modelList:bracketLists){
+					modelList.setBdtId(bomdrawTitleId);
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_bracket_list");
+					modelListDao.save(modelList);
+				}
+			}
+			if(null!=baitLists&&baitLists.size()>0){
+				for(ModelList modelList:baitLists){
+					modelList.setBdtId(bomdrawTitleId);
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_bait_list");
+					modelListDao.save(modelList);
+				}
+			}
+			if(null!=assweldLists&&assweldLists.size()>0){
+				for(ModelList modelList:assweldLists){
+					modelList.setBdtId(bomdrawTitleId);
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_assweld_list");
+					modelListDao.save(modelList);
+				}
+			}
+			if(null!=assembleLists&&assembleLists.size()>0){
+				for(ModelList modelList:assembleLists){
+					modelList.setBdtId(bomdrawTitleId);
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_assemble_list");
+					modelListDao.save(modelList);
+				}
+			}
+			if(null!=deliveryLists&&deliveryLists.size()>0){
+				for(ModelList modelList:deliveryLists){
+					modelList.setBdtId(bomdrawTitleId);
+					modelList.setBomversion(1.1F);
+					modelList.setDesignassistId(designassistId);
+					modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelList.setCreateTime(createTime);
+					modelList.setModelMark("t_delivery_list");
+					modelListDao.save(modelList);
+				}
+			}*/
+		}
+	}
+	@Override
+	public void changepushselect(List<ModelList> modelLists) throws Exception {
+		String changerecords = "";
+		if(null!=modelLists&&modelLists.size()>0){
+			ModelList mo = modelLists.get(0);
+			DesignAssist designAssist = designAssistDao.getById(modelLists.get(0).getDesignassistId());
+			if(mo.getModelMark().equals("t_bracket_list")){
+				designAssist.setBracketStatus(50);
+			}else if(mo.getModelMark().equals("t_bait_list")){
+				designAssist.setBaitStatus(50);
+			}else if(mo.getModelMark().equals("t_assweld_list")){
+				designAssist.setAssweldStatus(50);
+			}else if(mo.getModelMark().equals("t_assemble_list")){
+				designAssist.setAssembleStatus(50);
+			}else if(mo.getModelMark().equals("t_delivery_list")){
+				designAssist.setDeliveryStatus(50);
+			}else{}
+			designAssistDao.update(designAssist);
+			for(ModelList modelList:modelLists){
+				if(null!=modelList&&null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()!=0){
+					modelListDao.update(modelList);
+					changerecords += modelList.getId()+" ";
+				}
+			}
+			operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_ADD, "添加变更(ID:"+designAssist.getId()+",变更记录:"+changerecords+")");
+		}
+	}
+	@Override
+	public void unexamineAllToJson(List<DesignAssist> designAssistList) throws Exception {
+		String unexmines = "";
+		for(DesignAssist da:designAssistList){
+			da.setFstatus(0);
+			designAssistDao.update(da);
+			unexmines += da.getId()+" ";
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_ADD, "反审技术支持总单据:"+unexmines);
+	}
+}

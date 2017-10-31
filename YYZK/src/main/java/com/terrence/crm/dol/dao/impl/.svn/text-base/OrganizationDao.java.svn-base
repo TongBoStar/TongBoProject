@@ -1,0 +1,64 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Organization;
+import com.terrence.crm.dol.dao.IOrganizationDao;
+import com.terrence.crm.dol.query.OrganizationQuery;
+import com.terrence.crm.dol.query.OrggrantgroupQuery;
+
+@Repository
+public class OrganizationDao extends BaseIbatisDao<Organization,java.lang.Long> implements IOrganizationDao{
+
+		
+	public void saveOrUpdate(Organization entity) {
+		if(entity.getFinnerid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Organization";
+	}
+	public Organization getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Organization)this.getSqlMapClientTemplate().queryForObject("Organization.getByProperty", map);		
+	}
+
+	@Override
+	public Integer updateContract(OrganizationQuery organizationQuery) {
+		
+		return this.getSqlMapClientTemplate().update("Organization.update.CONT", organizationQuery);
+	}
+
+	
+	@Override
+	public Long saveAll(Organization organization) {
+		return (Long) this.getSqlMapClientTemplate().insert("Organization.insert", organization);
+	}
+
+	@Override
+	public void syncERPData() {
+		this.getSqlMapClientTemplate().queryForObject("Organization.update.data.forERP");
+		
+	}
+
+	@Override
+	public List<Organization> findlistdate(OrganizationQuery organizationQuery) {
+		return (List<Organization>)this.getSqlMapClientTemplate().queryForList("Organization.find.list.data", organizationQuery);
+	}
+}

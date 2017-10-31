@@ -1,0 +1,78 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckStepRec;
+import com.terrence.crm.dol.dao.ICheckStepRecDao;
+
+@Repository
+public class CheckStepRecDao extends BaseIbatisDao<CheckStepRec,java.lang.Long> implements ICheckStepRecDao{
+
+		
+	public void saveOrUpdate(CheckStepRec entity) {
+		if(entity.getRecid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckStepRec";
+	}
+	public CheckStepRec getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CheckStepRec)this.getSqlMapClientTemplate().queryForObject("CheckStepRec.getByProperty", map);		
+	}
+
+	@Override
+	public List<Integer> findCheckStepRecByStepId(String sql) {
+		List<Integer> results = new ArrayList<Integer>();
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Integer ispass = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				ispass=rs.getInt(1);
+				results.add(ispass);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return results;
+
+	}
+
+}

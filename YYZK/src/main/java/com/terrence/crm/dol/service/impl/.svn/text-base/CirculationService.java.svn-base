@@ -1,0 +1,159 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Circulation;
+import com.terrence.crm.dol.bean.MachineMatchEntity;
+import com.terrence.crm.dol.query.CirculationQuery;
+import com.terrence.crm.dol.dao.ICirculationDao;
+import com.terrence.crm.dol.service.ICirculationService;
+
+@Service
+@Transactional
+public class CirculationService extends BaseService implements ICirculationService {
+	protected static Logger logger = LoggerFactory.getLogger(CirculationService.class);
+	@Autowired
+	@Qualifier("circulationDao")
+	private ICirculationDao circulationDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Circulation";
+	}
+	@Transactional(readOnly=true)
+	public Circulation getById(java.lang.Long id) throws ServiceException
+	{
+		return circulationDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Circulation entity) throws ServiceException
+	{
+		circulationDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Circulation entity) throws ServiceException
+	{
+		Long adId = circulationDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Circulation entity) throws ServiceException
+	{
+		Integer returnValue =  circulationDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = circulationDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = circulationDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CirculationQuery query = new CirculationQuery();
+		try {
+			return circulationDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Circulation> findPage(Page<Circulation> page, CirculationQuery query) throws ServiceException
+	{
+		return circulationDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Circulation> findPage(Page<Circulation> page,String statement, CirculationQuery query) throws ServiceException
+	{
+		return circulationDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Circulation> findList(CirculationQuery query) throws ServiceException
+	{
+		return circulationDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Circulation> findList(CirculationQuery query,Integer pageSize) throws ServiceException
+	{
+		return circulationDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Circulation> findList(CirculationQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return circulationDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Circulation> findAllList() throws ServiceException
+	{
+		return circulationDao.findAllList();
+	}
+	@Override
+	public Circulation getByworkno(CirculationQuery query) throws ServiceException {
+
+		return circulationDao.getByEntity("Circulation.getByworkno", query);
+	}
+	@Override
+	public List<Circulation> findList(String statement,
+			CirculationQuery circulationQuery) throws ServiceException {
+
+		return circulationDao.findList(statement, circulationQuery);
+
+	}
+	@Override
+	public void updateCardStatus(Long circulationId) throws ServiceException {
+		
+		Circulation circulation=new Circulation();
+		circulation.setCirculationid(circulationId);
+		circulation.setCardstatus(Circulation.CARD_FINISH);
+		circulationDao.update("Circulation.update.cardStatus", circulation);
+	}
+	@Override
+	public Circulation findEntity(CirculationQuery circulationQuery)
+			throws ServiceException {
+		return circulationDao.findEntity(circulationQuery);
+	}
+	@Override
+	public Circulation findworkNo(CirculationQuery circulationQuery)
+			throws ServiceException {
+		Circulation ct  = circulationDao.findworkNo(circulationQuery);
+		
+		return ct;
+	}
+	
+
+}

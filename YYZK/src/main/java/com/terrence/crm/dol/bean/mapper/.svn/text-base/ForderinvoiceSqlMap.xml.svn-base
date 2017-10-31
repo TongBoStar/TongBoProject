@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Forderinvoice">
+
+        
+	<resultMap id="RM.Forderinvoice" class="com.terrence.crm.dol.bean.Forderinvoice">
+        <result property="invoiceid" column="invoiceid"/>
+        <result property="receivableid" column="receivableid"/>
+        <result property="fdate" column="fdate"/>
+        <result property="famount" column="famount"/>
+        <result property="finvoiceno" column="finvoiceno"/>
+        <result property="forderno" column="forderno"/>
+    </resultMap>
+	<resultMap id="RM.Forderinvoice.findDataFromK3" class="com.terrence.crm.dol.bean.Forderinvoice">
+        <result property="fdate" column="fdate"/>
+        <result property="famount" column="famount"/>
+        <result property="finvoiceno" column="finvoiceno"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Forderinvoice.columns">
+	    <![CDATA[
+        	t_forderinvoice.invoiceid ,
+        	t_forderinvoice.receivableid ,
+        	t_forderinvoice.fdate ,
+        	t_forderinvoice.famount ,
+        	t_forderinvoice.finvoiceno ,
+        	t_forderinvoice.forderno 
+	    ]]>
+	</sql>
+	
+   <insert id="Forderinvoice.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_forderinvoice (
+        	receivableid ,
+        	fdate ,
+        	famount ,
+        	finvoiceno ,
+        	forderno 
+        ) VALUES (
+        	#receivableid# ,
+        	#fdate# ,
+        	#famount# ,
+        	#finvoiceno# ,
+        	#forderno# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="invoiceid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Forderinvoice.update" parameterClass="com.terrence.crm.dol.bean.Forderinvoice">         
+        UPDATE t_forderinvoice 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="receivableid">
+	        	receivableid = #receivableid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="famount">
+	        	famount = #famount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="finvoiceno">
+	        	finvoiceno = #finvoiceno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderno">
+	        	forderno = #forderno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        invoiceid = #invoiceid# 
+    </update>
+    
+	<delete id="Forderinvoice.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_forderinvoice where
+       invoiceid = #invoiceid# 
+    ]]>
+    </delete>
+    
+    <delete id="Forderinvoice.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_forderinvoice 
+        WHERE
+       invoiceid in ($invoiceid$) 
+    ]]>
+    </delete>
+    
+    <select id="Forderinvoice.getById" resultMap="RM.Forderinvoice">
+	    select <include refid="Forderinvoice.columns"/>
+	    
+	        from t_forderinvoice 
+	        where 
+		        invoiceid = #invoiceid# 
+	    
+    </select>
+    
+	<select id="Forderinvoice.getByProperty" resultMap="RM.Forderinvoice">
+		select <include refid="Forderinvoice.columns"/> from t_forderinvoice where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Forderinvoice.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="invoiceid">
+	             t_forderinvoice.invoiceid = #invoiceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderinvoice.receivableid = #receivableid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderinvoice.fdate = #fdate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="famount">
+	             t_forderinvoice.famount = #famount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finvoiceno">
+	             t_forderinvoice.finvoiceno = #finvoiceno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderinvoice.forderno = #forderno#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Forderinvoice.findPage.and">
+			<isNotEmpty prepend="AND" property="invoiceid">
+	             t_forderinvoice.invoiceid = #invoiceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderinvoice.receivableid = #receivableid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderinvoice.fdate = #fdate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="famount">
+	             t_forderinvoice.famount = #famount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finvoiceno">
+	             t_forderinvoice.finvoiceno = #finvoiceno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderinvoice.forderno = #forderno#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Forderinvoice.Entity" resultMap="RM.Forderinvoice">
+    	SELECT 	<include refid="Forderinvoice.columns"/> FROM t_forderinvoice <include refid="Forderinvoice.findPage.where"/>
+    </select>
+    
+    <select id="Forderinvoice.findList" resultMap="RM.Forderinvoice">
+    	SELECT 
+    		<include refid="Forderinvoice.columns"/> 
+    	FROM 
+    		t_forderinvoice
+		<include refid="Forderinvoice.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Forderinvoice.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_forderinvoice
+    ]]>
+		<include refid="Forderinvoice.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Forderinvoice.findPage" resultMap="RM.Forderinvoice">
+    	select <include refid="Forderinvoice.columns"/>	    
+	        from t_forderinvoice 	   
+		<include refid="Forderinvoice.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Forderinvoice.findPage" resultMap="RM.Forderinvoice">
+    	select <include refid="Forderinvoice.columns"/>	    
+	        from t_forderinvoice where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       invoiceid 
+	   not in(select $notTop$ 
+       invoiceid 
+	   from t_forderinvoice <include refid="Forderinvoice.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Forderinvoice.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="Forderinvoice.findDataFromK3" resultMap="RM.Forderinvoice.findDataFromK3">
+    	select 
+			t.FDate fdate,
+			CASE t.FTranType
+		                  WHEN 80 THEN t1.FAmount+t1.FTaxAmount
+		                  ELSE t1.FAmount
+		              END AS famount,
+		     t.FBillNo finvoiceno,
+		     t1.FEntrySelfI0459  
+		from K33.AIS20120813194456.dbo.ICSale t
+		INNER JOIN 
+		K33.AIS20120813194456.dbo.ICSaleEntry t1 ON t.FInterID = t1.FInterID
+		where t1.FEntrySelfI0459 = #forderno# 
+    </select>
+    <select id="Forderinvoice.findByMakeNumberCode" resultMap="RM.Forderinvoice.findDataFromK3">
+    	<![CDATA[
+    	select 
+			t.FDate fdate,
+			CASE t.FTranType
+		                  WHEN 80 THEN t1.FAmount+t1.FTaxAmount
+		                  ELSE t1.FAmount
+		              END AS famount,
+		     t.FBillNo finvoiceno,
+		     t1.FEntrySelfI0459  
+		from AIS20120813194456.dbo.ICSale t
+		INNER JOIN 
+		AIS20120813194456.dbo.ICSaleEntry t1 ON t.FInterID = t1.FInterID
+		where (t1.FEntrySelfI0459 >= '$startCode$'
+		and t1.FEntrySelfI0459 <= '$endCode$' or t1.FEntrySelfI0459 = '$makeNumberCode$')
+		and famount>0 
+		 ]]>
+    </select>
+</sqlMap>

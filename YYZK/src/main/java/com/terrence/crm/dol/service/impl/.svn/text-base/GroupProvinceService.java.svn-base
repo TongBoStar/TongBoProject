@@ -1,0 +1,177 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.GroupProvince;
+import com.terrence.crm.dol.query.GroupProvinceQuery;
+import com.terrence.crm.dol.dao.IGroupProvinceDao;
+import com.terrence.crm.dol.service.IGroupProvinceService;
+
+@Service
+@Transactional
+public class GroupProvinceService extends BaseService implements
+		IGroupProvinceService {
+	protected static Logger logger = LoggerFactory
+			.getLogger(GroupProvinceService.class);
+	@Autowired
+	@Qualifier("groupProvinceDao")
+	private IGroupProvinceDao groupProvinceDao;
+
+	public String getIbatisSqlMapNamespace() {
+		return "GroupProvince";
+	}
+	@Transactional(readOnly = true)
+	public GroupProvince getById(java.lang.Long id) throws ServiceException {
+		return groupProvinceDao.getById(id);
+	}
+
+	public void saveOrUpdate(GroupProvince entity) throws ServiceException {
+		groupProvinceDao.saveOrUpdate(entity);
+	}
+
+	public java.lang.Long save(GroupProvince entity) throws ServiceException {
+		Long adId = groupProvinceDao.save(entity);
+
+		return adId;
+	}
+
+	public Integer update(GroupProvince entity) throws ServiceException {
+		Integer returnValue = groupProvinceDao.update(entity);
+
+		return returnValue;
+	}
+
+	public Integer deleteById(java.lang.Long id) throws ServiceException {
+		Integer returnValue = groupProvinceDao.deleteById(id);
+		return returnValue;
+	}
+
+	public Integer deleteByMultipleId(List<java.lang.Long> idList)
+			throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = groupProvinceDao.deleteByMultipleId(delIds);
+
+		return returnValue;
+	}
+
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		GroupProvinceQuery query = new GroupProvinceQuery();
+		try {
+			return groupProvinceDao.isUnique(query, uniquePropertyNames,
+					newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GroupProvince> findPage(Page<GroupProvince> page,
+			GroupProvinceQuery query) throws ServiceException {
+		return groupProvinceDao.findPage(page, query);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GroupProvince> findPage(Page<GroupProvince> page,
+			String statement, GroupProvinceQuery query) throws ServiceException {
+		return groupProvinceDao.findPage(page, statement, query);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupProvince> findList(GroupProvinceQuery query)
+			throws ServiceException {
+		return groupProvinceDao.findList(query);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupProvince> findList(GroupProvinceQuery query,
+			Integer pageSize) throws ServiceException {
+		return groupProvinceDao.findList(query, pageSize);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupProvince> findList(GroupProvinceQuery query,
+			String statement, Integer pageSize) throws ServiceException {
+		return groupProvinceDao.findList(query, statement, pageSize);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupProvince> findAllList() throws ServiceException {
+		return groupProvinceDao.findAllList();
+	}
+
+
+	public Long saveAll(GroupProvince entity) {
+		Long fitemid =null;
+		List<GroupProvince> listProvinces = null;
+		GroupProvince gProvince =null,groupProvince2 = null;
+		Long groupId =  entity.getGroupid();
+		groupProvince2 = new GroupProvince();
+		 groupProvince2.setGroupid(groupId);
+		 int  o = 0;
+		listProvinces= groupProvinceDao.findList(groupProvince2);
+		String s = entity.getS();
+		if (!s.equals("") && entity.getGroupid() != 0
+				&& entity.getGroupid() != null) {
+			String lists[] = s.split(",");
+			
+				if (!listProvinces.isEmpty()) {
+					for (GroupProvince gp : listProvinces) {
+						for (int i = 0; i < lists.length; i++) {
+							Long provinceId = Long.valueOf(lists[i]);
+							gProvince = new GroupProvince();
+							gProvince.setGroupid(groupId);
+							gProvince.setProvinceid(provinceId);
+							GroupProvince groupProvince = groupProvinceDao
+									.findGroupIdByProvince(gProvince);
+							if (groupProvince ==null) {
+								groupProvinceDao.save(gProvince);
+						}else{
+							if (!gp.getFitemid().equals(groupProvince.getFitemid())) {
+								 o = groupProvinceDao.deleteById(gp.getFitemid());
+							}
+						}
+							
+					}
+				}
+			}else {
+				for (int i = 0; i < lists.length; i++) {
+					Long provinceId = Long.valueOf(lists[i]);
+					gProvince = new GroupProvince();
+					gProvince.setGroupid(groupId);
+					gProvince.setProvinceid(provinceId);
+					groupProvinceDao.save(gProvince);
+				}
+			}
+				if (null!=gProvince.getFitemid()) {
+					fitemid = gProvince.getFitemid();
+				}else {
+					fitemid = Long.valueOf(o);
+				}
+		}
+		return fitemid;
+	} 
+}

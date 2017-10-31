@@ -1,0 +1,396 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Callslip;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.StoreroomTask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.ICallslipDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IStoreroomTaskDao;
+import com.terrence.crm.dol.query.CallslipQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.query.PickingQuery;
+import com.terrence.crm.dol.query.StoreroomTaskQuery;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.service.IStoreroomTaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class StoreroomTaskService extends BaseService implements IStoreroomTaskService {
+	@Autowired
+	@Qualifier("storeroomTaskDao")
+	private IStoreroomTaskDao storeroomTaskDao;
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	@Autowired
+	@Qualifier("callslipDao")
+	private ICallslipDao callslipDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	@Override
+	public StoreroomTask getById(Long id) throws ServiceException {
+		StoreroomTask st = storeroomTaskDao.getById(id);
+		ModelListQuery mquery = new ModelListQuery();
+		mquery.setDesignassistId(st.getSourceId());
+		mquery.setModelMark("t_bracket_list");
+		st.setBracketLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_bait_list");
+		st.setBaitLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assweld_list");
+		st.setAssweldLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assemble_list");
+		st.setAssembleLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_delivery_list");
+		st.setDeliveryLists(modelListDao.findList(mquery));
+		return st;
+	}
+	@Override
+	public void saveOrUpdate(StoreroomTask entity) throws ServiceException {
+		storeroomTaskDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(StoreroomTask entity) throws ServiceException {
+		return storeroomTaskDao.save(entity);
+	}
+	@Override
+	public Integer update(StoreroomTask entity) throws ServiceException {
+		return storeroomTaskDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return storeroomTaskDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = storeroomTaskDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<StoreroomTask> findPage(Page<StoreroomTask> page, StoreroomTaskQuery query) throws ServiceException{
+		return storeroomTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<StoreroomTask> findPage(Page<StoreroomTask> page,String statement, StoreroomTaskQuery query) throws ServiceException{
+		return storeroomTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<StoreroomTask> findList(StoreroomTaskQuery query) throws ServiceException{
+		return storeroomTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<StoreroomTask> findList(StoreroomTaskQuery query,Integer pageSize) throws ServiceException{
+		return storeroomTaskDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<StoreroomTask> findList(StoreroomTaskQuery query,String statement,Integer pageSize) throws ServiceException{
+		return storeroomTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<StoreroomTask> findAllList() throws ServiceException{
+		return storeroomTaskDao.findAllList();
+	}
+	@Override
+	public void exeProcess(StoreroomTask entity, ProcessExetask processExetask) throws Exception{
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);//需要分发节点
+		if(!(Boolean)map.get("flag")){//流程有异常
+			throw new ServiceException((String)map.get("msg"));
+		}else if((Boolean)map.get("rebackTag")){//被驳回
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+			changeMessage(entity,processExetask.getTaskCode(),map);//向系统消息中添加数据
+		}else if((Boolean)map.get("flag")){//是正常的往下执行的流程
+			Integer step = (Integer)map.get("step");//获取下一步的序号
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");//获取下一步的名称和执行人
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);//修改表头中对应的标签的信息
+			changeMessage(entity,processExetask.getTaskCode(),map);//向系统消息中添加数据
+			if((Boolean)map.get("endTag")){//如果审批流程结束，则进入下发流程
+				//生成领料单
+				addCallslip(storeroomTaskDao.getById(entity.getId()),processExetask.getTaskCode());
+			}
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		storeroomTaskDao.update(entity);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(processExetask.getTaskCode().equals("TO_BRACKET_STOREROOM_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_STOREROOMTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的库房任务支架下料审核成功，操作人为"+admin.getAdmin().getAdminName());
+		}else if(processExetask.getTaskCode().equals("TO_BAIT_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_STOREROOMTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的库房任务下料审核成功，操作人为"+admin.getAdmin().getAdminName());
+		}else if(processExetask.getTaskCode().equals("TO_ASSWELD_STOREROOM_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_STOREROOMTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的库房任务组焊审核成功，操作人为"+admin.getAdmin().getAdminName());
+		}else if(processExetask.getTaskCode().equals("TO_ASSEMBLE_STOREROOM_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_STOREROOMTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的库房任务装配审核成功，操作人为"+admin.getAdmin().getAdminName());
+		}else if(processExetask.getTaskCode().equals("TO_DELIVERY_STOREROOM_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_STOREROOMTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的库房任务发货审核成功，操作人为"+admin.getAdmin().getAdminName());
+		}else{
+			
+		}
+		
+	}
+	//更新和保存系统消息
+	public void changeMessage(StoreroomTask entity,String mark,Map<String,Object> map){
+		StoreroomTask da = storeroomTaskDao.getById(entity.getId());
+		if(mark.equals("TO_BRACKET_STOREROOM_TASK")){
+			saveOrupdateMessage(da,"TO_BRACKET_STOREROOM_TASK",map,"库房任务支架下料待审核",1);
+		}else if(mark.equals("TO_BAIT_TASK")){
+			saveOrupdateMessage(da,"TO_BAIT_STOREROOM_TASK",map,"库房任务下料待审核",1);
+		}else if(mark.equals("TO_ASSWELD_STOREROOM_TASK")){
+			saveOrupdateMessage(da,"TO_ASSWELD_STOREROOM_TASK",map,"库房任务组焊待审核",1);
+		}else if(mark.equals("TO_ASSEMBLE_STOREROOM_TASK")){
+			saveOrupdateMessage(da,"TO_ASSEMBLE_STOREROOM_TASK",map,"库房任务装配待审核",1);
+		}else if(mark.equals("TO_DELIVERY_STOREROOM_TASK")){
+			saveOrupdateMessage(da,"TO_DELIVERY_STOREROOM_TASK",map,"库房任务发货待审核",1);
+		}else{
+			
+		}
+	}
+	public void saveOrupdateMessage(StoreroomTask da,String mark,Map<String,Object> map,String mesname,Integer mestype){
+		//1先将原来的消息更新为status=2
+		MessageQuery query = new MessageQuery();
+		query.setFbillid(da.getId());
+		query.setProcessname(mark);
+		query.setSortColumns("id");
+		List<Message> lists = messageDao.findList(query);
+		if(lists!=null&&lists.size()>0){
+			Message mes = lists.get(lists.size()-1);
+			mes.setStatus(2);
+			mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+			this.messageDao.update(mes);
+		}
+		//2如果有当前执行人则插入数据
+		if(map!=null&&map.get("handlerIds")!=null){
+			List<Long> handlerIds = new ArrayList<Long>();
+			handlerIds = (List<Long>) map.get("handlerIds");
+			String empids="";
+			if(handlerIds!=null&&handlerIds.size()>0){
+				for(int i=0;i<handlerIds.size();i++){
+					if(i==handlerIds.size()-1){
+						empids +=handlerIds.get(i);
+					}else{
+						empids +=handlerIds.get(i)+",";
+					}
+				}
+			}
+			if(empids!=null&&!empids.equals("")){
+				Message message = new Message();
+				message.setName(mesname);//消息名称
+				message.setContent("任务单号："+da.getStoreTaskCode()+";产品编码："+da.getProductCode()+";产品名称："+da.getProductName()+";制令号："+da.getMakeNumberCode());//消息内容
+				message.setType(mestype);//单据类型
+				message.setFbillno(da.getStoreTaskCode());//单据编号
+				message.setFbillid(da.getId());//单据主键
+				message.setUrl("productmanage/storeroomtask.htm");//链接地址
+				message.setStatus(1);//消息状态(1未处理2已处理)
+				message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+				message.setEmpids(empids);//执行人
+				message.setProcessname(mark);//流程名称
+				this.messageDao.save(message);
+			}
+		}
+	}
+	public void addCallslip(StoreroomTask entity,String taskCode){
+		Callslip callslip = new Callslip();
+		callslip.setCallslipCode(icbillnoDao.genflowcode("CALL"));
+		callslip.setStoreroomId(entity.getId());
+		callslip.setSourceCode(entity.getSourceCode());
+		callslip.setSourceId(entity.getSourceId());
+		callslip.setProductCode(entity.getProductCode());
+		callslip.setProductName(entity.getProductName());
+		callslip.setProductModel(entity.getProductModel());
+		callslip.setCreateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		callslip.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+		callslip.setMakeNumberCode(entity.getMakeNumberCode());
+		callslip.setFcount(entity.getFcount());
+		callslip.setCallType(taskCode);
+		callslipDao.save(callslip);
+	}
+	public void dispatchStatus(StoreroomTask entity,String mark,Integer step,String desc){
+		if(mark.equals("TO_BRACKET_STOREROOM_TASK")){
+			entity.setBracketStatus(step);
+			entity.setBracketStatusDesc(desc);
+		}else if(mark.equals("TO_BAIT_STOREROOM_TASK")){
+			entity.setBaitStatus(step);
+			entity.setBaitStatusDesc(desc);
+		}else if(mark.equals("TO_ASSWELD_STOREROOM_TASK")){
+			entity.setAssweldStatus(step);
+			entity.setAssweldStatusDesc(desc);
+		}else if(mark.equals("TO_ASSEMBLE_STOREROOM_TASK")){
+			entity.setAssembleStatus(step);
+			entity.setAssembleStatusDesc(desc);
+		}else if(mark.equals("TO_DELIVERY_STOREROOM_TASK")){
+			entity.setDeliveryStatus(step);
+			entity.setDeliveryStatusDesc(desc);
+		}else{
+			
+		}
+	}
+	@Override
+	public void closeToJson(List<Long> checkedIdList, StoreroomTask entity)
+			throws Exception {
+		StoreroomTask temp = null;
+		for(Long id:checkedIdList){
+			temp = new StoreroomTask();
+			temp.setId(id);
+			temp.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			temp.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+			temp.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+			temp.setFstatus(100);
+			storeroomTaskDao.update(temp);
+		}
+	}
+	@Override
+	public void unexamine(StoreroomTaskQuery storeroomTaskQuery) throws Exception {
+		StoreroomTask storeroomTask = storeroomTaskDao.getById(storeroomTaskQuery.getId());
+		CallslipQuery callquery = new CallslipQuery();
+		callquery.setStoreroomId(storeroomTaskQuery.getId());
+		List<Callslip> callslips = null;
+		if(storeroomTaskQuery.getFmark().trim().equals("bracket")){//支架
+			if(null!=storeroomTask.getBracketStatus()&&storeroomTask.getBracketStatus().intValue()==100){//支架部分已经下推
+				callquery.setCallType("TO_BRACKET_STOREROOM_TASK");
+				callslips = callslipDao.findList(callquery);
+				if(null!=callslips&&callslips.size()>0){
+					Callslip callslip = callslips.get(0);
+					PickingQuery query = new PickingQuery();
+					query.setCallslipcode(callslip.getCallslipCode());
+					List<Picking> tmplist = pickingDao.findbycallslip(query);
+					if(null!=tmplist&&tmplist.size()>0){
+						throw new ServiceException("请先反审出库单中对应的单据并删除!");
+					}
+				}else{//虽然下推但是没有记录，严格情况下不存在这种情况
+					storeroomTask.setBracketStatus(0);
+					storeroomTask.setBracketStatusDesc(null);
+					storeroomTaskDao.update(storeroomTask);
+				}
+			}else{//未下推
+				storeroomTask.setBracketStatus(0);
+				storeroomTask.setBracketStatusDesc(null);
+				storeroomTaskDao.update(storeroomTask);
+			}
+		}else if(storeroomTaskQuery.getFmark().trim().equals("bait")){//下料
+			if(null!=storeroomTask.getBaitStatus()&&storeroomTask.getBaitStatus().intValue()==100){//支架部分已经下推
+				callquery.setCallType("TO_BAIT_STOREROOM_TASK");
+				callslips = callslipDao.findList(callquery);
+				if(null!=callslips&&callslips.size()>0){
+					Callslip callslip = callslips.get(0);
+					PickingQuery query = new PickingQuery();
+					query.setCallslipcode(callslip.getCallslipCode());
+					List<Picking> tmplist = pickingDao.findbycallslip(query);
+					if(null!=tmplist&&tmplist.size()>0){
+						throw new ServiceException("请先反审出库单中对应的单据并删除!");
+					}
+				}else{//虽然下推但是没有记录，严格情况下不存在这种情况
+					storeroomTask.setBaitStatus(0);
+					storeroomTask.setBaitStatusDesc(null);
+					storeroomTaskDao.update(storeroomTask);
+				}
+			}else{
+				storeroomTask.setBaitStatus(0);
+				storeroomTask.setBaitStatusDesc(null);
+				storeroomTaskDao.update(storeroomTask);
+			}
+		}else if(storeroomTaskQuery.getFmark().trim().equals("assweld")){//下料
+			if(null!=storeroomTask.getAssweldStatus()&&storeroomTask.getAssweldStatus().intValue()==100){//支架部分已经下推
+				callquery.setCallType("TO_ASSWELD_STOREROOM_TASK");
+				callslips = callslipDao.findList(callquery);
+				if(null!=callslips&&callslips.size()>0){
+					Callslip callslip = callslips.get(0);
+					PickingQuery query = new PickingQuery();
+					query.setCallslipcode(callslip.getCallslipCode());
+					List<Picking> tmplist = pickingDao.findbycallslip(query);
+					if(null!=tmplist&&tmplist.size()>0){
+						throw new ServiceException("请先反审出库单中对应的单据并删除!");
+					}
+				}else{//虽然下推但是没有记录，严格情况下不存在这种情况
+					storeroomTask.setAssweldStatus(0);
+					storeroomTask.setAssweldStatusDesc(null);
+					storeroomTaskDao.update(storeroomTask);
+				}
+			}else{//未下推
+				storeroomTask.setAssweldStatus(0);
+				storeroomTask.setAssweldStatusDesc(null);
+				storeroomTaskDao.update(storeroomTask);
+			}
+		}else if(storeroomTaskQuery.getFmark().trim().equals("assemble")){//下料
+			if(null!=storeroomTask.getAssembleStatus()&&storeroomTask.getAssembleStatus().intValue()==100){//支架部分已经下推
+				callquery.setCallType("TO_ASSEMBLE_STOREROOM_TASK");
+				callslips = callslipDao.findList(callquery);
+				if(null!=callslips&&callslips.size()>0){
+					Callslip callslip = callslips.get(0);
+					PickingQuery query = new PickingQuery();
+					query.setCallslipcode(callslip.getCallslipCode());
+					List<Picking> tmplist = pickingDao.findbycallslip(query);
+					if(null!=tmplist&&tmplist.size()>0){
+						throw new ServiceException("请先反审出库单中对应的单据并删除!");
+					}
+				}else{//虽然下推但是没有记录，严格情况下不存在这种情况
+					storeroomTask.setAssembleStatus(0);
+					storeroomTask.setAssembleStatusDesc(null);
+					storeroomTaskDao.update(storeroomTask);
+				}
+			}else{//未下推
+				storeroomTask.setAssembleStatus(0);
+				storeroomTask.setAssembleStatusDesc(null);
+				storeroomTaskDao.update(storeroomTask);
+			}
+		}else if(storeroomTaskQuery.getFmark().trim().equals("delivery")){//下料
+			if(null!=storeroomTask.getDeliveryStatus()&&storeroomTask.getDeliveryStatus().intValue()==100){//支架部分已经下推
+				callquery.setCallType("TO_DELIVERY_STOREROOM_TASK");
+				callslips = callslipDao.findList(callquery);
+				if(null!=callslips&&callslips.size()>0){
+					Callslip callslip = callslips.get(0);
+					PickingQuery query = new PickingQuery();
+					query.setCallslipcode(callslip.getCallslipCode());
+					List<Picking> tmplist = pickingDao.findbycallslip(query);
+					if(null!=tmplist&&tmplist.size()>0){
+						throw new ServiceException("请先反审出库单中对应的单据并删除!");
+					}
+				}else{//虽然下推但是没有记录，严格情况下不存在这种情况
+					storeroomTask.setAssembleStatus(0);
+					storeroomTask.setAssembleStatusDesc(null);
+					storeroomTaskDao.update(storeroomTask);
+				}
+			}else{//未下推
+				storeroomTask.setDeliveryStatus(0);
+				storeroomTask.setDeliveryStatusDesc(null);
+				storeroomTaskDao.update(storeroomTask);
+			}
+		}else{
+			throw new ServiceException("系统错误，请联系管理员!");
+		}
+	}
+}

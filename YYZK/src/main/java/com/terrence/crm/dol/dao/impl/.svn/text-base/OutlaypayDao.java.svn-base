@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Outlaypay;
+import com.terrence.crm.dol.dao.IOutlaypayDao;
+import com.terrence.crm.dol.query.OutlaypayQuery;
+
+@Repository
+public class OutlaypayDao extends BaseIbatisDao<Outlaypay,java.lang.Long> implements IOutlaypayDao{
+
+		
+	public void saveOrUpdate(Outlaypay entity) {
+		if(entity.getPayid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Outlaypay";
+	}
+	public Outlaypay getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Outlaypay)this.getSqlMapClientTemplate().queryForObject("Outlaypay.getByProperty", map);		
+	}
+
+	@Override
+	public List<Outlaypay> findOutlaypayData(OutlaypayQuery outlaypayQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Outlaypay.select.table.data", outlaypayQuery);
+	}
+
+}

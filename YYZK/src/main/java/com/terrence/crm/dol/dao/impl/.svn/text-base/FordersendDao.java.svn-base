@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Fordersend;
+import com.terrence.crm.dol.dao.IFordersendDao;
+
+@Repository
+public class FordersendDao extends BaseIbatisDao<Fordersend,java.lang.Long> implements IFordersendDao{
+
+		
+	public void saveOrUpdate(Fordersend entity) {
+		if(entity.getSendid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Fordersend";
+	}
+	public Fordersend getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Fordersend)this.getSqlMapClientTemplate().queryForObject("Fordersend.getByProperty", map);		
+	}
+
+	@Override
+	public List<Fordersend> findByMakeNumberCode(Map<String, String> map) {
+		return this.getSqlMapClientTemplate().queryForList("Fordersend.findByMakeNumberCode", map);
+	}
+
+}

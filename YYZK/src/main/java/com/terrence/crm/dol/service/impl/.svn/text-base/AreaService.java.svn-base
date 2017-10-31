@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Area;
+import com.terrence.crm.dol.query.AreaQuery;
+import com.terrence.crm.dol.dao.IAreaDao;
+import com.terrence.crm.dol.service.IAreaService;
+
+@Service
+@Transactional
+public class AreaService extends BaseService implements IAreaService {
+	protected static Logger logger = LoggerFactory.getLogger(AreaService.class);
+	@Autowired
+	@Qualifier("areaDao")
+	private IAreaDao areaDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Area";
+	}
+	@Transactional(readOnly=true)
+	public Area getById(java.lang.Long id) throws ServiceException
+	{
+		return areaDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Area entity) throws ServiceException
+	{
+		areaDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Area entity) throws ServiceException
+	{
+		Long adId = areaDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Area entity) throws ServiceException
+	{
+		Integer returnValue =  areaDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = areaDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = areaDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AreaQuery query = new AreaQuery();
+		try {
+			return areaDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Area> findPage(Page<Area> page, AreaQuery query) throws ServiceException
+	{
+		return areaDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Area> findPage(Page<Area> page,String statement, AreaQuery query) throws ServiceException
+	{
+		return areaDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Area> findList(AreaQuery query) throws ServiceException
+	{
+		return areaDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Area> findList(AreaQuery query,Integer pageSize) throws ServiceException
+	{
+		return areaDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Area> findList(AreaQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return areaDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Area> findAllList() throws ServiceException
+	{
+		return areaDao.findAllList();
+	}
+	@Override
+	public void syncAreaERPData() throws ServiceException {
+		areaDao.syncAreaERPData();
+		
+	}
+	@Override
+	public List<Area> findAreaList(AreaQuery areaQuery) throws ServiceException {
+		return areaDao.findAreaList(areaQuery);
+	}
+
+}

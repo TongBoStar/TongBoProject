@@ -1,0 +1,134 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Measureunit;
+import com.terrence.crm.dol.dao.IMeasureunitDao;
+import com.terrence.crm.dol.query.MeasureunitQuery;
+import com.terrence.crm.dol.query.MeasureunitsQuery;
+import com.terrence.crm.dol.service.IMeasureunitService;
+
+@Service
+@Transactional
+public class MeasureunitService extends BaseService implements IMeasureunitService {
+	protected static Logger logger = LoggerFactory.getLogger(MeasureunitService.class);
+	@Autowired
+	@Qualifier("measureunitDao")
+	private IMeasureunitDao measureunitDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Measureunit";
+	}
+	@Transactional(readOnly=true)
+	public Measureunit getById(java.lang.Long id) throws ServiceException
+	{
+		return measureunitDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Measureunit entity) throws ServiceException
+	{
+		measureunitDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Measureunit entity) throws ServiceException
+	{
+		Long adId = measureunitDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Measureunit entity) throws ServiceException
+	{
+		Integer returnValue =  measureunitDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = measureunitDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = measureunitDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		MeasureunitQuery query = new MeasureunitQuery();
+		try {
+			return measureunitDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Measureunit> findPage(Page<Measureunit> page, MeasureunitQuery query) throws ServiceException
+	{
+		return measureunitDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Measureunit> findPage(Page<Measureunit> page,String statement, MeasureunitQuery query) throws ServiceException
+	{
+		return measureunitDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunit> findList(MeasureunitQuery query) throws ServiceException
+	{
+		return measureunitDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunit> findMeasureunitList(MeasureunitsQuery query) throws ServiceException
+	{
+		return measureunitDao.findMeasureunitList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunit> findList(MeasureunitQuery query,Integer pageSize) throws ServiceException
+	{
+		return measureunitDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Measureunit> findList(MeasureunitQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return measureunitDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunit> findAllList() throws ServiceException
+	{
+		return measureunitDao.findAllList();
+	}
+	@Override
+	public void findUnit() throws ServiceException {
+		measureunitDao.findUnit();
+	}
+
+}

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrialRunStatus">
+
+        
+	<resultMap id="RM.TrialRunStatus" class="com.terrence.crm.dol.bean.TrialRunStatus">
+        <result property="statusid" column="statusid"/>
+        <result property="notes" column="notes"/>
+        <result property="fval" column="fval"/>
+        <result property="trialid" column="trialid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrialRunStatus.columns">
+	    <![CDATA[
+        	t_trial_run_status.statusid ,
+        	t_trial_run_status.notes ,
+        	t_trial_run_status.fval ,
+        	t_trial_run_status.trialid 
+	    ]]>
+	</sql>
+	
+   <insert id="TrialRunStatus.insert" >
+   
+        INSERT INTO
+        t_trial_run_status (
+        	notes ,
+        	fval ,
+        	trialid 
+        ) VALUES (
+        	#notes# ,
+        	#fval# ,
+        	#trialid# 
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="statusid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrialRunStatus.update" parameterClass="com.terrence.crm.dol.bean.TrialRunStatus">         
+        UPDATE t_trial_run_status 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="trialid">
+	        	trialid = #trialid# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fval">
+	        	fval = #fval# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        statusid = #statusid# 
+    </update>
+    
+	<delete id="TrialRunStatus.delete" parameterClass="java.lang.Integer">
+    <![CDATA[
+        delete from t_trial_run_status where
+       statusid = #statusid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrialRunStatus.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trial_run_status 
+        WHERE
+       statusid in ($statusid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrialRunStatus.getById" resultMap="RM.TrialRunStatus">
+	    select <include refid="TrialRunStatus.columns"/>
+	    
+	        from t_trial_run_status 
+	        where 
+		        statusid = #statusid#  
+	    
+    </select>
+    
+	<select id="TrialRunStatus.getByProperty" resultMap="RM.TrialRunStatus">
+		select <include refid="TrialRunStatus.columns"/> from t_trial_run_status where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrialRunStatus.findPage.where">
+	    <dynamic prepend="WHERE">
+	    	<isNotEmpty prepend="AND" property="statusid">
+	             t_trial_run_status.statusid = #statusid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_trial_run_status.notes = #notes#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fval">
+	             t_trial_run_status.fval = #fval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_trial_run_status.trialid = #trialid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrialRunStatus.findPage.and">
+    	<isNotEmpty prepend="AND" property="statusid">
+	             t_trial_run_status.statusid = #statusid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_trial_run_status.notes = #notes#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fval">
+	             t_trial_run_status.fval = #fval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_trial_run_status.trialid = #trialid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrialRunStatus.Entity" resultMap="RM.TrialRunStatus">
+    	SELECT 	<include refid="TrialRunStatus.columns"/> FROM t_trial_run_status <include refid="TrialRunStatus.findPage.where"/>
+    </select>
+    
+    <select id="TrialRunStatus.findList" resultMap="RM.TrialRunStatus">
+    	SELECT 
+    		<include refid="TrialRunStatus.columns"/> 
+    	FROM 
+    		t_trial_run_status
+		<include refid="TrialRunStatus.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrialRunStatus.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trial_run_status
+    ]]>
+		<include refid="TrialRunStatus.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrialRunStatus.findPage" resultMap="RM.TrialRunStatus">
+    	select <include refid="TrialRunStatus.columns"/>	    
+	        from t_trial_run_status 	   
+		<include refid="TrialRunStatus.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrialRunStatus.findPage" resultMap="RM.TrialRunStatus">
+    	select <include refid="TrialRunStatus.columns"/>	    
+	        from t_trial_run_status where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       statusid 
+	   not in(select $notTop$ 
+       statusid 
+	   from t_trial_run_status <include refid="TrialRunStatus.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrialRunStatus.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+     <select id="trialRunStatusService.list.findPage.count" resultClass="long"><!-- 2013/11/4 -->
+    <![CDATA[
+        select 
+        count(*)
+        from t_trial_run_status
+    ]]>
+		<include refid="TrialRunStatus.findPage.where"/>    
+    </select>
+    	<select id="trialRunStatusService.list.findPage" resultMap="RM.TrialRunStatus">
+    	select <include refid="TrialRunStatus.columns"/>	    
+	        from t_trial_run_status where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       statusid 
+	   not in(select $notTop$ 
+       statusid 
+	   from t_trial_run_status <include refid="TrialRunStatus.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrialRunStatus.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	 <select id="TrialRunStatus.find.entity" resultMap="RM.TrialRunStatus"><!-- 2013/11/4 查询favl是否存在 -->
+    	SELECT 	<include refid="TrialRunStatus.columns"/> FROM t_trial_run_status <include refid="TrialRunStatus.findPage.where"/>
+    </select>
+</sqlMap>

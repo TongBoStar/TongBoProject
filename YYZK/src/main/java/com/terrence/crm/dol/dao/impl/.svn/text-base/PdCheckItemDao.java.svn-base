@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdCheckItem;
+import com.terrence.crm.dol.dao.IPdCheckItemDao;
+
+@Repository
+public class PdCheckItemDao extends BaseIbatisDao<PdCheckItem,java.lang.Long> implements IPdCheckItemDao{
+
+		
+	public void saveOrUpdate(PdCheckItem entity) {
+		if(entity.getPcitemid() == null)
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdCheckItem";
+	}
+	public PdCheckItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdCheckItem)this.getSqlMapClientTemplate().queryForObject("PdCheckItem.getByProperty", map);		
+	}
+
+}

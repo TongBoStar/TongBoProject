@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AtsEmp;
+import com.terrence.crm.dol.query.AtsEmpQuery;
+import com.terrence.crm.dol.dao.IAtsEmpDao;
+import com.terrence.crm.dol.service.IAtsEmpService;
+
+@Service
+@Transactional
+public class AtsEmpService extends BaseService implements IAtsEmpService {
+	protected static Logger logger = LoggerFactory.getLogger(AtsEmpService.class);
+	@Autowired
+	@Qualifier("atsEmpDao")
+	private IAtsEmpDao atsEmpDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AtsEmp";
+	}
+	@Transactional(readOnly=true)
+	public AtsEmp getById(java.lang.Long id) throws ServiceException
+	{
+		return atsEmpDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AtsEmp entity) throws ServiceException
+	{
+		atsEmpDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AtsEmp entity) throws ServiceException
+	{
+		Long adId = atsEmpDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AtsEmp entity) throws ServiceException
+	{
+		Integer returnValue =  atsEmpDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = atsEmpDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = atsEmpDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AtsEmpQuery query = new AtsEmpQuery();
+		try {
+			return atsEmpDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AtsEmp> findPage(Page<AtsEmp> page, AtsEmpQuery query) throws ServiceException
+	{
+		return atsEmpDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AtsEmp> findPage(Page<AtsEmp> page,String statement, AtsEmpQuery query) throws ServiceException
+	{
+		return atsEmpDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AtsEmp> findList(AtsEmpQuery query) throws ServiceException
+	{
+		return atsEmpDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AtsEmp> findList(AtsEmpQuery query,Integer pageSize) throws ServiceException
+	{
+		return atsEmpDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AtsEmp> findList(AtsEmpQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return atsEmpDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AtsEmp> findAllList() throws ServiceException
+	{
+		return atsEmpDao.findAllList();
+	}
+
+}

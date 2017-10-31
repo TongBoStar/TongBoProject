@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TopicItemVal">
+
+        
+	<resultMap id="RM.TopicItemVal" class="com.terrence.crm.dol.bean.TopicItemVal">
+        <result property="valid" column="valid"/>
+        <result property="testitemid" column="testitemid"/>
+        <result property="waitid" column="waitid"/>
+        <result property="detecid" column="detecid"/>
+        <result property="topicid" column="topicid"/>
+        <result property="secid" column="secid"/>
+        <result property="fileno" column="fileno"/>
+        <result property="filepath" column="filepath"/>
+        <result property="comments" column="comments"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="ffilename" column="ffilename"/>
+        <result property="fresult" column="fresult"/>
+    </resultMap>
+	
+	<resultMap id="RM.TopicItemVal.SortSec" class="com.terrence.crm.dol.bean.TopicItemVal">
+        <result property="valid" column="valid"/>
+        <result property="testitemid" column="testitemid"/>
+        <result property="waitid" column="waitid"/>
+        <result property="topicid" column="topicid"/>
+        <result property="secid" column="secid"/>
+        <result property="fileno" column="fileno"/>
+        <result property="filepath" column="filepath"/>
+        <result property="comments" column="comments"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="ffilename" column="ffilename"/>
+        <result property="fresult" column="fresult"/>
+        <result property="sortcodesec" resultMap="RM.TopicItemVal.SortSec.Detail"/>
+    </resultMap>  
+	
+	<resultMap class="com.terrence.crm.dol.bean.Sortcodesec" id="RM.TopicItemVal.SortSec.Detail">
+		<result property="secname" column="secname"/>
+	</resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TopicItemVal.columns">
+	    <![CDATA[
+        	t_topic_item_val.valid ,
+        	t_topic_item_val.testitemid ,
+        	t_topic_item_val.waitid ,
+        	t_topic_item_val.topicid ,
+        	t_topic_item_val.secid ,
+        	t_topic_item_val.fileno ,
+        	t_topic_item_val.filepath ,
+        	t_topic_item_val.comments ,
+        	t_topic_item_val.itemcode ,
+        	t_topic_item_val.ffilename ,
+        	t_topic_item_val.fresult 
+	    ]]>
+	</sql>
+	
+   <insert id="TopicItemVal.insert" >
+        INSERT INTO
+        t_topic_item_val (
+        	testitemid ,
+        	waitid 
+        	 <dynamic prepend="">
+        	 <isNotEmpty prepend="," property="topicid">topicid</isNotEmpty>
+        	 <isNotEmpty prepend="," property="secid">secid</isNotEmpty>
+        	 <isNotEmpty prepend="," property="fileno">fileno</isNotEmpty>
+        	 <isNotEmpty prepend="," property="filepath">filepath</isNotEmpty>
+        	 <isNotEmpty prepend="," property="comments">comments</isNotEmpty>
+        	 <isNotEmpty prepend="," property="itemcode">itemcode</isNotEmpty>
+        	 <isNotEmpty prepend="," property="ffilename">ffilename</isNotEmpty>
+        	 <isNotEmpty prepend="," property="fresult">fresult</isNotEmpty>
+        	 </dynamic>
+        	 
+        ) VALUES (
+        	#testitemid# ,
+        	#waitid# 
+        	<dynamic prepend="">
+        	 <isNotEmpty prepend="," property="topicid">#topicid#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="secid">#secid#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="fileno">#fileno#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="filepath">#filepath#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="comments">#comments#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="itemcode">#itemcode#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="ffilename">#ffilename#</isNotEmpty>
+        	 <isNotEmpty prepend="," property="fresult">#fresult#</isNotEmpty>
+        	 </dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="valid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TopicItemVal.update" parameterClass="com.terrence.crm.dol.bean.TopicItemVal">         
+        UPDATE t_topic_item_val 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="testitemid">
+	        	testitemid = #testitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="waitid">
+	        	waitid = #waitid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="topicid">
+	        	topicid = #topicid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secid">
+	        	secid = #secid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fileno">
+	        	fileno = #fileno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="filepath">
+	        	filepath = #filepath# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="comments">
+	        	comments = #comments# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ffilename">
+	        	ffilename = #ffilename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fresult">
+	        	fresult = #fresult# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        valid = #valid# 
+    </update>
+    
+	<delete id="TopicItemVal.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_topic_item_val where
+       valid = #valid# 
+    ]]>
+    </delete>
+    
+    <delete id="TopicItemVal.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_topic_item_val 
+        WHERE
+       valid in ($valid$) 
+    ]]>
+    </delete>
+    
+    <select id="TopicItemVal.getById" resultMap="RM.TopicItemVal">
+	    select <include refid="TopicItemVal.columns"/>
+	    
+	        from t_topic_item_val 
+	        where 
+		        valid = #valid# 
+	    
+    </select>
+    
+	<select id="TopicItemVal.getByProperty" resultMap="RM.TopicItemVal">
+		select <include refid="TopicItemVal.columns"/> from t_topic_item_val where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TopicItemVal.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="valid">
+	             t_topic_item_val.valid = #valid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="testitemid">
+	             t_topic_item_val.testitemid = #testitemid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="waitid">
+	             t_topic_item_val.waitid = #waitid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="topicid">
+	             t_topic_item_val.topicid = #topicid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="secid">
+	             t_topic_item_val.secid = #secid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fileno">
+	             t_topic_item_val.fileno = #fileno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="filepath">
+	             t_topic_item_val.filepath = #filepath#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="comments">
+	             t_topic_item_val.comments = #comments#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_topic_item_val.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ffilename">
+	             t_topic_item_val.ffilename = #ffilename#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fresult">
+	             t_topic_item_val.fresult = #fresult#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TopicItemVal.findPage.and">
+			<isNotEmpty prepend="AND" property="valid">
+	             t_topic_item_val.valid = #valid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="testitemid">
+	             t_topic_item_val.testitemid = #testitemid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="waitid">
+	             t_topic_item_val.waitid = #waitid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="topicid">
+	             t_topic_item_val.topicid = #topicid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="secid">
+	             t_topic_item_val.secid = #secid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fileno">
+	             t_topic_item_val.fileno = #fileno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="filepath">
+	             t_topic_item_val.filepath = #filepath#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="comments">
+	             t_topic_item_val.comments = #comments#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_topic_item_val.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ffilename">
+	             t_topic_item_val.ffilename = #ffilename#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fresult">
+	             t_topic_item_val.fresult = #fresult#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TopicItemVal.Entity" resultMap="RM.TopicItemVal">
+    	SELECT 	<include refid="TopicItemVal.columns"/> FROM t_topic_item_val <include refid="TopicItemVal.findPage.where"/>
+    </select>
+    <select id="TopicItemVal.TopicItem.findList" resultMap="RM.TopicItemVal.SortSec">
+    	<!-- select t_sortcodesec.secname,t_topic_item.testitemid,t_topic_item.secid,
+		itemval.valid,itemval.waitid,itemval.topicid,itemval.fileno,itemval.filepath,
+		itemval.comments,itemval.itemcode,itemval.ffilename,itemval.fresult from t_topic_item left join(
+		select t_topic_item_val.* from t_topic_item_val ,t_item_wait
+		where  t_item_wait.waitid=t_topic_item_val.waitid and t_item_wait.waitid=#waitid#) itemval
+		on t_topic_item.testitemid=itemval.testitemid,t_sortcodesec 
+		where t_topic_item.secid=t_sortcodesec.secid 
+		and t_topic_item.topicid=#topicid# -->
+		 select t_sortcodesec.secname,t_topic_item.testitemid,t_topic_item.secid,
+		itemval.valid,itemval.waitid,itemval.topicid,itemval.fileno,itemval.filepath,
+		itemval.comments,itemval.itemcode,itemval.ffilename,itemval.fresult from ( select testitemid,topicid,secid from t_topic_item_val where t_topic_item_val.waitid=#waitid#) t_topic_item left join(
+		select t_topic_item_val.* from t_topic_item_val ,t_item_wait
+		where  t_item_wait.waitid=t_topic_item_val.waitid and t_item_wait.waitid=#waitid#) itemval
+		on t_topic_item.testitemid=itemval.testitemid,t_sortcodesec 
+		where t_topic_item.secid=t_sortcodesec.secid 
+		and t_topic_item.topicid=#topicid# 
+		
+    </select>
+    <select id="TopicItemVal.findList" resultMap="RM.TopicItemVal">
+    	SELECT 
+    		<include refid="TopicItemVal.columns"/> 
+    	FROM 
+    		t_topic_item_val
+		<include refid="TopicItemVal.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TopicItemVal.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_topic_item_val
+    ]]>
+		<include refid="TopicItemVal.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TopicItemVal.findPage" resultMap="RM.TopicItemVal">
+    	select <include refid="TopicItemVal.columns"/>	    
+	        from t_topic_item_val 	   
+		<include refid="TopicItemVal.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TopicItemVal.findPage" resultMap="RM.TopicItemVal">
+    	select <include refid="TopicItemVal.columns"/>	    
+	        from t_topic_item_val where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       valid 
+	   not in(select $notTop$ 
+       valid 
+	   from t_topic_item_val <include refid="TopicItemVal.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TopicItemVal.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

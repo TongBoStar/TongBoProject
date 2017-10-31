@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="KeyDevice">
+
+        
+	<resultMap id="RM.KeyDevice" class="com.terrence.crm.dol.bean.KeyDevice">
+        <result property="deviceid" column="deviceid"/>
+        <result property="devicename" column="devicename"/>
+        <result property="notes" column="notes"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="KeyDevice.columns">
+	    <![CDATA[
+        	t_key_device.deviceid ,
+        	t_key_device.devicename ,
+        	t_key_device.notes 
+	    ]]>
+	</sql>
+	
+   <insert id="KeyDevice.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_key_device (
+        	devicename ,
+        	notes 
+        ) VALUES (
+        	#devicename# ,
+        	#notes# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="deviceid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="KeyDevice.update" parameterClass="com.terrence.crm.dol.bean.KeyDevice">         
+        UPDATE t_key_device 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="devicename">
+	        	devicename = #devicename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        deviceid = #deviceid# 
+    </update>
+    
+	<delete id="KeyDevice.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_key_device where
+       deviceid = #deviceid# 
+    ]]>
+    </delete>
+    
+    <delete id="KeyDevice.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_key_device 
+        WHERE
+       deviceid in ($deviceid$) 
+    ]]>
+    </delete>
+    
+    <select id="KeyDevice.getById" resultMap="RM.KeyDevice">
+	    select <include refid="KeyDevice.columns"/>
+	    
+	        from t_key_device 
+	        where 
+		        deviceid = #deviceid# 
+	    
+    </select>
+    
+	<select id="KeyDevice.getByProperty" resultMap="RM.KeyDevice">
+		select <include refid="KeyDevice.columns"/> from t_key_device where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="KeyDevice.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="deviceid">
+	             t_key_device.deviceid = #deviceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="devicename">
+	             t_key_device.devicename like '%$devicename$%'
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_key_device.notes = #notes#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="KeyDevice.findPage.and">
+			<isNotEmpty prepend="AND" property="deviceid">
+	             t_key_device.deviceid = #deviceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="devicename">
+	             t_key_device.devicename like '%$devicename$%'
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_key_device.notes = #notes#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="KeyDevice.Entity" resultMap="RM.KeyDevice">
+    	SELECT 	<include refid="KeyDevice.columns"/> FROM t_key_device <include refid="KeyDevice.findPage.where"/>
+    </select>
+    
+    <select id="KeyDevice.findList" resultMap="RM.KeyDevice">
+    	SELECT 
+    		<include refid="KeyDevice.columns"/> 
+    	FROM 
+    		t_key_device
+		<include refid="KeyDevice.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="KeyDevice.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_key_device
+    ]]>
+		<include refid="KeyDevice.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.KeyDevice.findPage" resultMap="RM.KeyDevice">
+    	select <include refid="KeyDevice.columns"/>	    
+	        from t_key_device 	   
+		<include refid="KeyDevice.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="KeyDevice.findPage" resultMap="RM.KeyDevice">
+    	select <include refid="KeyDevice.columns"/>	    
+	        from t_key_device where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       deviceid 
+	   not in(select $notTop$ 
+       deviceid 
+	   from t_key_device <include refid="KeyDevice.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="KeyDevice.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

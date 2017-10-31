@@ -1,0 +1,488 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.bean;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Transient;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
+import com.google.common.collect.Lists;
+import com.terrence.core.dol.bean.Menu;
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.bean.Role;
+import com.terrence.core.dol.bean.RolePower;
+import com.terrence.crm.dol.base.BaseEntity;
+import com.terrence.crm.dol.base.utils.ConvertUtils;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.bean.Authority;
+/**
+ * 管理员基础类
+ * 
+ * @version 1.0
+ */
+@Entity
+public class Admin extends BaseEntity implements java.io.Serializable{
+
+
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -47654182622843436L;
+	//可以直接使用: @Length(max=50,message="用户名长度不能大于50")显示错误消息
+	//columns START
+    /**
+     * adminId       db_column: adminId 
+     */	
+	@Id
+	private java.lang.Long adminId;
+    /**
+     * loginName       db_column: loginName 
+     */	
+	
+	private java.lang.String loginName;
+    /**
+     * password       db_column: password 
+     */	
+	
+	private java.lang.String password;
+    /**
+     * createdTime       db_column: createdTime 
+     */	
+	
+	private java.util.Date createdTime;
+    /**
+     * modifiedTime       db_column: modifiedTime 
+     */	
+	
+	private java.util.Date modifiedTime;
+    /**
+     * 0 正常              1 锁定       db_column: status 
+     */	
+	
+	private java.lang.Integer status;
+	private java.lang.Integer teamid;
+	private java.lang.Integer type;
+	private java.lang.String empcode;
+	private java.lang.String email;
+	private java.lang.Long dutyid;
+	private java.lang.Long empSuperior;
+	private java.lang.Long areaid;
+	private java.lang.Long provinceid;
+	private java.lang.Integer emptype;
+	private Long amanagerid;
+	private String amanagername;
+	
+	private Department dept;
+	private Duty duty;
+	private List<Menu> authorityList = Lists.newArrayList();
+	private List<MenuOperate> menuOperateList = Lists.newArrayList();//操作按钮控制
+	private List<Authority> authorityListTrue = Lists.newArrayList();
+	private String adminName;
+	private Date lastLoginTime;
+	private String superiorname;
+	private List<Long> roleIdList = Lists.newArrayList();
+	private List<Role> roleList = Lists.newArrayList();
+	private String areaname;
+	private String provincename;
+	
+	private String provinceids;
+	private Long apid;
+	private List<AdminProvince> aplist=Lists.newArrayList();
+	private String empsupname;
+	private Long teamseq;
+	private String tefname;//班组名称
+	private Long salemid;
+	private String salemname;
+	private Integer isstruct;
+	private List<Map<String, Object>> rolesTreeList = Lists.newArrayList();
+	//columns END
+
+	public Admin(){
+	}
+
+	public Admin(
+		java.lang.Long adminId
+	){
+		this.adminId = adminId;
+	}
+
+	public void setAdminId(java.lang.Long value) {
+		this.adminId = value;
+	}
+	
+	public java.lang.Long getAdminId() {
+		return this.adminId;
+	}
+	public void setLoginName(java.lang.String value) {
+		this.loginName = value;
+	}
+	
+	public java.lang.String getLoginName() {
+		return this.loginName;
+	}
+	public void setPassword(java.lang.String value) {
+		this.password = value;
+	}
+	
+	public java.lang.String getPassword() {
+		return this.password;
+	}
+	public String getCreatedTimeString() {
+		return DateConvertUtils.format(getCreatedTime(), BaseEntity.DATE_TIME_FORMAT);
+	}
+	
+	
+	public void setCreatedTime(java.util.Date value) {
+		this.createdTime = value;
+	}
+	
+	public java.util.Date getCreatedTime() {
+		return this.createdTime;
+	}
+	public String getModifiedTimeString() {
+		return DateConvertUtils.format(getModifiedTime(), BaseEntity.DATE_TIME_FORMAT);
+	}
+	
+	
+	public void setModifiedTime(java.util.Date value) {
+		this.modifiedTime = value;
+	}
+	
+	public java.util.Date getModifiedTime() {
+		return this.modifiedTime;
+	}
+	public void setStatus(java.lang.Integer value) {
+		this.status = value;
+	}
+	
+	public java.lang.Integer getStatus() {
+		return this.status;
+	}
+	
+	private List<AdminRole> adminRoles = Lists.newArrayList();
+	public void setAdminRoles(List<AdminRole> adminRole){
+		this.adminRoles = adminRole;
+	}
+	
+	public List<AdminRole> getAdminRoles() {
+		return adminRoles;
+	}
+
+	public List<Map<String, Object>> getRolesTreeList() {
+		return rolesTreeList;
+	}
+
+	public void setRolesTreeList(List<Map<String, Object>> rolesTreeList) {
+		this.rolesTreeList = rolesTreeList;
+	}
+
+	public String toString() {
+		return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+			.append("AdminId",getAdminId())
+			.append("LoginName",getLoginName())
+			.append("Password",getPassword())
+			.append("CreatedTime",getCreatedTime())
+			.append("ModifiedTime",getModifiedTime())
+			.append("Status",getStatus())
+			.append("adminName",getStatus())
+			.append("lastLoginTime",getStatus())
+			.toString();
+	}
+	
+	public int hashCode() {
+		return new HashCodeBuilder()
+			.append(getAdminId())
+			.toHashCode();
+	}
+	
+	public boolean equals(Object obj) {
+		if(obj instanceof Admin == false) return false;
+		if(this == obj) return true;
+		Admin other = (Admin)obj;
+		return new EqualsBuilder()
+			.append(getAdminId(),other.getAdminId())
+			.isEquals();
+	}
+	
+	@Transient
+	public String getRoleIds() {
+		return ConvertUtils.convertElementPropertyToString(adminRoles, "roleId", ", ");
+	}
+	
+	
+
+	public String getAdminName() {
+		return adminName;
+	}
+
+	public void setAdminName(String adminName) {
+		this.adminName = adminName;
+	}
+
+	public Date getLastLoginTime() {
+		return lastLoginTime;
+	}
+
+	public void setLastLoginTime(Date lastLoginTime) {
+		this.lastLoginTime = lastLoginTime;
+	}
+	
+	public String getLastLoginTimeString() {
+		return DateConvertUtils.format(getLastLoginTime(), BaseEntity.DATE_TIME_FORMAT);
+	}
+
+	public void setRoleIdList(List<Long> roleIdList) {
+		this.roleIdList = roleIdList;
+	}
+
+	public List<Long> getRoleIdList() {
+		return roleIdList;
+	}
+
+	public List<Role> getRoleList() {
+		return roleList;
+	}
+
+	public void setRoleList(List<Role> roleList) {
+		this.roleList = roleList;
+	}
+
+	public String getRoleNames() {
+		return ConvertUtils.convertElementPropertyToString(roleList, "roleName", ", ");
+	}
+
+	public java.lang.Integer getTeamid() {
+		return teamid;
+	}
+
+	public void setTeamid(java.lang.Integer teamid) {
+		this.teamid = teamid;
+	}
+
+	public java.lang.Integer getType() {
+		return type;
+	}
+
+	public void setType(java.lang.Integer type) {
+		this.type = type;
+	}
+
+	public java.lang.String getEmpcode() {
+		return empcode;
+	}
+
+	public void setEmpcode(java.lang.String empcode) {
+		this.empcode = empcode;
+	}
+
+	public java.lang.String getEmail() {
+		return email;
+	}
+
+	public void setEmail(java.lang.String email) {
+		this.email = email;
+	}
+
+	public java.lang.Long getDutyid() {
+		return dutyid;
+	}
+
+	public void setDutyid(java.lang.Long dutyid) {
+		this.dutyid = dutyid;
+	}
+
+	public java.lang.Long getEmpSuperior() {
+		return empSuperior;
+	}
+
+	public void setEmpSuperior(java.lang.Long empSuperior) {
+		this.empSuperior = empSuperior;
+	}
+
+	public String getSuperiorname() {
+		return superiorname;
+	}
+
+	public void setSuperiorname(String superiorname) {
+		this.superiorname = superiorname;
+	}
+
+	public Department getDept() {
+		return dept;
+	}
+
+	public void setDept(Department dept) {
+		this.dept = dept;
+	}
+
+	public Duty getDuty() {
+		return duty;
+	}
+
+	public void setDuty(Duty duty) {
+		this.duty = duty;
+	}
+
+	public java.lang.Long getAreaid() {
+		return areaid;
+	}
+
+	public void setAreaid(java.lang.Long areaid) {
+		this.areaid = areaid;
+	}
+
+	public java.lang.Long getProvinceid() {
+		return provinceid;
+	}
+
+	public void setProvinceid(java.lang.Long provinceid) {
+		this.provinceid = provinceid;
+	}
+
+	public java.lang.Integer getEmptype() {
+		return emptype;
+	}
+
+	public void setEmptype(java.lang.Integer emptype) {
+		this.emptype = emptype;
+	}
+
+	public String getAreaname() {
+		return areaname;
+	}
+
+	public void setAreaname(String areaname) {
+		this.areaname = areaname;
+	}
+
+	public String getProvincename() {
+		return provincename;
+	}
+
+	public void setProvincename(String provincename) {
+		this.provincename = provincename;
+	}
+
+	public String getProvinceids() {
+		return provinceids;
+	}
+
+	public void setProvinceids(String provinceids) {
+		this.provinceids = provinceids;
+	}
+
+	public Long getApid() {
+		return apid;
+	}
+
+	public void setApid(Long apid) {
+		this.apid = apid;
+	}
+
+	public List<AdminProvince> getAplist() {
+		return aplist;
+	}
+
+	public void setAplist(List<AdminProvince> aplist) {
+		this.aplist = aplist;
+	}
+
+	public String getEmpsupname() {
+		return empsupname;
+	}
+
+	public void setEmpsupname(String empsupname) {
+		this.empsupname = empsupname;
+	}
+
+	public Long getAmanagerid() {
+		return amanagerid;
+	}
+
+	public void setAmanagerid(Long amanagerid) {
+		this.amanagerid = amanagerid;
+	}
+
+	public String getAmanagername() {
+		return amanagername;
+	}
+
+	public void setAmanagername(String amanagername) {
+		this.amanagername = amanagername;
+	}
+
+	public Long getTeamseq() {
+		return teamseq;
+	}
+
+	public void setTeamseq(Long teamseq) {
+		this.teamseq = teamseq;
+	}
+
+	public String getTefname() {
+		return tefname;
+	}
+
+	public void setTefname(String tefname) {
+		this.tefname = tefname;
+	}
+
+	public Long getSalemid() {
+		return salemid;
+	}
+
+	public void setSalemid(Long salemid) {
+		this.salemid = salemid;
+	}
+
+	public String getSalemname() {
+		return salemname;
+	}
+
+	public void setSalemname(String salemname) {
+		this.salemname = salemname;
+	}
+
+	public Integer getIsstruct() {
+		return isstruct;
+	}
+
+	public void setIsstruct(Integer isstruct) {
+		this.isstruct = isstruct;
+	}
+
+	public List<Menu> getAuthorityList() {
+		return authorityList;
+	}
+
+	public void setAuthorityList(List<Menu> authorityList) {
+		this.authorityList = authorityList;
+	}
+
+	public List<MenuOperate> getMenuOperateList() {
+		return menuOperateList;
+	}
+
+	public void setMenuOperateList(List<MenuOperate> menuOperateList) {
+		this.menuOperateList = menuOperateList;
+	}
+
+	public List<Authority> getAuthorityListTrue() {
+		return authorityListTrue;
+	}
+
+	public void setAuthorityListTrue(List<Authority> authorityListTrue) {
+		this.authorityListTrue = authorityListTrue;
+	}
+}

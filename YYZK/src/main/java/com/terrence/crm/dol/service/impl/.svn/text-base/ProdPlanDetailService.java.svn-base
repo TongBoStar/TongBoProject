@@ -1,0 +1,144 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PlanDetailView;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.query.ProdPlanDetailQuery;
+import com.terrence.crm.dol.service.IProdPlanDetailService;
+
+@Service
+@Transactional
+public class ProdPlanDetailService extends BaseService implements IProdPlanDetailService {
+	protected static Logger logger = LoggerFactory.getLogger(ProdPlanDetailService.class);
+	@Autowired
+	@Qualifier("prodPlanDetailDao")
+	private IProdPlanDetailDao prodPlanDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ProdPlanDetail";
+	}
+	@Transactional(readOnly=true)
+	public ProdPlanDetail getById(java.lang.Long id) throws ServiceException
+	{
+		return prodPlanDetailDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProdPlanDetail entity) throws ServiceException
+	{
+		prodPlanDetailDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ProdPlanDetail entity) throws ServiceException
+	{
+		Long adId = prodPlanDetailDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProdPlanDetail entity) throws ServiceException
+	{
+		Integer returnValue =  prodPlanDetailDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = prodPlanDetailDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = prodPlanDetailDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProdPlanDetailQuery query = new ProdPlanDetailQuery();
+		try {
+			return prodPlanDetailDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProdPlanDetail> findPage(Page<ProdPlanDetail> page, ProdPlanDetailQuery query) throws ServiceException
+	{
+		return prodPlanDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProdPlanDetail> findPage(Page<ProdPlanDetail> page,String statement, ProdPlanDetailQuery query) throws ServiceException
+	{
+		return prodPlanDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlanDetail> findList(ProdPlanDetailQuery query) throws ServiceException
+	{
+		return prodPlanDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlanDetail> findList(ProdPlanDetailQuery query,Integer pageSize) throws ServiceException
+	{
+		return prodPlanDetailDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProdPlanDetail> findList(ProdPlanDetailQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return prodPlanDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProdPlanDetail> findAllList() throws ServiceException
+	{
+		return prodPlanDetailDao.findAllList();
+	}
+	@Override
+	public Long save(PlanDetailView planDetail) throws ServiceException {
+		for(String itemcode:planDetail.getListcode())
+		{
+			ProdPlanDetail entity=new ProdPlanDetail();
+			entity.setItemcode(itemcode);
+			entity.setPlanid(planDetail.getPlanid());
+			entity.setPlannum(0.0);
+			entity.setProperty(0);
+			prodPlanDetailDao.save(entity);
+		}
+		
+		return null;
+	}
+	@Override
+	public List<ProdPlanDetail> findList(ProdPlanDetailQuery query,
+			String statement) throws ServiceException {
+		return prodPlanDetailDao.findList(statement, query);
+	}
+
+}

@@ -1,0 +1,444 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.velocity.runtime.parser.node.MathUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Area;
+import com.terrence.crm.dol.bean.Duty;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.Summary;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.ISummaryDao;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.DutyQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.SummaryQuery;
+import com.terrence.crm.dol.query.SysOrderQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IAreaService;
+import com.terrence.crm.dol.service.IDutyService;
+import com.terrence.crm.dol.service.ISummaryService;
+import com.terrence.crm.dol.service.ISysOrderService;
+import com.terrence.crm.dol.utils.ConstantInfo;
+import com.terrence.crm.dol.utils.DateUtil;
+
+@Service
+@Transactional
+public class SummaryService extends BaseService implements ISummaryService {
+	protected static Logger logger = LoggerFactory.getLogger(SummaryService.class);
+	@Autowired
+	@Qualifier("summaryDao")
+	private ISummaryDao summaryDao;
+	@Autowired
+	@Qualifier("areaService")
+	private IAreaService areaService;
+	@Autowired
+	@Qualifier("dutyService")
+	private IDutyService dutyService;
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	@Autowired
+	@Qualifier("sysOrderService")
+	private ISysOrderService sysOrderService;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Summary";
+	}
+	@Transactional(readOnly=true)
+	public Summary getById(java.lang.Long id) throws ServiceException
+	{
+		return summaryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Summary entity) throws ServiceException
+	{
+		summaryDao.saveOrUpdate(entity);
+	}
+	
+	
+	/**
+	 * 查询汇总数据信息
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Summary> listSummaryInfo(SummaryQuery summaryQuery) throws ServiceException {
+		
+	    //0查询出所有的销售
+		DutyQuery dutyquery=new DutyQuery();
+		dutyquery.setDutykeys("\'"+ConstantInfo.DUTY_XSGCS+"\'"+
+				","+"\'"+ConstantInfo.DUTY_XSZLGCS+"\'"+
+				","+"\'"+ConstantInfo.DUTY_JXS+"\'"+
+				","+"\'"+ConstantInfo.DUTY_QYXSJL+"\'");//职务是销售工程师,销售助理工程师,经销商,区域经理
+		
+		List<Duty> dutyList = dutyService.findList(dutyquery);//查询出职位
+		
+		if(null!=dutyList&&0<dutyList.size()){
+			StringBuffer sb = new StringBuffer();
+			for (Duty duty : dutyList) {
+				sb.append("\'" + duty.getDutyid() + "\'").append(",");
+			}
+			sb = sb.deleteCharAt(sb.length() - 1);
+			summaryQuery.setAdminDutyIds( sb.toString() );//要汇总的 销售职务的人员
+		}else{
+			logger.error("系统中还没有相关销售人员的职务请先指定!");
+			/*resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败:"+"系统中还没有相关销售人员的职务请先指定!";
+			return JSON;*/
+			throw new ServiceException("系统中还没有相关销售人员的职务请先指定!");
+		}
+		String yearmonth=summaryQuery.getFyear();
+		if(null!=yearmonth&&6==yearmonth.length()){//年月
+			summaryQuery.setFyear(yearmonth.substring(0, 4));
+		    summaryQuery.setFmonth(yearmonth.substring(5, 6));
+		}else if(null!=yearmonth&&4==yearmonth.length()){//年
+			summaryQuery.setFyear(yearmonth.substring(0, 4));
+		}
+		else{
+			logger.error("汇总时间格式不正确!");
+			/*resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败:"+"汇总时间格式不正确!";
+			return JSON;*/
+			throw new ServiceException("汇总时间格式不正确!");
+		}
+		List<Summary> summaryList=findProductQueryList(summaryQuery );
+	    return summaryList;
+	}
+	
+	/**
+	 * 数据汇总
+	 */
+	public void summaryInfo(SummaryQuery summaryQuery) throws ServiceException
+	{
+		AdminSession adminSession = (AdminSession) SecurityContextHolder
+			.getContext().getAuthentication().getPrincipal();
+		List<Area>  areaInfoList=areaService.findAllList();
+		try {
+			//0查询出所有的销售
+			DutyQuery dutyquery=new DutyQuery();
+			dutyquery.setDutykeys("\'"+ConstantInfo.DUTY_XSGCS+"\'"+
+					","+"\'"+ConstantInfo.DUTY_XSZLGCS+"\'"+
+					","+"\'"+ConstantInfo.DUTY_JXS+"\'"+
+					","+"\'"+ConstantInfo.DUTY_QYXSJL+"\'");//职务是销售工程师,销售助理工程师,经销商,区域经理
+			
+			List<Duty> dutyList = dutyService.findList(dutyquery);//查询出职位
+			
+			AdminQuery adminQuery=new AdminQuery();
+			if(null!=dutyList&&0<dutyList.size()){
+				StringBuffer sb = new StringBuffer();
+				for (Duty duty : dutyList) {
+					sb.append("\'" + duty.getDutyid() + "\'").append(",");
+				}
+				sb = sb.deleteCharAt(sb.length() - 1);
+				adminQuery.setDutyids(sb.toString());
+			}else{
+				logger.error("系统中还没有相关销售人员的职务请先指定!");
+				throw new ServiceException("系统中还没有相关销售人员的职务请先指定!");
+			}
+			List<Admin> adminList = adminService.findList(adminQuery);//查询出要统计的职务的人员
+			if(null!=adminList&&0<adminList.size()){
+				
+			}else{
+				logger.error("系统中还没有销售工程师请先指定!");
+				throw new ServiceException("系统中还没有销售工程师请先指定!");
+			}
+			//1 查询某个销售人员的某个月份的订单
+			/**
+			 * SELECT sysOrderStatus,*
+				  FROM [TerrenceCRM].[dbo].[t_sysorder] 
+				  where sysOrderStatus=2 AND businessUserId=23 AND issummary=0
+				  and ( contractTime >='2015-05-01 00:00:00.000' 
+				  and contractTime <'2015-06-01 00:00:00.000' )
+				  ---冯伟强2015,5月份已经生效的系统订单
+			 */
+			String nowFullYear=summaryQuery.getFyear()+"";//得到年
+			String nowFullMonth=summaryQuery.getFmonth()+"";//得到月
+			String nextFullMonth=  (Integer.valueOf(summaryQuery.getFmonth())+1)%12  +"";//得到下一月
+			
+			for (Admin admin : adminList) {//遍历所有的销售人员
+				
+			SysOrderQuery  sysorderQuery=new SysOrderQuery();
+			sysorderQuery.setSysOrderStatus(2);//已生效
+			sysorderQuery.setBusinessUserId(admin.getAdminId());//业务员
+			sysorderQuery.setIssummary(0);//未汇总
+			
+			sysorderQuery.setContractTimeBegin(nowFullYear+"-"+nowFullMonth+"-01 00:00:00.000");
+		    if("12".equals(nowFullMonth+"")){
+		    	nowFullYear=( ( Integer.valueOf(nowFullYear)+1)   )+"";//得到年
+		    	nextFullMonth="1";
+		    }
+			sysorderQuery.setContractTimeEnd(nowFullYear+"-"+nextFullMonth+"-01 00:00:00.000");
+			
+			List<SysOrder> sysOrderList=sysOrderService.findListQuery(sysorderQuery );//查询某个销售人员的某个月份的订单,包含省份
+			
+			//2在产品表中按照销售人员的某个月份的订单中的产品
+			/**
+			 * SELECT  *
+				  FROM [TerrenceCRM].[dbo].[t_product]  
+				  WHERE 
+				  t_product.orderCode IN ('2015-0194-ddgly', '2015-0066-ddgly','2015-0064-ddgly')
+				  ---冯伟强2015,5月份已经生效的系统订单中的产品
+			 */
+			
+			ProductQuery  productQuery=new ProductQuery();
+			
+			if(null!=sysOrderList&&0<sysOrderList.size()){
+				StringBuffer sb = new StringBuffer();
+				for (SysOrder sysOrder : sysOrderList) {//每个销售人员的系统订单
+					//sb.append("\'" + sysOrder.getOrderCode() + "\'").append(",");
+					
+					productQuery.setOrderCodes("\'"+sysOrder.getOrderCode()+"\'" );
+					List<Product> productList=sysOrderService.findProductQueryList(productQuery );//当前订单中的产品列表信息
+					//3从结果集中统计出 产品  A B C D E 类的总合计,服务费总计,系统订单类型是基础项目的合计,系统订单类型是大项目的合计
+					Number classAtotal=0;
+					Number classBtotal=0;
+					Number classCtotal=0;
+					Number classDtotal=0;
+					Number classEtotal=0;
+					Number servicechargeTotal=0;//服务费总计
+					Number bigProjectBusinessTotal=0;//2大项目业务类型
+					
+					Number baseBusinessTotal=0;//1基础业务总计
+						
+					if(null!=productList&&0<productList.size()){
+						for (Product product : productList) {//遍历当前订单中的产品列表
+							if("A".equals(product.getProductType())){
+								classAtotal = getTypeTotal(classAtotal, product);
+							}
+							if("B".equals(product.getProductType())){
+								classBtotal = getTypeTotal(classBtotal, product);
+								
+							}
+							if("C".equals(product.getProductType())){
+								classCtotal = getTypeTotal(classCtotal, product);
+							}
+							if("D".equals(product.getProductType())){
+								classDtotal = getTypeTotal(classDtotal, product);
+							}
+							if("E".equals(product.getProductType())){
+								classEtotal = getTypeTotal(classEtotal, product);
+							}
+							//服务费
+							Double servicecharge=product.getServicecharge();
+							Float productCountValue=product.getProductCount();
+							Double servicechargeLineResult = MathUtils.multiply(servicecharge,
+									productCountValue).doubleValue();//符合要求的服务费乘以数量,当前订单关联的产品行的服务费
+							Double addResult = MathUtils.add(servicechargeTotal,
+									servicechargeLineResult).doubleValue();//计算所有相加
+							
+							servicechargeTotal= addResult;
+							//2大项目业务类型
+							if("2".equals(sysOrder.getBussinessType())){// 1基础项目业务类型 ,2大项目业务类型
+								Float productCount=product.getProductCount();
+								Double unitPrice=product.getUnitPrice();
+								
+								Double multiResult = MathUtils.multiply(unitPrice,
+										productCount).doubleValue();//符合要求的单价乘以数量
+								Double addResultBigProjectBusinessTotal = MathUtils.add(bigProjectBusinessTotal,
+										multiResult).doubleValue();//计算所有相加
+								bigProjectBusinessTotal= addResultBigProjectBusinessTotal;
+							}
+							//1大项目业务类型
+							if("1".equals(sysOrder.getBussinessType())){// 1基础项目业务类型 ,2大项目业务类型
+								Float productCount=product.getProductCount();
+								Double unitPrice=product.getUnitPrice();
+								
+								Double multiResult = MathUtils.multiply(unitPrice,
+										productCount).doubleValue();//符合要求的单价乘以数量
+								Double addResultBaseBusinessTotal = MathUtils.add(baseBusinessTotal,
+										multiResult).doubleValue();//计算所有相加
+								baseBusinessTotal= addResultBaseBusinessTotal;
+							}
+						}
+						
+						//5往汇总表里面插入数据
+						/**
+						 * insert into t_summary ...
+						 */
+						Summary entitySummary=new Summary();
+						entitySummary.setFyear(nowFullYear+"");
+						entitySummary.setFmonth(nowFullMonth+"");
+						
+						//entitySummary.setAreaname(admin.getEmparea());//所属区域名
+						if(null!=areaInfoList&&null!=admin.getAreaid()){
+						for (Area area : areaInfoList) {
+							if((area.getAreaid()+"").equals(admin.getAreaid()+"")){
+								entitySummary.setAreaname(area.getAreaname());//所属区域名
+								break;
+							}
+						}
+						}
+						entitySummary.setAreaid(admin.getAreaid()); 
+						
+						entitySummary.setProvincename(sysOrder.getProvince());
+						entitySummary.setProvinceid(sysOrder.getProvinceId());
+						
+						entitySummary.setSalesrep(admin.getAdminId());
+						
+						entitySummary.setClassa(classAtotal.doubleValue());
+						entitySummary.setClassb(classBtotal.doubleValue());
+						entitySummary.setClassc(classCtotal.doubleValue());
+						entitySummary.setClassd(classDtotal.doubleValue());
+						entitySummary.setClasse(classEtotal.doubleValue());
+						
+						entitySummary.setFee(servicechargeTotal.doubleValue());
+						entitySummary.setBitem(baseBusinessTotal.doubleValue());
+						entitySummary.setBigitem(bigProjectBusinessTotal.doubleValue());
+						
+						entitySummary.setCreatedate(
+								DateUtil.GetDate2(
+										DateUtil.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+						
+						entitySummary.setAdminid(adminSession.getAdmin().getAdminId());
+						
+						saveOrUpdate(entitySummary);
+						
+						//6更新统计的系统订单编辑为已经做过统计
+						/**
+						 * update t_sysorder issummary=1  where orderCode IN ('2015-0194-ddgly', '2015-0066-ddgly','2015-0064-ddgly')
+						 */
+						SysOrder  sysOrderEntity=new SysOrder();
+						sysOrderEntity.setSysOrderId(sysOrder.getSysOrderId());
+						sysOrderEntity.setIssummary(1);
+						sysOrderService.updateSysOrder(sysOrderEntity);
+						
+					}else{
+						continue;
+					}
+				}
+			}else{
+			}
+			}
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			throw new ServiceException(e.getMessage());
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	private Number getTypeTotal(Number classAtotal, Product product) {
+			Float productCount=product.getProductCount();
+			Double unitPrice=product.getUnitPrice();
+			
+			Double multiResult = MathUtils.multiply(unitPrice,
+					productCount).doubleValue();//符合要求的单价乘以数量
+			Double addResult = MathUtils.add(classAtotal,
+					multiResult).doubleValue();//计算所有相加
+			classAtotal= addResult;
+			return classAtotal;
+	}
+	public java.lang.Long save(Summary entity) throws ServiceException
+	{
+		Long adId = summaryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Summary entity) throws ServiceException
+	{
+		Integer returnValue =  summaryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = summaryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = summaryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SummaryQuery query = new SummaryQuery();
+		try {
+			return summaryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Summary> findPage(Page<Summary> page, SummaryQuery query) throws ServiceException
+	{
+		return summaryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Summary> findPage(Page<Summary> page,String statement, SummaryQuery query) throws ServiceException
+	{
+		return summaryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Summary> findList(SummaryQuery query) throws ServiceException
+	{
+		return summaryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Summary> findList(SummaryQuery query,Integer pageSize) throws ServiceException
+	{
+		return summaryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Summary> findList(SummaryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return summaryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Summary> findAllList() throws ServiceException
+	{
+		return summaryDao.findAllList();
+	}
+	
+	/**
+	 * 分组查找 
+	 * @param order
+	 * @return
+	 */
+	public List<Summary> findProductQueryList(SummaryQuery  summaryQuery ) {
+		return summaryDao.findProductQueryList(summaryQuery);
+	}
+	/**
+	 * 查找 最新汇总时间
+	 * @param order
+	 * @return
+	 */
+	public List<Summary> findLastCreatedate(SummaryQuery  summaryQuery ){
+		return summaryDao.findLastCreatedate(summaryQuery);
+	}
+}

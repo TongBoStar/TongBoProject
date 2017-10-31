@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TecPro">
+
+        
+	<resultMap id="RM.TecPro" class="com.terrence.crm.dol.bean.TecPro">
+        <result property="proid" column="proid"/>
+        <result property="procontent" column="procontent"/>
+        <result property="parentproid" column="parentproid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TecPro.columns">
+	    <![CDATA[
+        	t_tec_pro.proid ,
+        	t_tec_pro.procontent ,
+        	t_tec_pro.parentproid 
+	    ]]>
+	</sql>
+	
+   <insert id="TecPro.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_tec_pro (
+        	procontent ,
+        	parentproid 
+        ) VALUES (
+        	#procontent# ,
+        	#parentproid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="proid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TecPro.update" parameterClass="com.terrence.crm.dol.bean.TecPro">         
+        UPDATE t_tec_pro 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="procontent">
+	        	procontent = #procontent# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentproid">
+	        	parentproid = #parentproid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        proid = #proid# 
+    </update>
+    
+	<delete id="TecPro.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_tec_pro where
+       proid = #proid# 
+    ]]>
+    </delete>
+    
+    <delete id="TecPro.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_tec_pro 
+        WHERE
+       proid in ($proid$) 
+    ]]>
+    </delete>
+    
+    <select id="TecPro.getById" resultMap="RM.TecPro">
+	    select <include refid="TecPro.columns"/>
+	    
+	        from t_tec_pro 
+	        where 
+		        proid = #proid# 
+	    
+    </select>
+    
+	<select id="TecPro.getByProperty" resultMap="RM.TecPro">
+		select <include refid="TecPro.columns"/> from t_tec_pro where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TecPro.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="proid">
+	             t_tec_pro.proid = #proid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="procontent">
+	             t_tec_pro.procontent = #procontent#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentproid">
+	             t_tec_pro.parentproid = #parentproid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TecPro.findPage.and">
+			<isNotEmpty prepend="AND" property="proid">
+	             t_tec_pro.proid = #proid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="procontent">
+	             t_tec_pro.procontent = #procontent#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentproid">
+	             t_tec_pro.parentproid = #parentproid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="TecPro.findList" resultMap="RM.TecPro">
+    	SELECT 
+    		<include refid="TecPro.columns"/> 
+    	FROM 
+    		t_tec_pro
+		<include refid="TecPro.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TecPro.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tec_pro
+    ]]>
+		<include refid="TecPro.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="TecPro.findPage" resultMap="RM.TecPro">
+    	select <include refid="TecPro.columns"/>	    
+	        from t_tec_pro 	   
+		<include refid="TecPro.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.TecPro.findPage" resultMap="RM.TecPro">
+    	select <include refid="TecPro.columns"/>	    
+	        from t_tec_pro where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       proid 
+	   not in(select $notTop$ 
+       proid 
+	   from t_tec_pro <include refid="TecPro.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TecPro.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

@@ -1,0 +1,257 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.OrgOrggorup;
+import com.terrence.crm.dol.bean.Organization;
+import com.terrence.crm.dol.bean.Orggrantgroup;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.query.OrggrantgroupQuery;
+import com.terrence.crm.dol.dao.IAdminOrggroupDao;
+import com.terrence.crm.dol.dao.IGroupProvinceDao;
+import com.terrence.crm.dol.dao.IOrgOrggorupDao;
+import com.terrence.crm.dol.dao.IOrganizationDao;
+import com.terrence.crm.dol.dao.IOrggrantgroupDao;
+import com.terrence.crm.dol.dao.IProvinceDao;
+import com.terrence.crm.dol.dao.impl.OrggrantgroupDao;
+import com.terrence.crm.dol.service.IOrggrantgroupService;
+
+@Service
+@Transactional
+public class OrggrantgroupService extends BaseService implements IOrggrantgroupService {
+	protected static Logger logger = LoggerFactory.getLogger(OrggrantgroupService.class);
+	@Autowired
+	@Qualifier("orggrantgroupDao")
+	private IOrggrantgroupDao orggrantgroupDao;
+	
+	@Autowired
+	@Qualifier("provinceDao")
+	private IProvinceDao provinceDao;
+	
+	@Autowired
+	@Qualifier("adminOrggroupDao")
+	private IAdminOrggroupDao adminOrggroupDao;
+	
+	@Autowired
+	@Qualifier("organizationDao")
+	private IOrganizationDao organizationDao;
+	
+	@Autowired
+	@Qualifier("orgOrggorupDao")
+	private IOrgOrggorupDao orgOrggorupDao;
+	
+	@Autowired
+	@Qualifier("groupProvinceDao")
+	private IGroupProvinceDao groupProvinceDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Orggrantgroup";
+	}
+	@Transactional(readOnly=true)
+	public Orggrantgroup getById(java.lang.Long id) throws ServiceException
+	{
+		return orggrantgroupDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Orggrantgroup entity) throws ServiceException
+	{
+		orggrantgroupDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Orggrantgroup entity) throws ServiceException
+	{
+		Long adId = orggrantgroupDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Orggrantgroup entity) throws ServiceException
+	{
+		Integer returnValue =  orggrantgroupDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = orggrantgroupDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		adminOrggroupDao.deleteByGroupId(Long.valueOf(delIds));
+		orgOrggorupDao.deleteByGroupId(Long.valueOf(delIds));
+		groupProvinceDao.deleteIdByGroupIds(delIds);
+		Integer returnValue = orggrantgroupDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrggrantgroupQuery query = new OrggrantgroupQuery();
+		try {
+			return orggrantgroupDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Orggrantgroup> findPage(Page<Orggrantgroup> page, OrggrantgroupQuery query) throws ServiceException
+	{
+		return orggrantgroupDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Orggrantgroup> findPage(Page<Orggrantgroup> page,String statement, OrggrantgroupQuery query) throws ServiceException
+	{
+		return orggrantgroupDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Orggrantgroup> findList(OrggrantgroupQuery query) throws ServiceException
+	{
+		return orggrantgroupDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Orggrantgroup> findList(OrggrantgroupQuery query,Integer pageSize) throws ServiceException
+	{
+		return orggrantgroupDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Orggrantgroup> findList(OrggrantgroupQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return orggrantgroupDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Orggrantgroup> findAllList() throws ServiceException
+	{
+		return orggrantgroupDao.findAllList();
+	}
+	
+	
+
+	@Override
+	public Long saveAll(Orggrantgroup orggrantgroup)
+			throws ServiceException {
+		Long ids= orggrantgroupDao.save(orggrantgroup);
+		if(ids!=null){
+			String list = orggrantgroup.getIdlist();
+				Province entity = new Province();
+				entity.setGroupid(ids);
+				entity.setIdss(list);
+				provinceDao.updateProvince(entity);
+		}
+		return ids;
+	}
+	//保存客户分组信息
+	public Long saveClientAll(Orggrantgroup orggrantgroup)
+	throws ServiceException {
+		if(orggrantgroup.getGroupid()==null||orggrantgroup.getGroupid()==0)
+		{
+			orggrantgroupDao.save(orggrantgroup);
+		}
+		String list = orggrantgroup.getIdlist();
+		if(!list.equals("")){
+			
+			String lists[] =  list.split(",");
+			for(int i=0;i<lists.length;i++){
+				
+				OrgOrggorup  entity = new OrgOrggorup();
+				
+				entity.setGroupid(orggrantgroup.getGroupid());
+				int ii = Integer.parseInt(lists[i]);
+				Long iii = Long.valueOf(ii);
+				entity.setFinnerid(iii);
+				Organization entity2 = organizationDao.getById(iii);
+				if (entity2.getFgroups()==null) {
+					entity2.setFgroups(Long.valueOf(1));
+				}else{
+					entity2.setFgroups(entity2.getFgroups()+1);
+				}
+				organizationDao.saveOrUpdate(entity2);
+				orgOrggorupDao.save(entity);
+			}
+		}
+	return orggrantgroup.getGroupid();
+	}
+	@Override
+	public List<Orggrantgroup> findModel(Long orggrantgroupId)
+			throws ServiceException {
+		return orggrantgroupDao.findModel(orggrantgroupId);
+	}
+	@Override
+	public Integer updateAll(Orggrantgroup orggrantgroup) {
+		String list = orggrantgroup.getIdlist();
+		Long ids = orggrantgroup.getGroupid();
+		Province entity = new Province();
+		entity.setGroupid(ids);
+		entity.setIdss(list);
+		provinceDao.updateProvince(entity);
+
+		return orggrantgroupDao.update(orggrantgroup);
+	}
+	
+	
+	@Override
+	public Integer updateClientAll(Orggrantgroup orggrantgroup) {
+		String list = orggrantgroup.getIdlist();
+		Long ids = orggrantgroup.getGroupid();
+		
+		if(ids!=null){
+			
+			if(!list.equals("")){
+				
+				String lists[] =  list.split(",");
+				for(int i=0;i<lists.length;i++){
+					
+					OrgOrggorup  entity = new OrgOrggorup();
+					
+					entity.setGroupid(ids);
+					int ii = Integer.parseInt(lists[i]);
+					Long iii = Long.valueOf(ii);
+					entity.setFinnerid(iii);
+					Organization entity2 = organizationDao.getById(iii);
+					if (entity2.getFgroups()==null) {
+						entity2.setFgroups(Long.valueOf(1));
+					}else{
+						entity2.setFgroups(entity2.getFgroups()+1);
+					}
+					organizationDao.saveOrUpdate(entity2);
+					orgOrggorupDao.save(entity);
+				}
+			}
+		
+		}
+	    return orggrantgroupDao.update(orggrantgroup);
+	}
+	@Override
+	public Orggrantgroup getbyUnique(OrggrantgroupQuery orggrantgroupQuery) {
+		return orggrantgroupDao.getByUnique(orggrantgroupQuery);
+	}
+
+}

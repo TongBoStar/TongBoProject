@@ -1,0 +1,569 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Blade;
+import com.terrence.crm.dol.bean.Fixture;
+import com.terrence.crm.dol.bean.Hilt;
+import com.terrence.crm.dol.bean.MeasureCategory;
+import com.terrence.crm.dol.bean.Tools;
+import com.terrence.crm.dol.bean.ToolsBlade;
+import com.terrence.crm.dol.dao.IBladeDao;
+import com.terrence.crm.dol.dao.IFixtureDao;
+import com.terrence.crm.dol.dao.IHiltDao;
+import com.terrence.crm.dol.dao.IMeasureCategoryDao;
+import com.terrence.crm.dol.dao.IToolsBladeDao;
+import com.terrence.crm.dol.dao.IToolsDao;
+import com.terrence.crm.dol.query.BladeQuery;
+import com.terrence.crm.dol.query.FixtureQuery;
+import com.terrence.crm.dol.query.HiltQuery;
+import com.terrence.crm.dol.query.MeasureCategoryQuery;
+import com.terrence.crm.dol.query.ToolsQuery;
+import com.terrence.crm.dol.service.IToolsService;
+
+@Service
+@Transactional
+public class ToolsService extends BaseService implements IToolsService {
+	protected static Logger logger = LoggerFactory.getLogger(ToolsService.class);
+	@Autowired
+	@Qualifier("toolsDao")
+	private IToolsDao toolsDao;
+	
+	@Autowired
+	@Qualifier("toolsBladeDao")
+	private IToolsBladeDao toolsBladeDao;
+	
+	@Autowired
+	@Qualifier("bladeDao")
+	private IBladeDao bladeDao;
+	
+	@Autowired
+	@Qualifier("hiltDao")
+	private IHiltDao hiltDao;
+	
+	@Autowired
+	@Qualifier("measureCategoryDao")
+	private IMeasureCategoryDao measureCategoryDao;
+	
+	@Autowired
+	@Qualifier("fixtureDao")
+	private IFixtureDao fixtureDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Tools";
+	}
+	@Transactional(readOnly=true)
+	public Tools getById(java.lang.Long id) throws ServiceException
+	{
+		//查看根据刀具的id获得所对应刀片的列表bladeDao
+		Tools tool = toolsDao.getById(id);
+		
+		/*List<ToolsBlade> toolsblade = toolsBladeDao.getByToolsid(id);
+		String bladename="";
+		for(ToolsBlade tb:toolsblade){
+			bladename+=bladeDao.getById(tb.getBladeid()).getBladeid()+";"+bladeDao.getById(tb.getBladeid()).getBladename()+",";//获得bladename--
+		}
+		tool.setBladeids(bladename);*/
+		
+		return tool;
+	}
+	
+	public void saveOrUpdate(Tools entity) throws ServiceException
+	{
+		
+		toolsDao.saveOrUpdate(entity);
+		
+	}
+	
+	public java.lang.Long save(Tools entity) throws ServiceException
+	{
+		Long adId=0L;
+		if("".equals(entity.getToolsid())){//根据toolsid判断--保存或修改
+		//保存
+			adId= toolsDao.save(entity);
+		}
+		else{
+			//修改
+			toolsDao.saveOrUpdate(entity);
+			//删除关系--
+			toolsBladeDao.deleteBytoolsId(entity.getToolsid());
+		}
+			//-----保存关系
+		if(!"".equals(entity.getBladeids())){
+			String bladeids[]=entity.getBladeids().split(",");
+			ToolsBlade toolsblade = null;
+			long ids=0;
+			for(int i=0;i<bladeids.length;i++){
+				toolsblade=new ToolsBlade();
+				toolsblade.setToolsid(entity.getToolsid());
+				toolsblade.setBladeid(Long.valueOf(bladeids[i]));
+				toolsBladeDao.save(toolsblade);//存入刀具刀片关系表
+			}
+		}
+		
+		return adId;
+	}
+	
+	public Integer update(Tools entity) throws ServiceException
+	{
+		Integer returnValue =  toolsDao.update(entity);
+		return returnValue;
+	}
+	
+//删除刀具时同时删除和刀具有关的关系表中的对应	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = toolsDao.deleteById(id);		
+		
+		//根据刀具id删除对应的关系----------------------
+		toolsBladeDao.deleteBytoolsId(id);
+		
+		return returnValue;
+		
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		ToolsQuery query=new ToolsQuery();
+		query.setParentids(delIds);
+		Integer returnValue=0;
+		if(toolsDao.findList(query).size()>0)
+		{
+			return 0;
+		}
+		else
+		{
+			returnValue = toolsDao.deleteByMultipleId(delIds);
+			return returnValue;
+		}
+		
+		
+		
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ToolsQuery query = new ToolsQuery();
+		try {
+			return toolsDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Tools> findPage(Page<Tools> page, ToolsQuery query) throws ServiceException
+	{
+//		readTools();//刀杆
+//		readBlade();//刀片
+//		readHilt();//刀柄
+//		readtCategory();//量具
+//		readFxture();//卡具
+		//System.out.println("import====OVER=============");
+		return toolsDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Tools> findList(ToolsQuery query) throws ServiceException
+	{
+		return toolsDao.findList(query);
+	}
+
+	
+	@Transactional(readOnly=true)
+	public List<Tools> findAllList() throws ServiceException
+	{
+		return toolsDao.findAllList();
+	}
+	@Override
+	public List<Tools> findToolsBladeList(ToolsQuery query)
+			throws ServiceException {
+		return toolsDao.findList("Tools.Blade.findList",query);
+	}
+	
+	public void readBlade(){
+		
+		try {
+			HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream("F:/blade-tools.xls"));
+			//HSSFSheet sheet = wb.getSheetAt(0);
+			HSSFSheet sheet = wb.getSheet("刀片");
+			int rows=sheet.getLastRowNum();//获取表格的行数
+			//System.out.println("所有行数："+rows);
+			HSSFRow row;
+			String cell;
+			//----------
+//			ToolsQuery toolsQuery=new ToolsQuery();
+//			List<Tools> toolsList=new ArrayList<Tools>();
+//			Tools tool=new Tools();
+			
+			BladeQuery bladeQuery=new BladeQuery();
+			List<Blade> bladeList=new ArrayList<Blade>();
+			Blade blade=new Blade();
+			//----------
+			for (int i =11; i < rows; i++) {
+				row = sheet.getRow(i);//i为读取的起始行数
+				int j = 0;
+				//for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
+					if(null!=row){//行判空
+						if(null!=row.getCell(j)){//单元格判空
+							cell = row.getCell(j).toString();
+							//System.out.println("=-=="+cell);
+								if(!"".equals(cell)){//单元格值判空
+										System.out.print(cell+"+");	
+									//===============================	
+//												toolsQuery.setLtoolscode(cell.toString());
+												bladeQuery.setLcode(cell.toString());
+												
+												//toolsList=toolsDao.findList(toolsQuery);
+												bladeList=bladeDao.findList(bladeQuery);
+
+												if(bladeList.size()==0){//无上级
+													blade.setParentcode("");//父编码
+													blade.setParentid(1L);//父级id
+													
+													blade.setBladename(row.getCell(2).toString());//刀具名称
+													blade.setBladecode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													blade.setLcode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													bladeDao.save(blade);//
+												}else{//有上级
+													Blade bd=bladeList.get(0);
+													
+													blade.setParentid(bd.getBladeid());//父级id
+													//blade.setLevels(bd.getLevels()+1);//级别
+													
+													blade.setParentcode(row.getCell(0).toString());//父编码
+													blade.setBladename(row.getCell(2).toString());//刀具名称
+													blade.setBladecode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													blade.setLcode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													bladeDao.save(blade);//
+												}
+									//===============================	
+								}
+							}
+					}	
+				//}
+				//System.out.println("==>第"+(i+1)+"行");
+			}
+//System.out.println("====end");
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public void readTools() {
+		
+		try {
+			HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream("F:/blade-tools.xls"));
+			//HSSFSheet sheet = wb.getSheetAt(0);
+			HSSFSheet sheet = wb.getSheet("刀杆");
+			int rows=sheet.getLastRowNum();//获取表格的行数
+			//System.out.println("所有行数："+rows);
+			HSSFRow row;
+			String cell;
+			//----------
+			ToolsQuery toolsQuery=new ToolsQuery();
+			List<Tools> toolsList=new ArrayList<Tools>();
+			Tools tool=new Tools();
+			
+			//----------
+			for (int i =11; i < rows; i++) {
+				row = sheet.getRow(i);//i为读取的起始行数
+				int j = 0;
+				//for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
+					if(null!=row){//行判空
+						if(null!=row.getCell(j)){//单元格判空
+							cell = row.getCell(j).toString();
+							//System.out.println("=-=="+cell);
+								if(!"".equals(cell)){//单元格值判空
+										System.out.print(cell+"+");	
+									//===============================	
+												toolsQuery.setLtoolscode(cell.toString());
+
+												toolsList=toolsDao.findList(toolsQuery);
+
+												if(toolsList.size()==0){//无上级
+													tool.setParentcode("");//父编码
+													tool.setParentid(1L);//父级id
+													tool.setLevels(1);//级别
+													tool.setToolsname(row.getCell(2).toString());//刀具名称
+													tool.setToolscode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													tool.setLtoolscode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													toolsDao.save(tool);//
+												}else{//有上级
+													Tools tl=toolsList.get(0);
+													
+													tool.setParentid(tl.getToolsid());//父级id
+													tool.setLevels(tl.getLevels()+1);//级别
+													
+													tool.setParentcode(row.getCell(0).toString());//父编码
+													tool.setToolsname(row.getCell(2).toString());//刀具名称
+													tool.setToolscode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													tool.setLtoolscode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													toolsDao.save(tool);//
+												}
+									//===============================	
+								}
+							}
+					}	
+				//}
+				//System.out.println("==>第"+(i+1)+"行");
+			}
+//System.out.println("====end");
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+		
+	}	
+
+	public void readHilt() {
+		
+		try {
+			HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream("F:/blade-tools.xls"));
+			//HSSFSheet sheet = wb.getSheetAt(0);
+			HSSFSheet sheet = wb.getSheet("刀柄");
+			int rows=sheet.getLastRowNum();//获取表格的行数
+			//System.out.println("所有行数："+rows);
+			HSSFRow row;
+			String cell;
+			//----------
+			HiltQuery hiltQuery=new  HiltQuery();
+			List<Hilt> hiltList=new ArrayList<Hilt>();
+			Hilt hilt=new Hilt();
+			//----------
+			for (int i =12; i < rows; i++) {
+				row = sheet.getRow(i);//i为读取的起始行数
+				int j = 0;
+				//for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
+					if(null!=row){//行判空
+						if(null!=row.getCell(j)){//单元格判空
+							cell = row.getCell(j).toString();
+							//System.out.println("=-=="+cell);
+								if(!"".equals(cell)){//单元格值判空
+										System.out.print(cell+"+");	
+									//===============================	
+										hiltQuery.setHiltcode(cell.toString());
+
+										hiltList=hiltDao.findList(hiltQuery);
+
+												if(hiltList.size()==0){//无上级
+													hilt.setParentcode("ROOT");//父编码
+//													hilt.setParentid(1L);//父级id
+//													tool.setLevels(1);//级别
+													hilt.setHiltname(row.getCell(2).toString());//名称
+													hilt.setShiltcode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													hilt.setHiltcode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													hiltDao.save(hilt);//
+												}else{//有上级
+													Hilt hlt=hiltList.get(0);
+													
+//													hilt.setParentid(tl.getToolsid());//父级id
+//													hilt.setLevels(tl.getLevels()+1);//级别
+													
+													hilt.setParentcode(row.getCell(0).toString());//父编码
+													hilt.setHiltname(row.getCell(2).toString());//名称
+													hilt.setShiltcode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													hilt.setHiltcode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													hiltDao.save(hilt);//
+												}
+									//===============================	
+								}
+							}
+					}	
+				//}
+				//System.out.println("==>第"+(i+1)+"行");
+			}
+//System.out.println("====end");
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+		
+	}	
+	public void readtCategory() {
+		
+		try {
+			HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream("F:/blade-tools.xls"));
+			//HSSFSheet sheet = wb.getSheetAt(0);
+			HSSFSheet sheet = wb.getSheet("量具");
+			int rows=sheet.getLastRowNum();//获取表格的行数
+			//System.out.println("所有行数："+rows);
+			HSSFRow row;
+			String cell;
+			//----------
+//			HiltQuery hiltQuery=new  HiltQuery();
+//			List<Hilt> hiltList=new ArrayList<Hilt>();
+//			Hilt hilt=new Hilt();
+			MeasureCategoryQuery measureCategoryQuery=new MeasureCategoryQuery();
+			List<MeasureCategory> categoryList=new ArrayList<MeasureCategory>();
+			MeasureCategory measureCategory=new MeasureCategory();
+			//----------
+			for (int i =11; i < rows; i++) {
+				row = sheet.getRow(i);//i为读取的起始行数
+				int j = 0;
+				//for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
+					if(null!=row){//行判空
+						if(null!=row.getCell(j)){//单元格判空
+							cell = row.getCell(j).toString();
+							//System.out.println("=-=="+cell);
+								if(!"".equals(cell)){//单元格值判空
+										System.out.print(cell+"+");	
+									//===============================	
+										measureCategoryQuery.setCategorycode(cell.toString());
+
+										categoryList=measureCategoryDao.findList(measureCategoryQuery);
+
+												if(categoryList.size()==0){//无上级
+													measureCategory.setParentcode("ROOT");//父编码
+//													hilt.setParentid(1L);//父级id
+//													tool.setLevels(1);//级别
+													measureCategory.setCategoryname(row.getCell(2).toString());//名称
+													measureCategory.setShortcode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													measureCategory.setCategorycode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													measureCategoryDao.save(measureCategory);//
+												}else{//有上级
+													MeasureCategory mc=categoryList.get(0);
+													
+//													hilt.setParentid(tl.getToolsid());//父级id
+//													hilt.setLevels(tl.getLevels()+1);//级别
+													
+													measureCategory.setParentcode(row.getCell(0).toString());//父编码
+													measureCategory.setCategoryname(row.getCell(2).toString());//名称
+													measureCategory.setShortcode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+													measureCategory.setCategorycode(row.getCell(0).toString()+row.getCell(1).toString());//长编码
+													
+													measureCategoryDao.save(measureCategory);//
+												}
+									//===============================	
+								}
+							}
+					}	
+				//}
+				//System.out.println("==>第"+(i+1)+"行");
+			}
+//System.out.println("====end");
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+		
+	}	
+	public void readFxture() {
+		
+		try {
+			HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream("F:/blade-tools.xls"));
+			//HSSFSheet sheet = wb.getSheetAt(0);
+			HSSFSheet sheet = wb.getSheet("工装");
+			int rows=sheet.getLastRowNum();//获取表格的行数
+			//System.out.println("所有行数："+rows);
+			HSSFRow row;
+			String cell;
+			//----------
+			FixtureQuery fixtureQuery=new FixtureQuery();
+			List<Fixture> fixtureList=new ArrayList<Fixture>();
+			Fixture fixture=new Fixture();
+			//----------
+			for (int i =12; i < rows; i++) {
+				row = sheet.getRow(i);//i为读取的起始行数
+				int j = 0;
+				//for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
+					if(null!=row){//行判空
+						if(null!=row.getCell(j)){//单元格判空
+							cell = row.getCell(j).toString();
+							//System.out.println("=-=="+cell);
+								if(!"".equals(cell)){//单元格值判空
+										System.out.print(cell+"+");	
+									//===============================	
+//										fixtureQuery.setFixtruecode(cell.toString());
+										fixtureQuery.setLcode(cell.toString());
+										//fixtureList=fixtureDao.findListByLcode(cell.toString());
+										fixtureList=fixtureDao.findList(fixtureQuery);
+
+												if(fixtureList.size()==0){//无上级
+													fixture.setParentcode("");//父编码
+													fixture.setParentid(1L);//父级id
+													fixture.setFixturename(row.getCell(2).toString());//名称
+													fixture.setFixtruecode(row.getCell(0).toString()+row.getCell(1).toString());//编码
+													fixture.setLcode(row.getCell(0).toString()+row.getCell(1).toString());
+													fixtureDao.save(fixture);//
+												}else{//有上级
+													Fixture ft=fixtureList.get(0);
+														fixture.setParentid(ft.getFixtureid());//父级id
+														fixture.setParentcode(row.getCell(0).toString());//父编码
+														fixture.setFixturename(row.getCell(2).toString());//名称
+														fixture.setFixtruecode(row.getCell(1).toString().substring(1, row.getCell(1).toString().length()));//编码
+														fixture.setLcode(row.getCell(0).toString()+row.getCell(1).toString());
+														fixtureDao.save(fixture);//
+												}
+									//===============================	
+								}
+							}
+					}	
+				//}
+				//System.out.println("==>第"+(i+1)+"行");
+			}
+//System.out.println("====end");
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+		
+	}	
+	
+
+}

@@ -1,0 +1,824 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.query.MenuOperateQuery;
+import com.terrence.core.dol.service.IMenuOperateService;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.RpBill;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.RpBillQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IRpBillService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/rpBill")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "rpBill." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class RpBillAction extends CrudActionSupport<RpBill>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("rpBillService")
+	private IRpBillService rpBillService;
+	@Autowired
+	@Qualifier("menuOperateService")
+	private IMenuOperateService menuOperateService;
+	/** 管理员服务访问接口 */
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	private RpBill entity;
+
+	private RpBillQuery rpBillQuery;
+	
+	List<MenuOperate> menuOperatelist ;
+	private java.lang.Long rpBillId;
+	
+	private java.lang.Double exchangeamount;
+	private java.lang.Double awardamount;
+	
+	/** 分页器 */
+	private Page<RpBill> page = new Page<RpBill>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[5];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<RpBill> rpBillList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (rpBillId != null ) {
+			entity = rpBillService.getById(rpBillId);
+		} else {
+			entity = new RpBill();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			rpBillService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 删除应收款及关联的业绩奖明细
+	 */
+	public String deleteRpBillInfo() throws Exception {
+		
+		try {
+			rpBillService.deleteRpBillInfo(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 通过应收款ID查找应收款 信息及当前订单负责人的业绩奖明细信息
+	 */
+	@Override
+	public String input() throws Exception {
+		
+		try {
+			entity = rpBillService.getRpBillPeFeeInfoById(rpBillId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(rpBillQuery == null) {
+			rpBillQuery = new RpBillQuery();
+		}
+		
+		try {
+			rpBillList = rpBillService.findList(rpBillQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("fbillid");
+			page.setOrder(Page.DESC);
+		}
+		if(rpBillQuery == null) {
+			rpBillQuery = new RpBillQuery();
+		}
+		
+		try {
+			//得到当前登陆人信息
+			AdminSession adminSession = (AdminSession) SecurityContextHolder
+					.getContext().getAuthentication().getPrincipal();
+			//查询当前登陆用户的按钮权限
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			menuOperateQuery.setMenuId(rpBillQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			
+		
+			Admin admin = adminSession.getAdmin();
+			/*admin.setAdminId(13l);
+			admin.setAmanagerid(13l);
+			admin.setAdminName("朱凌");*/
+//			if(13==admin.getAdminId()){//朱凌查看自己和底下人员的
+			if(null!=admin.getAdminId()){
+				if(admin.getAdminId()==admin.getAmanagerid()){//当前登陆用户的区域经理是自己.区域经理查看自己的
+					if(!"1".equalsIgnoreCase( admin.getAdminId()+"" )){//如果自己不是管理员
+						rpBillQuery.setAmanagerid(admin.getAdminId());
+					}
+				}
+				if(admin.getAdminId()!=admin.getAmanagerid()){//当前登陆用户的区域经理不是自己,即自己是区域经理下级
+					if(!"1".equalsIgnoreCase( admin.getAdminId()+"" )
+							&&!"96".equalsIgnoreCase(admin.getTeamid()+"")){//如果自己不是管理员
+						rpBillQuery.setFcurempname(admin.getAdminName());//查找自己的信息
+					}
+				}
+//				rpBillQuery.setAmanagerid(13l);
+				/*//查找13的下级
+				AdminQuery adminQuery = new AdminQuery();
+				adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());// 查询所有上级是当前登录的区域销售经理的下级
+				List<Admin> adminList = adminService.findList(adminQuery);
+				if(null!=adminList&&0<adminList.size()){
+				}*/
+				
+			}
+			/*else{
+				if(!"1".equalsIgnoreCase( admin.getAdminId()+"" )){
+					rpBillQuery.setFcurempname(admin.getAdminName());
+				}
+				
+			}*/
+			page = rpBillService.findPage(page, rpBillQuery);
+			//同时显示查询的回款金额 总计
+			List<RpBill> rpBillList=rpBillService.findList(rpBillQuery);
+			exchangeamount=0d;
+			for (RpBill rpBill : rpBillList) {
+				exchangeamount=exchangeamount+rpBill.getFexchangeamount();
+			}
+			//同时显示查询的合同单据奖励金额 总计
+			List<RpBill> rpBillAwardamountList=rpBillService.findAllPageList(rpBillQuery);
+			awardamount=0d;
+			for (RpBill rpBill : rpBillAwardamountList) {
+				//奖励合计
+				awardamount=awardamount+(null==rpBill.getFamount()?0:rpBill.getFamount());
+			}
+			 
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			resultInfo[2] = ""+formateNumber(exchangeamount,2,2);
+			resultInfo[3] = ""+formateNumber(awardamount,3,3);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	/**
+	 * 2015年4月前应收款管理-销售业绩奖统计
+	 * @return
+	 * @throws Exception
+	 */
+	public String findStatisticPage() throws Exception {
+		/*if (!page.isOrderBySetted()) {
+			page.setOrderBy("fbillid");
+			page.setOrder(Page.DESC);
+		}*/
+		if(rpBillQuery == null) {
+			rpBillQuery = new RpBillQuery();
+		}
+		try {
+			//rpBillQuery.setFdate("2015年 02季度");
+			if("".equalsIgnoreCase(rpBillQuery.getFdate())
+					||null==rpBillQuery.getFdate()){
+				rpBillQuery.setFdate(rpBillQuery.getFdateH());
+			}
+			if(null!=rpBillQuery.getFcurempname()&&
+					!"".equalsIgnoreCase(rpBillQuery.getFcurempname())
+					){
+				rpBillQuery.setAwardempname(rpBillQuery.getFcurempname());
+				rpBillQuery.setFcurempname(null);
+			}
+			page = rpBillService.findStatisticPage(page, rpBillQuery);
+			
+			//统计合计
+			//同时显示查询的回款金额 总计
+			List<RpBill> rpBillList=rpBillService.findStatisticPageList(rpBillQuery);
+			exchangeamount=0d;
+			awardamount=0d;
+			for (RpBill rpBill : rpBillList) {
+				if(null!=rpBill.getFexchangeamount()
+						&&!"null".equalsIgnoreCase(rpBill.getFexchangeamount()+"")
+						&&!"".equalsIgnoreCase(rpBill.getFexchangeamount()+"")){
+				exchangeamount=exchangeamount+rpBill.getFexchangeamount();//回款
+				}
+				//奖励合计
+				if(null!=rpBill.getFamount()
+						&&!"null".equalsIgnoreCase(rpBill.getFamount()+"")
+						&&!"".equalsIgnoreCase(rpBill.getFamount()+"")){
+					awardamount=awardamount+rpBill.getFamount();
+				}
+				
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			resultInfo[2] = ""+formateNumber(exchangeamount,2,2);
+			resultInfo[3] = ""+formateNumber(awardamount,3,3);
+			resultInfo[4] = ""+rpBillQuery.getFdate();
+		}
+		catch(ServiceException e) {
+					logger.error(e.getMessage());
+					
+					resultInfo[0] = "-1";
+					resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+					logger.error(e.getMessage());
+					
+					resultInfo[0] = "-1";
+					resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 2015年4月前应收款管理-销售业绩奖统计
+	 * @return
+	 * @throws Exception
+	 */
+	public String findPageStatistic() throws Exception {
+		if (!page.isOrderBySetted()) {
+			//page.setOrderBy("fbillid");
+			page.setOrderBy("t_rp_bill.fcurempname");
+			page.setOrder(Page.DESC);
+		}
+		
+		if(rpBillQuery == null) {
+			rpBillQuery = new RpBillQuery();
+		}
+		page.setOrderBy("t_rp_bill.fcurempname");
+		page.setOrder(Page.DESC);
+		rpBillQuery.setSortColumns("t_rp_bill.fcurempname desc ");
+		
+		try {
+			rpBillQuery.setFamount("0");//奖励金额不为0的
+			page = rpBillService.findPage(page, rpBillQuery);
+			
+			//所有的
+			List<RpBill> rpBillListAll= rpBillService.
+					findPageStatistic(rpBillQuery);
+			//经过过滤的所有的
+			List<RpBill> rpBillListResultall=new ArrayList<RpBill>();
+			if(null!=rpBillListAll&&0<rpBillListAll.size()){
+				String curempnameall="";
+				double fexchangeamountall=0d;
+				int curempIndexFlagall=0;
+				for (int i = 0; i < rpBillListAll.size(); i++) {
+					if(null!=rpBillListAll.get(i).getFcurempname()
+							&&!"".equalsIgnoreCase(rpBillListAll.get(i).getFcurempname())
+							&&!"null".equalsIgnoreCase(rpBillListAll.get(i).getFcurempname())){
+						curempnameall=rpBillListAll.get(i).getFcurempname();
+						
+						if(i+1<(rpBillListAll.size())){//还有下一个
+							if(!curempnameall.
+									equalsIgnoreCase(rpBillListAll.get(i+1).getFcurempname()) ){
+								//下一个与临时存的不一样,则计算当前临时存的人的按季度的合计
+								curempIndexFlagall=i;
+								for (int j = 0; j < curempIndexFlagall; j++) {
+									fexchangeamountall=fexchangeamountall
+											+rpBillListAll.get(j).getFexchangeamount();
+									
+								}
+								rpBillListAll.get(i).setFexchangeamount(fexchangeamountall);
+								RpBill rpBill=new RpBill();
+								rpBill.setFcurempname(rpBillListAll.get(i).getFcurempname());
+								rpBill.setFdate(rpBillListAll.get(i).getFdate());
+								rpBill.setFexchangeamount(rpBillListAll.get(i).getFexchangeamount());
+								rpBill.setFamount(rpBillListAll.get(i).getFamount());
+								
+								
+								rpBillListResultall.add(rpBill);
+								fexchangeamountall=0d;
+							}
+							else{//下一个与临时存的一样
+//								fexchangeamount=fexchangeamount+fexchangeamountTemp
+//										;
+							}
+					}
+				}
+			}
+			}
+			
+			//对当前结果集再做按人相等时把按季度的统计
+			List<RpBill> rpBillListPage=page.getResult();
+			
+			List<RpBill> rpBillListResult=new ArrayList<RpBill>();
+			
+			if(null!=rpBillListPage&&0<rpBillListPage.size()){
+				String curempname="";
+				double fexchangeamount=0d;
+				int curempIndexFlag=0;
+				for (int i = 0; i < rpBillListPage.size(); i++) {
+					if(null!=rpBillListPage.get(i).getFcurempname()
+							&&!"".equalsIgnoreCase(rpBillListPage.get(i).getFcurempname())
+							&&!"null".equalsIgnoreCase(rpBillListPage.get(i).getFcurempname())){
+						
+					
+					curempname=rpBillListPage.get(i).getFcurempname();
+					//double fexchangeamountTemp=rpBillListPage.get(i).getFexchangeamount();
+					///fexchangeamount=fexchangeamountTemp;
+					if(i+1<(rpBillListPage.size())){//还有下一个
+						if(!curempname.
+								equalsIgnoreCase(rpBillListPage.get(i+1).getFcurempname()) ){
+							//下一个与临时存的不一样,则计算当前临时存的人的按季度的合计
+							curempIndexFlag=i;
+							for (int j = 0; j < curempIndexFlag; j++) {
+								fexchangeamount=fexchangeamount
+										+rpBillListPage.get(j).getFexchangeamount();
+								
+							}
+							rpBillListPage.get(i).setFexchangeamount(fexchangeamount);
+							RpBill rpBill=new RpBill();
+							rpBill.setFcurempname(rpBillListPage.get(i).getFcurempname());
+							rpBill.setFdate(rpBillListPage.get(i).getFdate());
+							rpBill.setFexchangeamount(rpBillListPage.get(i).getFexchangeamount());
+							rpBill.setFamount(rpBillListPage.get(i).getFamount());
+							
+							
+							rpBillListResult.add(rpBill);
+							fexchangeamount=0d;
+						}
+						else{//下一个与临时存的一样
+//							fexchangeamount=fexchangeamount+fexchangeamountTemp
+//									;
+						}
+					}
+					/**/
+					else{//当前是最后一个了,没有下一个
+						//下一个与临时存的不一样,则计算当前临时存的人的按季度的合计
+						curempIndexFlag=i;
+						for (int j = 0; j < curempIndexFlag; j++) {
+							fexchangeamount=fexchangeamount
+									+rpBillListPage.get(j).getFexchangeamount();
+							
+						}
+						rpBillListPage.get(i).setFexchangeamount(fexchangeamount);
+						RpBill rpBill=new RpBill();
+						rpBill.setFcurempname(rpBillListPage.get(i).getFcurempname());
+						rpBill.setFdate(rpBillListPage.get(i).getFdate());
+						rpBill.setFexchangeamount(rpBillListPage.get(i).getFexchangeamount());
+						rpBill.setFamount(rpBillListPage.get(i).getFamount());
+						
+						
+						rpBillListResult.add(rpBill);
+						fexchangeamount=0d;
+					}
+				}
+			  }
+			}
+			page.setResult(rpBillListResult);//当前的结果集
+			//查找所有的
+			page.setTotalCount(rpBillListResultall.size());//总数
+			
+			
+			//同时显示查询的合同单据奖励金额 总计
+			List<RpBill> rpBillAwardamountList=rpBillService.findAllPageList(rpBillQuery);
+			
+			//同时显示查询的回款金额 总计
+			rpBillQuery.setFamount(null);
+			List<RpBill> rpBillList=rpBillService.findList(rpBillQuery);
+			exchangeamount=0d;
+			for (RpBill rpBill : rpBillList) {
+				exchangeamount=exchangeamount+rpBill.getFexchangeamount();
+			}
+			
+			awardamount=0d;
+			for (RpBill rpBill : rpBillAwardamountList) {
+				//奖励合计
+				awardamount=awardamount+rpBill.getFamount();
+			}
+			 
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			resultInfo[2] = ""+formateNumber(exchangeamount,2,2);
+			resultInfo[3] = ""+formateNumber(awardamount,3,3);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	//定义一个方法用来格式化实数
+	public String formateNumber(double d,int minimum,int maximum){
+		    NumberFormat  nf = NumberFormat.getInstance();//NumberFormat是java.text.NumberFormat包里的类
+		    
+		    nf.setMaximumFractionDigits(maximum);
+		    nf.setMinimumFractionDigits(minimum);//保留小数点两位
+		    return nf.format(d).replace(",", "");
+	}
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 保存2015年4月前应收款信息
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveRpBill() throws Exception {
+		
+		try {
+            rpBillService.saveRpBill(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 更新2015年4月前应收款信息
+	 * @return
+	 * @throws Exception
+	 */
+	public String updateRpBill() throws Exception {
+		
+		try {
+            rpBillService.updateRpBill(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			rpBillService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = rpBillService.getById(rpBillId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			rpBillList = rpBillService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public RpBill getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public RpBillQuery getRpBillQuery() {
+		return rpBillQuery;
+	}
+
+	
+	public void setRpBillQuery(RpBillQuery rpBillQuery) {
+		this.rpBillQuery = rpBillQuery;
+	}
+
+	public void setRpBillId(java.lang.Long rpBillId) {
+		this.rpBillId = rpBillId;
+	}
+	
+	
+	public java.lang.Long getRpBillId() {
+		return this.rpBillId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<RpBill> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<RpBill> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<RpBill> getRpBillList() {
+		return rpBillList;
+	}
+
+	public RpBill getEntity() {
+		return entity;
+	}
+
+	public void setEntity(RpBill entity) {
+		this.entity = entity;
+	}
+
+	public java.lang.Double getExchangeamount() {
+		return exchangeamount;
+	}
+
+	public void setExchangeamount(java.lang.Double exchangeamount) {
+		this.exchangeamount = exchangeamount;
+	}
+
+	public java.lang.Double getAwardamount() {
+		return awardamount;
+	}
+
+	public void setAwardamount(java.lang.Double awardamount) {
+		this.awardamount = awardamount;
+	}
+
+	public List<MenuOperate> getMenuOperatelist() {
+		return menuOperatelist;
+	}
+
+	public void setMenuOperatelist(List<MenuOperate> menuOperatelist) {
+		this.menuOperatelist = menuOperatelist;
+	}
+	
+	
+}

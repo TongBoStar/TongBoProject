@@ -1,0 +1,132 @@
+package com.terrence.crm.dol.service.impl;
+import java.awt.BasicStroke;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Shape;
+import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.OutputStream;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Random;
+
+import javax.imageio.ImageIO;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.DecodeHintType;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.Result;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessDefine;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.dao.IProcessDefineDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.query.ProcessTaskQuery;
+import com.terrence.crm.dol.service.IProcessTaskService;
+import com.terrence.crm.dol.utils.BufferedImageLuminanceSource;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.PropertiesUtil;
+import com.terrence.crm.dol.utils.QRCodeUtil;
+@Service
+@Transactional
+public class ProcessTaskService extends BaseService implements IProcessTaskService {
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processDefineDao")
+	private IProcessDefineDao processDefineDao;
+	@Override
+	public ProcessTask getById(Long id) throws ServiceException {
+		return processTaskDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProcessTask entity) throws ServiceException {
+		Long id =null;
+		if(entity.getId()!=null){
+			id = entity.getId();
+		}
+		ProcessDefine pd = new ProcessDefine();
+		pd.setIsuse(1);
+		pd.setId(entity.getProcessIds());
+		processDefineDao.update(pd);
+		processTaskDao.saveOrUpdate(entity);
+		if(id==null){
+			operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_ADD, "流程任务名称为："+entity.getTaskName()+"的流程任务信息添加成功");
+			}else{
+			operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_EDIT, "流程任务名称为："+entity.getTaskName()+"的流程任务名称修改成功");	
+		}
+	}
+	@Override
+	public Long save(ProcessTask entity) throws ServiceException {
+		return processTaskDao.save(entity);
+	}
+	@Override
+	public Integer update(ProcessTask entity) throws ServiceException {
+		return processTaskDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_DEL, "主键为："+id+"的流程任务名称删除成功");	
+		return processTaskDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_DEL, "主键为："+delIds+"的流程任务名称删除成功");	
+		Integer returnValue = processTaskDao.deleteByMultipleId(delIds);
+
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessTask> findPage(Page<ProcessTask> page, ProcessTaskQuery query) throws ServiceException{
+		return processTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessTask> findPage(Page<ProcessTask> page,String statement, ProcessTaskQuery query) throws ServiceException{
+		return processTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTask> findList(ProcessTaskQuery query) throws ServiceException{
+		return processTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTask> findList(ProcessTaskQuery query,Integer pageSize) throws ServiceException{
+		return processTaskDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTask> findList(ProcessTaskQuery query,String statement,Integer pageSize) throws ServiceException{
+		return processTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTask> findAllList() throws ServiceException{
+		return processTaskDao.findAllList();
+	}
+	@Override
+	public void saveseqcode(String code) throws Exception {
+		ProcessTask pt = new ProcessTask();
+		pt.setTaskCode(code);
+		processTaskDao.save(pt, "ProcessTask.saveTwoDimCode");
+	}
+	@Override
+	public List<ProcessTask> findScanCodeList(ProcessTaskQuery processTaskQuery)
+			throws Exception {
+		return processTaskDao.findList("ProcessTask.findScanCode", processTaskQuery);
+	}
+}

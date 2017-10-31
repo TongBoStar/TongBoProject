@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailStepExpl;
+import com.terrence.crm.dol.dao.ITrailStepExplDao;
+import com.terrence.crm.dol.query.TrailStepExplQuery;
+
+@Repository
+public class TrailStepExplDao extends BaseIbatisDao<TrailStepExpl,java.lang.Long> implements ITrailStepExplDao{
+
+		
+	public void saveOrUpdate(TrailStepExpl entity) {
+		if(entity.getStepid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailStepExpl";
+	}
+	public TrailStepExpl getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailStepExpl)this.getSqlMapClientTemplate().queryForObject("TrailStepExpl.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteDataByDid(TrailStepExplQuery trailStepExpl) {
+		this.getSqlMapClientTemplate().delete("delete.byDid", trailStepExpl);
+	}
+
+}

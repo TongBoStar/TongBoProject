@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Nogood;
+import com.terrence.crm.dol.dao.INogoodDao;
+
+@Repository
+public class NogoodDao extends BaseIbatisDao<Nogood,java.lang.Long> implements INogoodDao{
+
+		
+	public void saveOrUpdate(Nogood entity) {
+		if(entity.getRid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Nogood";
+	}
+	public Nogood getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Nogood)this.getSqlMapClientTemplate().queryForObject("Nogood.getByProperty", map);		
+	}
+
+}

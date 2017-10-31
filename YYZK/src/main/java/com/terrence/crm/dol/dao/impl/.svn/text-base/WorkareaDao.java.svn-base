@@ -1,0 +1,57 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Workarea;
+import com.terrence.crm.dol.dao.IWorkareaDao;
+import com.terrence.crm.dol.query.WorkareaQuery;
+
+@Repository
+public class WorkareaDao extends BaseIbatisDao<Workarea,java.lang.Long> implements IWorkareaDao{
+
+		
+	public void saveOrUpdate(Workarea entity) {
+		
+		
+		
+		if(entity.getAreaid() == null){
+			Workarea wk = (Workarea) this.getSqlMapClientTemplate().queryForObject("Workarea.find.wk.for.data", entity);//一个IP只能绑定一个区域
+			if(wk != null){
+				throw new ServiceException("此IP已经绑定区域，请不要重复绑定","-1");
+			}else{
+				save(entity);
+			}
+		}else{
+			update(entity);
+		}
+			
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Workarea";
+	}
+	public Workarea getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Workarea)this.getSqlMapClientTemplate().queryForObject("Workarea.getByProperty", map);		
+	}
+
+	@Override
+	public List<Workarea> findEntity(WorkareaQuery wquery) {
+		return this.getSqlMapClientTemplate().queryForList("Workarea.find.data.for.entity", wquery);
+	}
+
+}

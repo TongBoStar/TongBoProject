@@ -1,0 +1,460 @@
+package com.terrence.crm.dol.action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IPurchaseplanDetailService;
+import com.terrence.crm.dol.bean.PurchaseplanDetail;
+import com.terrence.crm.dol.query.PurchaseplanDetailQuery;
+/**
+ * tongbo
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/purchaseplanDetail")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "purchaseplanDetail."+ CrudActionSupport.ACTIONSUFFIX
+		+ "?page.pageRequest=${page.pageRequest}", type = "redirect") })
+public class PurchaseplanDetailAction extends CrudActionSupport<PurchaseplanDetail> implements ApplicationContextAware {
+
+	@Autowired
+	@Qualifier("purchaseplanDetailService")
+	private IPurchaseplanDetailService purchaseplanDetailService;
+
+	private PurchaseplanDetail entity;
+
+	private PurchaseplanDetailQuery purchaseplanDetailQuery;
+
+	private java.lang.Long purchaseplanDetailId;
+
+	/** 分页器 */
+	private Page<PurchaseplanDetail> page = new Page<PurchaseplanDetail>();
+
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+
+	private ApplicationContext ctx;
+	private List<PurchaseplanDetail> purchaseplanDetailList;
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (purchaseplanDetailId != null) {
+			entity = purchaseplanDetailService.getById(purchaseplanDetailId);
+		} else {
+			entity = new PurchaseplanDetail();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		try {
+			if(null!=checkedIdList && checkedIdList.size()>0){
+				purchaseplanDetailService.deleteByMultipleId(checkedIdList);
+			}else{
+				purchaseplanDetailService.deleteById(purchaseplanDetailId);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			addActionMessage("删除成功");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		try {
+			delete();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	public String listToQuery() throws Exception {
+		if (purchaseplanDetailQuery == null) {
+			purchaseplanDetailQuery = new PurchaseplanDetailQuery();
+		}
+		try {
+			purchaseplanDetailList = purchaseplanDetailService.findList(purchaseplanDetailQuery);
+			if(purchaseplanDetailList!=null&&purchaseplanDetailList.size()>0){
+				for(int i=0;i<purchaseplanDetailList.size();i++){
+					PurchaseplanDetail detail = purchaseplanDetailList.get(i);
+					//将查到的实时已有需求、在途数量、已有计划赋值给表中相应的字段
+					
+					detail.setFqty(detail.getFqtyreal());//库存数量
+					detail.setMakingnums(detail.getMakingnumsreal());//在途数量
+					detail.setExistednums(detail.getExistednumsreal());//已有需求
+					detail.setPlanednum(detail.getPlanednumreal());//已有计划
+					detail.setYoutput(detail.getYoutputreal());//年采购量（年产量）
+					//计算总需求和建议下单数量
+					/**此计算中本次计划均不参与计算
+					 * if（库存+在途数量+已有计划-本次计划-已有需求）》安全库存时：建议下单数量=0
+					 * else
+					 *     if(安全库存+本次计划+已有需求-库存量-在制品量-已有计划)>(年产量*系数)  建议下单数量=安全库存+本次计划+已有需求-库存量-在制品量-已有计划
+					 *     else 年产量*系数
+					 */
+					Double amount=0d;
+					if((detail.getFqty()==null?0:detail.getFqty())+(detail.getMakingnums()==null?0:detail.getMakingnums())-detail.getPlannum()-(detail.getExistednums()==null?0:detail.getExistednums())>(detail.getSecinv()==null?0:detail.getSecinv()))
+					{
+						amount=0d;
+					}
+					else
+					{
+						if((detail.getYoutput()==null?0:detail.getYoutput())*(detail.getRatio()==null?0:detail.getRatio())>(detail.getSecinv()==null?0:detail.getSecinv())+detail.getPlannum()+(detail.getExistednums()==null?0:detail.getExistednums())-(detail.getFqty()==null?0:detail.getFqty())-(detail.getMakingnums()==null?0:detail.getMakingnums()))
+						{
+							amount=(detail.getYoutput()==null?0:detail.getYoutput())*(detail.getRatio()==null?0:detail.getRatio());
+						}
+						else
+						{
+							amount=(detail.getSecinv()==null?0:detail.getSecinv())+detail.getPlannum()+(detail.getExistednums()==null?0:detail.getExistednums())-(detail.getFqty()==null?0:detail.getFqty())-(detail.getMakingnums()==null?0:detail.getMakingnums());
+						}
+					}
+					detail.setAmount(amount);//总需求
+					detail.setInnum(amount);//建议下单数量
+				}
+			}
+			
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("plandetailid");
+			page.setOrder(Page.DESC);
+		}
+		if (purchaseplanDetailQuery == null) {
+			purchaseplanDetailQuery = new PurchaseplanDetailQuery();
+		}
+		try {
+			page = purchaseplanDetailService.findPage(page, purchaseplanDetailQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+    /**
+     * 查询列表
+     * @return
+     * @throws Exception
+     */
+	public String listQuery() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("plandetailid");
+			page.setOrder(Page.DESC);
+		}
+		if (purchaseplanDetailQuery == null) {
+			purchaseplanDetailQuery = new PurchaseplanDetailQuery();
+		}
+		try {
+			purchaseplanDetailList = purchaseplanDetailService.findList(purchaseplanDetailQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+	public String listToJson() throws Exception {
+		try {
+			list();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public String listToJsonQuery() throws Exception {
+		try {
+			listQuery();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		try {
+			purchaseplanDetailService.saveOrUpdate(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			addActionMessage("操作成功");
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败," + e.getMessage();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		try {
+			save();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		try {
+			entity = purchaseplanDetailService.getById(purchaseplanDetailId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		try {
+			show();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	// -------------------自定义方法
+	public String listAll() throws Exception {
+		try {
+			purchaseplanDetailList = purchaseplanDetailService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (ServiceException e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	//=-原材料下推-------------
+	public void prepareSaveSrcBuy() throws Exception{
+		prepareModel();
+	}
+	
+	public String saveSrcBuy() throws Exception {
+		try{
+			purchaseplanDetailService.saveSrcBuy(entity,this.checkedIdList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public String pushDate() throws Exception {
+		try{
+			purchaseplanDetailService.pushDate(this.checkedIdList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/*
+	 * (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public PurchaseplanDetail getModel() {
+		return entity;
+	}
+
+	/**
+	 * 获得分页器
+	 * @return the page
+	 */
+	public Page<PurchaseplanDetail> getPage() {
+		return page;
+	}
+
+	public PurchaseplanDetail getEntity() {
+		return entity;
+	}
+	public void setEntity(PurchaseplanDetail entity) {
+		this.entity = entity;
+	}
+	public PurchaseplanDetailQuery getPurchaseplanDetailQuery() {
+		return purchaseplanDetailQuery;
+	}
+	public void setPurchaseplanDetailQuery(PurchaseplanDetailQuery purchaseplanDetailQuery) {
+		this.purchaseplanDetailQuery = purchaseplanDetailQuery;
+	}
+	public java.lang.Long getPurchaseplanDetailId() {
+		return purchaseplanDetailId;
+	}
+	public void setPurchaseplanDetailId(java.lang.Long purchaseplanDetailId) {
+		this.purchaseplanDetailId = purchaseplanDetailId;
+	}
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+	/**
+	 * 设置分页器
+	 * @param page
+	 *        the new page
+ */
+	public void setPage(Page<PurchaseplanDetail> page) {
+		this.page = page;
+	}
+	/**
+	 * 获得Json操作信息
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+	/**
+	 * 获得所选择的编号列表
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+	/**
+	 * 设置编号列表
+	 * @param checkedIdList
+	 *        编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+	public List<PurchaseplanDetail> getPurchaseplanDetailList() {
+		return purchaseplanDetailList;
+	}
+}

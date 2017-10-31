@@ -1,0 +1,1098 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.query.MenuOperateQuery;
+import com.terrence.core.dol.service.IMenuOperateService;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.Teams;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.PickingQuery;
+import com.terrence.crm.dol.query.TeamsQuery;
+import com.terrence.crm.dol.service.IPickingService;
+import com.terrence.crm.dol.service.ITeamsService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/picking")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "picking." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PickingAction extends CrudActionSupport<Picking>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("pickingService")
+	private IPickingService pickingService;
+	@Autowired
+	@Qualifier("teamsService")
+	private ITeamsService teamsService;
+	@Autowired
+	@Qualifier("menuOperateService")
+	private IMenuOperateService menuOperateService;
+	private List<Long> detailids;
+	private List<Long> stocks;
+	@Autowired
+	@Qualifier("pickingOrderService")
+	private IPickingService pickingOrderService;
+	List<MenuOperate> menuOperatelist ;
+	private Picking entity;
+	private java.lang.String fbillno;
+	private PickingQuery pickingQuery;
+	private ProcessExetask processExetask;
+	
+	private java.lang.Long pickingId;
+	private java.lang.Long tools;
+	
+	/** 分页器 */
+	private Page<Picking> page = new Page<Picking>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Picking> pickingList;
+	private String teamidsList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		
+		if (pickingId != null ) {
+			if(tools!=null){
+				if(tools.longValue()==1){
+					entity = pickingService.getByIdTools("Picking.getByIdTools",pickingId);			
+				}	
+			}else{
+				entity = pickingService.getById(pickingId);
+			}
+		} else {
+			entity = new Picking();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			pickingService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 出库单审核----
+	 * @return
+	 */
+	public String deleteToReal(){
+
+			try {
+				pickingService.deleteReal(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				addActionMessage("删除成功");
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败"+e.getMessage();
+				
+				addActionMessage("删除失败");
+			}
+			return JSON;
+	}
+	
+	
+	/**
+	 * 删除JOB待审出库单
+	 * @return
+	 */
+	
+	@Action("/Picking/deldata")
+	public String deletedata(){
+
+		try {
+			pickingService.deletedata(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败"+e.getMessage();
+			
+			addActionMessage("删除失败");
+		}
+		return JSON;
+}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(pickingQuery == null) {
+			pickingQuery = new PickingQuery();
+		}
+		
+		try {
+			pickingList = pickingService.findList(pickingQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pickingId");
+			page.setOrder(Page.DESC);
+		}
+		if(pickingQuery == null) {
+			pickingQuery = new PickingQuery();
+		}
+		
+		try {
+			page = pickingService.findPage(page, pickingQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	//--查询是否为机加和装配人员----
+	public String showEmpTeam()throws Exception {
+		
+		Long[] teamids = Picking.TEAM_NUMBER;
+		teamidsList="";
+		for(long ids:teamids){
+			teamidsList+=ids+",";
+			teamlist(ids);
+		}
+		teamidsList=teamidsList.substring(0,(teamidsList.length()-1));
+		System.out.println("==========allteamid="+teamidsList);
+		String[] tlist = teamidsList.split(",");
+		Integer empteamid = SpringSecurityUtils.getCurrentTeamid();
+		int isOK=0;
+		for(String tids:tlist){
+			if((empteamid+"").equals(tids)){//属于装配或机加---
+				isOK=1;
+			}
+		}
+		
+		if(isOK==1){////属于装配或机加---
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		}else{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "非装配或机加人员暂不可添加单据(若要添加单据,请修改您的班组到装配车间或机加车间)!!";
+		}
+		
+		return JSON;
+	}
+//---------------------------------------------------------------------
+	public String listDetailByteamid() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("t_picking.pickingid");
+			page.setOrder(Page.DESC);
+		}
+		if(pickingQuery == null) {
+			pickingQuery = new PickingQuery();
+		}
+		
+		try {
+			String tids="";
+			if(null!=pickingQuery.getTeamid()){
+				
+				teamidsList=pickingQuery.getTeamid()+",";
+				teamlist(pickingQuery.getTeamid().longValue());
+				teamidsList=teamidsList.substring(0,(teamidsList.length()-1));
+//				System.out.println("=========="+teamidsList);
+				pickingQuery.setTidlist(teamidsList);
+			}
+			
+			//page = pickingService.findPage(page, pickingQuery);
+		//	page = pickingService.findPage(page, "Picking.findpage.listDetailByteamid", pickingQuery);
+			page = pickingService.findPage(page, "Picking.findpage.listDetailByteamidNew", pickingQuery);
+			
+			//SpringSecurityUtils.getCurrentRealName();
+			//查询当前登陆用户的按钮权限
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			//menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+					.getAuthentication().getPrincipal();
+			//authorityList=  adminSession1.getAdmin().getAuthorityList();
+			//Iterator iterator=adminSession1.getAuthorities().iterator();
+			for (Iterator iterator2 = adminSession1.getAuthorities()
+					.iterator(); iterator2
+					.hasNext();) {
+				String type = (String) iterator2.next().toString();
+				MenuOperate menuOperate=new MenuOperate();
+				menuOperate.setFunctionName(type);
+				menuOperatelist.add(menuOperate);
+			}
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+//---------------------------------------------------	
+	public String listByteamid() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pickingId");
+			page.setOrder(Page.DESC);
+		}
+		if(pickingQuery == null) {
+			pickingQuery = new PickingQuery();
+		}
+		
+		try {
+			String tids="";
+			if(null!=pickingQuery.getTeamid()){
+				
+				teamidsList=pickingQuery.getTeamid()+",";
+				teamlist(pickingQuery.getTeamid().longValue());
+				teamidsList=teamidsList.substring(0,(teamidsList.length()-1));
+//				System.out.println("=========="+teamidsList);
+				pickingQuery.setTidlist(teamidsList);
+			}
+			
+			page = pickingService.findPage(page, pickingQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	private void teamlist(Long teamid) {
+		
+		TeamsQuery tQuery=new TeamsQuery();
+		tQuery.setTeamsuperior(teamid);
+		
+		List<Teams> list=new ArrayList<Teams>();
+		list=teamsService.findList(tQuery);
+		if(null!=list&&list.size()>0)
+		{
+				for(Teams t:list)
+				{
+					//teamidsList.add(t.getTeamid()+"");
+					teamidsList+=t.getTeamid()+",";
+					teamlist(t.getTeamid());
+				}
+		}
+	}
+
+	public void prepareReview() throws Exception {
+		prepareModel();
+	}
+	public String toreview()throws Exception{
+		/*if (pickingId != null ) {
+			if(tools!=null){
+				if(tools.longValue()==1){
+					entity = pickingService.getByIdTools("Picking.getByIdTools",pickingId);			
+				}	
+			}else{
+				entity = pickingService.getById(pickingId);
+			}
+		} else {
+			entity = new Picking();
+		}*/
+		if(null==entity){
+			entity = new Picking();
+		}
+		entity.setDetailids(detailids);//出库单明细ID
+		entity.setStocks(stocks);//出库单仓库ID
+		entity.setPickingid(pickingId);//出库单id
+		entity.setFbillno(fbillno);//出库单编号
+		//entity.set
+		Boolean examResult=false;
+		try {
+			entity.setFcheckerid(SpringSecurityUtils.getCurrentUserId());//审核人ID
+			if(entity.getUpfcheckdate() != null){
+				entity.setFcheckdate(entity.getUpfcheckdate());//审核时间
+			}else{
+				entity.setFcheckdate(DateConvertUtils.getCurrentDate());
+			}
+			pickingService.examPicking(entity,processExetask);//审核操作
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			addActionMessage("操作成功");
+			if(null!=entity.getFstatus()
+					&&100==entity.getFstatus()){
+				examResult=true;
+			}
+			resultInfo[2] = ""+examResult;
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			resultInfo[2] = ""+examResult;
+		} 
+		catch(NullPointerException e)
+		{
+			resultInfo[0] = "-1";
+			e.printStackTrace();
+			resultInfo[1] = "操作失败:"+e.getMessage();
+			addActionMessage(resultInfo[1]);
+			resultInfo[2] = ""+examResult;
+		}
+		
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			resultInfo[2] = ""+examResult;
+			
+		}
+		return JSON;
+	}
+	//@Token
+	public String reviewbak()throws Exception
+	{ 
+		try {
+			entity.setFcheckerid(SpringSecurityUtils.getCurrentUserId());
+			if(entity.getUpfcheckdate() != null){
+				entity.setFcheckdate(entity.getUpfcheckdate());
+			}else{
+				entity.setFcheckdate(DateConvertUtils.getCurrentDate());
+			}
+			pickingService.update(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			addActionMessage("操作成功");
+			
+			//更新流程状态
+			Boolean examResult=pickingService.exeProcess(entity,processExetask);
+			resultInfo[0] = "0";
+			resultInfo[1] = "下推成功";
+			resultInfo[2] = ""+examResult;
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} 
+		catch(NullPointerException e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败:"+e.getMessage();
+			addActionMessage(resultInfo[1]);
+		}
+		catch(SQLServerException e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			
+		}
+		return JSON;
+	}
+	
+	public void prepareReviewOrder() throws Exception {
+		prepareModel();
+	}
+	//@Token
+	public String reviewOrder()throws Exception
+	{
+		try {
+			entity.setFcheckerid(SpringSecurityUtils.getCurrentUserId());
+			entity.setFcheckdate(DateConvertUtils.getCurrentDate());
+			pickingOrderService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} 
+		catch(NullPointerException e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败:"+e.getMessage();
+			addActionMessage(resultInfo[1]);
+		}
+		catch(SQLServerException e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			
+		}
+		return JSON;
+	}
+	
+	public void prepareUnreview() throws Exception {
+		prepareModel();
+	}
+	//@Token
+	public String unreview()throws Exception
+	{
+		try {
+			entity.setFcheckerid(null);
+			entity.setFcheckdate(null);
+			entity.setFstatus(0);//反审核
+			pickingService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	public void prepareUnreviewOrder() throws Exception {
+		prepareModel();
+	}
+	//@Token
+	public String unreviewOrder()throws Exception
+	{
+		try {
+			entity.setFcheckerid(null);
+			entity.setFcheckdate(null);
+			pickingOrderService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			pickingService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public String fexport()throws Exception
+	{
+		resultInfo[0] = "0";
+		try {
+			Picking picking=pickingService.getById(pickingId);
+			if(null!=picking){
+				resultInfo[1] = pickingService.savePickingXls(pickingId,getRequest().getRealPath("/"));
+			}else{
+				resultInfo[1] ="领料单信息不存在!";
+			}
+			
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = pickingService.getById(pickingId);
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			//menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+					.getAuthentication().getPrincipal();
+			//authorityList=  adminSession1.getAdmin().getAuthorityList();
+			//Iterator iterator=adminSession1.getAuthorities().iterator();
+			for (Iterator iterator2 = adminSession1.getAuthorities()
+					.iterator(); iterator2
+					.hasNext();) {
+				String type = (String) iterator2.next().toString();
+				MenuOperate menuOperate=new MenuOperate();
+				menuOperate.setFunctionName(type);
+				menuOperatelist.add(menuOperate);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			 
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	public String showpicking() throws Exception {
+		
+		try {
+			entity = pickingService.getById(pickingId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			 
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	public String showToTools() throws Exception {
+		
+		try {
+//			entity = pickingService.getById(pickingId);
+			entity = pickingService.getByIdTools("Picking.getByIdTools",pickingId);
+			
+			//审核
+			//查询当前登陆用户的按钮权限
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			//menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+					.getAuthentication().getPrincipal();
+			//authorityList=  adminSession1.getAdmin().getAuthorityList();
+			//Iterator iterator=adminSession1.getAuthorities().iterator();
+			for (Iterator iterator2 = adminSession1.getAuthorities()
+					.iterator(); iterator2
+					.hasNext();) {
+				String type = (String) iterator2.next().toString();
+				MenuOperate menuOperate=new MenuOperate();
+				menuOperate.setFunctionName(type);
+				menuOperatelist.add(menuOperate);
+			}
+			//审核
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+			
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			pickingList = pickingService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public String findPicking() throws Exception {
+			
+			try {
+				entity = pickingService.findPicking(pickingQuery);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				 
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询失败";
+			}
+			return JSON;
+		}
+	
+	/**
+	 * 退库单据审核
+	 * @throws Exception
+	 */
+	public void prepareUpdatestock() throws Exception {
+		prepareModel();
+	}
+	@Action("/picking/updatestock")
+	public String updatestock()throws Exception
+	{
+		try {
+			//entity.setFcheckerid(SpringSecurityUtils.getCurrentUserId());
+			//entity.setFcheckdate(DateConvertUtils.getCurrentDate());
+			pickingService.updatestock(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	public void prepareExeProcess() throws Exception {
+		prepareModel();
+	}
+	/**
+	 * 启动流程
+	 * @return
+	 */
+	public String exeProcess(){
+		Boolean examResult=pickingService.exeProcess(entity,processExetask);
+		resultInfo[0] = "0";
+		resultInfo[1] = "下推成功";
+		resultInfo[2] = ""+examResult;
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Picking getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PickingQuery getPickingQuery() {
+		return pickingQuery;
+	}
+
+	
+	public void setPickingQuery(PickingQuery pickingQuery) {
+		this.pickingQuery = pickingQuery;
+	}
+
+	public void setPickingId(java.lang.Long pickingId) {
+		this.pickingId = pickingId;
+	}
+	
+	
+	public java.lang.Long getPickingId() {
+		return this.pickingId;
+	}
+
+	public java.lang.Long getTools() {
+		return tools;
+	}
+	
+
+	public void setTools(java.lang.Long tools) {
+		this.tools = tools;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Picking> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Picking> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Picking> getPickingList() {
+		return pickingList;
+	}
+
+	public ProcessExetask getProcessExetask() {
+		return processExetask;
+	}
+
+	public void setProcessExetask(ProcessExetask processExetask) {
+		this.processExetask = processExetask;
+	}
+
+	public List<Long> getDetailids() {
+		return detailids;
+	}
+
+	public void setDetailids(List<Long> detailids) {
+		this.detailids = detailids;
+	}
+
+	public List<Long> getStocks() {
+		return stocks;
+	}
+
+	public void setStocks(List<Long> stocks) {
+		this.stocks = stocks;
+	}
+
+	public Picking getEntity() {
+		return entity;
+	}
+
+	public void setEntity(Picking entity) {
+		this.entity = entity;
+	}
+
+	public String getTeamidsList() {
+		return teamidsList;
+	}
+
+	public void setTeamidsList(String teamidsList) {
+		this.teamidsList = teamidsList;
+	}
+
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+
+	public void setPickingList(List<Picking> pickingList) {
+		this.pickingList = pickingList;
+	}
+
+	public java.lang.String getFbillno() {
+		return fbillno;
+	}
+
+	public void setFbillno(java.lang.String fbillno) {
+		this.fbillno = fbillno;
+	}
+
+	public List<MenuOperate> getMenuOperatelist() {
+		return menuOperatelist;
+	}
+
+	public void setMenuOperatelist(List<MenuOperate> menuOperatelist) {
+		this.menuOperatelist = menuOperatelist;
+	}
+    
+	
+	
+}

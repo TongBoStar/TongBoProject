@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItemVer">
+
+        
+	<resultMap id="RM.ItemVer" class="com.terrence.crm.dol.bean.ItemVer">
+        <result property="fverid" column="fverid"/>
+        <result property="baseitemid" column="baseitemid"/>
+        <result property="fversion" column="fversion"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="isdefault" column="isdefault"/>
+        
+        <result property="finishstatus" column="finishstatus"/>
+        <result property="wfstatus" column="wfstatus"/>
+        <result property="imgpath" column="imgpath"/>
+        <result property="adminid" column="adminid"/>
+        <result property="auditor" column="auditor"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ItemVer.columns">
+	    <![CDATA[
+        	t_item_ver.fverid ,
+        	t_item_ver.baseitemid ,
+        	t_item_ver.fversion ,
+        	t_item_ver.itemcode ,
+        	t_item_ver.isdefault ,
+        	
+        	t_item_ver.finishstatus,
+        	t_item_ver.wfstatus ,
+        	t_item_ver.imgpath ,
+        	t_item_ver.adminid ,
+        	t_item_ver.auditor
+	    ]]>
+	</sql>
+	
+   <insert id="ItemVer.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_item_ver (
+        	baseitemid ,
+        	fversion ,
+        	itemcode ,
+        	isdefault 
+        ) VALUES (
+        	#baseitemid# ,
+        	#fversion# ,
+        	#itemcode# ,
+        	#isdefault# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fverid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ItemVer.update" parameterClass="com.terrence.crm.dol.bean.ItemVer">         
+        UPDATE t_item_ver 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="baseitemid">
+	        	baseitemid = #baseitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fversion">
+	        	fversion = #fversion# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isdefault">
+	        	isdefault = #isdefault# 
+	        </isNotEmpty>
+	        
+	        
+	        <isNotEmpty prepend="," property="finishstatus">
+	        	finishstatus = #finishstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="wfstatus">
+	        	wfstatus = #wfstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="imgpath">
+	        	imgpath = #imgpath# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="auditor">
+	        	auditor = #auditor# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fverid = #fverid# 
+    </update>
+    
+	<delete id="ItemVer.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_item_ver where
+       fverid = #fverid# 
+    ]]>
+    </delete>
+    
+    <delete id="ItemVer.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_item_ver 
+        WHERE
+       fverid in ($fverid$) 
+    ]]>
+    </delete>
+    
+    <select id="ItemVer.getById" resultMap="RM.ItemVer">
+	    select <include refid="ItemVer.columns"/>
+	    
+	        from t_item_ver 
+	        where 
+		        fverid = #fverid# 
+	    
+    </select>
+    
+	<select id="ItemVer.getByProperty" resultMap="RM.ItemVer">
+		select <include refid="ItemVer.columns"/> from t_item_ver where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ItemVer.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fverid">
+	             t_item_ver.fverid = #fverid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_item_ver.baseitemid = #baseitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fversion">
+	             t_item_ver.fversion = #fversion#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_item_ver.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="isdefault">
+	             t_item_ver.isdefault = #isdefault#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ItemVer.findPage.and">
+			<isNotEmpty prepend="AND" property="fverid">
+	             t_item_ver.fverid = #fverid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="baseitemid">
+	             t_item_ver.baseitemid = #baseitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fversion">
+	             t_item_ver.fversion = #fversion#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_item_ver.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="isdefault">
+	             t_item_ver.isdefault = #isdefault#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ItemVer.Entity" resultMap="RM.ItemVer">
+    	SELECT 	<include refid="ItemVer.columns"/> FROM t_item_ver <include refid="ItemVer.findPage.where"/>
+    </select>
+    
+    <select id="ItemVer.findList" resultMap="RM.ItemVer">
+    	SELECT 
+    		<include refid="ItemVer.columns"/> 
+    	FROM 
+    		t_item_ver
+		<include refid="ItemVer.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ItemVer.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item_ver
+    ]]>
+		<include refid="ItemVer.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ItemVer.findPage" resultMap="RM.ItemVer">
+    	select <include refid="ItemVer.columns"/>	    
+	        from t_item_ver 	   
+		<include refid="ItemVer.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ItemVer.findPage" resultMap="RM.ItemVer">
+    	select <include refid="ItemVer.columns"/>	    
+	        from t_item_ver where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fverid 
+	   not in(select $notTop$ 
+       fverid 
+	   from t_item_ver <include refid="ItemVer.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ItemVer.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

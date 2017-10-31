@@ -1,0 +1,330 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Callslip;
+import com.terrence.crm.dol.bean.CallslipDetail;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICallslipDao;
+import com.terrence.crm.dol.dao.ICallslipDetailDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+import com.terrence.crm.dol.query.CallslipDetailQuery;
+import com.terrence.crm.dol.query.CallslipQuery;
+import com.terrence.crm.dol.service.ICallslipService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class CallslipService extends BaseService implements ICallslipService {
+	@Autowired
+	@Qualifier("callslipDao")
+	private ICallslipDao callslipDao;
+	
+	@Autowired
+	@Qualifier("callslipDetailDao")
+	private ICallslipDetailDao callslipDetailDao;
+	
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	
+	@Autowired
+	@Qualifier("pickingDetailDao")
+	private IPickingDetailDao pickingDetailDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Override
+	public Callslip getById(Long id) throws ServiceException {
+		return callslipDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(Callslip entity) throws ServiceException {
+		callslipDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(Callslip entity) throws ServiceException {
+		return callslipDao.save(entity);
+	}
+	@Override
+	public Integer update(Callslip entity) throws ServiceException {
+		return callslipDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return callslipDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = callslipDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<Callslip> findPage(Page<Callslip> page, CallslipQuery query) throws ServiceException{
+		return callslipDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Callslip> findPage(Page<Callslip> page,String statement, CallslipQuery query) throws ServiceException{
+		return callslipDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Callslip> findList(CallslipQuery query) throws ServiceException{
+		return callslipDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Callslip> findList(CallslipQuery query,Integer pageSize) throws ServiceException{
+		return callslipDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Callslip> findList(CallslipQuery query,String statement,Integer pageSize) throws ServiceException{
+		return callslipDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Callslip> findAllList() throws ServiceException{
+		return callslipDao.findAllList();
+	}
+	@Override
+	public void exeProcess(Callslip entity, ProcessExetask processExetask) throws Exception{
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);
+		if((Boolean)map.get("rebackTag")){
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+		}else if((Boolean)map.get("flag")){
+			Integer step = (Integer)map.get("step");
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);
+			if((Boolean)map.get("endTag")){//进入下推流程
+				Callslip entity1 = this.callslipDao.getById(entity.getId());
+				//将投料单下推到待审出库单t_picking
+				Picking picking=new Picking();
+				picking.setEmpid(SpringSecurityUtils.getCurrentUserId());//领料人
+				picking.setSeqcode(null);//装配序列号
+				picking.setTakedate(DateConvertUtils.getCurrentDate());//领料日期
+				Icbillno icbillno=null;
+				//默认3账套
+				icbillno=icbillnoDao.getByProperty("fpreletter", "ODO");/**生产领料单（待出库单）**/
+				picking.setFbillno(icbillno.getFpreletter()+(icbillno.getFcurno()+1));//领料单号
+				picking.setFbillerid(SpringSecurityUtils.getCurrentUserId());//fbillerid
+				picking.setFtrantype(icbillno.getFbillid());//单据类型
+				picking.setFpurposeid(12000l);//领料类型:一般领料
+				picking.setFdeptid(SpringSecurityUtils.getCurrentTeamid().longValue());//领料部门
+				picking.setFstatus(0);//0：未审，1：已审
+				/*if(entity.getDbno()==3)
+				{
+					picking.setFstatus(0);//0：未审，1：已审
+				}
+				else if(entity.getDbno()==4)
+				{
+					picking.setFstatus(0);//0：未审，1：已审
+					//理新单据编号
+					icbillno.setFcurno(icbillno.getFcurno()+1);
+					icbillnoDao.update(icbillno);
+				}*/
+				picking.setFupstockwhensave(1);/**库存更新方式**/
+				picking.setFdate(DateConvertUtils.getCurrentDate());//制单日期
+				picking.setItemcode(entity1.getProductCode());//物料编号
+				picking.setFqty(entity1.getFcount());//数量
+				picking.setFsourcebillno(entity1.getSourceCode());//源单单号
+				picking.setFsourcebillid(entity1.getSourceId());//源单内码
+				picking.setDbno(3);//帐套：默认3
+				Long pickingId = pickingDao.save(picking);
+				/**理新单据编号**/
+				icbillno.setFcurno(icbillno.getFcurno()+1);
+				icbillnoDao.update(icbillno);
+				
+				//将领料单详情下推到待审出库单详情表中 t_picking_detail
+				//查询的时候就把物料内码和仓库（storage值查出来）
+				List<CallslipDetail> details = new ArrayList<CallslipDetail>();
+				CallslipDetailQuery query = new CallslipDetailQuery();
+				query.setCallslipId(entity1.getId());
+				details = this.callslipDetailDao.getListDetail(query);
+				if(details!=null&&details.size()>0){
+					for(int i=0;i<details.size();i++){
+						CallslipDetail detail = details.get(i);
+						if(detail.getItemcode()!=null&&detail.getPlanoutcount()!=null&&detail.getPlanoutcount()>0){
+							PickingDetail pdetail=new PickingDetail();
+							pdetail.setItemcode(detail.getItemcode());
+							pdetail.setItemname(detail.getItemname());
+							pdetail.setItemmode(detail.getFmodel());
+							if(detail.getFitemid()!=null){
+								pdetail.setFitemid(detail.getFitemid().intValue());//物料内码
+							}else{
+								pdetail.setFitemid(null);//物料内码
+							}
+							pdetail.setPickingid(pickingId);
+							pdetail.setBatchno(null);//批次号
+							pdetail.setFentryid(i+1);//分录号
+							pdetail.setFqty(detail.getPlanoutcount());//数量
+							pdetail.setSeqcode(null);//装配单序列号
+							pdetail.setFscstockid(detail.getStockid()==null?null:detail.getStockid());//调出仓库
+							pdetail.setDbno(3);//帐套
+							pdetail.setFreproducetype(1059);/**ERP的值是1059**/
+							pdetail.setFsourcetrantype(85L);/**ERP对应值为85**/
+							pdetail.setFcostobjid(null);//成本对像?
+							pdetail.setFicmobillno(null);//生产任务单编号?
+							pdetail.setFicmointerid(null);//生产任务单内码?
+							pdetail.setIssn(0);//是否序列号管理
+							pdetail.setDetailno(entity1.getId());//配料单号:暂时取投料单id?
+							pdetail.setFsourceinterid(null);//源单内码
+							pdetail.setFsourcebillno(null);//源单编号
+							pickingDetailDao.save(pdetail);
+							//更新下料详单中的已领数量=计划投料数
+							detail.setCallcount(detail.getPlanoutcount());
+							callslipDetailDao.update(detail);
+							
+						}
+						
+					}
+					
+				}
+			}
+			
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		callslipDao.update(entity);
+		
+	}
+	public void dispatchStatus(Callslip entity,String mark,Integer step,String desc){
+		if(mark.equals("TO_CALLSLIP_TASK")){
+			entity.setFstatus(step);
+			entity.setFstatusDesc(desc);
+		}
+	}
+	@Override
+	public void pushData(Callslip entity) throws Exception {
+		Callslip entity1 = this.callslipDao.getById(entity.getId());
+		//将投料单下推到待审出库单t_picking
+		Picking picking=new Picking();
+		picking.setEmpid(SpringSecurityUtils.getCurrentUserId());//领料人
+		picking.setSeqcode(null);//装配序列号
+		picking.setTakedate(DateConvertUtils.getCurrentDate());//领料日期
+		Icbillno icbillno=null;
+		//默认3账套
+		icbillno=icbillnoDao.getByProperty("fpreletter", "ODO");/**生产领料单（待出库单）**/
+		picking.setFbillno(icbillno.getFpreletter()+(icbillno.getFcurno()+1));//领料单号
+		picking.setFbillerid(SpringSecurityUtils.getCurrentUserId());//fbillerid
+		picking.setFtrantype(icbillno.getFbillid());//单据类型
+		picking.setFpurposeid(12000l);//领料类型:一般领料
+		picking.setFdeptid(SpringSecurityUtils.getCurrentTeamid().longValue());//领料部门
+		picking.setFstatus(0);//0：未审，1：已审
+		/*if(entity.getDbno()==3)
+		{
+			picking.setFstatus(0);//0：未审，1：已审
+		}
+		else if(entity.getDbno()==4)
+		{
+			picking.setFstatus(0);//0：未审，1：已审
+			//理新单据编号
+			icbillno.setFcurno(icbillno.getFcurno()+1);
+			icbillnoDao.update(icbillno);
+		}*/
+		picking.setFupstockwhensave(1);/**库存更新方式**/
+		picking.setFdate(DateConvertUtils.getCurrentDate());//制单日期
+		picking.setItemcode(entity1.getProductCode());//物料编号
+		picking.setFqty(entity1.getFcount());//数量
+		picking.setFsourcebillno(null);//源单单号:取投料单的code
+		picking.setFsourcebillid(null);//源单内码：取投料单的id
+		picking.setDbno(3);//帐套：默认3
+		picking.setCallslipcode(entity1.getCallslipCode());
+		Long pickingId = pickingDao.save(picking);
+		/**理新单据编号**/
+		icbillno.setFcurno(icbillno.getFcurno()+1);
+		icbillnoDao.update(icbillno);
+		
+		//将领料单详情下推到待审出库单详情表中 t_picking_detail
+		//查询的时候就把物料内码和仓库（storage值查出来）
+		List<CallslipDetail> details = new ArrayList<CallslipDetail>();
+		CallslipDetailQuery query = new CallslipDetailQuery();
+		query.setCallslipId(entity1.getId());
+		details = this.callslipDetailDao.getListDetail(query);
+		if(details!=null&&details.size()>0){
+			for(int i=0;i<details.size();i++){
+				CallslipDetail detail = details.get(i);
+				if(detail.getItemcode()!=null&&detail.getPlanoutcount()!=null&&detail.getPlanoutcount()>0){
+					PickingDetail pdetail=new PickingDetail();
+					pdetail.setItemcode(detail.getItemcode());
+					pdetail.setItemname(detail.getItemname());
+					pdetail.setItemmode(detail.getFmodel());
+					if(detail.getFitemid()!=null){
+						pdetail.setFitemid(detail.getFitemid().intValue());//物料内码
+					}else{
+						pdetail.setFitemid(null);//物料内码
+					}
+					pdetail.setPickingid(pickingId);
+					pdetail.setBatchno(null);//批次号
+					pdetail.setFentryid(i+1);//分录号
+					pdetail.setFqty(detail.getPlanoutcount());//数量
+					pdetail.setSeqcode(null);//装配单序列号
+					pdetail.setFscstockid(detail.getStockid()==null?null:detail.getStockid());//调出仓库
+					pdetail.setDbno(3);//帐套
+					pdetail.setFreproducetype(1059);/**ERP的值是1059**/
+					pdetail.setFsourcetrantype(85L);/**ERP对应值为85**/
+					pdetail.setFcostobjid(null);//成本对像?
+					pdetail.setFicmobillno(null);//生产任务单编号?
+					pdetail.setFicmointerid(null);//生产任务单内码?
+					pdetail.setIssn(0);//是否序列号管理
+					pdetail.setDetailno(entity1.getId());//配料单号:暂时取投料单id?
+					pdetail.setFsourceinterid(null);//源单内码
+					pdetail.setFsourcebillno(null);//源单编号
+					pickingDetailDao.save(pdetail);
+					//更新下料详单中的已领数量=计划投料数
+					detail.setCallcount(detail.getPlanoutcount()+(detail.getCallcount()==null?0.0:detail.getCallcount()));//已领数量=计划投料数
+					Double shouldoutcount=0.0;
+					if((detail.getShouldoutcount()==null?0.0:detail.getShouldoutcount())-detail.getPlanoutcount()>0){
+						shouldoutcount = (detail.getShouldoutcount()==null?0.0:detail.getShouldoutcount())-detail.getPlanoutcount();
+					}
+					detail.setShouldoutcount(shouldoutcount);//应发数量=原来的应发数量-计划投料数>0?原来的应发数量-计划投料数:0.0
+					detail.setPlanoutcount(0.0);//计划投料数改为0
+					callslipDetailDao.update(detail);
+					
+				}
+				
+			}
+			
+		}
+
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_CALLSLIP, ConfigTerrence.OPT_PUSH, "主键为"+entity.getId()+"的投料单下推成功，操作人为"+admin.getAdmin().getAdminName());
+
+		
+	}
+	@Override
+	public void closeData(Callslip entity) throws Exception {
+		entity.setFstatus(100);
+		entity.setFstatusDesc("已关闭");
+		entity.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		entity.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+		entity.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+		callslipDao.update(entity);
+		
+	}
+}

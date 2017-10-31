@@ -1,0 +1,156 @@
+package com.terrence.cn.test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.apache.struts2.convention.annotation.Action;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.Productpl;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.query.ProductplQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IPerformanceService;
+import com.terrence.crm.dol.service.IProductService;
+import com.terrence.crm.dol.service.IProductplService;
+import com.terrence.crm.dol.service.ISysOrderService;
+
+public class TerrenceTest extends BaseTest{
+	Logger logger=Logger.getLogger("Test");
+	@Autowired
+	@Qualifier("performanceService")
+	private IPerformanceService performanceService;
+	@Autowired
+	@Qualifier("productService")
+	private IProductService productService;
+	@Autowired
+	@Qualifier("productplService")
+	private IProductplService productplService;
+	@Autowired
+	@Qualifier("sysOrderService")
+	private ISysOrderService sysOrderService;
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	@Override
+	protected Object newInstance() {
+		return new Object();
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 1:获取常州ERP中订单编号和合同编号存在且编号相同的情况
+	 */
+	@Test
+	public void testGetChangZhouErpDatasWith()
+	{
+		sysOrderService=(ISysOrderService)actx.getBean("sysOrderService");
+		//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+		sysOrderService.getSeorderDatas();
+//		//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+		sysOrderService.getContractEntryInfo();
+//		//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+		sysOrderService.getContractSchemeInfo();
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 2:获取常州ERP中订单编号和合同编号存在但编号不相同的情况
+	 */
+	@Test
+	public void testGetChangZhouErpDatasWithDif()
+	{
+		sysOrderService=(ISysOrderService)actx.getBean("sysOrderService");
+		//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+		sysOrderService.getSeorderDatasWithDif();
+		//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+		sysOrderService.getContractEntryInfoWithDif();
+//		//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+		sysOrderService.getContractSchemeInfoWithDif();
+	}
+	/**
+	 * 从常州ERP中获取订单和合同信息到WEB端订单相关表中:
+	 * 3:获取常州ERP中订单编号不存在,合同编号存在的情况
+	 */
+	@Test
+	public void testGetChangZhouErpDatasWithNoOrderNum()
+	{
+		sysOrderService=(ISysOrderService)actx.getBean("sysOrderService");
+		//1获取常州ERP中的系统订单数据,并同步到WEB端系统订单表中
+		sysOrderService.getSeorderDatasWithNoOrderNum();
+		//2获取常州ERP中的系统合同数据,并同步到WEB端合同表中
+		sysOrderService.getContractEntryInfoWithNoOrderNum();
+//		//3获取常州ERP中的应收款数据,并同步到WEB端应收款表中
+		sysOrderService.getContractSchemeInfoWithNoOrderNum();
+	}
+	/**
+	 * 从常州ERP中获取物料信息到WEB端物料表中:
+	 */
+	@Test
+	public void testSyncBaseItem()
+	{
+		baseItemService=(IBaseItemService)actx.getBean("baseItemService");
+		baseItemService.SyncBaseItem();
+	}
+	
+	@Test
+	public void testColname()
+	{
+		performanceService=(IPerformanceService)actx.getBean("performanceService");
+		ProductQuery productQuery=new ProductQuery();
+		productQuery.setOrderCode("2015-0245-CS_Z");//2015-0233-GLY
+		productService=(IProductService)actx.getBean("productService");
+		productplService=(IProductplService)actx.getBean("productplService");
+		
+		List<Product> productList=productService.findList(productQuery);
+		StringBuffer sb=new StringBuffer("");
+//		for(Product product:products)
+//		{
+			/*String str="{\"value\":[{\"productLineNum\":\"1\",\"fmodel\":\"1\",\"fnum\":\"1\",\"fprice\":\"1\",\"flistprice\":\"1\"," +
+			"\"pl3000fmodel\":\"2\",\"pl3000fnum\":\"2\",\"pl3000fprice\":\"2\",\"pl3000flistprice\":\"2\"," +
+			"\"ssv3500fmodel\":\"\",\"ssv3500fnum\":\"\",\"ssv3500fprice\":\"\",\"ssv3500flistprice\":\"\"," +
+			"\"pl2000fmodel\":\"\",\"pl2000fnum\":\"\",\"pl2000fprice\":\"\",\"pl2000flistprice\":\"\"}," +
+			"{\"productLineNum\":\"1\",\"fmodel\":\"\",\"fnum\":\"\",\"fprice\":\"\",\"flistprice\":\"\"," +
+			"\"pl3000fmodel\":\"2\",\"pl3000fnum\":\"2\",\"pl3000fprice\":\"2\",\"pl3000flistprice\":\"2\"," +
+			"\"ssv3500fmodel\":\"\",\"ssv3500fnum\":\"\",\"ssv3500fprice\":\"\",\"ssv3500flistprice\":\"\"," +
+			"\"pl2000fmodel\":\"\",\"pl2000fnum\":\"\",\"pl2000fprice\":\"\",\"pl2000flistprice\":\"\"}]}";
+			System.out.println(str);*/
+			//product.setpLProducts(str);
+			
+//		}
+		setProductPlInfos(productplService, productList, sb);//2015-0233-GLY
+		System.out.println(performanceService.processBlance("2015-0245-CS_Z","2015-08-19",4001l,productList).strInfo);
+		//System.out.println(performanceService.processBlance("2015-0157-ZJW","2015-07-08",8l,products).strInfo);
+	}
+	private void setProductPlInfos(IProductplService productplService,
+			List<Product> productList, StringBuffer sb) {
+		if(null!=productList&&0<productList.size()){
+			 for (int i = 0; i < productList.size(); i++) {
+				 sb.append(productList.get(i).getProductId());
+				 if(i!=(productList.size()-1)){//非最后一个
+					 sb.append(",");
+				 }
+				 
+			}
+		}
+		ProductplQuery productplQuery=new ProductplQuery();
+		productplQuery.setProductIds(sb.toString());
+		List<Productpl> productplList=productplService.findProductplId(productplQuery);
+		
+		if(null!=productList&&0<productList.size()){
+			if(null!=productplList&&0<productplList.size()){
+				for (Product product : productList) {
+					List<Productpl> productpllistValue=new ArrayList<Productpl>();
+					for (int i = 0; i < productplList.size(); i++) {
+						if(product.getProductId().equals(productplList.get(i).getProductId())){
+							productpllistValue.add(i, productplList.get(0));
+						}
+					}
+					product.setProductpllist(productpllistValue);
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,64 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Bitem;
+import com.terrence.crm.dol.dao.IBitemDao;
+import com.terrence.crm.dol.query.BitemQuery;
+
+@Repository
+public class BitemDao extends BaseIbatisDao<Bitem,java.lang.Long> implements IBitemDao{
+
+		
+	public void saveOrUpdate(Bitem entity) {
+		if(entity.getFitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Bitem";
+	}
+	public Bitem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Bitem)this.getSqlMapClientTemplate().queryForObject("Bitem.getByProperty", map);		
+	}
+
+	@Override
+	public void findBitemErp() {
+		this.getSqlMapClientTemplate().queryForObject("Bitem.getdata.tongbu.erp");
+	}
+	
+	public List<Bitem> getListByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (List<Bitem>)this.getSqlMapClientTemplate().queryForList("Item.getByProperty", map);		
+	}
+
+	@Override
+	public List<Bitem> findTreeList() {
+		return (List<Bitem>)this.getSqlMapClientTemplate().queryForList("Bitem.findTreeList");
+	}
+
+	@Override
+	public Bitem findParent(BitemQuery itemQuery) {
+		return (Bitem)this.getSqlMapClientTemplate().queryForObject("Bitem.findParent.Code", itemQuery);	
+	}
+	
+	@Override
+	public void saveUpdateDateERP(){
+		this.getSqlMapClientTemplate().queryForObject("Bitem.update.item.department.province.data");
+	}
+}

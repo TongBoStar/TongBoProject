@@ -1,0 +1,859 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckDetail;
+import com.terrence.crm.dol.bean.CheckDetailView;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.Circulation;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.Nogood;
+import com.terrence.crm.dol.bean.NogoodNote;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.contasnt.TeamTaskStatus;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckDetailDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.ICirculationDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.INogoodDao;
+import com.terrence.crm.dol.dao.INogoodNoteDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.CheckQuery;
+import com.terrence.crm.dol.query.DispatchWorkQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.PrepareEmpQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.service.ICheckService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class CheckService extends BaseService implements ICheckService {
+	protected static Logger logger = LoggerFactory.getLogger(CheckService.class);
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("checkDetailDao")
+	private ICheckDetailDao checkDetailDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("circulationDao")
+	private ICirculationDao circulationDao;
+	
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	@Autowired
+	@Qualifier("workPlanDao")
+	private IWorkPlanDao workPlanDao;
+	
+	@Autowired
+	@Qualifier("nogoodDao")
+	private INogoodDao nogoodDao;
+	
+	@Autowired
+	@Qualifier("nogoodNoteDao")
+	private INogoodNoteDao nogoodNoteDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Check";
+	}
+	@Transactional(readOnly=true)
+	public Check getById(java.lang.Long id) throws ServiceException
+	{
+		//Check c=checkDao.getById(id);
+		Check c=checkDao.getById("Check.getByIdIncludebatch", id);
+		
+		Long nums=0L;
+		if(null!=dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getAcceptednum()){
+			nums=dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getAcceptednum().longValue();
+		}
+		c.setDisacceptnum(nums);//已检合格数
+		
+		c.setFrontdisacceptnum(dispatchWorkDao.getByAcceptNum(dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getPreorder().longValue()).longValue());	
+
+		//----------------------
+		DispatchWork dis=null;
+		dis = dispatchWorkDao.getByProperty("workseqid", dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getPreorder().longValue()+"");
+		if(dis!=null){
+			DispatchWorkQuery dquery=new DispatchWorkQuery();
+			dquery.setId(dis.getId());
+			CheckRecord checkrecord = checkRecordDao.getByEntity("CheckRecord.getall.receviernum", dquery);
+			c.setFrontdisacceptnum((c.getFrontdisacceptnum()==null?0:c.getFrontdisacceptnum())+checkrecord.getReceivernum());
+		}
+		
+		//-------------------------
+		CheckQuery cquery=new CheckQuery();
+		cquery.setCheckid(id);
+		cquery.setEmployeetaskid(c.getEmployeetaskid());
+		
+		Check checktimes=new Check(); 
+		checktimes= checkDao.getByEntity("Check.getByEntity.getchecktimes", cquery);
+				
+		c.setChecktimes((checktimes.getChecktimes()==null?0:checktimes.getChecktimes())+1);
+		
+		//baseItemDao.getByProperty("itemcode", c.getItemcode()).getFormatno()
+		c.setItemmode(baseItemDao.getByProperty("itemcode", c.getItemcode()).getFormatno());
+		
+	//	checktimes//交检次数
+		return c;
+	}
+	
+	public void saveOrUpdate(Check entity) throws ServiceException
+	{
+		EmployeeTask employeeTas = employeeTaskDao.getById(entity.getEmployeetaskid());
+		employeeTas.setStatus(TeamTaskStatus.WORKING.getIndex());//提交后任务状态为开工
+		entity.setItemcode(employeeTas.getItemcode());
+		entity.setItemname(employeeTas.getItemname());
+		entity.setProcessid(employeeTas.getProcessid());
+		entity.setWorkid(employeeTas.getWorkid());
+		entity.setBatchno("");
+		entity.setRework(0L);
+		entity.setReceviernum(0L);
+		entity.setTeamid(employeeTas.getTeamid());
+		entity.setItemprocessid(employeeTas.getItemprocessid());
+		entity.setPrice(employeeTas.getProcess().getPrice());
+		entity.setRatio(employeeTas.getProcess().getRatio());
+		entity.setWage(employeeTas.getProcess().getPrice()*employeeTas.getProcessmins());
+		entity.setClassshift(employeeTas.getClasstype());
+		entity.setClassratio(1.0);
+		if(employeeTas.getClasstype()==2)
+			entity.setClassratio(1.1);	
+		entity.setTotalratio(1.0);
+		if(entity.getChecktype().intValue()==1){//首检
+			employeeTas.setFirstcheckstatus(1);
+		}
+		if(entity.getChecktype().intValue()==3){//终检
+			employeeTas.setLastcheckstatus(1);
+			//--判断本序提交数是否大于任务数量----------------------
+			EmployeeTaskQuery employeeTaskQuery=new EmployeeTaskQuery();
+			employeeTaskQuery.setEmployeetaskid(entity.getEmployeetaskid());
+			Check cc=new Check();
+			 cc = checkDao.getByEntity("Check.getemp.submit.fqty", employeeTaskQuery);
+			 if(((cc.getChecknum()==null?0:cc.getChecknum())+entity.getChecknum())>employeeTas.getFqty()){//提交数大于领取数
+			 	 throw new ServiceException("此任务提交数大于领取数");
+			 }
+			//------------------------
+			
+		}
+		entity.setProcessname(employeeTas.getProcess().getProcessname());
+		employeeTaskDao.update(employeeTas);
+		checkDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Check entity) throws ServiceException
+	{
+		Long adId = checkDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Check entity) throws ServiceException
+	{
+		Integer returnValue =  checkDao.update(entity);
+		
+		return returnValue;
+	}
+	/**
+	 * 反检
+	 */
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Check check=checkDao.getById(id);
+		EmployeeTask emptask=new EmployeeTask();
+		emptask.setEmployeetaskid(check.getEmployeetaskid());
+		emptask.setStatus(TeamTaskStatus.UNCHECK.getIndex());
+		employeeTaskDao.update(emptask);
+		
+		//prepareEmpDao.delteByEmptask(emptask.getEmployeetaskid().toString());
+		   
+		checkRecordDao.deleteByCheckid(id);
+		
+		int accnum=0;//班组任务单合格数减去反检单的合格数
+		DispatchWork dpwork=new DispatchWork();
+		emptask=employeeTaskDao.getById(check.getEmployeetaskid());
+		dpwork=dispatchWorkDao.getById(emptask.getDispatchid());
+		accnum=dpwork.getAcceptednum().intValue()-check.getAcceptnum().intValue();
+		dpwork.setAcceptednum(accnum);
+		dispatchWorkDao.update(dpwork);//更新班组任务单合格数
+		
+		Integer returnValue = checkDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = checkDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CheckQuery query = new CheckQuery();
+		try {
+			return checkDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Check> findPage(Page<Check> page, CheckQuery query) throws ServiceException
+	{
+		return checkDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Check> findList(CheckQuery query) throws ServiceException
+	{
+		return checkDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Check> findAllList() throws ServiceException
+	{
+		return checkDao.findAllList();
+	}
+	@Override
+	public Long saveFirst(CheckDetailView view, Check entity)
+			throws ServiceException {
+		
+		Check check=checkDao.getById(entity.getCheckid());
+		if(check.getCheckstatus().intValue()==2){
+			throw new ServiceException("首检已完成，不可重复提交！！！！！");
+			
+		}
+		
+		entity.setChecktime(DateConvertUtils.getCurrentDateTime());
+		checkDao.update(entity);
+		if(entity.getCheckstatus().intValue()==2)/**首检通过**/
+		{
+			PrepareEmp pe=new PrepareEmp();
+			pe.setEmployeetaskid(entity.getEmployeetaskid());
+			pe.setCheckdate(DateConvertUtils.getCurrentDateTime());
+			prepareEmpDao.updateByEmptaskid(pe);
+		}
+		EmployeeTask task=new EmployeeTask();
+		task.setEmployeetaskid(check.getEmployeetaskid());
+		task.setFirstcheckstatus(entity.getCheckstatus());
+		employeeTaskDao.update(task);
+		CheckRecord record=new CheckRecord();
+		record.setCheckid(entity.getCheckid());
+		record.setCreatetime(entity.getCreatetime());
+		record.setChecktime(DateConvertUtils.getCurrentDateTime());
+		
+		if(entity.getCheckstatus().longValue()==2)
+		{
+			record.setAcceptnum(1l);
+		}
+		else
+		{
+			record.setAcceptnum(0l);
+		}
+		record.setChecknum(1l);
+		record.setChecktype(1);/**首检**/
+		record.setBatchno("");
+		record.setDefectnum(0l);
+		record.setExplains("");
+		record.setEmployeetaskid(check.getEmployeetaskid());
+		record.setFeesinnum(0l);
+		record.setItemcode(check.getItemcode());
+		record.setItemname(check.getItemname());
+		record.setItemdiscard(0l);
+		record.setProcessid(check.getProcessid());
+		record.setReceivernum(0l);
+		record.setRepairnum(0l);
+		record.setReworknum(0l);
+		record.setUserid(entity.getCheckemp());
+		record.setReqemp(check.getReqemp());
+		record.setWorkdiscard(0l);
+		record.setWorkid(check.getWorkid());
+		record.setWorknum(1l);
+		record.setTeamid(check.getTeamid());
+		record.setItemprocessid(check.getItemprocessid());
+		record.setPrice(check.getPrice());
+		record.setWage(check.getWage());
+		record.setRatio(check.getRatio());
+		record.setTotalratio(check.getTotalratio());
+		record.setClassratio(check.getClassratio());
+		record.setClassshift(check.getClassshift());
+		record.setProcessname(check.getProcessname());
+		checkRecordDao.save(record);
+		String checkpoint[]=view.getCheckpoint();
+		String checkval[]=view.getCheckval();
+		Integer verdict[]=view.getVerdict();
+		String explain[]=view.getExplains();
+		if(checkpoint!=null)
+		{
+			for(int i=0;i<checkpoint.length;i++)
+			{
+				CheckDetail detail=new CheckDetail();
+				detail.setCheckpoints(checkpoint[i]);
+				detail.setCheckval(checkval[i]);
+				detail.setVerdict(verdict[i]);
+				detail.setExplains(explain[i]);
+				detail.setChecktype(1);
+				detail.setRecordid(record.getRecordid());
+				
+				checkDetailDao.save(detail);
+			}
+		}
+		return null;
+	}
+	@Override
+	public boolean saveEndCheck(Check entity) throws ServiceException {
+			
+		//检查合格数总和是否大于上序合格数
+		if(!checkacceptnum(entity)){
+			return false;
+		}
+		
+		
+		Check check=checkDao.getById(entity.getCheckid());
+
+		if(check.getCheckstatus().intValue()==2){//质检已完成
+			throw new ServiceException("此质检单据已质检完成，不可重复提交!!!");
+		}
+		
+		if(check.getCheckstatus().intValue()==2){//质检已完成
+			throw new ServiceException("此质检单据已质检完成，不可重复提交!!!");
+		}
+		
+		
+		entity.setChecktime(DateConvertUtils.getCurrentDateTime());
+		checkDao.update(entity);
+		CheckRecord record=new CheckRecord();
+
+		
+		DispatchWork dpwork=new DispatchWork();
+		//由check的Employeetaskid获得Dispatchid,然后获得dispatch对象
+		dpwork=dispatchWorkDao.getById( employeeTaskDao.getById(check.getEmployeetaskid()).getDispatchid());
+		if(entity.getChecktype().intValue()!=4){
+			//获取班组任务的合格数量然后累加当前的合格数	
+			dpwork.setAcceptednum(dpwork.getAcceptednum()+entity.getAcceptnum().intValue());	
+		}
+		dispatchWorkDao.update(dpwork);
+		
+		record.setAcceptnum(null==entity.getAcceptnum()?0:entity.getAcceptnum());
+		record.setFeesinnum(null==entity.getFeesinnum()?0:entity.getFeesinnum());
+		record.setExplains(entity.getExplain());
+		record.setWorknum(entity.getChecknum()==null?0:entity.getChecknum());
+		record.setWorkdiscard(entity.getOperationdiscardnum()==null?0:entity.getOperationdiscardnum());
+		record.setItemdiscard(entity.getItemdiscardnum()==null?0:entity.getItemdiscardnum());
+		record.setReceivernum(entity.getReceviernum()==null?0:entity.getReceviernum());
+		record.setRepairnum(entity.getRepairnum()==null?0:entity.getRepairnum());
+		record.setReworknum(entity.getRework()==null?0:entity.getRework());
+		
+		record.setUserid(entity.getCheckemp());
+		record.setReqemp(check.getReqemp());
+		record.setChecktype(entity.getChecktype());
+		record.setCheckid(entity.getCheckid());
+		record.setBatchno(check.getBatchno());
+		record.setCreatetime(check.getCreatetime());
+		record.setChecktime(DateConvertUtils.getCurrentDateTime());
+		record.setEmployeetaskid(check.getEmployeetaskid());
+		record.setItemcode(check.getItemcode());
+		record.setItemname(check.getItemname());
+		record.setProcessid(check.getProcessid());
+		record.setWorkid(check.getWorkid());
+		record.setChecknum(0l);
+		if(entity.getChecktype().intValue()!=4){//如果是巡检
+			record.setDefectnum(entity.getChecknum()-entity.getAcceptnum());
+		}
+		record.setTeamid(check.getTeamid());
+		record.setItemprocessid(check.getItemprocessid());
+		record.setPrice(check.getPrice());
+		record.setWage(check.getWage());
+		record.setRatio(check.getRatio());
+		record.setTotalratio(check.getTotalratio());
+		record.setClassratio(check.getClassratio());
+		record.setClassshift(check.getClassshift());
+		record.setProcessname(check.getProcessname());
+		checkRecordDao.save(record);
+		EmployeeTask task=new EmployeeTask();
+		task.setEmployeetaskid(check.getEmployeetaskid());
+		task.setLastcheckstatus(entity.getCheckstatus());
+		employeeTaskDao.update(task);
+		
+		
+		if((entity.getChecktype()!=3&&entity.getChecktype()!=4)||entity.getNogoodfqty()==0){
+			return true;
+		}
+		//-向nogood传值------------------
+		Nogood nogood=new Nogood();
+		NogoodNote nogoodnote=new NogoodNote();
+		//物料代码OK,物料名称OK，工序idOK,申请人idOK,规格型号OK，批次号OK，提交数ok，一次合格数ok，不合格数，交检次数ok
+		nogood.setItemcode(check.getItemcode());
+		nogood.setItemname(check.getItemname());
+		nogood.setSeqno(itemProcedureDao.getById(workSeqDao.getById(dpwork.getWorkseqid()).getItemprocedureid()).getSeqno().longValue());//123
+		nogood.setEmp(SpringSecurityUtils.getCurrentUserId());//申请人
+		nogood.setItemmode(baseItemDao.getByProperty("itemcode", check.getItemcode()).getFormatno());//规格型号
+		nogood.setFbatchno(workPlanDao.getByProperty("fbillno", icmoDao.getById(check.getWorkid()).getFbillno()).getBatchno());//批次
+		nogood.setSubmitCount(entity.getChecknum()==null?0:entity.getChecknum().doubleValue());//提交数
+		if(entity.getChecktype().intValue()!=4){//如果不是巡检
+			nogood.setOnceGoodCount(entity.getAcceptnum().doubleValue());//一次合格数
+			nogood.setSubmitToCheckCount(entity.getChecktimes());//交检次数
+			nogood.setFtype(713);//机加终检
+		}else{
+			nogood.setFtype(714);//机加巡检
+		}
+		nogood.setFqty(entity.getNogoodfqty());//不合格数
+		nogood.setCheckid(entity.getCheckid());
+		Date ddate=new Date();
+		//System.out.println("checknum="+entity.getChecknum()+"---------entity.getAcceptnum().doubleValue()="+entity.getAcceptnum().doubleValue()+"------entity.getChecktimes()="+entity.getChecktimes());
+		//-------------------不合格单号-------
+		IcbillnoQuery icbill = new IcbillnoQuery();
+		icbill.setFpreletter("BHG");
+		Icbillno icb = icbillnoDao.findfcurno(icbill);
+		Icbillno icq = new Icbillno();
+		icq.setFcurno(icb.getFcurno()+1);
+		icq.setFbillid(icb.getFbillid());
+		icq.setFpreletter(icb.getFpreletter());
+		icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		String sss = "BHG";
+		String ym=DateUtils.GetFormatDate("yyyyMM");
+		sss+=ym;
+		Integer sun = icb.getFcurno();//当前编号
+		Integer l = icb.getFlength();//编号长度
+		Integer fno = sun + 1;//先加1再用
+		Integer s2= fno.toString().length();
+		sss+=fno.toString();
+		nogood.setWorkno(sss);
+		//------------------------
+		nogood.setSourceid(check.getWorkid());//原单id
+		nogood.setFsrcno(icmoDao.getById(check.getWorkid()).getFbillno());//源单单号
+		nogood.setCreatedate(new Date());
+		nogood.setTablesum(TerrcnceConstants.T_TABLE_SUM);
+		
+		Long nogoodid = nogoodDao.save(nogood);
+		
+		
+		Double[] nogoodnotefqty =null; 
+		nogoodnotefqty=entity.getFqtylist();
+		if(nogoodnotefqty==null){
+			return true;
+		}
+		
+		
+		int notelength = nogoodnotefqty.length;
+		
+		for(int noi=0;noi<notelength;noi++){
+			nogoodnote=new NogoodNote();
+			nogoodnote.setRid(nogoodid);
+			nogoodnote.setCheckid(entity.getCheckid());
+			nogoodnote.setFdescription(entity.getFdescriptionlist()[noi]);//不合格描述
+			nogoodnote.setFqty(nogoodnotefqty[noi]);//数量
+			nogoodnote.setSeverity(entity.getSeveritylist()[noi].intValue());//严重程度
+			nogoodNoteDao.save(nogoodnote);
+		}
+		
+		return true;
+	}
+	
+	@Override
+	public Integer findLastnum(Check check) {
+		// 
+		Long dispatchid=employeeTaskDao.getById(check.getEmployeetaskid()).getDispatchid();//获得班组id
+		Long lastdispatchid=dispatchWorkDao.getById(dispatchid).getPreorder();//获得上序id
+		Integer lastAcceptednum=0;
+		if(lastdispatchid.intValue()==0){//第一序
+		 lastAcceptednum=-1;
+		 return lastAcceptednum;
+		}else{
+		 lastAcceptednum=dispatchWorkDao.getByAcceptNum(lastdispatchid);//获得上序合格数
+		  //--
+		 	DispatchWork dis=null;
+			Check c=new Check();
+			dis = dispatchWorkDao.getByProperty("workseqid", lastdispatchid+"");
+			if(dis!=null){
+				DispatchWorkQuery dquery=new DispatchWorkQuery();
+				dquery.setId(dis.getId());
+				CheckRecord checkrecord = checkRecordDao.getByEntity("CheckRecord.getall.receviernum", dquery);
+				c.setFrontdisacceptnum(checkrecord.getReceivernum());
+			}
+		 //--------
+			lastAcceptednum=lastAcceptednum+c.getFrontdisacceptnum().intValue();
+		 
+//		 获得本序的所有合格数
+		 CheckQuery checkQuery=new CheckQuery();
+		 checkQuery.setEmployeetaskid(check.getEmployeetaskid());
+		 List<Check> list = checkDao.findList(checkQuery);
+		 int acceptednum=0;
+		 for(Check e:list){
+			 acceptednum+=e.getAcceptnum().intValue();
+		 }
+		 if((acceptednum+check.getChecknum())>lastAcceptednum){
+			 return -2;
+		 }
+		 
+		}
+		return lastAcceptednum;
+	}
+
+	
+	private boolean checkacceptnum(Check entity) {
+
+		Check check=checkDao.getById(entity.getCheckid());
+		DispatchWork dpwork=new DispatchWork();
+		//由check的Employeetaskid获得Dispatchid,然后获得dispatch对象
+		dpwork=dispatchWorkDao.getById( employeeTaskDao.getById(check.getEmployeetaskid()).getDispatchid());
+		//获取班组任务的合格数量然后累加当前的合格数
+		if(dpwork.getPreorder().intValue()!=0){
+
+			//判断本序合格数是否大于上序合格数
+			DispatchWork dis=null;
+			Check c=new Check();
+			dis = dispatchWorkDao.getByProperty("workseqid", dpwork.getPreorder().longValue()+"");
+			if(dis!=null){
+				DispatchWorkQuery dquery=new DispatchWorkQuery();
+				dquery.setId(dis.getId());
+				CheckRecord checkrecord = checkRecordDao.getByEntity("CheckRecord.getall.receviernum", dquery);
+				c.setFrontdisacceptnum(checkrecord.getReceivernum());
+			}
+			
+			if(entity.getChecktype().intValue()!=4){
+				//判断本序合格数是否大于上序合格数
+				if((dpwork.getAcceptednum().intValue()+entity.getAcceptnum().intValue())>(dispatchWorkDao.getByAcceptNum(dpwork.getPreorder())+c.getFrontdisacceptnum())){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	@Override
+	public List<Check> findList(String statement, CheckQuery query)
+			throws ServiceException {
+		return checkDao.findList(statement, query);
+	}
+	@Override
+	public List<Check> findEmployeekLogs(Check entity) throws ServiceException {
+
+		return checkDao.findEmployeekLogs(entity);
+		
+	}
+	@Override
+	public boolean getIsLast(Long checkId) throws ServiceException {
+
+//		select a.id from t_dispatch_work a where a.preorder=(
+//			select b.workseqid from tx_dispatch_work b where b.id=(
+//			select dispatchid from t_employee_task where employeetaskid=(select employeetaskid from t_check where checkid='传入id')
+//		  )
+//		)
+
+//查询是否为最后一序
+		Integer lastid=null;
+		 lastid=checkDao.getIsLast(checkId);
+		if(null==lastid){
+			return true;	
+		}else{
+			return false;
+		}
+		
+	}
+	@Override
+	public Check findAcceptnum(Long checkId) throws ServiceException {
+		//查询最后一序所有合格数---
+		//查询所有下推数--
+		//	查询本序所有合格数
+		Integer allacceptNum=null;
+		allacceptNum=checkDao.getAllAccept(checkId);
+		//查询所有下推数--
+		Integer downK3Num =null;
+		 downK3Num =checkDao.getAllDownK3(checkId);
+		 if(null==allacceptNum){
+			 allacceptNum=0;
+			}
+		 if(null==downK3Num){
+			 downK3Num=0;
+			}
+		 Check check=new Check();
+		 check.setAllacceptnum(allacceptNum);
+		 check.setAlldownnum(downK3Num);
+		 //获取icmoid和单号fibllno
+		 Long icmoid = checkDao.getById(checkId).getWorkid();
+		 check.setWorkid(icmoid);
+		 check.setFbillno(icmoDao.getById(icmoid).getFbillno());
+		 
+		 System.out.println("=======allacceptNum:"+allacceptNum);
+		 System.out.println("=======downK3Num:"+downK3Num);
+		 
+		return check;
+	}
+	@Override
+	public void saveDownk3sum(Long checkId, Long thistimeNum,Long storageId,CheckQuery entity )
+			throws ServiceException {
+		//检查是否领料----未领料不能下推---后续数量统计取checkrecord表
+		CheckRecord checkRecord=null;
+		 checkRecord=checkRecordDao.getByColumn("checkRecordDao.getworkid", checkId+"");
+		 if(checkRecord.getIsreqtake()==null||checkRecord.getIsreqtake()!=2){//未领料
+			 throw new ServiceException("此任务单未领料,不可下推!!");
+		 }
+		 ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+		 ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		 processDetailQuery.setProcessId(processTask.getProcessIds());
+		 List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		//putstorageDao
+		//putstorageentityDao
+		Putstorage putstorage=new Putstorage();
+		putstorage.setIsclose(0);//关闭标志
+		putstorage.setStatus(0);//审核标记
+		putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());//制单人,当前登录人
+		putstorage.setSrctype(85L);//原单类型
+		putstorage.setTeamid(213L);//交货部门---机加入库统一(K3,t_Department部门表取值213)
+		putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+		String handlers = "";
+		ProcessDetail processDetail = processDetails.get(0);
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		putstorage.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		String fbillno="";
+		Icbillno icbillno = icbillnoDao.getByProperty("fpreletter", "CINPC");
+		Integer icblength = icbillno.getFlength();
+		String fcurno = icbillno.getFcurno()+"";
+		if(fcurno.length()<icblength){
+			String head="";
+			for(int i=0;i<icblength-fcurno.length();i++){
+				head=head+"0";
+			}
+			fbillno=icbillno.getFpreletter()+head+fcurno;
+		}else{
+			fbillno=icbillno.getFpreletter()+fcurno;
+		}
+		putstorage.setFbillno(fbillno);//入库单号t_icbillno:(72	入库单	WIN	1697	6)
+		
+		Long putstorageid = putstorageDao.save(putstorage, "Putstorage.insert.fromCheck");//保存入库单
+		
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(fbillno);
+		processHistask.setSourceId(putstorageid);
+		processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processExetask.setSourceCode(fbillno);
+		processExetask.setSourceId(putstorageid);
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+		
+		
+		icbillno.setFcurno(icbillno.getFcurno()+1);
+		icbillnoDao.update(icbillno);
+		
+		Putstorageentity putstorageentity=new Putstorageentity();
+		
+		putstorageentity.setFinterid(putstorageid);
+		String itemcode=checkRecord.getItemcode();
+		putstorageentity.setItemcode(itemcode);
+		putstorageentity.setStorageid(storageId);//收料仓库
+		putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+		
+		//baseItemDao.getByProperty("itemcode", itemcode);
+		putstorageentity.setUnitid(baseItemDao.getByProperty("itemcode", itemcode).getUnitid().longValue());
+		putstorageentity.setFqty(thistimeNum.doubleValue());//数量
+		
+		//Check c=checkDao.getById("Check.getByIdIncludebatch", checkId);
+		//---非批次号的去掉批次
+		System.out.println("=============="+entity.getIsbatch());
+		if(null!=entity.getIsbatch()&&entity.getIsbatch()==1){
+			putstorageentity.setFbatchno(checkRecord.getBatchno());//批次
+		}
+		
+		putstorageentity.setFsrcinterid(checkId);//原单内码
+		
+		Icmo iicmo =new Icmo(); 
+		//iicmo=icmoDao.getById(c.getWorkid());
+		iicmo=icmoDao.getById("Icmo.getById.fxmark", checkRecord.getWorkid());
+		
+		putstorageentity.setPoorderno(iicmo.getFbillno());//
+		putstorageentity.setFxmark(iicmo.getFxmark()==null?3:iicmo.getFxmark());
+		
+		Long putstorageentityid = putstorageentityDao.save(putstorageentity, "Putstorageentity.insert.in.poorderentry");
+		//-处理工序流转卡完成状态-----------------
+		//	查询本序所有合格数
+		Integer allacceptNum=null;
+		allacceptNum=checkRecordDao.getAllAccept(checkId);
+		//查询所有下推数--
+		Integer downK3Num =null;
+		downK3Num =checkRecordDao.getAllDownK3(checkId);
+		//若本序所有检验合格数等于所有下推数,且本车间任务为已完成状态,那么,工序流转卡为完成
+		System.out.println(allacceptNum.intValue()+""+downK3Num.intValue());
+		if(allacceptNum.intValue()==downK3Num.intValue()){
+			Icmo icmo = icmoDao.getById(checkRecord.getWorkid());
+			if(icmo.getPerformstatus().intValue()==3){//车间任务已完工
+				//设置工序流转卡为完成状态------
+				//Circulation ccard = circulationDao.getByColumn("workno",icmo.getFbillno());
+				Circulation ccard=circulationDao.getByProperty("workno", icmo.getFbillno());
+				ccard.setCardstatus(Circulation.CARD_FINISH);
+				circulationDao.update("Circulation.update.cardStatus",ccard);//更新工序流转卡为完成状态
+			}
+		}
+		
+	//---处理序列号------------------------------------------------------------------------------------------------------------
+		if(entity.getIssn()!=null&&entity.getIssn()==1){
+		
+		String sncode = putstorageentity.getItemcode();
+		
+		BaseItemQuery bquery=new BaseItemQuery();
+		bquery.setItemcode(sncode);
+		
+		BaseItem snbaseitem = baseItemDao.getByEntity("BaseItem.getfitemid", bquery);
+		//Long snfitemid = snbaseitem.getFitemid();
+		Long snfstockid = putstorageentity.getStorageid();
+		
+		if(entity.getIssn()!=null&&entity.getIssn()==1){//处理序列号----
+			String[] snlist = entity.getSnlist();
+			
+			for(String sn:snlist){
+				Icserial snentity=new Icserial();
+				snentity.setItemcode(sncode);
+				//snentity.setFitemid(snfitemid.intValue());
+				snentity.setFstockid(snfstockid.intValue());
+				snentity.setDb(putstorageentity.getFxmark());
+				snentity.setFserialnum(sn);
+				snentity.setFstatus(0);
+				snentity.setFvalid(0);
+				snentity.setLockstatus(0);
+				snentity.setFtrantypeid(85L);//产品入库---
+				snentity.setFsnlistid(putstorageentityid);//入库单详细id
+				snentity.setFinterid(putstorageentityid);
+				
+				icserialDao.save(snentity, "Icserial.insert.fromcard");		
+			}
+		}
+		
+		}
+		
+	}
+	@Override
+	public Check findLastcheck(CheckQuery checkQuery) throws ServiceException {
+		/*	select top 1 t_check.checkid from t_check where checktype=3 and employeetaskid in(
+					select t_employee_task.employeetaskid from t_employee_task where dispatchid=(
+					select t_dispatch_work.id from t_dispatch_work where workseqid not in (select preorder from t_dispatch_work  where workid=2898) and workid=2898
+					)
+				)
+		 */
+		
+		Check cc=new Check();
+		cc=checkDao.getByEntity("Check.findLastcheck", checkQuery);
+		return cc;
+		
+	}
+	
+}

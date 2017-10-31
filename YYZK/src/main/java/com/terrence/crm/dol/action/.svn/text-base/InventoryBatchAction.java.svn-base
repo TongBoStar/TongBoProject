@@ -1,0 +1,773 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.StockQuery;
+import com.terrence.crm.dol.service.IInventoryBatchService;
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/inventoryBatch")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "inventoryBatch." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class InventoryBatchAction extends CrudActionSupport<InventoryBatch>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("inventoryBatchService")
+	private IInventoryBatchService inventoryBatchService;
+	
+	
+	private InventoryBatch entity;
+
+	private InventoryBatchQuery inventoryBatchQuery;
+	
+	
+	private java.lang.Long inventoryBatchId;
+	
+	/** 分页器 */
+	private Page<InventoryBatch> page = new Page<InventoryBatch>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<InventoryBatch> inventoryBatchList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (inventoryBatchId != null ) {
+			entity = inventoryBatchService.getById(inventoryBatchId);
+		} else {
+			entity = new InventoryBatch();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			inventoryBatchService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	public String listToEntrty()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery,10);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToQuery()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listTok3()throws Exception
+	{
+		
+		try {
+			if(inventoryBatchQuery == null) {
+				inventoryBatchQuery = new InventoryBatchQuery();
+			}
+		
+			if(inventoryBatchQuery.getPcode().equals("k5")){
+		
+				inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.findPage.k5AllDifferenceNew");
+				
+			}else if(inventoryBatchQuery.getPcode().equals("p")){
+			
+				inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.findPage.paichanAllDifferenceNew");
+			}else if(inventoryBatchQuery.getPcode().equals("k3")){//k3-k5-排产-差异
+				inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.findPage.k3AllDifferenceNew");
+			}
+
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String updatek3k5()throws Exception
+	{
+		
+		try {
+			
+			
+			inventoryBatchService.updatek3k5("InventoryBatch.updatek3k5.icinventoryALl");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "刷新成功!!";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败!!(请联系管理员)";
+		}
+		return JSON;
+	}
+	
+	public String listToDetail()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.findList.uninclude0");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("inventoryBatchId");
+			page.setOrder(Page.DESC);
+		}
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			page = inventoryBatchService.findPage(page, inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/*
+	 * @return
+	 * @throws Exception
+	 */
+	public String listByDeptid() throws Exception {
+		
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("batchid");
+			page.setOrder(Page.DESC);
+		}
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		try {
+						
+			page=inventoryBatchService.findPagenew(page, "InventoryBatch.findPage.BydeptidNew", inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public String listByDeptidP() throws Exception {
+		
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("batchid");
+			page.setOrder(Page.DESC);
+		}
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		try {
+			
+			page=inventoryBatchService.findPage(page, "InventoryBatch.findPage.BydeptidPNew", inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			inventoryBatchService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = inventoryBatchService.getById(inventoryBatchId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	public String  showToFqty()throws Exception {
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+	
+		try{
+			entity=inventoryBatchService.getByCode(inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	// -------------------自定义方法
+	public String listByCode(){
+
+			if(inventoryBatchQuery == null) {
+				inventoryBatchQuery = new InventoryBatchQuery();
+			}
+		
+			try{
+				inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.findListBycode");
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			} catch(ServiceException e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+			}	
+			
+			return JSON;
+	}
+	
+	
+	public String findBatchInSale()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.find.in.salesDetailSum");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String findAllShuLiang()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.find.findAllShuLiang");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public String feiBatchIss()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = inventoryBatchService.findList(inventoryBatchQuery, "InventoryBatch.find.list.for.feiBatchIss");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			inventoryBatchList = inventoryBatchService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	@Action("/excel/exportInventory")
+	public String exportAllitem(){
+		    try {
+		    	if(inventoryBatchQuery == null) {
+		    		inventoryBatchQuery = new InventoryBatchQuery();
+				}
+				String fileName = inventoryBatchService.findInventoryXls(getRequest().getRealPath("/"),inventoryBatchQuery);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	public String syncFromErp(){
+		try {
+		 	inventoryBatchService.syncFromErp();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1"; 
+			resultInfo[1] = "操作失败"+e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	@Action("/excel/saveInventoryExport")
+	public void saveExport(){
+		String filename=getRequest().getParameter("filename");
+		HSSFWorkbook wb = null;
+		try {
+			wb = new HSSFWorkbook(new FileInputStream(getRequest().getRealPath("/")+filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+			HttpServletResponse response = getResponse();
+			response.setContentType("application/vnd.ms-excel");
+			try {
+				
+
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "库存.xls".getBytes("gb2312"), "ISO8859-1" ) );					
+			
+					OutputStream ouputStream = response.getOutputStream(); 
+					 wb.write(ouputStream);  
+					 ouputStream.flush();  
+					 ouputStream.close();
+					 new File(getRequest().getRealPath("/")+filename).delete();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public InventoryBatch getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public InventoryBatchQuery getInventoryBatchQuery() {
+		return inventoryBatchQuery;
+	}
+
+	
+	public void setInventoryBatchQuery(InventoryBatchQuery inventoryBatchQuery) {
+		this.inventoryBatchQuery = inventoryBatchQuery;
+	}
+
+	public void setInventoryBatchId(java.lang.Long inventoryBatchId) {
+		this.inventoryBatchId = inventoryBatchId;
+	}
+	
+	
+	public java.lang.Long getInventoryBatchId() {
+		return this.inventoryBatchId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<InventoryBatch> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<InventoryBatch> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<InventoryBatch> getInventoryBatchList() {
+		return inventoryBatchList;
+	}
+	
+	//下料根据物料代码查找所有库存
+	public String findStockList()throws Exception
+	{
+		if(inventoryBatchQuery == null) {
+			inventoryBatchQuery = new InventoryBatchQuery();
+		}
+		
+		try {
+			inventoryBatchList = this.inventoryBatchService.findStockList(inventoryBatchQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+}

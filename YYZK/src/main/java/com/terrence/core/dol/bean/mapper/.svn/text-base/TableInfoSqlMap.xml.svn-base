@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+	<resultMap id="RM.TableInfo" class="com.terrence.core.dol.bean.TableInfo">
+		<result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="packageName" column="packageName" />
+		<result property="lowerName" column="lowerName" />
+		<result property="upperName" column="upperName" />
+		<result property="moduleName" column="moduleName" />
+		<result property="tableIntroduce" column="tableIntroduce" />
+	</resultMap>
+
+	<sql id="TableInfo.columns">
+       <![CDATA[
+           id,name,packageName,lowerName,upperName,moduleName,tableIntroduce
+       ]]>
+	</sql>
+
+	<insert id="TableInfo.insert">
+   <![CDATA[
+       INSERT INTO base_table_info
+       (
+        name,
+        packageName,
+        lowerName,
+        upperName,
+        moduleName,
+        tableIntroduce
+       )
+       VALUES
+       (
+        #name#,
+        #packageName#,
+        #lowerName#,
+        #upperName#,
+        #moduleName#,
+        #tableIntroduce#
+       )
+   ]]>
+		<selectKey resultClass="java.lang.Long" type="post"
+			keyProperty="id">
+			SELECT  @@identity  AS  ID
+		</selectKey>
+	</insert>
+
+	<update id="TableInfo.update">
+		UPDATE base_table_info
+		<dynamic prepend="SET">
+			<isNotEmpty prepend="," property="name">
+				name = #name#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="packageName">
+				packageName = #packageName#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="lowerName">
+				lowerName = #lowerName#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="upperName">
+				upperName = #upperName#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="moduleName">
+				moduleName = #moduleName#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="tableIntroduce">
+				tableIntroduce = #tableIntroduce#
+			</isNotEmpty>
+		</dynamic>
+		WHERE
+		id = #id#
+	</update>
+
+	<delete id="TableInfo.delete">
+       <![CDATA[
+       DELETE FROM base_table_info WHERE
+       id = #id# 
+       ]]>
+	</delete>
+
+	<select id="TableInfo.getById" resultMap="RM.TableInfo">
+		SELECT
+		<include refid="TableInfo.columns" />
+       <![CDATA[
+       FROM base_table_info 
+       WHERE 
+       id = #id# 
+       ]]>
+	</select>
+
+	<sql id="TableInfo.findPage.where">
+		<isNotEmpty prepend="AND" property="name">
+				name = #name#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="packageName">
+				packageName = #packageName#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="lowerName">
+			lowerName = #lowerName#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="upperName">
+			upperName = #upperName#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleName">
+			moduleName = #moduleName#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tableIntroduce">
+			tableIntroduce = #tableIntroduce#
+		</isNotEmpty>
+	</sql>
+
+	<select id="TableInfo.findPage.count" resultClass="long">
+		SELECT count(*) FROM base_table_info
+		<include refid="TableInfo.findPage.where" />
+	</select>
+
+	<select id="TableInfo.findPage" resultMap="RM.TableInfo">
+		SELECT
+		<include refid="TableInfo.columns" />
+		FROM base_table_info
+		<include refid="TableInfo.findPage.where" />
+		<isNotEmpty property="notTop">
+			and
+			id not in(select $notTop$ id from base_table_info
+			<include refid="TableInfo.findPage.where" />
+			<isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>
+			)
+		</isNotEmpty>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+	<select id="TableInfo.findList" resultMap="RM.TableInfo">
+		SELECT
+		<include refid="TableInfo.columns" />
+		FROM base_table_info
+		<include refid="TableInfo.findPage.where" />
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+</sqlMap>

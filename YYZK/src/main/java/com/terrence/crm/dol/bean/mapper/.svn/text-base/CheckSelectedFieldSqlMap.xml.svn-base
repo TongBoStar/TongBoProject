@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckSelectedField">
+	<resultMap id="RM.CheckSelectedField" class="com.terrence.crm.dol.bean.CheckSelectedField">
+        <result property="fid" column="fid"/>
+        <result property="modelid" column="modelid"/>
+        <result property="fkey" column="fkey"/>
+        <result property="fname" column="fname"/>
+        <result property="fseqno" column="fseqno"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckSelectedField.columns">
+	    <![CDATA[
+        	t_check_gchartfield.fid ,
+        	t_check_gchartfield.modelid ,
+        	rtrim(t_check_gchartfield.fkey) fkey,
+        	t_check_gchartfield.fseqno
+	    ]]>
+	</sql>
+	
+   <insert id="CheckSelectedField.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_check_gchartfield (
+        	modelid,
+        	fkey ,
+        	fseqno
+        ) VALUES (
+        	#modelid#,
+        	#fkey# ,
+        	#fseqno#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <select id="CheckSelectedField.findList" resultMap="RM.CheckSelectedField">
+    	select <include refid="CheckSelectedField.columns"/>,t_check_field.fname fname 	    
+	        from t_check_gchartfield
+	        left join t_check_field on t_check_gchartfield.fkey = t_check_field.fkey
+	         where modelid = #modelid#
+    </select>
+    <select id="CheckSelectedField.findListBymfkey" resultClass="java.lang.String">
+    	select rtrim(fkey) from t_check_gchartfield where modelid = #modelid#
+    </select>
+    <select id="CheckSelectedField.getById" resultMap="RM.CheckSelectedField">
+    	select <include refid="CheckSelectedField.columns"/>,t_check_field.fname fname 	    
+	        from t_check_gchartfield
+	        left join t_check_field on t_check_gchartfield.fkey = t_check_field.fkey 
+	        where fid = $id$
+    </select>
+	<update id="CheckSelectedField.update" parameterClass="com.terrence.crm.dol.bean.CheckSelectedField">         
+        UPDATE t_check_gchartfield set 
+        	fkey = #fkey# ,fseqno = #fseqno# 
+        WHERE 
+	        modelid = #modelid# and fkey = #fkey#
+    </update>
+    
+	<delete id="CheckSelectedField.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_gchartfield where fid = $id$
+    ]]>
+    </delete>
+    <delete id="CheckSelectedField.deleteByMfkey">
+        delete from t_check_gchartfield where modelid = $modelid$ and fkey=#fkey#
+    </delete>
+</sqlMap>

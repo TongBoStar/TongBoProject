@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WebUnitGroup">
+
+        
+	<resultMap id="RM.WebUnitGroup" class="com.terrence.crm.dol.bean.WebUnitGroup">
+        <result property="funitGroupId" column="FUnitGroupID"/>
+        <result property="fname" column="FName"/>
+        <result property="fdefaultUnitId" column="FDefaultUnitID"/>
+        <result property="fmodifyTime" column="FModifyTime"/>
+        <result property="uuid" column="UUID"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="WebUnitGroup.columns">
+	    <![CDATA[
+        	t_web_UnitGroup.FUnitGroupID ,
+        	t_web_UnitGroup.FName ,
+        	t_web_UnitGroup.FDefaultUnitID ,
+        	t_web_UnitGroup.FModifyTime ,
+        	t_web_UnitGroup.UUID 
+	    ]]>
+	</sql>
+	
+   <insert id="WebUnitGroup.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_web_UnitGroup (
+        	FName ,
+        	FDefaultUnitID ,
+        	FModifyTime ,
+        	UUID 
+        ) VALUES (
+        	#fname# ,
+        	#fdefaultUnitId# ,
+        	#fmodifyTime# ,
+        	#uuid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="funitGroupId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="WebUnitGroup.update" parameterClass="com.terrence.crm.dol.bean.WebUnitGroup">         
+        UPDATE t_web_UnitGroup 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fname">
+	        	FName = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdefaultUnitId">
+	        	FDefaultUnitID = #fdefaultUnitId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmodifyTime">
+	        	FModifyTime = #fmodifyTime# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="uuid">
+	        	UUID = #uuid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        FUnitGroupID = #funitGroupId# 
+    </update>
+    
+	<delete id="WebUnitGroup.delete" parameterClass="java.lang.Integer">
+    <![CDATA[
+        delete from t_web_UnitGroup where
+       FUnitGroupID = #funitGroupId# 
+    ]]>
+    </delete>
+    
+    <delete id="WebUnitGroup.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_web_UnitGroup 
+        WHERE
+       FUnitGroupID in ($funitGroupId$) 
+    ]]>
+    </delete>
+    
+    <select id="WebUnitGroup.getById" resultMap="RM.WebUnitGroup">
+	    select <include refid="WebUnitGroup.columns"/>
+	    
+	        from t_web_UnitGroup 
+	        where 
+		        FUnitGroupID = #funitGroupId# 
+	    
+    </select>
+    
+	<select id="WebUnitGroup.getByProperty" resultMap="RM.WebUnitGroup">
+		select <include refid="WebUnitGroup.columns"/> from t_web_UnitGroup where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="WebUnitGroup.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="funitGroupId">
+	             t_web_UnitGroup.FUnitGroupID = #funitGroupId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_web_UnitGroup.FName = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdefaultUnitId">
+	             t_web_UnitGroup.FDefaultUnitID = #fdefaultUnitId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fmodifyTime">
+	             t_web_UnitGroup.FModifyTime = #fmodifyTime#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="uuid">
+	             t_web_UnitGroup.UUID = #uuid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="WebUnitGroup.findPage.and">
+			<isNotEmpty prepend="AND" property="funitGroupId">
+	             t_web_UnitGroup.FUnitGroupID = #funitGroupId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_web_UnitGroup.FName = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdefaultUnitId">
+	             t_web_UnitGroup.FDefaultUnitID = #fdefaultUnitId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmodifyTime">
+	             t_web_UnitGroup.FModifyTime = #fmodifyTime#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="uuid">
+	             t_web_UnitGroup.UUID = #uuid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="WebUnitGroup.Entity" resultMap="RM.WebUnitGroup">
+    	SELECT 	<include refid="WebUnitGroup.columns"/> FROM t_web_UnitGroup <include refid="WebUnitGroup.findPage.where"/>
+    </select>
+    
+    <select id="WebUnitGroup.findList" resultMap="RM.WebUnitGroup">
+    	SELECT 
+    		<include refid="WebUnitGroup.columns"/> 
+    	FROM 
+    		t_web_UnitGroup
+		<include refid="WebUnitGroup.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="WebUnitGroup.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_web_UnitGroup
+    ]]>
+		<include refid="WebUnitGroup.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.WebUnitGroup.findPage" resultMap="RM.WebUnitGroup">
+    	select <include refid="WebUnitGroup.columns"/>	    
+	        from t_web_UnitGroup 	   
+		<include refid="WebUnitGroup.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="WebUnitGroup.findPage" resultMap="RM.WebUnitGroup">
+    	select <include refid="WebUnitGroup.columns"/>	    
+	        from t_web_UnitGroup where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       FUnitGroupID 
+	   not in(select $notTop$ 
+       FUnitGroupID 
+	   from t_web_UnitGroup <include refid="WebUnitGroup.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="WebUnitGroup.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

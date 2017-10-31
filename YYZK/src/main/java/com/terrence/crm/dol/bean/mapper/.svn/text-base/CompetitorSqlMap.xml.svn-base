@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Competitor">
+
+        
+	<resultMap id="RM.Competitor" class="com.terrence.crm.dol.bean.Competitor">
+        <result property="competitorid" column="competitorid"/>
+        <result property="fname" column="fname"/>
+        <result property="shortname" column="shortname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Competitor.columns">
+	    <![CDATA[
+        	t_competitor.competitorid ,
+        	t_competitor.fname ,
+        	t_competitor.shortname 
+	    ]]>
+	</sql>
+	
+   <insert id="Competitor.insert" >
+        INSERT INTO
+        t_competitor (
+        	fname ,
+        	shortname 
+        	<isNotEmpty prepend="," property="sectionid">
+	        	sectionid
+	        </isNotEmpty>
+        	
+        ) VALUES (
+        	#fname# ,
+        	#shortname# 
+        	<isNotEmpty prepend="," property="sectionid">
+	        	#sectionid#
+	        </isNotEmpty>
+        	
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="competitorid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Competitor.update" parameterClass="com.terrence.crm.dol.bean.Competitor">         
+        UPDATE t_competitor 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="shortname">
+	        	shortname = #shortname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="sectionid">
+	        	sectionid = #sectionid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        competitorid = #competitorid# 
+    </update>
+    
+	<delete id="Competitor.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_competitor where
+       competitorid = #competitorid# 
+    ]]>
+    </delete>
+    
+    <delete id="Competitor.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_competitor 
+        WHERE
+       competitorid in ($competitorid$) 
+    ]]>
+    </delete>
+    
+    <select id="Competitor.getById" resultMap="RM.Competitor">
+	    select <include refid="Competitor.columns"/>
+	    
+	        from t_competitor 
+	        where 
+		        competitorid = #competitorid# 
+	    
+    </select>
+    
+	<select id="Competitor.getByProperty" resultMap="RM.Competitor">
+		select <include refid="Competitor.columns"/> from t_competitor where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Competitor.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_competitor.competitorid = #competitorid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_competitor.fname like ('%$fname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="shortname">
+	             t_competitor.shortname like ('%$shortname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sectionid">
+	             t_competitor.sectionid = #sectionid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Competitor.findPage.and">
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_competitor.competitorid = #competitorid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_competitor.fname like ('%$fname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="shortname">
+	             t_competitor.shortname like ('%$shortname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sectionid">
+	             t_competitor.sectionid = #sectionid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Competitor.Entity" resultMap="RM.Competitor">
+    	SELECT 	<include refid="Competitor.columns"/> FROM t_competitor <include refid="Competitor.findPage.where"/>
+    </select>
+    
+    <select id="Competitor.findList" resultMap="RM.Competitor">
+    	SELECT 
+    		<include refid="Competitor.columns"/> 
+    	FROM 
+    		t_competitor
+		<include refid="Competitor.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Competitor.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_competitor
+    ]]>
+		<include refid="Competitor.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Competitor.findPage" resultMap="RM.Competitor">
+    	select <include refid="Competitor.columns"/>	    
+	        from t_competitor 	   
+		<include refid="Competitor.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Competitor.findPage" resultMap="RM.Competitor">
+    	select <include refid="Competitor.columns"/>	    
+	        from t_competitor where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       competitorid 
+	   not in(select $notTop$ 
+       competitorid 
+	   from t_competitor <include refid="Competitor.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Competitor.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

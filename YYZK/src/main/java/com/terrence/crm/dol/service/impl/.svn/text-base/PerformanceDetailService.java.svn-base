@@ -1,0 +1,226 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PerformanceDetail;
+import com.terrence.crm.dol.bean.Receivable;
+import com.terrence.crm.dol.dao.IPerformanceDetailDao;
+import com.terrence.crm.dol.query.PerformanceDetailQuery;
+import com.terrence.crm.dol.service.IPerformanceDetailService;
+@Service
+@Transactional
+public class PerformanceDetailService implements IPerformanceDetailService {
+	@Autowired
+	@Qualifier("performanceDetailDao")
+	private IPerformanceDetailDao performanceDetailDao;
+	@Override
+	public PerformanceDetail getById(Long id) throws ServiceException {
+		return performanceDetailDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(PerformanceDetail entity) throws ServiceException {
+		performanceDetailDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(PerformanceDetail entity) throws ServiceException {
+		return performanceDetailDao.save(entity);
+	}
+	@Override
+	public Integer update(PerformanceDetail entity) throws ServiceException {
+		return performanceDetailDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return performanceDetailDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = performanceDetailDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<PerformanceDetail> findPage(Page<PerformanceDetail> page, PerformanceDetailQuery query) throws ServiceException{
+		if(null!=query.getFdate()&&!query.getFdate().trim().equals("")){
+			Integer fyear = Integer.valueOf(query.getFdate().substring(0, 4));
+			Integer fquarter = Integer.valueOf(query.getFdate().substring(6, 8));
+			query.setFyear(fyear);
+			query.setFquarter(fquarter);
+		}
+		return performanceDetailDao.findPage(page, query);
+	}
+	public String getQuarterStartTime(Integer fyear,Integer quarter){
+    	String startTime = "";
+    	if(quarter==1){
+    		startTime = fyear+"-01-01 00:00:00";
+    	}else if(quarter==2){
+    		startTime = fyear+"-04-01 00:00:00";
+    	}else if(quarter==3){
+    		startTime = fyear+"-07-01 00:00:00";
+    	}else{
+    		startTime = fyear+"-10-01 00:00:00";
+    	}
+    	return startTime;
+    }
+    public String getQuarterEndTime(Integer fyear,Integer quarter){
+    	String endTime = "";
+    	if(quarter==1){
+    		endTime = fyear+"-03-31 23:59:59";
+    	}else if(quarter==2){
+    		endTime = fyear+"-06-30 23:59:59";
+    	}else if(quarter==3){
+    		endTime = fyear+"-09-30 23:59:59";
+    	}else{
+    		endTime = fyear+"-12-31 23:59:59";
+    	}
+    	return endTime;
+    }
+	@Transactional(readOnly=true)
+	public Page<PerformanceDetail> findPage(Page<PerformanceDetail> page,String statement, PerformanceDetailQuery query) throws ServiceException{
+		return performanceDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PerformanceDetail> findList(PerformanceDetailQuery query) throws ServiceException{
+		return performanceDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PerformanceDetail> findList(PerformanceDetailQuery query,Integer pageSize) throws ServiceException{
+		return performanceDetailDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PerformanceDetail> findList(PerformanceDetailQuery query,String statement,Integer pageSize) throws ServiceException{
+		return performanceDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PerformanceDetail> findAllList() throws ServiceException{
+		return performanceDetailDao.findAllList();
+	}
+	@Override
+	public List<PerformanceDetail> countRewardsByQuarter(PerformanceDetailQuery performanceDetailQuery) {
+		return performanceDetailDao.findList("PerformanceDetail.countawardBySaler", performanceDetailQuery);
+	}
+	@Override
+	public void exportExcelStatic2007(HttpServletResponse response,PerformanceDetailQuery performanceDetailQuery) throws Exception {
+		performanceDetailDao.findAllList();
+		List<PerformanceDetail> list = performanceDetailDao.findList("PerformanceDetail.countawardBySaler", performanceDetailQuery);
+		XSSFWorkbook wb = new XSSFWorkbook();
+		XSSFSheet sheet = wb.createSheet("合同_奖励_序时簿");
+		createHeadAndStyle(sheet,wb);
+		XSSFRow row;
+		XSSFCell cell = null;
+		XSSFFont font = null;
+		PerformanceDetail tmp = null;
+		for(int i=0;i<list.size();i++){
+			tmp = list.get(i);
+			row = sheet.createRow(i+1);
+			createCell(cell,font,wb, row, 0, (i+1)+"");
+			createCell(cell,font,wb, row, 1, tmp.getFyear()+"年"+tmp.getFquarter()+"季度");
+			createCell(cell,font,wb, row, 2, tmp.getSalerName());
+			createCell(cell,font,wb, row, 3, replaceNull(tmp.getAchrewardamounta())+"");
+			createCell(cell,font,wb, row, 4, replaceNull(tmp.getAchrewardamountbcde())+"");
+			createCell(cell,font,wb, row, 5, replaceNull(null==tmp.getExcrewardamount()?tmp.getPlamount():tmp.getExcrewardamount())+"");
+			createCell(cell,font,wb, row, 6, replaceNull(tmp.getServicefeeamounta())+"");
+			createCell(cell,font,wb, row, 7, replaceNull(tmp.getServicefeeamountbcde())+"");
+			createCell(cell,font,wb, row, 8, (replaceNull(tmp.getAchrewardamounta())*100+replaceNull(tmp.getExcrewardamount())*100+replaceNull(tmp.getAchrewardamountbcde())*100)/100+"");
+			createCell(cell,font,wb, row, 9, (replaceNull(tmp.getServicefeeamounta())*100+replaceNull(tmp.getServicefeeamountbcde())*100)/100+"");
+		}
+		wb.write(response.getOutputStream());
+	}
+	public Double replaceNull(Double obj){
+		if(null==obj){
+			return 0D;
+		}else{
+			return obj;
+		}
+	}
+	/**
+	 * 创建表头和样式
+	 * @param sheet sheet对象
+	 * @param wb excel表格
+	 */
+	public void createHeadAndStyle(XSSFSheet sheet,XSSFWorkbook wb){
+		// 创建第一行
+	    XSSFRow row0 = sheet.createRow(0);
+	    XSSFCell cell = null;
+	    XSSFFont font = null;
+		// 设置单元格宽度
+	    sheet.setColumnWidth(0, 2000);
+	    sheet.setColumnWidth(1, 4000);
+	    sheet.setColumnWidth(2, 9000);
+	    sheet.setColumnWidth(3, 4000);
+	    sheet.setColumnWidth(4, 4000);
+	    sheet.setColumnWidth(5, 4000);
+	    sheet.setColumnWidth(6, 4000);
+	    sheet.setColumnWidth(7, 4000);
+	    sheet.setColumnWidth(8, 5000);
+	    sheet.setColumnWidth(9, 5000);
+		// 设置单元格
+		createCell(cell,font,wb, row0, 0, "序号");
+		createCell(cell,font,wb, row0, 1, "季度");
+		createCell(cell,font,wb, row0, 2, "业务员");
+		createCell(cell,font,wb, row0, 3, "标准奖励");
+		createCell(cell,font,wb, row0, 4, "非标奖励");
+		createCell(cell,font,wb, row0, 5, "超额奖励");
+		createCell(cell,font,wb, row0, 6, "标准业务费");
+		createCell(cell,font,wb, row0, 7, "非标业务费");
+		createCell(cell,font,wb, row0, 8, "奖励总额");
+		createCell(cell,font,wb, row0, 9, "业务费总额");
+	}
+	/**
+	 * 创建单元格
+	 * @param wb excel表格
+	 * @param row 行
+	 * @param col 列
+	 * @param val 内容
+	 */
+	public void createCell(XSSFCell cell,XSSFFont font,XSSFWorkbook wb,XSSFRow row,int col,String val){
+		//创建一个celll单元格
+		cell=row.createCell(col);
+		if(null!=val&&isNumeric(val)){
+        	cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
+        	cell.setCellValue(Double.valueOf(val));
+        }else{
+        	cell.setCellValue(val);
+        }
+        //创建样式
+        XSSFCellStyle cellstyle=wb.createCellStyle();
+        cellstyle.setAlignment(XSSFCellStyle.ALIGN_CENTER_SELECTION);//居中对齐
+        cellstyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直方向居中对齐
+        cellstyle.setBorderTop(XSSFCellStyle.BORDER_THIN);//带上边框
+        cellstyle.setBorderRight(XSSFCellStyle.BORDER_THIN);//带右边框
+        cellstyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);//带下边框
+        cellstyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);//带左边框
+        //cellstyle.setBorderLeft(BorderStyle.DASH_DOT);
+        cellstyle.setWrapText(true);//设置自动换行
+        cell.setCellStyle(cellstyle);//给单元格设置样式
+        font = wb.createFont();
+        font.setFontName("宋体");
+        font.setFontHeightInPoints((short)12);
+        cellstyle.setFont(font);
+	}
+	public boolean isNumeric(String str) {
+		Pattern pattern = Pattern.compile("^[-+]?(([0-9]+)([.]([0-9]+))?|([.]([0-9]+))?)$");
+		Matcher isNum = pattern.matcher(str);
+		if (!isNum.matches()) {
+			return false;
+		}
+		return true;
+	}
+}

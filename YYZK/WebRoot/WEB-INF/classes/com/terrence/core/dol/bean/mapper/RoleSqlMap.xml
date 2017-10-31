@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+   <resultMap id="RM.Role" class="com.terrence.core.dol.bean.Role">
+       <result property="id" column="id"/>
+       <result property="pId" column="pId"/>
+       <result property="pCode" column="pCode"/>
+       <result property="name" column="name"/>
+       <result property="keywords" column="keywords"/>
+       <result property="code" column="code"/>
+   </resultMap>
+   
+   <resultMap id="RM.RoleByAdmin" class="com.terrence.core.dol.bean.Role">
+		<result property="id" column="id"/>
+		<result property="keywords" column="keywords"/>
+		<result property="name" column="name"/>
+		<result property="adminRoles" resultMap="Role.RM.AdminRole"/>
+	</resultMap>
+	
+   	<resultMap id="Role.RM.AdminRole" class="com.terrence.crm.dol.bean.AdminRole">
+		<result property="id" column="id"/>
+		<result property="adminId" column="adminId"/>
+		<result property="roleId" column="roleId"/>
+	</resultMap>
+
+   <sql id="Role.columns">
+       <![CDATA[
+           core_role.id,core_role.pId,core_role.pCode,core_role.name,core_role.code,core_role.keywords
+       ]]>
+   </sql>
+
+   <sql id="Role.AdminRole.columns">
+		<![CDATA[t_admin_role.id,t_admin_role.adminId,t_admin_role.roleId]]>
+	</sql>
+
+   <insert id="Role.insert" >
+
+       INSERT INTO core_role
+       (
+       name,
+       code
+       <isNotNull prepend="," property="keywords">
+           keywords
+       </isNotNull>
+       <isNotNull prepend="," property="pId">
+           pId
+       </isNotNull>
+       <isNotNull prepend="," property="pCode">
+           pCode
+       </isNotNull>
+       
+       )
+       VALUES
+       (
+       #name#,
+       #code#
+       <isNotNull prepend="," property="keywords">
+           #keywords#
+       </isNotNull>
+       <isNotNull prepend="," property="pId">
+           #pId#
+       </isNotNull>
+       <isNotNull prepend="," property="pCode">
+           #pCode#
+       </isNotNull>
+       )
+
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="Role.update" >
+       UPDATE core_role 
+       <dynamic prepend="SET">
+       <isNotNull prepend="," property="pId">
+           pId = #pId# 
+       </isNotNull>
+       <isNotNull prepend="," property="pCode">
+           pCode = #pCode# 
+       </isNotNull>
+       <isNotNull prepend="," property="name">
+           name = #name# 
+       </isNotNull>
+       <isNotNull prepend="," property="code">
+           code = #code# 
+       </isNotNull>
+       <isNotNull prepend="," property="keywords">
+           keywords = #keywords# 
+       </isNotNull>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+
+   <delete id="Role.delete">
+       <![CDATA[
+       DELETE FROM core_role WHERE
+       id = #id# 
+       ]]>
+   </delete>
+
+   <select id="Role.getById" resultMap="RM.Role">
+       SELECT <include refid="Role.columns"/>
+       <![CDATA[
+       FROM core_role 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+
+   <sql id="Role.findPage.where">
+       <dynamic prepend="WHERE">
+           <isNotEmpty prepend="AND" property="id">
+               id = #id#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="pId">
+               pId = #pId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="pCode">
+               pCode = #pCode#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="name">
+               name = #name#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="code">
+               code = #code#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="keywords">
+               keywords = #keywords#
+           </isNotEmpty>
+       </dynamic>
+   </sql>
+
+   <select id="Role.findPage.count" resultClass="long">
+       SELECT count(*) FROM core_role <include refid="Role.findPage.where"/>
+   </select>
+
+   <select id="Role.findPage" resultMap="RM.Role">
+       SELECT <include refid="Role.columns"/> 
+       FROM core_role <include refid="Role.findPage.where"/>
+           <isNotEmpty property="notTop"> and
+               id not in(select $notTop$ id from core_role <include refid="Role.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty> ) 
+           </isNotEmpty>  
+           <isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+           </isNotEmpty>
+   </select>
+
+   <select id="Role.findList" resultMap="RM.Role">
+       SELECT <include refid="Role.columns"/> 
+       FROM core_role <include refid="Role.findPage.where"/>
+       <isNotEmpty property="sortColumns">
+       ORDER BY $sortColumns$
+       </isNotEmpty>
+   </select>
+   
+   <select id="Role.findListByEmpId" resultMap="RM.Role">
+       	select <include refid="Role.columns"/> 
+       	from core_role 
+		where id in (select roleId from core_emp_role where empId=#empId#)
+   </select>
+   
+   <select id="Role.findByAdminId" resultMap="RM.Role" >
+	    SELECT <include refid="Role.columns"/>
+	    <![CDATA[
+	        FROM 
+	        	core_role , t_admin_role
+	        WHERE 
+	        	core_role.id = t_admin_role.roleId
+	        	and t_admin_role.adminId = #adminId#
+	    ]]>
+    </select>
+    
+    <select id="Role.findAllByAdminId" resultMap="RM.RoleByAdmin">
+    	select core_role.id,core_role.name,core_role.keywords,t_admin_role.id  as adminRoleId,t_admin_role.adminId,t_admin_role.roleId
+    	<![CDATA[
+    	from core_role left join t_admin_role  on core_role.id=t_admin_role.roleId and 
+    	t_admin_role.adminId=#adminId#
+    	]]>
+    </select>
+
+</sqlMap>

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AdminOrggroup">
+
+        
+	<resultMap id="RM.AdminOrggroup" class="com.terrence.crm.dol.bean.AdminOrggroup">
+        <result property="id" column="id"/>
+        <result property="groupid" column="groupid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="orggrantgroup.groupname" column="groupname"/>
+        <result property="orggrantgroup.notes" column="notes"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AdminOrggroup.columns">
+	    <![CDATA[
+        	t_admin_orggroup.id ,
+        	t_admin_orggroup.groupid ,
+        	t_admin_orggroup.adminId ,
+        	t_orggrantgroup.groupname,
+        	t_orggrantgroup.notes
+	    ]]>
+	</sql>
+	
+   <insert id="AdminOrggroup.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_admin_orggroup (
+        	groupid ,
+        	adminId 
+        ) VALUES (
+        	#groupid# ,
+        	#adminId# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AdminOrggroup.update" parameterClass="com.terrence.crm.dol.bean.AdminOrggroup">         
+        UPDATE t_admin_orggroup 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="groupid">
+	        	groupid = #groupid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminId">
+	        	adminId = #adminId# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="AdminOrggroup.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_admin_orggroup where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="AdminOrggroup.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_admin_orggroup 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="AdminOrggroup.getById" resultMap="RM.AdminOrggroup">
+	    select <include refid="AdminOrggroup.columns"/>
+	    
+	        from t_admin_orggroup 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="AdminOrggroup.getByProperty" resultMap="RM.AdminOrggroup">
+		select <include refid="AdminOrggroup.columns"/> from t_admin_orggroup where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AdminOrggroup.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_admin_orggroup.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="groupid">
+	             t_admin_orggroup.groupid = #groupid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_admin_orggroup.adminId = #adminId#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AdminOrggroup.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_admin_orggroup.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="groupid">
+	             t_admin_orggroup.groupid = #groupid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_admin_orggroup.adminId = #adminId#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="AdminOrggroup.findList" resultMap="RM.AdminOrggroup">
+    	SELECT 
+    		<include refid="AdminOrggroup.columns"/> 
+    	FROM 
+    		t_admin_orggroup
+		<include refid="AdminOrggroup.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AdminOrggroup.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_admin_orggroup
+        left join   t_orggrantgroup
+ 		on  t_admin_orggroup.groupid  =  t_orggrantgroup.groupid	
+    ]]>
+		<include refid="AdminOrggroup.findPage.where"/>    
+    </select>
+    <select id="AdminOrggroup.isUnique" resultClass="long">
+    	  <![CDATA[
+				select count(id) from t_admin_orggroup    	  
+    	  ]]>
+    	  <include refid="AdminOrggroup.findPage.where"/>
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="AdminOrggroup.findPage" resultMap="RM.AdminOrggroup">
+    	select <include refid="AdminOrggroup.columns"/>	    
+	        from t_admin_orggroup 
+	        left join   t_orggrantgroup
+ 		    on  t_admin_orggroup.groupid  =  t_orggrantgroup.groupid
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_admin_orggroup 
+	   left join   t_orggrantgroup
+ 	   on  t_admin_orggroup.groupid  =  t_orggrantgroup.groupid
+	   <include refid="AdminOrggroup.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AdminOrggroup.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+    
+	<select id="Sql.AdminOrggroup.findPage" resultMap="RM.AdminOrggroup">
+    	select <include refid="AdminOrggroup.columns"/>	    
+	        from t_admin_orggroup where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_admin_orggroup <include refid="AdminOrggroup.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AdminOrggroup.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<delete id="AdminOrggroup.deleteByGroupId">
+    <![CDATA[
+        DELETE FROM t_admin_orggroup WHERE
+        groupid in ($groupid$) 
+    ]]>
+    </delete>
+</sqlMap>

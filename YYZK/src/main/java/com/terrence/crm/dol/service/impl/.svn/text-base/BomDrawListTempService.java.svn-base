@@ -1,0 +1,134 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BomDrawListTemp;
+import com.terrence.crm.dol.query.BomDrawListTempQuery;
+import com.terrence.crm.dol.dao.IBomDrawListTempDao;
+import com.terrence.crm.dol.service.IBomDrawListTempService;
+
+@Service
+@Transactional
+public class BomDrawListTempService extends BaseService implements IBomDrawListTempService {
+	protected static Logger logger = LoggerFactory.getLogger(BomDrawListTempService.class);
+	@Autowired
+	@Qualifier("bomDrawListTempDao")
+	private IBomDrawListTempDao bomDrawListTempDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "BomDrawListTemp";
+	}
+	@Transactional(readOnly=true)
+	public BomDrawListTemp getById(java.lang.Long id) throws ServiceException
+	{
+		return bomDrawListTempDao.getById(id);
+	}
+	
+	public void saveOrUpdate(BomDrawListTemp entity) throws ServiceException
+	{
+		bomDrawListTempDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(BomDrawListTemp entity) throws ServiceException
+	{
+		Long adId = bomDrawListTempDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(BomDrawListTemp entity) throws ServiceException
+	{
+		Integer returnValue =  bomDrawListTempDao.update(entity);
+		return returnValue;
+	}
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = bomDrawListTempDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = bomDrawListTempDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BomDrawListTempQuery query = new BomDrawListTempQuery();
+		try {
+			return bomDrawListTempDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<BomDrawListTemp> findPage(Page<BomDrawListTemp> page, BomDrawListTempQuery query) throws ServiceException
+	{
+		return bomDrawListTempDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<BomDrawListTemp> findPage(Page<BomDrawListTemp> page,String statement, BomDrawListTempQuery query) throws ServiceException
+	{
+		return bomDrawListTempDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawListTemp> findList(BomDrawListTempQuery query) throws ServiceException
+	{
+		return bomDrawListTempDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawListTemp> findList(BomDrawListTempQuery query,Integer pageSize) throws ServiceException
+	{
+		return bomDrawListTempDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<BomDrawListTemp> findList(BomDrawListTempQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return bomDrawListTempDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawListTemp> findAllList() throws ServiceException
+	{
+		return bomDrawListTempDao.findAllList();
+	}
+	public List<BomDrawListTemp> findList(String sql,BomDrawListTempQuery query){
+		return bomDrawListTempDao.findList(sql, query);
+	}
+}

@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Job">
+
+        
+	<resultMap id="RM.Job" class="com.terrence.crm.dol.bean.Job">
+        <result property="jobid" column="jobid"/>
+        <result property="jobname" column="jobname"/>
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="empid" column="empid"/>
+        <result property="empname" column="empname"/>
+        <result property="planfinishdate" column="planfinishdate"/>
+        <result property="performdate" column="performdate"/>
+        <result property="amount" column="amount"/>
+        <result property="price" column="price"/>
+        <result property="status" column="status"/>
+        <result property="processid" column="processid"/>
+        <result property="laststep" column="laststep"/>
+        <result property="taskid" column="taskid"/>
+        <result property="checkstatus" column="checkstatus"/>
+        <result property="reviewstatus" column="reviewstatus"/>
+        
+    </resultMap>
+	<resultMap id="RM.Job2" class="com.terrence.crm.dol.bean.Job">
+        <result property="jobid" column="jobid"/>
+        <result property="jobname" column="jobname"/>
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="empid" column="empid"/>
+        <result property="empname" column="empname"/>
+        <result property="planfinishdate" column="planfinishdate"/>
+        <result property="performdate" column="performdate"/>
+        <result property="amount" column="amount"/>
+        <result property="price" column="price"/>
+        <result property="status" column="status"/>
+        <result property="processid" column="processid"/>
+        <result property="laststep" column="laststep"/>
+        <result property="taskid" column="taskid"/>
+        <result property="checkstatus" column="checkstatus"/>
+        <result property="reviewstatus" column="reviewstatus"/>
+       <result property="process" resultMap="RM.Job.process"/>
+        
+        <result property="fattr" column="fattr"/>
+        <result property="fexplain" column="fexplain"/>
+        
+    </resultMap>
+	
+	   
+	<resultMap id="RM.Job.process" class="com.terrence.crm.dol.bean.ProcessBj">
+		<result property="processname" column="processname"/>
+    </resultMap>
+	      
+	
+        
+	<resultMap id="RM.Job.findListLogs" class="com.terrence.crm.dol.bean.Job">
+        <result property="jobname" column="jobname"/>
+        <result property="empname" column="empname"/>
+        <result property="amount" column="amount"/>
+        <result property="price" column="price"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+
+
+	<resultMap id="RM.Job.getbyid" class="com.terrence.crm.dol.bean.Job">
+        <result property="jobid" column="jobid"/>
+        <result property="jobname" column="jobname"/>
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="empid" column="empid"/>
+        <result property="empname" column="empname"/>
+        <result property="planfinishdate" column="planfinishdate"/>
+        <result property="performdate" column="performdate"/>
+        <result property="amount" column="amount"/>
+        <result property="price" column="price"/>
+        <result property="status" column="status"/>
+        <result property="processid" column="processid"/>
+        <result property="laststep" column="laststep"/>
+        <result property="taskid" column="taskid"/>
+        <result property="checkstatus" column="checkstatus"/>
+        <result property="reviewstatus" column="reviewstatus"/>
+        <result property="fattr" column="fattr"/>
+        <result property="fexplain" column="fexplain"/>
+        
+    </resultMap>
+
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Job.columns">
+	    <![CDATA[
+        	t_job.jobid ,
+        	t_job.jobname ,
+        	t_job.teamid ,
+        	t_job.teamname ,
+        	t_job.empid ,
+        	t_job.empname ,
+        	t_job.planfinishdate ,
+        	t_job.performdate ,
+        	t_job.amount ,
+        	t_job.price ,
+        	t_job.status ,
+        	t_job.processid ,
+        	t_job.laststep ,
+        	t_job.taskid, 
+        	t_job.checkstatus,
+        	t_job.reviewstatus
+	    ]]>
+	</sql>
+	
+   <insert id="Job.insert" >
+    
+        INSERT INTO
+        t_job (
+        	jobname ,
+        	teamid ,
+        	teamname ,
+        	empid ,
+        	empname ,
+        	planfinishdate ,
+        	amount ,
+        	price ,
+        	status ,
+        	processid ,
+        	laststep ,
+        	taskid ,
+        	checkstatus,
+        	reviewstatus
+        	<isNotEmpty prepend="," property="fattr">
+        	fattr
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fexplain">
+        	fexplain
+        	</isNotEmpty>
+        	
+        ) VALUES (
+        	#jobname# ,
+        	#teamid# ,
+        	#teamname# ,
+        	#empid# ,
+        	#empname# ,
+        	#planfinishdate# ,
+        	#amount# ,
+        	#price# ,
+        	#status# ,
+        	#processid# ,
+        	#laststep# ,
+        	#taskid# ,
+        	#checkstatus# ,
+        	#reviewstatus#
+        	<isNotEmpty prepend="," property="fattr">
+        	#fattr#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fexplain">
+        	#fexplain#
+        	</isNotEmpty>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="jobid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Job.update" parameterClass="com.terrence.crm.dol.bean.Job">         
+        UPDATE t_job 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="jobname">
+	        	jobname = #jobname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamname">
+	        	teamname = #teamname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empname">
+	        	empname = #empname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="planfinishdate">
+	        	planfinishdate = #planfinishdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="performdate">
+	        	performdate = #performdate# 
+	        </isNotEmpty>
+	        
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="price">
+	        	price = #price# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        
+	        <isNotEmpty prepend="," property="processid">
+	        	processid = #processid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="laststep">
+	        	laststep = #laststep# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskid">
+	        	taskid = #taskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkstatus">
+	        	checkstatus = #checkstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="reviewstatus">
+	        	reviewstatus = #reviewstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fattr">
+        		fattr=#fattr#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fexplain">
+        		fexplain=#fexplain#
+        	</isNotEmpty>
+	        
+	        
+	    </dynamic>
+        WHERE 
+	        jobid = #jobid# 
+    </update>
+    
+	<delete id="Job.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_job where
+       jobid = #jobid# 
+    ]]>
+    </delete>
+    
+    <delete id="Job.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_job 
+        WHERE
+       jobid in ($jobid$) 
+    ]]>
+    </delete>
+    
+    
+	<delete id="Job.deleteByTaskId" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_job where
+       taskid = #taskid# 
+    ]]>
+    </delete>
+    
+    <select id="Job.getById" resultMap="RM.Job.getbyid">
+	    select <include refid="Job.columns"/>,fattr,fexplain
+	    
+	        from t_job 
+	        where 
+		        jobid = #jobid# 
+	    
+    </select>
+    <select id="Job.getByTaskId" resultMap="RM.Job">
+	   select top 1 *from t_job where taskid=#taskid#   order by jobid desc
+	    
+    </select>
+    
+    
+    
+    
+    
+	<select id="Job.getByProperty" resultMap="RM.Job">
+		select <include refid="Job.columns"/> from t_job where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Job.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="jobid">
+	             t_job.jobid = #jobid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="jobname">
+	             t_job.jobname  like ('%$jobname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_job.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_job.teamname = #teamname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_job.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empname">
+	             t_job.empname = #empname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="planfinishdateBegin">
+	             t_job.planfinishdate &gt;= #planfinishdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planfinishdateEnd">
+	             t_job.planfinishdate &lt;= #planfinishdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="performdateBegin">
+	             t_job.performdate &gt;= #performdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="performdateEnd">
+	             t_job.performdate &lt;= #performdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_job.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="price">
+	             t_job.price = #price#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_job.status = #status#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="notinstatus">
+	             t_job.status != #notinstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="notcheck">
+	             t_job.reviewstatus = #notcheck# 
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="processid">
+	             t_job.processid = #processid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="laststep">
+	             t_job.laststep = #laststep#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_job.taskid = #taskid#
+	       </isNotEmpty>
+	       
+	        <isNotEmpty prepend="AND" property="checkstatus">
+	        	checkstatus = #checkstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="reviewstatus">
+	        	reviewstatus = #reviewstatus# 
+	        </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	<sql id="Job.findPage.query">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="jobid">
+	             t_job.jobid = #jobid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="jobname">
+	             t_job.jobname =#jobname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_job.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_job.teamname = #teamname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_job.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empname">
+	             t_job.empname = #empname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="planfinishdateBegin">
+	             t_job.planfinishdate &gt;= #planfinishdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planfinishdateEnd">
+	             t_job.planfinishdate &lt;= #planfinishdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="performdateBegin">
+	             t_job.performdate &gt;= #performdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="performdateEnd">
+	             t_job.performdate &lt;= #performdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_job.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="price">
+	             t_job.price = #price#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_job.status = #status#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="notinstatus">
+	             t_job.status != #notinstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="notcheck">
+	             t_job.reviewstatus = #notcheck# 
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="processid">
+	             t_job.processid = #processid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="laststep">
+	             t_job.laststep = #laststep#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_job.taskid = #taskid#
+	       </isNotEmpty>
+	       
+	        <isNotEmpty prepend="AND" property="checkstatus">
+	        	checkstatus = #checkstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="reviewstatus">
+	        	reviewstatus = #reviewstatus# 
+	        </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Job.findPage.and">
+			<isNotEmpty prepend="AND" property="jobid">
+	             t_job.jobid = #jobid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="jobname">
+	             t_job.jobname like ('%$jobname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_job.teamid = #teamid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_job.teamname = #teamname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_job.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empname">
+	             t_job.empname = #empname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="planfinishdateBegin">
+	             t_job.planfinishdate &gt;= #planfinishdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planfinishdateEnd">
+	             t_job.planfinishdate &lt;= #planfinishdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="performdateBegin">
+	             t_job.performdate &gt;= #performdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="performdateEnd">
+	             t_job.performdate &lt;= #performdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_job.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="price">
+	             t_job.price = #price#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_job.status = #status#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="notinstatus">
+	             t_job.status != #notinstatus# 
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="notcheck">
+	             t_job.reviewstatus = #notcheck# 
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="processid">
+	             t_job.processid = #processid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="laststep">
+	             t_job.laststep = #laststep#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_job.taskid = #taskid#
+	       </isNotEmpty>
+	       
+	        <isNotEmpty prepend="AND" property="checkstatus">
+	        	checkstatus = #checkstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="reviewstatus">
+	        	reviewstatus = #reviewstatus# 
+	        </isNotEmpty>
+	</sql>
+    
+    <select id="Job.findList" resultMap="RM.Job">
+    	SELECT 
+    		<include refid="Job.columns"/> 
+    	FROM 
+    		t_job
+		<include refid="Job.findPage.query"/>
+		
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Job.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_job
+    ]]>
+		<include refid="Job.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    
+    <select id="Job.findPage" resultMap="RM.Job">
+    	select <include refid="Job.columns"/>	    
+	        from t_job 	   
+		<include refid="Job.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    -->
+	<select id="Job.findPage" resultMap="RM.Job2">
+    	select <include refid="Job.columns"/> ,t_process_bj.processname,fattr,fexplain	    
+	        from t_job left join t_process_bj on t_job.processid=t_process_bj.processid where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       jobid 
+	   not in(select $notTop$ 
+       jobid 
+	   from t_job <include refid="Job.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Job.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+	<select id="Job.findListLogs" resultMap="RM.Job.findListLogs">
+		select t_job.empname,t_job.jobname,	t_job.amount,t_job.price,t_job.status				
+			 from t_job_check 
+				left join t_job on t_job_check.jobid=t_job.jobid
+			where (datename(yyyy,t_job_check.createtime)+datename(mm,t_job_check.createtime)+case len(datename(dd,t_job_check.createtime))
+ when 1 then '0'+datename(dd,t_job_check.createtime) else datename(dd,t_job_check.createtime) end)=#yearMonth#
+				order by empname		
+				
+	</select>
+
+	
+</sqlMap>

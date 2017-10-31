@@ -1,0 +1,61 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ExamineReport;
+import com.terrence.crm.dol.dao.IExamineReportDao;
+import com.terrence.crm.dol.query.ExamineReportQuery;
+
+@Repository
+public class ExamineReportDao extends BaseIbatisDao<ExamineReport,java.lang.Long> implements IExamineReportDao{
+
+		
+	public void saveOrUpdate(ExamineReport entity) {
+		if(entity.getExamineid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ExamineReport";
+	}
+	public ExamineReport getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ExamineReport)this.getSqlMapClientTemplate().queryForObject("ExamineReport.getByProperty", map);		
+	}
+
+	@Override
+	public ExamineReport findData(ExamineReportQuery examineReportQuery) {
+		return (ExamineReport) this.getSqlMapClientTemplate().queryForObject("ExamineReport.find.check.checkResult", examineReportQuery);
+	}
+
+	@Override
+	public List<ExamineReport> findExId(ExamineReportQuery examineReportQuery) {
+		return this.getSqlMapClientTemplate().queryForList("ExamineReport.find.exid.data", examineReportQuery);
+	}
+
+	@Override
+	public ExamineReport findER(ExamineReportQuery examineReportQuery) {
+		return (ExamineReport) this.getSqlMapClientTemplate().queryForObject("ExamineReport.find.ER.data.ffilepath", examineReportQuery);
+	}
+
+	@Override
+	public ExamineReport findReportDate(ExamineReportQuery examineReportQuery) {
+		return (ExamineReport) this.getSqlMapClientTemplate().queryForObject("ExamineReport.find.chuchang.select.data", examineReportQuery);
+	}
+
+}

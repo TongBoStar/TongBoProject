@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProjectInfo;
+import com.terrence.crm.dol.dao.IProjectInfoDao;
+@Repository
+public class ProjectInfoDao extends BaseIbatisDao<ProjectInfo,java.lang.Long> implements IProjectInfoDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ProjectInfo"; 
+	}
+	public void saveOrUpdate(ProjectInfo entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public ProjectInfo getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProjectInfo)this.getSqlMapClientTemplate().queryForObject("ProjectInfo.getByProperty", map);
+	}
+}

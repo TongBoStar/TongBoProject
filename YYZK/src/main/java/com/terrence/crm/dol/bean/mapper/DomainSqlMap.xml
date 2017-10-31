@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Domain">
+
+<resultMap id="RM.Domain" class="com.terrence.crm.dol.bean.Domain">
+	<result property="id" column="id"/>
+	<result property="domainName" column="domainName"/>
+	<result property="domainIcon" column="domainIcon"/>
+	<result property="domainNo" column="domainNo"/>
+	<result property="domainCode" column="domainCode"/>
+	<result property="domainLevel" column="domainLevel"/>
+	<result property="domainDesc" column="domainDesc"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Domain.columns">
+	<![CDATA[
+		t_domain.id ,
+		t_domain.domainName ,
+		t_domain.domainIcon ,
+		t_domain.domainNo ,
+		t_domain.domainCode ,
+		t_domain.domainLevel ,
+		t_domain.domainDesc
+	]]>
+</sql>
+
+<insert id="Domain.insert" >
+	<![CDATA[
+	INSERT INTO t_domain (
+		domainName,
+		domainIcon,
+		domainNo,
+		domainCode,
+		domainLevel,
+		domainDesc
+	) VALUES (
+		#domainName#,
+		#domainIcon#,
+		#domainNo#,
+		#domainCode#,
+		#domainLevel#,
+		#domainDesc#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Domain.update" parameterClass="com.terrence.crm.dol.bean.Domain"> 
+	UPDATE t_domain 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="domainName">
+			domainName = #domainName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="domainIcon">
+			domainIcon = #domainIcon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="domainNo">
+			domainNo = #domainNo# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="domainCode">
+			domainCode = #domainCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="domainLevel">
+			domainLevel = #domainLevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="domainDesc">
+			domainDesc = #domainDesc# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Domain.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_domain.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainName">
+			t_domain.domainName = #domainName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainIcon">
+			t_domain.domainIcon = #domainIcon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainNo">
+			t_domain.domainNo = #domainNo# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainCode">
+			t_domain.domainCode = #domainCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainLevel">
+			t_domain.domainLevel = #domainLevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="domainDesc">
+			t_domain.domainDesc = #domainDesc# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Domain.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_domain.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainName">
+		t_domain.domainName = #domainName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainIcon">
+		t_domain.domainIcon = #domainIcon# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainNo">
+		t_domain.domainNo = #domainNo# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainCode">
+		t_domain.domainCode = #domainCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainLevel">
+		t_domain.domainLevel = #domainLevel# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="domainDesc">
+		t_domain.domainDesc = #domainDesc# 
+	</isNotEmpty>
+</sql>
+
+<select id="Domain.getById" resultMap="RM.Domain">
+	select <include refid="Domain.columns"/> from t_domain where id=#id#
+</select>
+
+<select id="Domain.getByProperty" resultMap="RM.Domain">
+	select <include refid="Domain.columns"/> from t_domain where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Domain.delete">
+	<![CDATA[
+		DELETE FROM t_domain WHERE id=#id#
+	]]>
+</delete>
+<delete id="Domain.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_domain WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Domain.findPage.count" resultClass="long">
+	select count(*) from t_domain <include refid="Domain.findPage.where"/>
+</select>
+
+<select id="Domain.findPage" resultMap="RM.Domain">
+	select <include refid="Domain.columns"/> 
+		from t_domain 
+	<include refid="Domain.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Domain.findList" resultMap="RM.Domain">
+	SELECT <include refid="Domain.columns"/> FROM t_domain
+	<include refid="Domain.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

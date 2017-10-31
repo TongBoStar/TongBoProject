@@ -1,0 +1,390 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.query.IcserialQuery;
+import com.terrence.crm.dol.service.IIcserialService;
+
+@Service
+@Transactional
+public class IcserialService extends BaseService implements IIcserialService {
+	protected static Logger logger = LoggerFactory.getLogger(IcserialService.class);
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Icserial";
+	}
+	@Transactional(readOnly=true)
+	public Icserial getById(java.lang.Long id) throws ServiceException
+	{
+		return icserialDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Icserial entity) throws ServiceException
+	{
+		icserialDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Icserial entity) throws ServiceException
+	{
+		Long adId = icserialDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Icserial entity) throws ServiceException
+	{
+		Integer returnValue =  icserialDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = icserialDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = icserialDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		IcserialQuery query = new IcserialQuery();
+		try {
+			return icserialDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Icserial> findPage(Page<Icserial> page, IcserialQuery query) throws ServiceException
+	{
+		return icserialDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Icserial> findPage(Page<Icserial> page,String statement, IcserialQuery query) throws ServiceException
+	{
+		return icserialDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icserial> findList(IcserialQuery query) throws ServiceException
+	{
+		return icserialDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icserial> findList(IcserialQuery query,Integer pageSize) throws ServiceException
+	{
+		return icserialDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Icserial> findList(IcserialQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return icserialDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Icserial> findAllList() throws ServiceException
+	{
+		return icserialDao.findAllList();
+	}
+	@Override
+	public void saveSync(String statement) throws ServiceException {
+		Icserial icserial=new Icserial();
+		icserialDao.save(icserial, statement);
+	}
+	@Override
+	public void saveSerial(Icserial entity) throws ServiceException {
+		
+		List<String> fserialnums = entity.getFserialnums();
+		List<Long> serialids = entity.getSerialids();
+		
+		BaseItem baseitem = new BaseItem();
+		baseitem.setItemcode(entity.getItemcode());
+		BaseItem bitem = baseItemDao.findbitem(baseitem);
+		
+		
+		if(fserialnums.size()>0){
+			for(int i =0;i<fserialnums.size();i++){
+				Icserial icserial = new Icserial();
+				if(fserialnums.get(i)!=null && !fserialnums.get(i).equals("")){
+					icserial.setFserialnum(fserialnums.get(i));
+				}else{
+					break;
+				}
+				
+				if(serialids.get(i) == null || serialids.get(i).equals("") || serialids.get(i).equals("null")){
+					
+					IcserialQuery icserialentity = new IcserialQuery();
+					icserialentity.setItemcode(entity.getItemcode());
+					icserialentity.setFserialnum(fserialnums.get(i));
+					if(entity.getFxmark() != null){
+						icserialentity.setDb(entity.getFxmark());
+					}else{
+						icserialentity.setDb(3);
+					}
+					List<Icserial> iclist = icserialDao.findList("Icserial.findlist.check.have.or.not", icserialentity);//同一物料、同一账套序列号唯一
+					if(iclist.size()>0){
+						throw new ServiceException("物料"+entity.getItemcode()+"已存在序列号"+fserialnums.get(i)+"  请注意：同一物料、同一账套序列号唯一");
+					}
+					
+					icserial.setFstatus(0);//0、出库 1、在库
+					icserial.setFvalid(0);//0、无效 1、有效
+					icserial.setItemcode(entity.getItemcode());
+					//icserial.setFitemid(fid);
+					icserial.setLockstatus(0);
+					
+					if(entity.getFxmark() != null){
+						icserial.setDb(entity.getFxmark());
+					}else{
+						icserial.setDb(3);
+					}
+					icserial.setFtrantypeid(71l);//订单单据类型
+					//icserial.setFinterid(entity.getFinterid());//最后操作单据内码---订单明细----之前用的
+					
+					//=====================================以下为后来改的============================================
+					icserial.setFinterid(entity.getFinterid());//最后操作单据内码---已检物料id
+					ItemWait itewai = itemWaitDao.getById(entity.getFinterid());
+					icserial.setFsnlistid(itewai.getOrderid());//----最后操作流转id----采购订单明细id
+					//================================================================================================
+					icserial.setFstockid(entity.getPositionname().intValue());//仓库
+					icserialDao.saveSerial(icserial);
+				}else{
+					
+					icserial.setSerialid(serialids.get(i));
+					icserial.setItemcode(entity.getItemcode());
+					//icserial.setFitemid(fid);
+					
+					
+					if(entity.getFxmark() != null){
+						icserial.setDb(entity.getFxmark());
+					}else{
+						icserial.setDb(3);
+					}
+					icserial.setFtrantypeid(71l);//订单单据类型
+				//	icserial.setFinterid(entity.getFinterid());//最后操作单据内码---订单明细----之前用的
+					
+					//====================================以下为后来改的=======================================================
+					icserial.setFinterid(entity.getFinterid());//最后操作单据内码---已检物料id
+					ItemWait itewai = itemWaitDao.getById(entity.getFinterid());
+					icserial.setFsnlistid(itewai.getOrderid());//----最后操作流转id----采购订单明细id
+					//============================================================================================
+					
+					icserial.setFstockid(entity.getPositionname().intValue());//仓库
+					
+					icserialDao.update("Icserial.update.newDate", icserial);
+					
+				}
+				
+				
+			}
+		}
+		
+		
+	}
+	@Override
+	public List<Icserial> findAllNumber(IcserialQuery icserialQuery)
+			throws ServiceException {
+		return icserialDao.findAllNumber(icserialQuery);
+	}
+	@Override
+	public List<Icserial> findNumberNot(IcserialQuery icserialQuery)
+			throws ServiceException {
+		return icserialDao.findNumberNot(icserialQuery);
+	}
+	@Override
+	public void updateIcserialNum(IcserialQuery icserialQuery)
+			throws ServiceException {
+		String serialnum = icserialQuery.getFserialnumList();//修改后的序列号
+	try {
+		List<Icserial> icserials = this.findList(icserialQuery);
+		//根据修改后的序列号取数据库，若取出数据不为空，则抛出异常，否则更新
+		IcserialQuery query = new IcserialQuery();
+		query.setFserialnum(serialnum);
+		query.setItemcode(icserialQuery.getItemcode());
+		List<Icserial> icserialsList = this.findList(query);
+		if(!icserialsList.isEmpty()){
+			throw new ServiceException("序列号"+serialnum+"在同一物料中已经存在，", "-1");
+		}
+		if(icserials.size()>1){
+			throw new ServiceException("序列号"+icserialQuery.getFserialnum()+"在物料"+icserialQuery.getItemcode()+"中不是唯一的", "-1");
+		}
+			for (int j = 0; j < icserials.size(); j++) {
+				Icserial icserial =icserials.get(j);
+				icserial.setFserialnum(serialnum);
+				this.update(icserial);
+			}
+		} catch (Exception e) {
+			throw new ServiceException(e.getMessage(), "-1");
+		}
+		
+	}
+	@Override
+	public List<Icserial> findList(IcserialQuery icserialQuery, String statement)
+			throws ServiceException {
+		return icserialDao.findList(statement, icserialQuery);
+		
+	}
+	@Override
+	public void updateIcserial(IcserialQuery icserialQuery)
+			throws ServiceException {
+		List<Icserial> icList = icserialDao.findList("Icserial.find.icList.data", icserialQuery);
+		
+		Putstorageentity putstora = putstorageentityDao.getById(icserialQuery.getFinterid());
+		
+		if(icList.size()>0){
+			for(int tt =0;tt<icList.size();tt++){
+				Icserial icser = new Icserial();
+				icser.setSerialid(icList.get(tt).getSerialid());
+				icser.setFstatus(1);
+				icser.setFvalid(1);
+				icser.setFtrantypeid(71L);
+				icser.setFinterid(putstora.getOrderid());
+				icserialDao.update("Icserial.udpate.return.zhuangtai", icser);
+			}
+		}
+		Icserial ics = new Icserial();
+		ics.setIdserials(icserialQuery.getSerialids());
+		ics.setFsnlistid(icserialQuery.getFsnlistid());
+		icserialDao.updateIcserial(ics);
+	}
+	@Override
+	public List<Icserial> findRENumber(IcserialQuery icserialQuery)
+			throws ServiceException {
+		return icserialDao.findList("Icserial.find.return.tuihuo.data", icserialQuery);
+	}
+	@Override
+	public List<Icserial> findserialNumber(IcserialQuery icserialQuery)
+			throws ServiceException {
+		return icserialDao.findList("Icserial.find.seriNum.management", icserialQuery);
+	}
+	@Override
+	public void saveNumber(Icserial entity) throws ServiceException {
+		List<String> fserialnums = entity.getFserialnums();
+		List<Long> serialids = entity.getSerialids();
+		
+		BaseItem baseitem = new BaseItem();
+		baseitem.setItemcode(entity.getItemcode());
+		BaseItem bitem = baseItemDao.findbitem(baseitem);
+		//Long fitemid = bitem.getFitemid();//原物料内码
+		//Integer fid = fitemid.intValue();
+		
+		
+		if(fserialnums.size()>0){
+			for(int i =0;i<fserialnums.size();i++){
+				Icserial icserial = new Icserial();
+				if(fserialnums.get(i)!=null && !fserialnums.get(i).equals("")){
+					icserial.setFserialnum(fserialnums.get(i));
+				}else{
+					break;
+				}
+				
+				if(serialids.get(i) == null || serialids.get(i).equals("") || serialids.get(i).equals("null")){
+					icserial.setFstatus(1);//0、出库 1、在库
+					icserial.setFvalid(1);//0、无效 1、有效
+					icserial.setItemcode(entity.getItemcode());
+					//icserial.setFitemid(fid);
+					icserial.setLockstatus(0);
+					
+					if(entity.getDb() != null){
+						icserial.setDb(entity.getDb());
+					}else{
+						icserial.setDb(3);
+					}
+					
+					
+					icserial.setFstockid(entity.getFstockid());//仓库
+					icserialDao.saveSerial(icserial);
+				}else{
+					
+					icserial.setSerialid(serialids.get(i));
+					icserial.setItemcode(entity.getItemcode());
+					//icserial.setFitemid(fid);
+					
+					
+					if(entity.getDb() != null){
+						icserial.setDb(entity.getDb());
+					}else{
+						icserial.setDb(3);
+					}
+					
+					icserial.setFstockid(entity.getFstockid());//仓库
+					icserialDao.update("Icserial.update.newDate", icserial);
+					
+				}
+				
+				
+			}
+		}
+	}
+	@Override
+	public void updateSerial(List<Long> checkedIdList) throws ServiceException {
+		for(int tt =0 ;tt<checkedIdList.size();tt++){
+			
+			Icserial ic = icserialDao.getById(checkedIdList.get(tt));
+			if(ic.getLockstatus()==1){
+				throw new ServiceException("序列号"+ic.getFserialnum()+"已锁库，不可做删除操作","-1");
+			}
+			
+			Icserial icserial = new Icserial();
+			icserial.setSerialid(checkedIdList.get(tt));
+			icserial.setFstatus(-1);
+			icserial.setFvalid(-1);
+			icserial.setLockstatus(-1);//作废
+			icserialDao.update(icserial);
+		}
+		
+	}
+
+}

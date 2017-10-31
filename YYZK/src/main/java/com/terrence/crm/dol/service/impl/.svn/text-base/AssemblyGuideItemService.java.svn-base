@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyGuideItem;
+import com.terrence.crm.dol.query.AssemblyGuideItemQuery;
+import com.terrence.crm.dol.dao.IAssemblyGuideItemDao;
+import com.terrence.crm.dol.service.IAssemblyGuideItemService;
+
+@Service
+@Transactional
+public class AssemblyGuideItemService extends BaseService implements IAssemblyGuideItemService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyGuideItemService.class);
+	@Autowired
+	@Qualifier("assemblyGuideItemDao")
+	private IAssemblyGuideItemDao assemblyGuideItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyGuideItem";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyGuideItem getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyGuideItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyGuideItem entity) throws ServiceException
+	{
+		assemblyGuideItemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyGuideItem entity) throws ServiceException
+	{
+		Long adId = assemblyGuideItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyGuideItem entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyGuideItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyGuideItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyGuideItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyGuideItemQuery query = new AssemblyGuideItemQuery();
+		try {
+			return assemblyGuideItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyGuideItem> findPage(Page<AssemblyGuideItem> page, AssemblyGuideItemQuery query) throws ServiceException
+	{
+		return assemblyGuideItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyGuideItem> findPage(Page<AssemblyGuideItem> page,String statement, AssemblyGuideItemQuery query) throws ServiceException
+	{
+		return assemblyGuideItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuideItem> findList(AssemblyGuideItemQuery query) throws ServiceException
+	{
+		return assemblyGuideItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuideItem> findList(AssemblyGuideItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyGuideItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyGuideItem> findList(AssemblyGuideItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyGuideItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuideItem> findAllList() throws ServiceException
+	{
+		return assemblyGuideItemDao.findAllList();
+	}
+
+}

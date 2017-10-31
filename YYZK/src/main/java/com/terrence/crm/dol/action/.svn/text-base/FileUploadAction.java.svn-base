@@ -1,0 +1,286 @@
+package com.terrence.crm.dol.action;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.json.annotations.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+
+import com.opensymphony.xwork2.ActionSupport;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.query.FileInfo;
+import com.terrence.crm.dol.query.FileType;
+import com.terrence.crm.dol.service.IFileService;
+
+/**
+ * 活动服务控制
+ * 
+ * @version 1.0
+ */
+@Namespace("/common")
+public class FileUploadAction extends ActionSupport {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6731441248764927465L;
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+	public static final String JSON = "json";
+	
+	private String qqfile;
+	private File uploadFile;
+	private String uploadFileFileName;
+	private String type;
+	private String srcfilename;
+	private String success;
+	private String filename;
+	
+	@Autowired
+	@Qualifier("fileService")
+	private IFileService fileService;
+	
+	private String folderName;
+	/**
+	 * 上传附件
+	 * @return
+	 * @throws Exception
+	 */
+	public String upload() throws Exception
+	{
+		String temp = ServletActionContext.getServletContext().getRealPath("/");
+		System.out.println(temp);
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			
+			FileInfo fileInfo = fileService.uploadStandOrderFile(in, uploadFileName, getFileType(type));
+			success = "true";
+			filename = fileInfo.getFileUrl();//
+			srcfilename=uploadFileFileName;//用户上传的文件名
+		}catch(Exception e){
+			success = "false";
+			filename = "";
+		}
+		
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ActionSupport#execute()
+	 */
+	@Override
+	public String execute() throws Exception {
+		String temp = ServletActionContext.getServletContext().getRealPath("/");
+		System.out.println(temp);
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			
+			FileInfo fileInfo = fileService.upload(in, uploadFileName, getFileType(type));
+			success = "true";
+			filename = fileInfo.getFileUrl();
+			srcfilename=uploadFileFileName;
+		}catch(Exception e){
+			success = "false";
+			filename = "";
+		}
+		
+		return JSON;
+	}
+
+	@Action("/common/uploadProject")
+	public String uploadProject() throws Exception {
+		String temp = ServletActionContext.getServletContext().getRealPath("/");
+		System.out.println(temp);
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			
+			FileInfo fileInfo = fileService.uploadProject(in, uploadFileName, getFileType(type),folderName);
+			success = "true";
+			filename = fileInfo.getFileUrl();
+			srcfilename=uploadFileFileName;
+		}catch(Exception e){
+			success = "false";
+			filename = "";
+		}
+		
+		return JSON;
+	}
+	@Action("/common/uploadHelp")
+	public String uploadHelp() throws Exception {
+		String temp = ServletActionContext.getServletContext().getRealPath("/");
+		System.out.println(temp);
+		String uploadFileName = qqfile;
+		InputStream in = null;
+		if(uploadFileFileName != null &&uploadFile!=null) {
+			uploadFileName = uploadFileFileName;
+			in = new FileInputStream(uploadFile);
+		}else{
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try{
+			
+			FileInfo fileInfo = fileService.uploadHelp(in, uploadFileName, getFileType(type),folderName);
+			success = "true";
+			filename = fileInfo.getFileUrl();
+			srcfilename=uploadFileFileName;
+		}catch(Exception e){
+			success = "false";
+			filename = "";
+		}
+		
+		return JSON;
+	}
+	
+	/**
+	 * @return the qqfile
+	 */
+//	@JSON(serialize=false)
+//	public File getQqfile() {
+//		return qqfile;
+//	}
+
+	/**
+	 * @param qqfile the qqfile to set
+	 */
+//	public void setQqfile(File qqfile) {
+//		this.qqfile = qqfile;
+//	}
+	
+	
+
+	
+
+	public String getQqfile() {
+		return qqfile;
+	}
+
+	public void setQqfile(String qqfile) {
+		this.qqfile = qqfile;
+	}
+
+
+	/**
+	 * @return the type
+	 */
+	@JSON(serialize=false)
+	public String getType() {
+		return type;
+	}
+
+	/**
+	 * @param type the type to set
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+	/**
+     * 对应枚举类
+     * @param type
+     * @return
+     */
+	@JSON(serialize=false)
+    private FileType getFileType(String type){
+    	FileType rnt = null;
+    	if(type!=null&&!type.trim().equals("")){
+    		rnt = FileType.valueOf(type.toUpperCase());
+    	}
+    	return rnt;
+    }
+
+	/**
+	 * @return the success
+	 */
+	public String getSuccess() {
+		return success;
+	}
+
+	/**
+	 * @param success the success to set
+	 */
+	public void setSuccess(String success) {
+		this.success = success;
+	}
+
+	/**
+	 * @return the filename
+	 */
+	public String getFilename() {
+		return filename;
+	}
+
+	/**
+	 * @param filename the filename to set
+	 */
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+
+	/**
+	 * @return the uploadFile
+	 */
+	@JSON(serialize=false)
+	public File getUploadFile() {
+		return uploadFile;
+	}
+
+	/**
+	 * @param uploadFile the uploadFile to set
+	 */
+	public void setUploadFile(File uploadFile) {
+		this.uploadFile = uploadFile;
+	}
+
+	/**
+	 * @return the uploadFileFileName
+	 */
+	@JSON(serialize=false)
+	public String getUploadFileFileName() {
+		return uploadFileFileName;
+	}
+
+	/**
+	 * @param uploadFileFileName the uploadFileFileName to set
+	 */
+	public void setUploadFileFileName(String uploadFileFileName) {
+		this.uploadFileFileName = uploadFileFileName;
+	}
+
+	public String getSrcfilename() {
+		return srcfilename;
+	}
+
+	public void setSrcfilename(String srcfilename) {
+		this.srcfilename = srcfilename;
+	}
+	public String getFolderName() {
+		return folderName;
+	}
+	public void setFolderName(String folderName) {
+		this.folderName = folderName;
+	}
+	
+}

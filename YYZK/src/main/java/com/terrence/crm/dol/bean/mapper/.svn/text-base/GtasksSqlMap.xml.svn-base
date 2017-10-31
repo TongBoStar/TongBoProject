@@ -1,0 +1,749 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Gtasks">
+
+        
+	<resultMap id="RM.Gtasks" class="com.terrence.crm.dol.bean.Gtasks">
+        <result property="taskid" column="taskid"/>
+        <result property="fbillid" column="fbillid"/>
+        <result property="taskname" column="taskname"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="status" column="status"/>
+        <result property="createdate" column="createdate"/>
+        <result property="empid" column="empid"/>
+        <result property="execdate" column="execdate"/>
+        <result property="nodeid" column="nodeid"/>
+        <result property="processdesc" column="processdesc"/>
+        <result property="processid" column="processid"/>
+        <result property="mark" column="mark"/>
+    </resultMap>
+    
+    
+    <resultMap id="RM.Gtasks.findpage.allTasks" class="com.terrence.crm.dol.bean.Gtasks"><!-- 待办任务列表 -->
+        <result property="taskid" column="taskid"/>
+        <result property="fbillid" column="fbillid"/>
+        <result property="taskname" column="taskname"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="status" column="status"/>
+        <result property="createdate" column="createdate"/>
+        <result property="mark" column="mark"/>
+        <result property="empid" column="empid"/>
+        <result property="execdate" column="execdate"/>
+        <result property="admin" resultMap="RM.Admin.allTasks.find"/>
+        <result property="icbill" resultMap="RM.Icbillno.allTasks.find"/>        
+    </resultMap>
+	 <resultMap id="RM.Admin.allTasks.find" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+    <resultMap id="RM.Icbillno.allTasks.find" class="com.terrence.crm.dol.bean.Icbillno">
+        <result property="fbillname" column="fbillname"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Gtasks.columns">
+	    <![CDATA[
+        	t_gtasks.taskid ,
+        	t_gtasks.fbillid ,
+        	t_gtasks.taskname ,
+        	t_gtasks.fbillno ,
+        	t_gtasks.status ,
+        	t_gtasks.createdate ,
+        	t_gtasks.empid ,
+        	t_gtasks.execdate ,
+        	t_gtasks.nodeid ,
+        	t_gtasks.processdesc ,
+        	t_gtasks.processid,
+        	t_gtasks.mark 
+	    ]]>
+	</sql>
+	
+   <insert id="Gtasks.insert" >
+  
+        INSERT INTO
+        t_gtasks (
+       		 taskname ,
+        	fbillno ,
+        	status ,
+        	createdate ,
+        	empid 
+        	<isNotEmpty prepend="," property="nodeid">
+        	nodeid
+        	</isNotEmpty> 
+        	  <isNotEmpty prepend="," property="execdate">
+	        	execdate 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="processdesc">
+	        	processdesc 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="processid">
+	        	processid 
+	        </isNotEmpty>
+        	  <isNotEmpty prepend="," property="fbillid">
+	        	fbillid 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	mark
+	        </isNotEmpty>
+        	
+        ) VALUES 
+        (
+        	#taskname# ,
+        	#fbillno# ,
+        	#status# ,
+        	#createdate# ,
+        	#empid# 
+        	<isNotEmpty prepend="," property="nodeid">
+        	#nodeid#
+        	</isNotEmpty> 
+        	 <isNotEmpty prepend="," property="execdate">
+	        	#execdate# 
+	        </isNotEmpty>
+        	
+        	 <isNotEmpty prepend="," property="processdesc">
+	        	#processdesc# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="processid">
+	        	#processid# 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="fbillid">
+	        	#fbillid# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	#mark# 
+	        </isNotEmpty>
+        	
+        )
+ 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="taskid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <insert id="Gtasks.insert.newTask" ><!-- 采购申请单提交添加 -->
+  
+        INSERT INTO
+        t_gtasks (
+        status 
+          <isNotEmpty prepend="," property="fbillid">
+	        	fbillid 
+	        </isNotEmpty>
+        	  <isNotEmpty prepend="," property="taskname">
+	        	taskname 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="fbillno">
+	        	fbillno 
+	        </isNotEmpty>
+        	
+        	<isNotEmpty prepend="," property="createdate">
+	        	createdate 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="empid">
+	        	empid 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="execdate">
+	        	execdate 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	mark 
+	        </isNotEmpty>
+        	 
+        ) VALUES (
+        	#status# 
+        	 <isNotEmpty prepend="," property="fbillid">
+	        	#fbillid# 
+	        </isNotEmpty>
+        	  <isNotEmpty prepend="," property="taskname">
+	        	#taskname# 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="fbillno">
+	        	#fbillno# 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="createdate">
+	        	#createdate# 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="empid">
+	        	#empid# 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="execdate">
+	        	#execdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	#mark# 
+	        </isNotEmpty>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="taskid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+
+	<insert id="Tasks.insert.tasksPoor" ><!-- 订单提交添加 -->
+  
+        INSERT INTO
+        t_gtasks (
+        status 
+          <isNotEmpty prepend="," property="fbillid">
+	        	fbillid 
+	        </isNotEmpty>
+        	  <isNotEmpty prepend="," property="taskname">
+	        	taskname 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="fbillno">
+	        	fbillno 
+	        </isNotEmpty>
+        	
+        	<isNotEmpty prepend="," property="createdate">
+	        	createdate 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="empid">
+	        	empid 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="execdate">
+	        	execdate 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	mark 
+	        </isNotEmpty>
+        	 
+        ) VALUES (
+        	#status# 
+        	 <isNotEmpty prepend="," property="fbillid">
+	        	#fbillid# 
+	        </isNotEmpty>
+        	  <isNotEmpty prepend="," property="taskname">
+	        	#taskname# 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="fbillno">
+	        	#fbillno# 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="createdate">
+	        	#createdate# 
+	        </isNotEmpty>
+        	<isNotEmpty prepend="," property="empid">
+	        	#empid# 
+	        </isNotEmpty>
+        	 <isNotEmpty prepend="," property="execdate">
+	        	#execdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	#mark# 
+	        </isNotEmpty>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="taskid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+	<update id="Gtasks.update" parameterClass="com.terrence.crm.dol.bean.Gtasks">         
+        UPDATE t_gtasks 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillid">
+	        	fbillid = #fbillid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskname">
+	        	taskname = #taskname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="execdate">
+	        	execdate = #execdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="nodeid">
+	        	nodeid = #nodeid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processdesc">
+	        	processdesc = #processdesc# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processid">
+	        	processid = #processid# 
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="mark">
+	        	mark = #mark# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        taskid = #taskid# 
+    </update>
+    
+    
+    
+    <update id="Gtasks.update.gtasks" parameterClass="com.terrence.crm.dol.bean.Gtasks"><!-- 更新任务为已做 -->         
+        UPDATE t_gtasks 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillid">
+	        	fbillid = #fbillid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskname">
+	        	taskname = #taskname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="execdate">
+	        	execdate = #execdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="nodeid">
+	        	nodeid = #nodeid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processdesc">
+	        	processdesc = #processdesc# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="processid">
+	        	processid = #processid# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	mark = #mark# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        taskid = #taskid# 
+    </update>
+    
+     <update id="Gtasks.update.status.detail" parameterClass="com.terrence.crm.dol.bean.Gtasks"><!-- 根据单据编号更新任务为已做 -->         
+        UPDATE t_gtasks 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillid">
+	        	fbillid = #fbillid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskname">
+	        	taskname = #taskname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="execdate">
+	        	execdate = #execdate# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="mark">
+	        	mark = #mark# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fbillno = #fbillno# 
+    </update>
+    
+     <update id="Gtasks.update.fbno" parameterClass="com.terrence.crm.dol.bean.Gtasks"><!-- 反审核更新当前单据编码状态为未做-->         
+        UPDATE t_gtasks set status = 1 where fbillno = #fbillno#        
+    </update>
+    
+    <update id="Gtasks.update.findRejected" parameterClass="com.terrence.crm.dol.bean.Gtasks"><!-- 驳回用-->         
+        UPDATE t_gtasks set status = #status#,taskname = #taskname# where fbillno = #fbillno#  and fbillid = #fbillid#
+    </update>
+    
+     <update id="Gtasks.update.tijiao.liebiao" parameterClass="com.terrence.crm.dol.bean.Gtasks">        
+        UPDATE t_gtasks set status = #status# where   taskid = #taskid# 
+    </update>
+    
+    
+    
+	<delete id="Gtasks.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_gtasks where
+       taskid = #taskid# 
+    ]]>
+    </delete>
+    
+    <delete id="Gtasks.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_gtasks 
+        WHERE
+       taskid in ($taskid$) 
+    ]]>
+    </delete>
+    
+      <delete id="Gtasks.delete.fno"><!-- 删除 -->
+    <![CDATA[
+        DELETE FROM 
+        	t_gtasks 
+        WHERE
+       taskid = #taskid# 
+    ]]>
+    </delete>
+    
+       <delete id="Gtasks.delete.rejected"><!-- 删除 -->
+    <![CDATA[
+        DELETE FROM 
+        	t_gtasks 
+        WHERE
+       fbillid = #fbillid#  and fbillno = #fbillno# and status = #status#
+    ]]>
+    </delete>
+  
+    
+    <select id="Gtasks.getById" resultMap="RM.Gtasks">
+	    select <include refid="Gtasks.columns"/>
+	    
+	        from t_gtasks 
+	        where 
+		        taskid = #taskid# 
+	    
+    </select>
+    
+	<select id="Gtasks.getByProperty" resultMap="RM.Gtasks">
+		select <include refid="Gtasks.columns"/> from t_gtasks where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Gtasks.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_gtasks.taskid = #taskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_gtasks.fbillid = #fbillid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskname">
+	             t_gtasks.taskname = #taskname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_gtasks.fbillno = #fbillno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_gtasks.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_gtasks.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_gtasks.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_gtasks.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="execdateBegin">
+	             t_gtasks.execdate &gt;= #execdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="execdateEnd">
+	             t_gtasks.execdate &lt;= #execdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nodeid">
+	             t_gtasks.nodeid = #nodeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processdesc">
+	             t_gtasks.processdesc = #processdesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processid">
+	             t_gtasks.processid = #processid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="mark">
+	             t_gtasks.mark = #mark#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Gtasks.findPage.and">
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_gtasks.taskid = #taskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_gtasks.fbillid = #fbillid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskname">
+	             t_gtasks.taskname = #taskname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_gtasks.fbillno = #fbillno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_gtasks.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_gtasks.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_gtasks.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_gtasks.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="execdateBegin">
+	             t_gtasks.execdate &gt;= #execdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="execdateEnd">
+	             t_gtasks.execdate &lt;= #execdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nodeid">
+	             t_gtasks.nodeid = #nodeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processdesc">
+	             t_gtasks.processdesc = #processdesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processid">
+	             t_gtasks.processid = #processid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="mark">
+	             t_gtasks.mark = #mark#
+	       </isNotEmpty>
+	</sql>
+	
+	
+	<sql id="Gtasks.findPage.task.where"><!-- 待办任务列表 -->
+	   
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_gtasks.taskid = #taskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_gtasks.fbillid = #fbillid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskname">
+	             t_gtasks.taskname = #taskname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_gtasks.fbillno = #fbillno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_gtasks.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_gtasks.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_gtasks.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_gtasks.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="execdateBegin">
+	             t_gtasks.execdate &gt;= #execdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="execdateEnd">
+	             t_gtasks.execdate &lt;= #execdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="mark">
+	             t_gtasks.mark = #mark#
+	       </isNotEmpty>
+	</sql>
+	 <sql id="Gtasks.findPage.task.and"><!-- 待办任务列表 -->
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_gtasks.taskid = #taskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_gtasks.fbillid = #fbillid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taskname">
+	             t_gtasks.taskname = #taskname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_gtasks.fbillno = #fbillno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_gtasks.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_gtasks.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_gtasks.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_gtasks.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="execdateBegin">
+	             t_gtasks.execdate &gt;= #execdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="execdateEnd">
+	             t_gtasks.execdate &lt;= #execdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="nodeid">
+	             t_gtasks.nodeid = #nodeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processdesc">
+	             t_gtasks.processdesc = #processdesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="processid">
+	             t_gtasks.processid = #processid#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="mark">
+	             t_gtasks.mark = #mark#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Gtasks.Entity" resultMap="RM.Gtasks">
+    	SELECT 	<include refid="Gtasks.columns"/> FROM t_gtasks <include refid="Gtasks.findPage.where"/>
+    </select>
+    
+    <select id="Gtasks.findList" resultMap="RM.Gtasks">
+    	SELECT 
+    		<include refid="Gtasks.columns"/> 
+    	FROM 
+    		t_gtasks
+		<include refid="Gtasks.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Gtasks.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_gtasks
+    ]]>
+		<include refid="Gtasks.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Gtasks.findPage" resultMap="RM.Gtasks">
+    	select <include refid="Gtasks.columns"/>	    
+	        from t_gtasks 	   
+		<include refid="Gtasks.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Gtasks.findPage" resultMap="RM.Gtasks">
+    	select <include refid="Gtasks.columns"/>	    
+	        from t_gtasks where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       taskid 
+	   not in(select $notTop$ 
+       taskid 
+	   from t_gtasks <include refid="Gtasks.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Gtasks.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    
+    <select id="Tasks.findpage.allTask.count" resultClass="long"><!-- 待办事项列表查询 -->
+    <![CDATA[
+        select 
+        count(*)
+        from t_gtasks
+    ]]>
+		where t_gtasks.status = 1  <include refid="Gtasks.findPage.task.where"/>    
+    </select>
+    <select id="Tasks.findpage.allTask" resultMap="RM.Gtasks.findpage.allTasks"><!-- 待办事项列表查询 -->
+    	select <include refid="Gtasks.columns"/>,t_admin.adminName,t_icbillno.fbillname	    
+	        from t_gtasks left join t_admin on t_gtasks.empid = t_admin.adminId
+	        left join t_icbillno on t_gtasks.fbillid = t_icbillno.fbillid
+	        
+	         where 1=1 and t_gtasks.status = 1 
+	   <isNotEmpty property="notTop">  and 
+       taskid 
+	   not in(select $notTop$ 
+       taskid 
+	   from t_gtasks   where 1=1 and t_gtasks.status = 1 <include refid="Gtasks.findPage.task.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Gtasks.findPage.task.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+     <select id="Gtasks.find.entity" resultMap="RM.Gtasks">
+	    select <include refid="Gtasks.columns"/>
+	    
+	        from t_gtasks 
+	        where 
+		        fbillno = #fbillno# 
+	    
+    </select>
+    
+     <select id="Gtaska.find.tasksid" resultMap="RM.Gtasks">
+	    select <include refid="Gtasks.columns"/>
+	    
+	        from t_gtasks 
+	        where 
+		        fbillno = #fbillno# and status = #status#
+	    
+    </select>
+    
+     <select id="Gtasks.find.findlistgtasks" resultMap="RM.Gtasks">
+	    select <include refid="Gtasks.columns"/>
+	    
+	        from t_gtasks 
+	        where 
+		        fbillno = #fbillno# and status = 1
+	    
+    </select>
+    
+     <select id="Gtasks.find.delete.data.for.poorder" resultMap="RM.Gtasks">
+	    select <include refid="Gtasks.columns"/>
+	    
+	        from t_gtasks 
+	        where 
+		       fbillno = #fbillno# and status = #status#
+	    
+    </select>
+    
+	
+</sqlMap>

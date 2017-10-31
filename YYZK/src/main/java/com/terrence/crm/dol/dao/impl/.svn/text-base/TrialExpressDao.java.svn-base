@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrialExpress;
+import com.terrence.crm.dol.dao.ITrialExpressDao;
+import com.terrence.crm.dol.query.TrialExpressQuery;
+
+@Repository
+public class TrialExpressDao extends BaseIbatisDao<TrialExpress,java.lang.Long> implements ITrialExpressDao{
+
+		
+	public void saveOrUpdate(TrialExpress entity) {
+		if(entity.getExpressid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrialExpress";
+	}
+	public TrialExpress getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrialExpress)this.getSqlMapClientTemplate().queryForObject("TrialExpress.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteDataByDid(TrialExpressQuery trialExpressQuery) {
+		this.getSqlMapClientTemplate().delete("TrialExpress.delete.byDid", trialExpressQuery);
+	}
+
+}

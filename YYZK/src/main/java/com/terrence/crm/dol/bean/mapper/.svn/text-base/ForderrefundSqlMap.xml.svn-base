@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Forderrefund">
+
+        
+	<resultMap id="RM.Forderrefund" class="com.terrence.crm.dol.bean.Forderrefund">
+        <result property="refundid" column="refundid"/>
+        <result property="receivableid" column="receivableid"/>
+        <result property="fdate" column="fdate"/>
+        <result property="famount" column="famount"/>
+        <result property="forderno" column="forderno"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Forderrefund.columns">
+	    <![CDATA[
+        	t_forderrefund.refundid ,
+        	t_forderrefund.receivableid ,
+        	t_forderrefund.fdate ,
+        	t_forderrefund.famount ,
+        	t_forderrefund.forderno 
+	    ]]>
+	</sql>
+	
+   <insert id="Forderrefund.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_forderrefund (
+        	receivableid ,
+        	fdate ,
+        	famount ,
+        	forderno 
+        ) VALUES (
+        	#receivableid# ,
+        	#fdate# ,
+        	#famount# ,
+        	#forderno# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="refundid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Forderrefund.update" parameterClass="com.terrence.crm.dol.bean.Forderrefund">         
+        UPDATE t_forderrefund 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="receivableid">
+	        	receivableid = #receivableid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="famount">
+	        	famount = #famount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderno">
+	        	forderno = #forderno# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        refundid = #refundid# 
+    </update>
+    
+	<delete id="Forderrefund.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_forderrefund where
+       refundid = #refundid# 
+    ]]>
+    </delete>
+    
+    <delete id="Forderrefund.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_forderrefund 
+        WHERE
+       refundid in ($refundid$) 
+    ]]>
+    </delete>
+    
+    <select id="Forderrefund.getById" resultMap="RM.Forderrefund">
+	    select <include refid="Forderrefund.columns"/>
+	    
+	        from t_forderrefund 
+	        where 
+		        refundid = #refundid# 
+	    
+    </select>
+    
+	<select id="Forderrefund.getByProperty" resultMap="RM.Forderrefund">
+		select <include refid="Forderrefund.columns"/> from t_forderrefund where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Forderrefund.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="refundid">
+	             t_forderrefund.refundid = #refundid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderrefund.receivableid = #receivableid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderrefund.fdate = #fdate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="famount">
+	             t_forderrefund.famount = #famount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderrefund.forderno = #forderno#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Forderrefund.findPage.and">
+			<isNotEmpty prepend="AND" property="refundid">
+	             t_forderrefund.refundid = #refundid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderrefund.receivableid = #receivableid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderrefund.fdate = #fdate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="famount">
+	             t_forderrefund.famount = #famount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderrefund.forderno = #forderno#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Forderrefund.Entity" resultMap="RM.Forderrefund">
+    	SELECT 	<include refid="Forderrefund.columns"/> FROM t_forderrefund <include refid="Forderrefund.findPage.where"/>
+    </select>
+    
+    <select id="Forderrefund.findList" resultMap="RM.Forderrefund">
+    	SELECT 
+    		<include refid="Forderrefund.columns"/> 
+    	FROM 
+    		t_forderrefund
+		<include refid="Forderrefund.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Forderrefund.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_forderrefund
+    ]]>
+		<include refid="Forderrefund.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Forderrefund.findPage" resultMap="RM.Forderrefund">
+    	select <include refid="Forderrefund.columns"/>	    
+	        from t_forderrefund 	   
+		<include refid="Forderrefund.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Forderrefund.findPage" resultMap="RM.Forderrefund">
+    	select <include refid="Forderrefund.columns"/>	    
+	        from t_forderrefund where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       refundid 
+	   not in(select $notTop$ 
+       refundid 
+	   from t_forderrefund <include refid="Forderrefund.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Forderrefund.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

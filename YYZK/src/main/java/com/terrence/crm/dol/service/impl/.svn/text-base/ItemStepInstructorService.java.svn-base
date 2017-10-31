@@ -1,0 +1,213 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.ItemStepInstructor;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.ItemStepInstructorQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IItemStepInstructorDao;
+import com.terrence.crm.dol.service.IItemStepInstructorService;
+
+@Service
+@Transactional
+public class ItemStepInstructorService extends BaseService implements IItemStepInstructorService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemStepInstructorService.class);
+	@Autowired
+	@Qualifier("itemStepInstructorDao")
+	private IItemStepInstructorDao itemStepInstructorDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemStepInstructor";
+	}
+	@Transactional(readOnly=true)
+	public ItemStepInstructor getById(java.lang.Long id) throws ServiceException
+	{
+		return itemStepInstructorDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemStepInstructor entity) throws ServiceException
+	{
+		itemStepInstructorDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ItemStepInstructor entity) throws ServiceException
+	{
+		Long adId = itemStepInstructorDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemStepInstructor entity) throws ServiceException
+	{
+		Integer returnValue =  itemStepInstructorDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemStepInstructorDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemStepInstructorDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemStepInstructorQuery query = new ItemStepInstructorQuery();
+		try {
+			return itemStepInstructorDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemStepInstructor> findPage(Page<ItemStepInstructor> page, ItemStepInstructorQuery query) throws ServiceException
+	{
+		return itemStepInstructorDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemStepInstructor> findPage(Page<ItemStepInstructor> page,String statement, ItemStepInstructorQuery query) throws ServiceException
+	{
+		return itemStepInstructorDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemStepInstructor> findList(ItemStepInstructorQuery query) throws ServiceException
+	{
+		return itemStepInstructorDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemStepInstructor> findList(ItemStepInstructorQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemStepInstructorDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemStepInstructor> findList(ItemStepInstructorQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemStepInstructorDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemStepInstructor> findAllList() throws ServiceException
+	{
+		return itemStepInstructorDao.findAllList();
+	}
+	@Override
+	public void saveNewData(ItemStepInstructor entity, List<Long> checkedIdList)
+			throws ServiceException {
+		String ids = StringUtils.join(checkedIdList, ",");
+		BaseItemQuery baseitemQuery = new BaseItemQuery();
+		baseitemQuery.setBaseitemids(ids);
+		List<BaseItem> baseList = baseItemDao.findList("BaseItem.find.itemcode.in.itemStepInstructor", baseitemQuery);
+		
+		List<Long> fitemids = entity.getFitemids();//作业指导书
+		List<Long> fnodes = entity.getFnodes();//工序
+		
+		if(baseList.size()>0){
+			for(int y= 0;y<baseList.size();y++){
+				
+				for(int sq=0;sq<fitemids.size();sq++){
+					ItemStepInstructor isi = new ItemStepInstructor();
+					if(fitemids.get(sq)!=null){
+						isi.setFitemid(fitemids.get(sq));
+					}else{
+						break;
+					}
+					isi.setFnode(fnodes.get(sq));
+					isi.setItemcode(baseList.get(y).getItemcode());
+					
+					List<ItemStepInstructor> itemSI = itemStepInstructorDao.findListISI(isi);
+					if(itemSI.size()>0){
+						throw new ServiceException("该工序的工艺规程已绑定，如需修改，请删除原先绑定的数据","-1");						
+					}
+					
+					itemStepInstructorDao.save(isi, "ItemStepInstructor.newData.insert");
+					BaseItem base = new BaseItem();
+					base.setBaseitemid(baseList.get(y).getBaseitemid());
+					if(fnodes.get(sq)==2){
+						base.setAssembkyid(fitemids.get(sq));
+						base.setAssis(1);
+					}else if(fnodes.get(sq)==3){
+						base.setCraftid(fitemids.get(sq));
+						base.setCrfis(1);
+					}else if(fnodes.get(sq)==1 || fnodes.get(sq)==4){
+						throw new ServiceException("程序未涉及配料、检修的工艺规程绑定，请联系相关人员","-1");
+					}
+					
+				
+					baseItemDao.update("BaseItem.update.craftid.or.assembkyid", base);
+				}
+			}
+		}
+		
+	}
+	@Override
+	public List<ItemStepInstructor> findbookData(
+			ItemStepInstructorQuery itemStepInstructorQuery)
+			throws ServiceException {
+		List<ItemStepInstructor>  listISI = itemStepInstructorDao.findbookData(itemStepInstructorQuery);
+		
+//		if(listISI.size()==0){
+//			throw new ServiceException("此物料此工序没有绑定工艺规程","-1");
+//		}
+//		if(listISI.size()>1){
+//			throw new ServiceException("此物料此工序绑定的工艺规程为多份","-1");
+//		}
+		return listISI;
+	}
+	@Override
+	public List<ItemStepInstructor> findAllScheme(
+			ItemStepInstructorQuery itemStepInstructorQuery)
+			throws ServiceException {
+		return itemStepInstructorDao.findAllScheme(itemStepInstructorQuery);
+	}
+	@Override
+	public void deleteScheme(ItemStepInstructorQuery itemStepInstructorQuery)
+			throws ServiceException {
+		itemStepInstructorDao.deleteScheme(itemStepInstructorQuery);
+		BaseItem baseitem = new BaseItem();
+		baseitem.setItemcode(itemStepInstructorQuery.getItemcode());
+		if(itemStepInstructorQuery.getFnode()==2){
+			baseitem.setAssis(0);
+		}else if(itemStepInstructorQuery.getFnode()==3){
+			baseitem.setCrfis(0);
+		}
+		baseItemDao.update("BaseItem.update.for.assis.crfis", baseitem);
+	}
+
+}

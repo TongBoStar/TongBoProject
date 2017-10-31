@@ -1,0 +1,216 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.OrderItem;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.bean.OrdersProductView;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IOrderItemDao;
+import com.terrence.crm.dol.dao.IOrdersProductDao;
+import com.terrence.crm.dol.dao.ISeqDao;
+import com.terrence.crm.dol.dao.IShortageDao;
+import com.terrence.crm.dol.event.ItemDemandEvent;
+import com.terrence.crm.dol.query.OrdersProductQuery;
+import com.terrence.crm.dol.service.IOrdersProductService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class OrdersProductService extends BaseService implements IOrdersProductService {
+	protected static Logger logger = LoggerFactory.getLogger(OrdersProductService.class);
+	@Autowired
+	@Qualifier("ordersProductDao")
+	private IOrdersProductDao ordersProductDao;
+	@Autowired
+	@Qualifier("shortageDao")
+	private IShortageDao shortageDao;
+	
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	
+	@Autowired
+	@Qualifier("orderItemDao")
+	private IOrderItemDao orderItemDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("seqDao")
+	private ISeqDao seqDao;
+	public String getIbatisSqlMapNamespace() {
+		return "OrdersProduct";
+	}
+	@Transactional(readOnly=true)
+	public OrdersProduct getById(java.lang.Long id) throws ServiceException
+	{
+		return ordersProductDao.getById(id);
+	}
+	
+	public void saveOrUpdate(OrdersProduct entity) throws ServiceException
+	{
+		ordersProductDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(OrdersProduct entity) throws ServiceException
+	{
+		Long adId = ordersProductDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(OrdersProduct entity) throws ServiceException
+	{
+		Integer returnValue =  ordersProductDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = ordersProductDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = ordersProductDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrdersProductQuery query = new OrdersProductQuery();
+		try {
+			return ordersProductDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<OrdersProduct> findPage(Page<OrdersProduct> page, OrdersProductQuery query) throws ServiceException
+	{
+		return ordersProductDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<OrdersProduct> findPage(Page<OrdersProduct> page,String statement, OrdersProductQuery query) throws ServiceException
+	{
+		return ordersProductDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrdersProduct> findList(OrdersProductQuery query) throws ServiceException
+	{
+		return ordersProductDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrdersProduct> findList(OrdersProductQuery query,Integer pageSize) throws ServiceException
+	{
+		return ordersProductDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<OrdersProduct> findList(OrdersProductQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return ordersProductDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<OrdersProduct> findAllList() throws ServiceException
+	{
+		return ordersProductDao.findAllList();
+	}
+	@Override
+	public List<OrdersProduct> findList(OrdersProductQuery query,
+			String statement) throws ServiceException {
+		return ordersProductDao.findList(statement, query);
+	}
+	@Override
+	public void updateStatus(OrdersProduct entity) throws ServiceException {
+		ordersProductDao.update(entity);
+		if(entity.getStatus()==2)
+		{
+			OrdersProduct product=ordersProductDao.getById(entity.getId());
+			ItemDemandEvent event=new ItemDemandEvent("");
+			event.setAddOrSub(0);
+			event.setItemcode(product.getItemcode());
+			event.setDemand(product.getAmount());
+			this.publishEvent(event);
+		}
+	}
+	@Override
+	public void saveTaskOrShortage(OrdersProductView ordersProductView,Long orderid) throws ServiceException {
+		String itemcodes[]=ordersProductView.getItemcode();
+		String itemname[]=ordersProductView.getItemname();
+		Double demands[]=ordersProductView.getAmount();
+		AssemblyTask assemblytask;
+		for(int i=0;i<itemcodes.length;i++)
+		{
+			OrderItem orderItem=orderItemDao.getByProperty("fnumber", itemcodes[i]);
+			if(orderItem!=null&&orderItem.getItemproperty()==2)/**自制**/
+			{
+				Icbillno icbillno=icbillnoDao.getByProperty("fpreletter", "JOB");
+				String fbillno=icbillno.getFpreletter()+icbillno.getFcurno();//seqDao.getCurSeq("WORK",6);
+				assemblytask=new AssemblyTask();
+				assemblytask.setItemcode(itemcodes[i]);
+				assemblytask.setItemname(itemname[i]);
+				assemblytask.setOrderid(orderid);
+				assemblytask.setTaskcode(fbillno);
+				assemblytask.setTaskstatus(0);
+				assemblytask.setStatus(0);
+				assemblytask.setDispatchstatus(0);
+				assemblytask.setDemand(demands[i]);
+				assemblytask.setCreatedate(DateConvertUtils.getCurrentDate());
+				assemblytask.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+				assemblytask.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+				assemblyTaskDao.save(assemblytask);
+			}
+			else if(orderItem!=null&&orderItem.getItemproperty()==1)/**外购**/
+			{
+				
+			}
+		}
+	}
+	@Override
+	public List<OrdersProduct> findPro(List<Long> idList)
+			throws ServiceException {
+		 
+		String proids = StringUtils.join(idList, ",");
+		OrdersProduct op = new OrdersProduct();
+		op.setProids(proids);
+		
+		List<OrdersProduct> listpro = ordersProductDao.findPro(op);
+		
+		return listpro;
+	}
+}

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdExamineSolution">
+
+        
+	<resultMap id="RM.PdExamineSolution" class="com.terrence.crm.dol.bean.PdExamineSolution">
+        <result property="solutionid" column="solutionid"/>
+        <result property="solutionname" column="solutionname"/>
+        <result property="notes" column="notes"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.PdExamineSolution" id="RM.PdExamineSolution.SolutionItem">
+    	<result property="solutionid" column="solutionid"/>
+        <result property="solutionname" column="solutionname"/>
+        <result property="notes" column="notes"/>
+        <result property="sitemlist" column="solutionid" select="PdExamineSolution.solutionitem.findList"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.PdExamineSolutionItem" id="PdExamineSolution.solutionitem.show">
+    	<result property="pisiid" column="pisiid"/>
+		<result property="itemid" column="itemid"/>
+		<result property="pdExamineItem" resultMap="PdExamine.Item"/>
+		<result property="pesiclist" column="{solutionid=solutionid,itemid=itemid}" select="PdExamineSolution.solutionitemcol.findList"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.PdExamineItem" id="PdExamine.Item">
+    	<result property="itemname" column="itemname"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.PdExamineSolutionItemCol" id="PdExamineSolutionItemCol.PdExamineItemCol">
+    	<result property="pesicid" column="pesicid"/>
+    	<result property="pisiid" column="pisiid"/>
+    	<result property="colid" column="colid"/>
+    	<result property="solutionid" column="solutionid"/>
+    	<result property="itemid" column="itemid"/>
+    	<result property="colval" column="colval"/>
+    	<result property="pdExamineItemCol" resultMap="PdExamineItemCol.Col"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.PdExamineItemCol" id="PdExamineItemCol.Col">
+    	<result property="colname" column="colname"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.PdExamineSolution" id="RM.PdExamineSolution.Item">
+		<result property="solutionid" column="solutionid"/>
+        <result property="solutionname" column="solutionname"/>
+        <result property="notes" column="notes"/>
+        <result property="itemlist" column="solutionid" select="PdExamineSolution.item.findList"/>
+	</resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.PdExamineItem" id="RM.PdExamineSolution.Item.show">
+		<result property="pisiid" column="pisiid"/>
+		<result property="solutionid" column="solutionid"/>
+		<result property="item" column="item"/>
+		<result property="itemname" column="itemname"/>
+		<result property="itemid" column="itemid"/>
+		<result property="listcol" column="{solutionid=solutionid,itemid=itemid}" select="PdExamineSolution.item.col.findList"/>
+	</resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.PdExamineItemCol" id="RM.PdExamineSolution.Item.col.show">
+		<result property="colid" column="colid"/>
+		<result property="itemid" column="itemid"/>
+		<result property="colname" column="colname"/>
+		<result property="colcode" column="colcode"/>
+		<result property="pesic" resultMap="RM.PdExamineSolution.pesic.ItemList.Pesic"/>
+	</resultMap>
+	
+	<resultMap class="com.terrence.crm.dol.bean.PdExamineSolutionItemCol" id="RM.PdExamineSolution.pesic.ItemList.Pesic">
+		<result property="pesicid" column="pesicid"/>
+		<result property="pisiid" column="pisiid"/>
+		<result property="solutionid" column="solutionid"/>
+	</resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdExamineSolution.columns">
+	    <![CDATA[
+        	t_pd_examine_solution.solutionid ,
+        	t_pd_examine_solution.solutionname ,
+        	t_pd_examine_solution.notes 
+	    ]]>
+	</sql>
+	
+   <insert id="PdExamineSolution.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_examine_solution (
+        	solutionname ,
+        	notes 
+        ) VALUES (
+        	#solutionname# ,
+        	#notes# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="solutionid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdExamineSolution.update" parameterClass="com.terrence.crm.dol.bean.PdExamineSolution">         
+        UPDATE t_pd_examine_solution 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="solutionname">
+	        	solutionname = #solutionname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        solutionid = #solutionid# 
+    </update>
+    
+	<delete id="PdExamineSolution.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_examine_solution where
+       solutionid = #solutionid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdExamineSolution.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_examine_solution 
+        WHERE
+       solutionid in ($solutionid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdExamineSolution.getById" resultMap="RM.PdExamineSolution.Item">
+	    select <include refid="PdExamineSolution.columns"/>
+	    
+	        from t_pd_examine_solution 
+	        where 
+		        solutionid = #solutionid# 
+	    
+    </select>
+    <select id="PdExamineSolution.getBySolutionid" resultMap="RM.PdExamineSolution.SolutionItem">
+    	select <include refid="PdExamineSolution.columns"/>
+	    
+	        from t_pd_examine_solution 
+	        where 
+		        solutionid = #solutionid# 
+    </select>
+	<select id="PdExamineSolution.getByProperty" resultMap="RM.PdExamineSolution">
+		select <include refid="PdExamineSolution.columns"/> from t_pd_examine_solution where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdExamineSolution.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="solutionid">
+	             t_pd_examine_solution.solutionid = #solutionid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="solutionname">
+	             t_pd_examine_solution.solutionname = #solutionname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_pd_examine_solution.notes = #notes#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdExamineSolution.findPage.and">
+			<isNotEmpty prepend="AND" property="solutionid">
+	             t_pd_examine_solution.solutionid = #solutionid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="solutionname">
+	             t_pd_examine_solution.solutionname = #solutionname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_pd_examine_solution.notes = #notes#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdExamineSolution.Entity" resultMap="RM.PdExamineSolution">
+    	SELECT 	<include refid="PdExamineSolution.columns"/> FROM t_pd_examine_solution <include refid="PdExamineSolution.findPage.where"/>
+    </select>
+    
+    <select id="PdExamineSolution.findList" resultMap="RM.PdExamineSolution">
+    	SELECT 
+    		<include refid="PdExamineSolution.columns"/> 
+    	FROM 
+    		t_pd_examine_solution
+		<include refid="PdExamineSolution.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdExamineSolution.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_examine_solution
+    ]]>
+		<include refid="PdExamineSolution.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdExamineSolution.findPage" resultMap="RM.PdExamineSolution">
+    	select <include refid="PdExamineSolution.columns"/>	    
+	        from t_pd_examine_solution 	   
+		<include refid="PdExamineSolution.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdExamineSolution.findPage" resultMap="RM.PdExamineSolution">
+    	select <include refid="PdExamineSolution.columns"/>	    
+	        from t_pd_examine_solution where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       solutionid 
+	   not in(select $notTop$ 
+       solutionid 
+	   from t_pd_examine_solution <include refid="PdExamineSolution.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdExamineSolution.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="PdExamineSolution.item.findList" resultMap="RM.PdExamineSolution.Item.show">
+    select t_pd_examine_item.itemid,t_pd_examine_item.itemname,sitem.itemid item,#solutionid# solutionid,sitem.pisiid from t_pd_examine_item 
+    left join (select t_pd_examine_solution_item.* from t_pd_examine_solution,t_pd_examine_solution_item
+	where t_pd_examine_solution.solutionid=t_pd_examine_solution_item.solutionid and t_pd_examine_solution.solutionid=#solutionid#) sitem
+	on t_pd_examine_item.itemid=sitem.itemid 
+    </select>
+    <select id="PdExamineSolution.item.col.findList" resultMap="RM.PdExamineSolution.Item.col.show">
+    select t_pd_examine_item_col.colid,t_pd_examine_item_col.itemid,t_pd_examine_item_col.colname,
+	t_pd_examine_item_col.colcode,t_pd_examine_solution_item_col.pesicid,t_pd_examine_solution_item_col.pisiid,
+	t_pd_examine_solution_item_col.solutionid from t_pd_examine_item_col left join t_pd_examine_solution_item_col
+	on t_pd_examine_item_col.colid=t_pd_examine_solution_item_col.colid
+ 	and t_pd_examine_solution_item_col.solutionid=#solutionid# where t_pd_examine_item_col.itemid=#itemid#
+    </select>
+	<select id="PdExamineSolution.solutionitem.findList" resultMap="PdExamineSolution.solutionitem.show">
+		select t_pd_examine_solution_item.itemid,t_pd_examine_solution_item.solutionid,t_pd_examine_item.itemname,t_pd_examine_solution_item.pisiid from 	t_pd_examine_item,t_pd_examine_solution_item
+		where t_pd_examine_item.itemid=t_pd_examine_solution_item.itemid
+		and t_pd_examine_solution_item.solutionid=#solutionid#
+	</select>
+	<select id="PdExamineSolution.solutionitemcol.findList" resultMap="PdExamineSolutionItemCol.PdExamineItemCol">
+		select t_pd_examine_solution_item_col.pesicid,t_pd_examine_solution_item_col.pisiid,
+		t_pd_examine_solution_item_col.colid,t_pd_examine_solution_item_col.solutionid,
+		t_pd_examine_solution_item_col.itemid,t_pd_examine_solution_item_col.colval,
+		t_pd_examine_item_col.colname from t_pd_examine_solution_item_col,t_pd_examine_item_col
+		where t_pd_examine_solution_item_col.colid=t_pd_examine_item_col.colid
+		and t_pd_examine_solution_item_col.solutionid=#solutionid# and t_pd_examine_solution_item_col.itemid=#itemid#
+	</select>
+	
+	<select id="PdExamineSolution.findList.solution" resultMap="RM.PdExamineSolution"><!-- 2013/10/29查询检验方案每次显示10条 -->
+		select top 10 t_pd_examine_solution.solutionid,t_pd_examine_solution.solutionname,t_pd_examine_solution.notes  from 
+			t_pd_examine_solution
+			<isNotEmpty  property="solutionname">
+	            where t_pd_examine_solution.solutionname like ('%$solutionname$%')
+	       </isNotEmpty>
+			 
+	</select>
+</sqlMap>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+	<resultMap id="RM.TableField" class="com.terrence.core.dol.bean.TableField">
+		<result property="id" column="id" />
+		<result property="tableName" column="tableName" />
+		<result property="name" column="name" />
+		<result property="dataType" column="dataType" />
+		<result property="length" column="length" />
+		<result property="isPrimaryKey" column="isPrimaryKey" />
+		<result property="description" column="description" />
+		<result property="sort" column="sort" />
+		<result property="title" column="title" />
+		<result property="isForm" column="isForm" />
+		<result property="isBean" column="isBean" />
+		<result property="isList" column="isList" />
+		<result property="validform" column="validform" />
+		<result property="inputType" column="inputType" />
+	</resultMap>
+
+	<sql id="TableField.columns">
+       <![CDATA[
+           id,tableName,name,dataType,length,isPrimaryKey,description,sort,title,isForm,isList,isBean,validform,inputType
+       ]]>
+	</sql>
+
+	<insert id="TableField.insert">
+   <![CDATA[
+       INSERT INTO base_table_field
+       (
+        tableName,
+        name,
+        dataType,
+        length,
+        isPrimaryKey,
+        description,
+        sort,
+        title,
+        isForm,
+        isList,
+        isBean,
+        validform,
+        inputType
+       )
+       VALUES
+       (
+        #tableName#,
+        #name#,
+        #dataType#,
+        #length#,
+        #isPrimaryKey#,
+        #description#,
+        #sort#,
+        #title#,
+        #isForm#,
+        #isList#,
+        #isBean#,
+        #validform#,
+        #inputType#
+       )
+   ]]>
+		<selectKey resultClass="java.lang.Long" type="post"
+			keyProperty="id">
+			SELECT @@identity
+		</selectKey>
+	</insert>
+
+	<update id="TableField.update">
+		UPDATE base_table_field
+		<dynamic prepend="SET">
+			<isNotEmpty prepend="," property="tableName">
+				tableName = #tableName#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="name">
+				name = #name#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="dataType">
+				dataType = #dataType#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="length">
+				length = #length#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isPrimaryKey">
+				isPrimaryKey = #isPrimaryKey#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="description">
+				description = #description#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="sort">
+				sort = #sort#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="title">
+				title = #title#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isForm">
+				isForm = #isForm#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isList">
+				isList = #isList#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isBean">
+				isBean = #isBean#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="validform">
+				validform = #validform#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="inputType">
+				inputType = #inputType#
+			</isNotEmpty>
+		</dynamic>
+		WHERE
+		id = #id#
+	</update>
+
+	<delete id="TableField.delete">
+       <![CDATA[
+       DELETE FROM base_table_field WHERE
+       id = #id# 
+       ]]>
+	</delete>
+
+	<select id="TableField.getById" resultMap="RM.TableField">
+		SELECT
+		<include refid="TableField.columns" />
+       <![CDATA[
+       FROM base_table_field 
+       WHERE 
+       id = #id# 
+       ]]>
+	</select>
+
+	<sql id="TableField.findPage.where">
+		<isNotEmpty prepend="AND" property="tableName">
+			tableName = #tableName#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="name">
+			name = #name#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="dataType">
+			dataType = #dataType#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="length">
+			length = #length#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isPrimaryKey">
+			isPrimaryKey = #isPrimaryKey#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="description">
+			description = #description#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sort">
+			sort = #sort#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			title = #title#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isForm">
+			isForm = #isForm#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isList">
+			isList = #isList#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isBean">
+			isBean = #isBean#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="validform">
+			validform = #validform#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="inputType">
+			inputType = #inputType#
+		</isNotEmpty>
+	</sql>
+
+	<select id="TableField.findPage.count" resultClass="long">
+		SELECT count(*) FROM base_table_field where 1=1 <include refid="TableField.findPage.where" />
+	</select>
+
+	<select id="TableField.findPage" resultMap="RM.TableField">
+		SELECT
+		<include refid="TableField.columns" />
+		FROM base_table_field where 1=1
+		<include refid="TableField.findPage.where" />
+		<isNotEmpty property="notTop">
+			and id not in(select $notTop$ id from base_table_field where 1=1 <include refid="TableField.findPage.where" /> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>)
+		</isNotEmpty>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+	<select id="TableField.findList" resultMap="RM.TableField">
+		SELECT
+		<include refid="TableField.columns" />
+		FROM base_table_field where 1=1 <include refid="TableField.findPage.where" />
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+</sqlMap>

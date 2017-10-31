@@ -1,0 +1,93 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessDefine;
+import com.terrence.crm.dol.dao.IProcessDefineDao;
+import com.terrence.crm.dol.query.ProcessDefineQuery;
+import com.terrence.crm.dol.service.IProcessDefineService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class ProcessDefineService extends BaseService implements IProcessDefineService {
+	@Autowired
+	@Qualifier("processDefineDao")
+	private IProcessDefineDao processDefineDao;
+	@Override
+	public ProcessDefine getById(Long id) throws ServiceException {
+		return processDefineDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProcessDefine entity) throws ServiceException {
+		Long id =null;
+		if(entity.getId()!=null){
+			id = entity.getId();
+		}
+		entity.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+		entity.setDepbelong(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));
+		entity.setCreateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processDefineDao.saveOrUpdate(entity);
+		if(id==null){
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_ADD, "流程名称为："+entity.getProcessName()+"的流程定义添加成功");
+		}else{
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_EDIT, "主键为："+id+"的流程名称修改成功");	
+		}
+	}
+	@Override
+	public Long save(ProcessDefine entity) throws ServiceException {
+		return processDefineDao.save(entity);
+	}
+	@Override
+	public Integer update(ProcessDefine entity) throws ServiceException {
+		return processDefineDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_DEL, "主键为："+id+"的流程名称删除成功");	
+
+		return processDefineDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		operationLogDao.save(ConfigTerrence.MODEL_PROCESSTASK, ConfigTerrence.OPT_DEL, "主键为："+delIds+"的流程名称删除成功");	
+
+		Integer returnValue = processDefineDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessDefine> findPage(Page<ProcessDefine> page, ProcessDefineQuery query) throws ServiceException{
+		return processDefineDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessDefine> findPage(Page<ProcessDefine> page,String statement, ProcessDefineQuery query) throws ServiceException{
+		return processDefineDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDefine> findList(ProcessDefineQuery query) throws ServiceException{
+		return processDefineDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDefine> findList(ProcessDefineQuery query,Integer pageSize) throws ServiceException{
+		return processDefineDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDefine> findList(ProcessDefineQuery query,String statement,Integer pageSize) throws ServiceException{
+		return processDefineDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDefine> findAllList() throws ServiceException{
+		return processDefineDao.findAllList();
+	}
+}

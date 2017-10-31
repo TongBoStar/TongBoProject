@@ -1,0 +1,726 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.query.MenuOperateQuery;
+import com.terrence.core.dol.service.IMenuOperateService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.PutstorageentityQuery;
+import com.terrence.crm.dol.service.IPutstorageentityService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
+import java.util.List;
+
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/putstorageentity")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "putstorageentity." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PutstorageentityAction extends CrudActionSupport<Putstorageentity>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("putstorageentityService")
+	private IPutstorageentityService putstorageentityService;
+	
+	@Autowired
+	@Qualifier("menuOperateService")
+	private IMenuOperateService menuOperateService;
+	private Putstorageentity entity;
+
+	private PutstorageentityQuery putstorageentityQuery;
+	private ProcessExetask processExetask;
+	
+	private java.lang.Long putstorageentityId;
+	List<MenuOperate> menuOperatelist ;
+	/** 分页器 */
+	private Page<Putstorageentity> page = new Page<Putstorageentity>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Putstorageentity> putstorageentityList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (putstorageentityId != null ) {
+			entity = putstorageentityService.getById(putstorageentityId);
+		} else {
+			entity = new Putstorageentity();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			putstorageentityService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(putstorageentityQuery == null) {
+			putstorageentityQuery = new PutstorageentityQuery();
+		}
+		
+		try {
+			putstorageentityList = putstorageentityService.findList(putstorageentityQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("putstorageentityId");
+			page.setOrder(Page.DESC);
+		}
+		if(putstorageentityQuery == null) {
+			putstorageentityQuery = new PutstorageentityQuery();
+		}
+		
+		try {
+			page = putstorageentityService.findPage(page, putstorageentityQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			putstorageentityService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = putstorageentityService.getById(putstorageentityId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			putstorageentityList = putstorageentityService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	public String listputstorage() throws Exception {
+//		if (!page.isOrderBySetted()) {
+//			page.setOrderBy("putstorageentityId");
+//			page.setOrder(Page.DESC);
+//		}
+		if(putstorageentityQuery == null) {
+			putstorageentityQuery = new PutstorageentityQuery();
+		}
+		
+		try {
+			page = putstorageentityService.findPage(page,"Putstorageentity.findPage.for.putstorage", putstorageentityQuery);
+			
+			//审核
+			//查询当前登陆用户的按钮权限
+			MenuOperateQuery menuOperateQuery = new MenuOperateQuery();
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			menuOperateQuery.setEmpId(adminSession.getAdmin().getAdminId());
+			//menuOperateQuery.setMenuId(sysOrderQuery.getMenuidparam());
+			menuOperateQuery.setSortColumns(" id asc ");
+			menuOperatelist  = menuOperateService.findMenuOperateList(menuOperateQuery);
+			AdminSession adminSession1 = (AdminSession)SecurityContextHolder.getContext()
+					.getAuthentication().getPrincipal();
+			//authorityList=  adminSession1.getAdmin().getAuthorityList();
+			//Iterator iterator=adminSession1.getAuthorities().iterator();
+			for (Iterator iterator2 = adminSession1.getAuthorities()
+					.iterator(); iterator2
+					.hasNext();) {
+				String type = (String) iterator2.next().toString();
+				MenuOperate menuOperate=new MenuOperate();
+				menuOperate.setFunctionName(type);
+				menuOperatelist.add(menuOperate);
+			}
+			//审核
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareUpdatedataxiugai() throws Exception {
+		prepareModel();
+	}
+	public String updatedataxiugai() throws Exception {//数量的修改、状态修改
+			
+			try {
+				putstorageentityService.updatedataxiugai(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "修改成功";
+			
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "修改失败";
+			
+			}
+			return JSON;
+		}
+	
+	
+	@Action("/putstorageentity/deletput")
+	public String deletePutstorageentity() throws Exception {
+		
+		try {
+			//putstorageentityService.deleteByMultipleId(checkedIdList);
+			putstorageentityService.deletePut(putstorageentityQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		
+		}
+		return JSON;
+	}
+
+	
+	
+	/**
+	 * 退货数据查询
+	 * @return
+	 * @throws Exception
+	 */
+	public String finRreturnGoods() throws Exception {
+		try{
+			
+			putstorageentityList = putstorageentityService.finRreturnGoods(putstorageentityQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 保存退货数据
+	 * @throws Exception
+	 */
+
+	public void prepareSaveToGoods() throws Exception {
+		prepareModel();
+	}
+	@Action("/putstorageentity/saveGoods")
+	public String saveToGoods() throws Exception {
+			
+			
+			try{
+				putstorageentityService.saveReturnGoods(entity);
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			} catch(ServiceException e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+			}	
+			
+			return JSON;
+			
+			
+		}
+	
+	
+	
+	
+	
+//===========================
+	
+	/**
+	 * 入库单明细excel导出
+	 */
+	@Action("/putstrage/excelout")
+	public String exportAllputstorage(){
+		    try {
+		    	if(putstorageentityQuery == null) {
+		    		putstorageentityQuery = new PutstorageentityQuery();
+				}
+				String fileName = putstorageentityService.findputstorageAll(getRequest().getRealPath("/"),putstorageentityQuery,checkedIdList);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	
+	@Action("/excel/savePutstorageentityExport")
+	public void saveAllExport(){
+		String filename=getRequest().getParameter("filename");
+		HSSFWorkbook wb = null;
+		try {
+			wb = new HSSFWorkbook(new FileInputStream(getRequest().getRealPath("/")+filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+			HttpServletResponse response = getResponse();
+			response.setContentType("application/vnd.ms-excel");
+			try {
+				
+
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "外购入库单明细.xls".getBytes("gb2312"), "ISO8859-1" ) );					
+			
+					OutputStream ouputStream = response.getOutputStream(); 
+					 wb.write(ouputStream);  
+					 ouputStream.flush();  
+					 ouputStream.close();
+					 new File(getRequest().getRealPath("/")+filename).delete();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	//===========================
+	
+	public String findPutstraPutentity() throws Exception {
+		try{
+			
+			putstorageentityList = putstorageentityService.findPutstraPutentity(putstorageentityQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	/**
+	 * 启动流程
+	 * @return
+	 */
+	public String exeProcess(){
+		Boolean examResult=putstorageentityService
+				.exeProcess(entity,processExetask);
+		resultInfo[0] = "0";
+		resultInfo[1] = "下推成功";
+		resultInfo[2] = ""+examResult;
+		return JSON;
+	}
+	public String findSaleOut() throws Exception {
+		try{
+			
+			putstorageentityList = putstorageentityService.findSaleOut(putstorageentityQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Putstorageentity getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PutstorageentityQuery getPutstorageentityQuery() {
+		return putstorageentityQuery;
+	}
+
+	
+	public void setPutstorageentityQuery(PutstorageentityQuery putstorageentityQuery) {
+		this.putstorageentityQuery = putstorageentityQuery;
+	}
+
+	public void setPutstorageentityId(java.lang.Long putstorageentityId) {
+		this.putstorageentityId = putstorageentityId;
+	}
+	
+	
+	public java.lang.Long getPutstorageentityId() {
+		return this.putstorageentityId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Putstorageentity> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Putstorageentity> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+	
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Putstorageentity> getPutstorageentityList() {
+		return putstorageentityList;
+	}
+
+	public ProcessExetask getProcessExetask() {
+		return processExetask;
+	}
+
+	public void setProcessExetask(ProcessExetask processExetask) {
+		this.processExetask = processExetask;
+	}
+
+	public Putstorageentity getEntity() {
+		return entity;
+	}
+
+	public void setEntity(Putstorageentity entity) {
+		this.entity = entity;
+	}
+
+	public List<MenuOperate> getMenuOperatelist() {
+		return menuOperatelist;
+	}
+
+	public void setMenuOperatelist(List<MenuOperate> menuOperatelist) {
+		this.menuOperatelist = menuOperatelist;
+	}
+
+	public ApplicationContext getCtx() {
+		return ctx;
+	}
+
+	public void setCtx(ApplicationContext ctx) {
+		this.ctx = ctx;
+	}
+
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+
+	public void setPutstorageentityList(List<Putstorageentity> putstorageentityList) {
+		this.putstorageentityList = putstorageentityList;
+	}
+	
+	
+}

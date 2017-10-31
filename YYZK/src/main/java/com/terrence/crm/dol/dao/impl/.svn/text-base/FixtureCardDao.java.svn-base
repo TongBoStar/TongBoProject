@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.FixtureCard;
+import com.terrence.crm.dol.dao.IFixtureCardDao;
+
+@Repository
+public class FixtureCardDao extends BaseIbatisDao<FixtureCard,java.lang.Long> implements IFixtureCardDao{
+
+		
+	public void saveOrUpdate(FixtureCard entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "FixtureCard";
+	}
+	public FixtureCard getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (FixtureCard)this.getSqlMapClientTemplate().queryForObject("FixtureCard.getByProperty", map);		
+	}
+
+}

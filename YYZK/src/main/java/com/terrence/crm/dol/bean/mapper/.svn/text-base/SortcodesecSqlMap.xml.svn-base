@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Sortcodesec">
+
+        
+	<resultMap id="RM.Sortcodesec" class="com.terrence.crm.dol.bean.Sortcodesec">
+        <result property="secid" column="secid"/>
+        <result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+        <result property="secdesc" column="secdesc"/>
+        <result property="secenable" column="secenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="firid" column="firid"/>
+    </resultMap>
+    
+    <resultMap id="RM.Sortcodesec.firname.Name" class="com.terrence.crm.dol.bean.Sortcodesec">
+        <result property="secid" column="secid"/>
+        <result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+        <result property="secdesc" column="secdesc"/>
+        <result property="secenable" column="secenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="firid" column="firid"/>
+        <result property="sortcodefir" resultMap="RM.Sortcodefir.name"/>
+    </resultMap>
+	
+	  <resultMap id="RM.Sortcodesec.Name" class="com.terrence.crm.dol.bean.Sortcodesec">
+        <result property="secid" column="secid"/>
+        <result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+        <result property="secdesc" column="secdesc"/>
+        <result property="secenable" column="secenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="firid" column="firid"/>
+        <result property="sortcodefir" resultMap="RM.Sortcodefir.name"/>
+        <result property="admin" resultMap="Admin.Name"/>
+    </resultMap>
+    <resultMap id="RM.Sortcodesec.NA" class="com.terrence.crm.dol.bean.Sortcodesec">
+        <result property="seccode" column="seccode"/>
+    </resultMap>
+    
+	 <resultMap id="RM.Sortcodefir.name" class="com.terrence.crm.dol.bean.Sortcodefir">
+        <result property="firname" column="firname"/>
+    </resultMap>
+
+	 <resultMap id="Admin.Name" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Sortcodesec.columns">
+	    <![CDATA[
+        	t_sortcodesec.secid ,
+        	t_sortcodesec.seccode ,
+        	t_sortcodesec.secname ,
+        	t_sortcodesec.secdesc ,
+        	t_sortcodesec.secenable ,
+        	t_sortcodesec.emplid ,
+        	t_sortcodesec.lastupdate ,
+        	t_sortcodesec.firid 
+	    ]]>
+	</sql>
+	
+	<sql id="Sortcodesec.columns.list">
+	    <![CDATA[
+        	t_sortcodesec.secid ,
+        	t_sortcodesec.seccode ,
+        	t_sortcodesec.secname ,
+        	t_sortcodesec.secdesc ,
+        	t_sortcodesec.secenable ,
+        	t_sortcodesec.emplid ,
+        	t_sortcodesec.firid 
+	    ]]>
+	</sql>
+	
+   <insert id="Sortcodesec.insert" >
+  
+         INSERT INTO
+        t_sortcodesec (
+        lastupdate 
+        <dynamic prepend="">
+        	<isNotEmpty prepend="," property="seccode">
+        		seccode
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secname">
+        		secname
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secdesc">
+        		secdesc
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secenable">
+        		secenable
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="emplid">
+        		emplid
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="firid">
+        		firid
+        	</isNotEmpty>
+        </dynamic>
+        	
+        	
+        ) VALUES (
+       		  CONVERT(varchar,getdate(), 120 ) 
+        	 <dynamic prepend="">
+        	<isNotEmpty prepend="," property="seccode">
+        		#seccode#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secname">
+        		#secname#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secdesc">
+        		#secdesc#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="secenable">
+        		#secenable#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="emplid">
+        		#emplid#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="firid">
+        		#firid#
+        	</isNotEmpty>
+        </dynamic>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="secid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Sortcodesec.update" parameterClass="com.terrence.crm.dol.bean.Sortcodesec">         
+        UPDATE t_sortcodesec 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seccode">
+	        	seccode = #seccode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secname">
+	        	secname = #secname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secdesc">
+	        	secdesc = #secdesc# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secenable">
+	        	secenable = #secenable# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="emplid">
+	        	emplid = #emplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lastupdate">
+	        	lastupdate = #lastupdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="firid">
+	        	firid = #firid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        secid = #secid# 
+    </update>
+    
+	<delete id="Sortcodesec.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_sortcodesec where
+       secid = #secid# 
+    ]]>
+    </delete>
+    
+    <delete id="Sortcodesec.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_sortcodesec 
+        WHERE
+       secid in ($secid$) 
+    ]]>
+    </delete>
+    
+   <!--  <select id="Sortcodesec.getById" resultMap="RM.Sortcodesec">
+	    select <include refid="Sortcodesec.columns"/>
+	    
+	        from t_sortcodesec 
+	        where 
+		        secid = #secid# 
+	    
+    </select> -->
+    
+       <select id="Sortcodesec.getById" resultMap="RM.Sortcodesec.Name">
+	    select <include refid="Sortcodesec.columns"/>,t_admin.adminName,t_sortcodefir.firname,CONVERT(varchar, t_sortcodesec.lastupdate, 120 )  lastupdate	 
+	    
+	        from t_sortcodesec left join t_admin on t_sortcodesec.emplid = t_admin.adminId
+	        	 left join t_sortcodefir on t_sortcodesec.firid = t_sortcodefir.firid
+	        where 
+		        secid = #secid# 
+	    
+    </select>
+	<select id="Sortcodesec.getByProperty" resultMap="RM.Sortcodesec">
+		select <include refid="Sortcodesec.columns"/> from t_sortcodesec where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Sortcodesec.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="secid">
+	             t_sortcodesec.secid = #secid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seccode">
+	             t_sortcodesec.seccode = #seccode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="secname">
+	             t_sortcodesec.secname like ('%$secname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="secdesc">
+	             t_sortcodesec.secdesc = #secdesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="secenable">
+	             t_sortcodesec.secenable = #secenable#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="emplid">
+	             t_sortcodesec.emplid = #emplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lastupdateBegin">
+	             t_sortcodesec.lastupdate &gt;= #lastupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastupdateEnd">
+	             t_sortcodesec.lastupdate &lt;= #lastupdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="firid">
+	             t_sortcodesec.firid = #firid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sortcodefir.firname">
+	             t_sortcodefir.firname like ('%$sortcodefir.firname$%')
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Sortcodesec.findPage.and">
+			<isNotEmpty prepend="AND" property="secid">
+	             t_sortcodesec.secid = #secid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seccode">
+	             t_sortcodesec.seccode = #seccode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="secname">
+	            t_sortcodesec.secname like ('%$secname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="secdesc">
+	             t_sortcodesec.secdesc = #secdesc#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="secenable">
+	             t_sortcodesec.secenable = #secenable#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="emplid">
+	             t_sortcodesec.emplid = #emplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lastupdateBegin">
+	             t_sortcodesec.lastupdate &gt;= #lastupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="lastupdateEnd">
+	             t_sortcodesec.lastupdate &lt;= #lastupdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="firid">
+	             t_sortcodesec.firid = #firid#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="sortcodefir.firname">
+	             t_sortcodefir.firname like  ('%$sortcodefir.firname$%')
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Sortcodesec.Entity" resultMap="RM.Sortcodesec">
+    	SELECT 	<include refid="Sortcodesec.columns"/> FROM t_sortcodesec <include refid="Sortcodesec.findPage.where"/>
+    </select>
+    
+    <select id="Sortcodesec.findList" resultMap="RM.Sortcodesec">
+    	SELECT 
+    		<include refid="Sortcodesec.columns"/> 
+    	FROM 
+    		t_sortcodesec
+		<include refid="Sortcodesec.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Sortcodesec.findListByfirstCode" resultMap="RM.Sortcodesec">
+    	SELECT 
+    		<include refid="Sortcodesec.columns"/> 
+    	FROM 
+    	t_sortcodefir left join 
+    		t_sortcodesec
+    		on 	t_sortcodefir.firid=t_sortcodesec.firid
+    		where
+    		t_sortcodefir.fircode=#sortcodefir.fircode#	
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <select id="Sortcodesec.Sortcodefir.findList" resultMap="RM.Sortcodesec">
+    	select <include refid="Sortcodesec.columns"/> from t_sortcodesec,t_sortcodefir where t_sortcodesec.firid=t_sortcodefir.firid and t_sortcodefir.fircode=#sortcodefir.fircode#
+    </select>
+    <select id="Sortcodesec.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_sortcodesec left join t_sortcodefir on t_sortcodesec.firid = t_sortcodefir.firid 
+    ]]>
+		<include refid="Sortcodesec.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Sortcodesec.findPage" resultMap="RM.Sortcodesec">
+    	select <include refid="Sortcodesec.columns"/>	    
+	        from t_sortcodesec 	   
+		<include refid="Sortcodesec.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sortcodesec.findPage" resultMap="RM.Sortcodesec.firname.Name">
+    	select <include refid="Sortcodesec.columns"/>,t_sortcodefir.firname	    
+	        from t_sortcodesec,t_sortcodefir  where 1=1 and t_sortcodesec.firid = t_sortcodefir.firid 
+	   <isNotEmpty property="notTop">  and 
+       secid 
+	   not in(select $notTop$ 
+       secid 
+	   from t_sortcodesec <include refid="Sortcodesec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Sortcodesec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+     <select id="sortcodesec.fir.sec.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_sortcodesec left join t_sortcodefir on t_sortcodesec.firid = t_sortcodefir.firid 
+    ]]>
+		<include refid="Sortcodesec.findPage.where"/>    
+    </select>
+    <select id="sortcodesec.fir.sec" resultMap="RM.Sortcodesec.firname.Name"><!-- 2013/10/28 -->
+    	select <include refid="Sortcodesec.columns"/>,t_sortcodefir.firname	    
+	        from t_sortcodesec,t_sortcodefir  where 1=1 and t_sortcodesec.firid = t_sortcodefir.firid 
+	   <isNotEmpty property="notTop">  and 
+       secid 
+	   not in(select $notTop$ 
+       secid 
+	   from t_sortcodesec <include refid="Sortcodesec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Sortcodesec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SortCodeSec.findName" resultMap="RM.Sortcodesec">
+    	select <include refid="Sortcodesec.columns"/> from t_sortcodesec  where firid = #firid# and secname = #secname#
+    </select>
+    
+    <!-- 查询物料类别分类 -->
+    <select id="SortCodeSec.findSecInfoList" resultMap="RM.Sortcodesec">
+    	select <include refid="Sortcodesec.columns"/> 
+    	from t_sortcodesec where t_sortcodesec.firid = 
+    	(select t_sortcodefir.firid from t_sortcodefir where fircode = #fircodevalue#  )
+    </select>
+     
+     <select id="sortCodeSec.findSecList" resultMap="RM.Sortcodesec">
+    	select <include refid="Sortcodesec.columns"/> from t_sortcodesec where t_sortcodesec.firid = (select t_sortcodefir.firid from t_sortcodefir where firname = 'PL3000主阀气密性测试')
+    </select>
+    
+    
+     <select id="sortCodeSec.listsupplierDOC" resultMap="RM.Sortcodesec"><!-- 2013/10/18 文件类型 -->
+		select <include refid="Sortcodesec.columns"/> from t_sortcodesec where t_sortcodesec.firid in (select t_sortcodefir.firid from t_sortcodefir where t_sortcodefir.fircode = 'SUPPLIERDOCCLASS') 
+    </select>
+    
+     <select id="sortCodeSec.listsupplierlevl" resultMap="RM.Sortcodesec"><!-- 2013/10/18 采购中查询供应商类别-->
+		select <include refid="Sortcodesec.columns"/> from t_sortcodesec where t_sortcodesec.firid in (select t_sortcodefir.firid from t_sortcodefir where t_sortcodefir.fircode = 'SUPPLIERLEVEL') 
+    </select>
+    
+     <select id="sortCodeSec.listsuppliergovernment" resultMap="RM.Sortcodesec"><!-- 2013/10/25 采购中查询供应商管辖-->
+		select <include refid="Sortcodesec.columns"/> from t_sortcodesec where t_sortcodesec.firid in (select t_sortcodefir.firid from t_sortcodefir where t_sortcodefir.fircode = 'suppliergovernment') 
+    </select>
+    
+    
+      <select id="sortcodesec.list.status.count" resultClass="long"><!-- 2013/11/5设备类别列表查询 -->
+    <![CDATA[
+        select 
+        count(*)
+        from v_trial_device_type
+    ]]>
+		<include refid="Sortcodesec.findPage.where"/>    
+    </select>
+	<select id="sortcodesec.list.status" resultMap="RM.Sortcodesec">
+    	select secid,seccode,secname,secdesc,secenable,emplid,lastupdate,firid	    
+	        from v_trial_device_type  where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       secid 
+	   not in(select $notTop$ 
+       secid 
+	   from v_trial_device_type <include refid="Sortcodesec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Sortcodesec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+      <select id="sortCodeSec.listfindStatus" resultMap="RM.Sortcodesec"><!-- 设备管理中加载设备类别 -->
+    	select secid,seccode,secname,secdesc,secenable,emplid,lastupdate,firid from  v_trial_device_type
+    </select>
+    <select id="SortCode.code" resultMap="RM.Sortcodesec.NA">
+    	select t_sortcodesec.seccode 
+    		from t_sortcodesec ,t_sortcodefir where t_sortcodesec.firid = t_sortcodefir.firid and t_sortcodefir.firname='联系人个数'
+    </select>
+</sqlMap>

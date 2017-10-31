@@ -1,0 +1,67 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Performance;
+import com.terrence.crm.dol.dao.IPerformanceDao;
+import com.terrence.crm.dol.query.PerformanceQuery;
+
+@Repository
+public class PerformanceDao extends BaseIbatisDao<Performance,java.lang.Long> implements IPerformanceDao{
+
+		
+	public void saveOrUpdate(Performance entity) {
+		if(entity.getPid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Performance";
+	}
+	public Performance getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Performance)this.getSqlMapClientTemplate().queryForObject("Performance.getByProperty", map);		
+	}
+
+	@Override
+	public Performance findperData(PerformanceQuery performanceQuery) {
+		return (Performance) this.getSqlMapClientTemplate().queryForObject("Performance.find.performance.list.data", performanceQuery);
+	}
+
+	@Override
+	public List<Performance> findBonus(PerformanceQuery performanceQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Performance.findBonus.data", performanceQuery);
+	}
+
+	@Override
+	public Integer deleteWhere(String statement,
+			PerformanceQuery performanceQuery) {
+		
+		return this.getSqlMapClientTemplate().delete(statement, performanceQuery);
+	}
+	/**
+	 * 显示系统订单审核后该订单的奖励人信息
+	 * @param userId
+	 * @return
+	 */
+	@Override
+	public List<Performance> getSysorderSaleInfo(PerformanceQuery performanceQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Performance.getSysorderSaleInfo", 
+				performanceQuery);
+	}
+}

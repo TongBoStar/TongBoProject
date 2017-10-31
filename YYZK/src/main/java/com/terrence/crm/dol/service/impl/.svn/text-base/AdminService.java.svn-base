@@ -1,0 +1,453 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.service.impl;
+
+
+
+
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.Lists;
+import com.terrence.core.dol.bean.Menu;
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.core.dol.bean.Role;
+import com.terrence.core.dol.bean.RolePower;
+import com.terrence.core.dol.dao.IMenuDao;
+import com.terrence.core.dol.dao.IMenuOperateDao;
+import com.terrence.core.dol.dao.IRoleDao;
+import com.terrence.core.dol.dao.IRolePowerDao;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.BaseCodeUtils;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.AdminProvince;
+import com.terrence.crm.dol.bean.AdminRole;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IAdminProvinceDao;
+import com.terrence.crm.dol.dao.IAdminRoleDao;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+/**
+ * 管理员服务访问
+ * 
+ * @version 1.0
+ */
+@Service
+@Transactional
+public class AdminService extends BaseService implements IAdminService {
+
+	protected static Logger logger = LoggerFactory.getLogger(AdminService.class);
+	/** 管理员数据访问接口 */
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	
+	/** 角色基本信息数据访问接口 */
+	@Autowired
+	@Qualifier("roleDao")
+	private IRoleDao roleDao;
+	
+	/** 管理员角色基本信息数据访问接口 */
+	@Autowired
+	@Qualifier("adminRoleDao")
+	private IAdminRoleDao adminRoleDao;
+	
+	@Autowired
+	@Qualifier("menuDao")
+	private IMenuDao menuDao;
+	
+	@Autowired
+	@Qualifier("menuOperateDao")
+	private IMenuOperateDao menuOperateDao;
+	
+	@Autowired
+	@Qualifier("rolePowerDao")
+	private IRolePowerDao rolePowerDao;
+	
+	@Autowired
+	@Qualifier("adminProvinceDao")
+	private IAdminProvinceDao adminProvinceDao;
+	
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#deleteById(java.lang.Long)
+	 */
+	public Integer deleteById(java.lang.Long id) throws ServiceException {
+		if(id == 1) {
+			logger.warn("删除管理员失败，超级管理员不能删除");
+			throw new ServiceException("删除管理员失败，超级管理员不能删除");
+		}
+		
+		Integer returnValue = adminDao.deleteById(id);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_USER_MANAGE,ConfigTerrence.OPT_DEL, "删除的用户主键为:"+id+"，操作人为"+admin.getAdmin().getAdminName());		
+		return returnValue;
+		
+	}
+	
+	public List<Admin> listfindAdmin(AdminQuery adminQuery) {
+		return adminDao.listfindAdmin(adminQuery);
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#deleteByMultipleId(java.util.List)
+	 */
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException {
+		if(idList.contains(1L)) {
+			logger.warn("删除管理员失败，超级管理员不能删除");
+			throw new ServiceException("删除管理员失败，超级管理员不能删除");
+		}
+		String delIds = StringUtils.join(idList, ",");
+		//adminRoleDao.deleteByMultipleAdminId(delIds);
+		Integer returnValue = adminDao.updateByMultipleId(delIds);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_USER_MANAGE,ConfigTerrence.OPT_DEL, "删除的用户主键为:"+delIds+"，操作人为"+admin.getAdmin().getAdminName());
+		
+		return returnValue;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#findAllList()
+	 */
+	@Transactional(readOnly=true)
+	public List<Admin> findAllList() throws ServiceException {
+		return adminDao.findAllList();
+	}
+	/*自定义查询获得用户所对应的表名
+	 * */
+	@Transactional(readOnly=true)
+	public List<HashMap> findAllUser() throws ServiceException {
+		return adminDao.getallUser();
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#findList(com.disney.dol.vo.AdminQuery)
+	 */
+	@Transactional(readOnly=true)
+	public List<Admin> findList(AdminQuery query) throws ServiceException {
+		return adminDao.findList(query);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Admin> findListByDepart(AdminQuery query) throws ServiceException {
+		return adminDao.findListByDepart(query);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#findPage(com.disney.dol.base.core.Page, com.disney.dol.vo.AdminQuery)
+	 */
+	@Transactional(readOnly=true)
+	public Page<Admin> findPage(Page<Admin> page, AdminQuery query) throws ServiceException {
+		 
+		/*List<Admin> returnList = Lists.newArrayList();*/
+		Page<Admin> returnPage = adminDao.findPage(page, query);
+		
+		List<Admin> list = returnPage.getResult();
+		
+		/*for(Admin admin: list) {
+			Long adminId = admin.getAdminId();
+			List<Role> roleList = roleDao.findListByAdminId(adminId);
+			admin.setRoleList(roleList);
+			returnList.add(admin);
+		}
+		
+		returnPage.setResult(returnList);*/
+		return returnPage;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#getById(java.lang.Long)
+	 */
+	@Transactional(readOnly=true)
+	public Admin getById(java.lang.Long id) throws ServiceException {
+		return adminDao.getById(id);
+	}
+
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#isUnique(java.lang.String, java.lang.Object, java.lang.Object)
+	 */
+	@Transactional(readOnly=true)
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException {
+		AdminQuery query = new AdminQuery();
+		try {
+			return adminDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#save(com.disney.dol.bean.Admin)
+	 */
+	public java.lang.Long save(Admin entity) throws ServiceException {
+		AdminQuery query = new AdminQuery();
+		
+		Admin qAdmin = adminDao.getByLoginName(entity.getLoginName());
+		if(qAdmin != null) {
+			logger.warn("保存管理员失败，原因：{}登录名称重复", entity.getLoginName());
+			throw new ServiceException("保存管理员失败，原因：" + entity.getLoginName() + "登录名称重复");
+		}
+		if(entity.getPassword() != null) {
+			String psw = BaseCodeUtils.getMd5PasswordEncoder(entity.getPassword(), entity.getLoginName());
+			entity.setPassword(psw);
+		}
+		
+		Long adminId = adminDao.save(entity);
+		for(Long roleId: entity.getRoleIdList()) {
+			AdminRole adminRole = new AdminRole();
+			adminRole.setAdminId(adminId);
+			adminRole.setRoleId(roleId);
+			adminRoleDao.save(adminRole);
+		}
+		
+		
+		return adminId;
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#saveOrUpdate(com.disney.dol.bean.Admin)
+	 */
+	public void saveOrUpdate(Admin entity) throws ServiceException {
+		Long id=null;
+		if(entity.getAdminId()!=null){
+			id=entity.getAdminId();
+		}
+		Admin qAdmin = adminDao.getByLoginName(entity.getLoginName());
+
+		if(qAdmin != null && !qAdmin.getAdminId().equals(entity.getAdminId()) ) {
+			logger.warn("保存管理员失败，原因：{}登录名称重复", entity.getLoginName());
+			throw new ServiceException("保存管理员失败，原因：" + entity.getLoginName() + "登录名称重复");
+		}
+		if(entity.getAdminId() == null) {
+			entity.setStatus(0);
+			entity.setCreatedTime(DateConvertUtils.getCurrentDateTime());
+			entity.setModifiedTime(DateConvertUtils.getCurrentDateTime());
+			entity.setLastLoginTime(DateConvertUtils.getCurrentDateTime());
+			entity.setType(3);
+		} else {
+			entity.setModifiedTime(DateConvertUtils.getCurrentDateTime());
+		}
+		
+		if(entity.getPassword() != null) {
+			String psw = BaseCodeUtils.getMd5PasswordEncoder(entity.getPassword(), entity.getLoginName());
+			entity.setPassword(psw);
+		}
+		adminDao.saveOrUpdate(entity);
+		
+		adminRoleDao.deleteByAdminId(entity.getAdminId());
+		for(Long roleId: entity.getRoleIdList()) {
+			AdminRole adminRole = new AdminRole();
+			adminRole.setAdminId(entity.getAdminId());
+			adminRole.setRoleId(roleId);
+			adminRoleDao.save(adminRole);
+		}
+	
+		/*
+		//省份修改
+		AdminProvince adminPro = new AdminProvince();
+		adminPro.setAdminId(entity.getAdminId());
+		adminProvinceDao.delData(adminPro);//删除之前的数据
+		
+		if(entity.getProvinceids() != null){
+			String sq = entity.getProvinceids();
+			if(sq.length()>0){
+			   String proList[] = sq.split(",");
+			     
+				for(int i = 0;i<proList.length;i++){
+					AdminProvince ap = new AdminProvince();
+//						if(entity.getApid()!=null && !entity.getApid().equals("") && !entity.getApid().equals("null")){
+//							ap.setApid(entity.getApid());
+//						}
+						ap.setAdminId(entity.getAdminId());
+					if(entity.getAreaid()!=null){
+						ap.setAreaid(entity.getAreaid());
+					}
+					
+						ap.setProvinceid(Long.valueOf(proList[i]).longValue());
+					
+					adminProvinceDao.save(ap);//保存修改后的新数据
+				}
+			}
+		}*/
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(id==null){
+			
+			operationLogDao.save(ConfigTerrence.MODEL_USER_MANAGE,ConfigTerrence.OPT_ADD, "添加用户名称为:"+entity.getAdminName()+"，操作人为"+admin.getAdmin().getAdminName());
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_USER_MANAGE,ConfigTerrence.OPT_EDIT, "修改用户名称为:"+entity.getAdminName()+"，操作人为"+admin.getAdmin().getAdminName());
+
+		}	
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#update(com.disney.dol.bean.Admin)
+	 */
+	public Integer update(Admin entity) throws ServiceException {
+		Admin qAdmin = adminDao.getByLoginName(entity.getLoginName());
+		if(qAdmin != null && !qAdmin.getAdminId().equals(entity.getAdminId())) {
+			logger.warn("保存管理员失败，原因：{}登录名称重复", entity.getLoginName());
+			throw new ServiceException("保存管理员失败，原因：" + entity.getLoginName() + "登录名称重复");
+		}
+		
+		if(entity.getPassword() != null) {
+			String psw = BaseCodeUtils.getMd5PasswordEncoder(entity.getPassword(), entity.getLoginName());
+			entity.setPassword(psw);
+		}
+		
+		Integer count = adminDao.update(entity);
+		
+		adminRoleDao.deleteByAdminId(entity.getAdminId());
+		for(Long roleId: entity.getRoleIdList()) {
+			AdminRole adminRole = new AdminRole();
+			adminRole.setAdminId(entity.getAdminId());
+			adminRole.setRoleId(roleId);
+			adminRoleDao.save(adminRole);
+		}
+		
+		
+		
+		return count;
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#getByLoginName(java.lang.String)
+	 */
+	@Transactional(readOnly=true)
+	public Admin getByLoginName(java.lang.String loginName) throws ServiceException {
+		return adminDao.getByLoginName(loginName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#getAdminRolesAndAuthorityByLoginName(java.lang.String)
+	 */
+	@Transactional(readOnly=true)
+	public Admin getAdminRolesAndAuthorityByLoginName(String loginName)
+			throws ServiceException {
+		Admin admin = adminDao.getByLoginName(loginName);
+		if(admin != null) {
+			Long adminId = admin.getAdminId();
+			List<Menu> authorityList = menuDao.findByUserId(adminId);
+			admin.setAuthorityList(authorityList);
+			List<MenuOperate> menuOperateList = menuOperateDao.findByUserId(adminId);
+			admin.setMenuOperateList(menuOperateList);
+		}
+		return admin;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.service.IAdminService#updateLastTime(com.disney.dol.bean.Admin)
+	 */
+	public Integer updateLastTime(Admin entity) throws ServiceException {
+		return adminDao.update(entity);
+	}
+
+	@Override
+	public Integer comparePwd(Admin entity,String pwd) throws ServiceException {
+			Integer compare=0;
+			System.out.println("pwd:"+BaseCodeUtils.getMd5PasswordEncoder(pwd,entity.getLoginName()));
+			System.out.println("pwd2:"+entity.getPassword());
+			if(BaseCodeUtils.getMd5PasswordEncoder(pwd,entity.getLoginName()).equals(entity.getPassword())){
+				compare=1;
+				return compare;
+			}else{
+				return compare;
+			}
+	}
+
+	@Override
+	public void updatePwd(Admin entity) throws ServiceException {
+
+		Admin qAdmin = adminDao.getByLoginName(entity.getLoginName());
+
+		if(qAdmin != null && !qAdmin.getAdminId().equals(entity.getAdminId()) ) {
+			logger.warn("保存管理员失败，原因：{}登录名称重复", entity.getLoginName());
+			throw new ServiceException("保存管理员失败，原因：" + entity.getLoginName() + "登录名称重复");
+		}
+		if(entity.getAdminId() == null) {
+			entity.setStatus(0);
+			entity.setCreatedTime(DateConvertUtils.getCurrentDateTime());
+			entity.setModifiedTime(DateConvertUtils.getCurrentDateTime());
+			entity.setLastLoginTime(DateConvertUtils.getCurrentDateTime());
+		} else {
+			entity.setModifiedTime(DateConvertUtils.getCurrentDateTime());
+		}
+		
+		if(entity.getPassword() != null) {
+			String psw = BaseCodeUtils.getMd5PasswordEncoder(entity.getPassword(), entity.getLoginName());
+			entity.setPassword(psw);
+		}
+		adminDao.saveOrUpdate(entity);
+	}
+
+	@Override
+	public List<Admin> findAdminId(AdminQuery adminQuery) {
+		return adminDao.findAdminId(adminQuery);
+	}
+
+	@Override
+	public List<Admin> findList(AdminQuery query, String statement)
+			throws ServiceException {
+		return adminDao.findList(statement,query);
+	}
+
+	@Override
+	public void syncAdminERPData() throws ServiceException {
+		adminDao.findAdminErp();
+	}
+
+	@Override
+	public Admin findById(Admin minad) throws ServiceException {
+		return adminDao.findById(minad);
+	}
+
+	@Override
+	public List<Admin> findAdminSel(AdminQuery adminQuery)
+			throws ServiceException {
+		return adminDao.findAdminSel(adminQuery);
+	}
+
+	@Override
+	public List<Admin> findAdminProcurement(AdminQuery adminQuery)
+			throws ServiceException {
+		return adminDao.findAdminProcurement(adminQuery);
+	}
+
+	
+	
+}

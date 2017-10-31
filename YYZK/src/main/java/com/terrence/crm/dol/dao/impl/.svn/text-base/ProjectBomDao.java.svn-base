@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProjectBom;
+import com.terrence.crm.dol.dao.IProjectBomDao;
+import com.terrence.crm.dol.query.ProjectBomQuery;
+
+@Repository
+public class ProjectBomDao extends BaseIbatisDao<ProjectBom,java.lang.Long> implements IProjectBomDao{
+
+		
+	public void saveOrUpdate(ProjectBom entity) {
+		if(entity.getBomid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ProjectBom";
+	}
+	public ProjectBom getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProjectBom)this.getSqlMapClientTemplate().queryForObject("ProjectBom.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByInfoId(ProjectBomQuery query) {
+		this.getSqlMapClientTemplate().delete("ProjectBom.deleteByInfoId",query);
+	}
+
+}

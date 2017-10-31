@@ -1,0 +1,55 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.query.ModelListQuery;
+@Repository
+public class ModelListDao extends BaseIbatisDao<ModelList,java.lang.Long> implements IModelListDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ModelList"; 
+	}
+	public void saveOrUpdate(ModelList entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public ModelList getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ModelList)this.getSqlMapClientTemplate().queryForObject("ModelList.getByProperty", map);
+	}
+	
+	@Override
+	public void deleteByBomDrawTitleId(ModelListQuery ml) {
+		this.getSqlMapClientTemplate().delete("ModelList.delete.bybomdrawId", ml);
+	}
+	@Override
+	public void deleteById(ModelListQuery ml) {
+		this.getSqlMapClientTemplate().delete("ModelList.delete.byId", ml);
+	}
+	@Override
+	public List<ModelList>  findModelByGroupId(String ids,String modelMark) {
+		Map map=new HashMap();
+		map.put("ids", ids);
+		map.put("modelMark",modelMark);
+		return (List<ModelList>)this.getSqlMapClientTemplate().queryForList("ModelList.find.bygroupid", map);
+	}
+	@Override
+	public void deleteByEntity(ModelList mo) throws Exception {
+		this.getSqlMapClientTemplate().delete("ModelList.delete", mo);
+	}
+	@Override
+	public ModelList getById(String statement, ModelListQuery modelListQuery)
+			throws Exception {
+		Map map=new HashMap();
+		map.put("id", modelListQuery.getId());
+		map.put("modelMark",modelListQuery.getModelMark());
+		return (ModelList)this.getSqlMapClientTemplate().queryForObject("ModelList.getById",map);
+	}
+}

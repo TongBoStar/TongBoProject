@@ -1,0 +1,70 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+
+@Repository
+public class EmployeeTaskDao extends BaseIbatisDao<EmployeeTask,java.lang.Long> implements IEmployeeTaskDao{
+
+		
+	public void saveOrUpdate(EmployeeTask entity) {
+		if(entity.getEmployeetaskid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "EmployeeTask";
+	}
+	public EmployeeTask getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (EmployeeTask)this.getSqlMapClientTemplate().queryForObject("EmployeeTask.getByProperty", map);		
+	}
+
+	@Override
+	public EmployeeTask getMaxPlanEndDate(EmployeeTaskQuery query) {
+		Object obj=this.getSqlMapClientTemplate().queryForObject("EmployeeTask.getMaxPlanEndDate",query);
+		if(obj!=null)
+			return (EmployeeTask)obj;
+		else
+			return null;
+	}
+
+	@Override
+	public Long findCount(String statement, EmployeeTaskQuery query) {
+		
+		return (Long)this.getSqlMapClientTemplate().queryForObject(statement,query);
+	}
+
+	@Override
+	public void updateTofinish(Long dispatchid) {
+		// 
+		
+		this.getSqlMapClientTemplate().update("EmpoyeeTask.update.updateTofinish", dispatchid);
+		
+	}
+
+	@Override
+	public List<EmployeeTask> findEpList(Long workid) {
+
+		return (List<EmployeeTask>)this.getSqlMapClientTemplate().queryForList("RM.EmployeeTask.findEpList", workid);
+	}
+
+}

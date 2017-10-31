@@ -1,0 +1,150 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Pdparameter;
+import com.terrence.crm.dol.query.PdparameterQuery;
+import com.terrence.crm.dol.dao.IPdparameterDao;
+import com.terrence.crm.dol.service.IPdparameterService;
+
+@Service
+@Transactional
+public class PdparameterService extends BaseService implements IPdparameterService {
+	protected static Logger logger = LoggerFactory.getLogger(PdparameterService.class);
+	@Autowired
+	@Qualifier("pdparameterDao")
+	private IPdparameterDao pdparameterDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Pdparameter";
+	}
+	@Transactional(readOnly=true)
+	public Pdparameter getById(java.lang.Long id) throws ServiceException
+	{
+		return pdparameterDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Pdparameter entity) throws ServiceException
+	{
+		pdparameterDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Pdparameter entity) throws ServiceException
+	{
+		Long adId = pdparameterDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Pdparameter entity) throws ServiceException
+	{
+		Integer returnValue =  pdparameterDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdparameterDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdparameterDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdparameterQuery query = new PdparameterQuery();
+		try {
+			return pdparameterDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Pdparameter> findPage(Page<Pdparameter> page, PdparameterQuery query) throws ServiceException
+	{
+		return pdparameterDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Pdparameter> findPage(Page<Pdparameter> page,String statement, PdparameterQuery query) throws ServiceException
+	{
+		return pdparameterDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdparameter> findList(PdparameterQuery query) throws ServiceException
+	{
+		return pdparameterDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdparameter> findList(PdparameterQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdparameterDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Pdparameter> findList(PdparameterQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdparameterDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdparameter> findAllList() throws ServiceException
+	{
+		return pdparameterDao.findAllList();
+	}
+	@Override
+	public Integer deleteAlone(Long pdparameterId) {
+		List<java.lang.Long> idList = new ArrayList<Long>();
+		if(pdparameterId!=0){
+			idList.add(pdparameterId);
+		}
+		finddeleteIds(idList,pdparameterId);
+		
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdparameterDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	public List<java.lang.Long>  finddeleteIds(List<java.lang.Long> idList,Long id){
+		PdparameterQuery query = new PdparameterQuery();
+		query.setFparentid(id);
+		List<Pdparameter> list = new ArrayList<Pdparameter>();
+		list = this.pdparameterDao.findList(query);
+		if(list!=null&&list.size()>0){
+			for(Pdparameter pd:list){
+				idList.add(pd.getParamid());
+				finddeleteIds(idList,pd.getParamid());
+			}
+		}
+		return idList;
+	}
+}

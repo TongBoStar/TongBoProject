@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ShortageTemp;
+import com.terrence.crm.dol.dao.IShortageTempDao;
+import com.terrence.crm.dol.query.ShortageTempQuery;
+
+@Repository
+public class ShortageTempDao extends BaseIbatisDao<ShortageTemp,java.lang.Long> implements IShortageTempDao{
+
+		
+	public void saveOrUpdate(ShortageTemp entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ShortageTemp";
+	}
+	public ShortageTemp getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ShortageTemp)this.getSqlMapClientTemplate().queryForObject("ShortageTemp.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteUseridProductid(ShortageTempQuery satempquery) {
+		this.getSqlMapClientTemplate().delete("ShortageTemp.Userid,productid.delete", satempquery);
+	}
+
+}

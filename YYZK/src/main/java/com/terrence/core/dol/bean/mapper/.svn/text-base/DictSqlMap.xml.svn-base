@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+   <resultMap id="RM.Dict" class="com.terrence.core.dol.bean.Dict">
+       <result property="id" column="id"/>
+       <result property="name" column="name"/>
+       <result property="code" column="code"/>
+       <result property="pId" column="pId"/>
+       <result property="pCode" column="pCode"/>
+       <result property="value" column="value"/>
+       <result property="isChildren" column="isChildren"/>
+       <result property="sort" column="sort"/>
+       <result property="webId" column="webId"/>
+       <result property="createOn" column="createOn"/>
+       <result property="createUserId" column="createUserId"/>
+       <result property="modifiedOn" column="modifiedOn"/>
+       <result property="modifiedUserId" column="modifiedUserId"/>
+   </resultMap>
+
+   <sql id="Dict.columns">
+       <![CDATA[
+           id,name,code,pId,pCode,value,isChildren,sort,webId,createOn,createUserId,modifiedOn,modifiedUserId
+       ]]>
+   </sql>
+
+
+   <insert id="Dict.insert" >
+   <![CDATA[
+       INSERT INTO core_dict
+       (
+        name
+        ,code
+        ,pId
+        ,pCode
+        ,value
+        ,isChildren
+        ,sort
+        ,webId
+        ,createOn
+        ,createUserId
+        ,modifiedOn
+        ,modifiedUserId
+
+       )
+       VALUES
+       (
+        #name#
+        ,#code#
+        ,#pId#
+        ,#pCode#
+        ,#value#
+        ,#isChildren#
+        ,#sort#
+        ,#webId#
+        ,#createOn#
+        ,#createUserId#
+        ,#modifiedOn#
+        ,#modifiedUserId#
+
+       )
+   ]]>
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="Dict.update" >
+       UPDATE core_dict 
+       <dynamic prepend="SET">
+       <isNotEmpty prepend="," property="name">
+           name = #name# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="code">
+           code = #code# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="pId">
+           pId = #pId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="pCode">
+           pCode = #pCode# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="value">
+           value = #value# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="isChildren">
+           isChildren = #isChildren# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="sort">
+           sort = #sort# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="webId">
+           webId = #webId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="createOn">
+           createOn = #createOn# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="createUserId">
+           createUserId = #createUserId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="modifiedOn">
+           modifiedOn = #modifiedOn# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="modifiedUserId">
+           modifiedUserId = #modifiedUserId# 
+       </isNotEmpty>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+
+   <delete id="Dict.delete">
+       <![CDATA[
+       DELETE FROM core_dict WHERE
+       id = #id# 
+       ]]>
+   </delete>
+
+   <select id="Dict.getById" resultMap="RM.Dict">
+       SELECT <include refid="Dict.columns"/>
+       <![CDATA[
+       FROM core_dict 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+
+   <sql id="Dict.findPage.where">
+       <dynamic prepend="WHERE">
+           <isNotEmpty prepend="AND" property="id">
+               id = #id#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="name">
+               name = #name#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="code">
+               code = #code#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="pId">
+               pId = #pId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="pCode">
+               pCode = #pCode#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="value">
+               value = #value#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="isChildren">
+               isChildren = #isChildren#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="sort">
+               sort = #sort#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="webId">
+               webId = #webId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="createOn">
+               createOn = #createOn#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="createUserId">
+               createUserId = #createUserId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="modifiedOn">
+               modifiedOn = #modifiedOn#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="modifiedUserId">
+               modifiedUserId = #modifiedUserId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="values">
+               value in ($values$)
+           </isNotEmpty>
+       </dynamic>
+   </sql>
+
+   <select id="Dict.findPage.count" resultClass="long">
+       SELECT count(*) FROM core_dict <include refid="Dict.findPage.where"/>
+   </select>
+
+   <select id="Dict.findPage" resultMap="RM.Dict">
+       SELECT <include refid="Dict.columns"/> 
+       FROM core_dict <include refid="Dict.findPage.where"/>
+           <isNotEmpty property="notTop"> and
+               id not in(select $notTop$ id from core_dict <include refid="Dict.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>) 
+           </isNotEmpty>  
+           <isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+           </isNotEmpty>
+   </select>
+
+   <select id="Dict.findList" resultMap="RM.Dict">
+       SELECT <include refid="Dict.columns"/> 
+       FROM core_dict <include refid="Dict.findPage.where"/>
+       <isNotEmpty property="sortColumns">
+       ORDER BY $sortColumns$
+       </isNotEmpty>
+   </select>
+
+</sqlMap>

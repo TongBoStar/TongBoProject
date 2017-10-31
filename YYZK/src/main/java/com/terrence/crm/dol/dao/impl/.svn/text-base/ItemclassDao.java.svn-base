@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Itemclass;
+import com.terrence.crm.dol.dao.IItemclassDao;
+
+@Repository
+public class ItemclassDao extends BaseIbatisDao<Itemclass,java.lang.Long> implements IItemclassDao{
+
+		
+	public void saveOrUpdate(Itemclass entity) {
+		if(entity.getFitemclassid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Itemclass";
+	}
+	public Itemclass getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Itemclass)this.getSqlMapClientTemplate().queryForObject("Itemclass.getByProperty", map);		
+	}
+
+	@Override
+	public void finditemclassErp() {
+		this.getSqlMapClientTemplate().queryForObject("Itemclass.tongbu.rep.data");
+	}
+
+}

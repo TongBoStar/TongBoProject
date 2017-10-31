@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Wxuser">
+
+<resultMap id="RM.Wxuser" class="com.terrence.crm.dol.bean.Wxuser">
+	<result property="id" column="id"/>
+	<result property="nickname" column="nickname"/>
+	<result property="wxCode" column="wxCode"/>
+	<result property="headerurl" column="headerurl"/>
+	<result property="province" column="province"/>
+	<result property="city" column="city"/>
+	<result property="sex" column="sex"/>
+	<result property="fmark" column="fmark"/>
+	<result property="username" column="username"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Wxuser.columns">
+	<![CDATA[
+		t_wxuser.id ,
+		t_wxuser.nickname ,
+		t_wxuser.wxCode ,
+		t_wxuser.headerurl ,
+		t_wxuser.province ,
+		t_wxuser.city ,
+		t_wxuser.sex ,
+		t_wxuser.fmark ,
+		t_wxuser.username
+	]]>
+</sql>
+
+<insert id="Wxuser.insert" >
+	<![CDATA[
+	INSERT INTO t_wxuser (
+		nickname,
+		wxCode,
+		headerurl,
+		province,
+		city,
+		sex,
+		fmark,
+		username
+	) VALUES (
+		#nickname#,
+		#wxCode#,
+		#headerurl#,
+		#province#,
+		#city#,
+		#sex#,
+		#fmark#,
+		#username#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Wxuser.update" parameterClass="com.terrence.crm.dol.bean.Wxuser"> 
+	UPDATE t_wxuser 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="nickname">
+			nickname = #nickname# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="wxCode">
+			wxCode = #wxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="headerurl">
+			headerurl = #headerurl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="province">
+			province = #province# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="city">
+			city = #city# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sex">
+			sex = #sex# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="username">
+			username = #username# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Wxuser.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_wxuser.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nickname">
+			t_wxuser.nickname like ('%$nickname$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="wxCode">
+			t_wxuser.wxCode = #wxCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="headerurl">
+			t_wxuser.headerurl = #headerurl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="province">
+			t_wxuser.province = #province# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="city">
+			t_wxuser.city = #city# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sex">
+			t_wxuser.sex = #sex# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_wxuser.fmark like ('%$fmark$%') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="username">
+			t_wxuser.username like ('%$username$%') 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Wxuser.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_wxuser.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nickname">
+		t_wxuser.nickname like ('%$nickname$%') 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="wxCode">
+		t_wxuser.wxCode = #wxCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="headerurl">
+		t_wxuser.headerurl = #headerurl# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="province">
+		t_wxuser.province = #province# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="city">
+		t_wxuser.city = #city# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sex">
+		t_wxuser.sex = #sex# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_wxuser.fmark like ('%$fmark$%') 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="username">
+		t_wxuser.username like ('%$username$%') 
+	</isNotEmpty>
+</sql>
+
+<select id="Wxuser.getById" resultMap="RM.Wxuser">
+	select <include refid="Wxuser.columns"/> from t_wxuser where id=#id#
+</select>
+
+<select id="Wxuser.getByProperty" resultMap="RM.Wxuser">
+	select <include refid="Wxuser.columns"/> from t_wxuser where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Wxuser.delete">
+	<![CDATA[
+		DELETE FROM t_wxuser WHERE id=#id#
+	]]>
+</delete>
+<delete id="Wxuser.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_wxuser WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Wxuser.findPage.count" resultClass="long">
+	select count(*) from t_wxuser <include refid="Wxuser.findPage.where"/>
+</select>
+
+<select id="Wxuser.findPage" resultMap="RM.Wxuser">
+	select <include refid="Wxuser.columns"/> 
+		from t_wxuser 
+	<include refid="Wxuser.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Wxuser.findList" resultMap="RM.Wxuser">
+	SELECT <include refid="Wxuser.columns"/> FROM t_wxuser
+	<include refid="Wxuser.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

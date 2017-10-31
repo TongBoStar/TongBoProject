@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="HisReport">
+
+        
+	<resultMap id="RM.HisReport" class="com.terrence.crm.dol.bean.HisReport">
+        <result property="id" column="id"/>
+        <result property="amount" column="amount"/>
+        <result property="empid" column="empid"/>
+        <result property="checktime" column="checktime"/>
+        <result property="money" column="money"/>
+        <result property="jobprice" column="jobprice"/>
+        <result property="adminname" column="adminname"/>
+        <result property="createdate" column="createdate"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="HisReport.columns">
+	    <![CDATA[
+        	t_his_report.id ,
+        	t_his_report.amount ,
+        	t_his_report.empid ,
+        	t_his_report.checktime ,
+        	t_his_report.money ,
+        	t_his_report.jobprice ,
+        	t_his_report.adminname ,
+        	t_his_report.createdate 
+	    ]]>
+	</sql>
+	
+   <insert id="HisReport.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_his_report (
+        	amount ,
+        	empid ,
+        	checktime ,
+        	money ,
+        	jobprice ,
+        	adminname ,
+        	createdate 
+        ) VALUES (
+        	#amount# ,
+        	#empid# ,
+        	#checktime# ,
+        	#money# ,
+        	#jobprice# ,
+        	#adminname# ,
+        	#createdate# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<insert id="HisReport.insert.Report">
+	insert into t_his_report(amount,empid,checktime,money,jobprice,adminname,createdate)
+	select amount,reqemp,checktime,money,jobprice ,adminname,createdate from (
+	select isnull(t_check.amount,0) amount,isnull(isnull(t_check.reqemp,t_job_check.empid),t_pre.empid)  
+	reqemp ,isnull(t_check.checktime,datename(yyyy,getdate())+datename(mm,dateadd(mm,-1,getdate()))) checktime,
+	isnull(t_pre.money,0) money,isnull(t_job_check.jobprice,0)  jobprice
+	, t_admin.adminname ,getdate() createdate from  (select sum(acceptnum*t_item_process.wage*t_item_process.ratio) 
+	 amount,t_check.reqemp ,datename(yyyy,checktime)+datename(mm,checktime) as checktime 
+	  from t_check,t_item_process  where t_check.itemprocessid=t_item_process.itemprocessid 
+	  and checktype=3 and datename(yyyy,checktime)+datename(mm,checktime)  =datename(yyyy,getdate())+datename(mm,dateadd(mm,-1,getdate())) 
+	  group by datename(yyyy,checktime)+datename(mm,checktime),t_check.reqemp  ) t_check full 
+	    join (select  sum(t_item_process.reservefund) money,empid,datename(yyyy,checkdate)+datename(mm,checkdate)  checktime 
+	 from  t_prepare_emp,t_item_process where t_prepare_emp.itemprocessid=t_item_process.itemprocessid  
+	  and datename(yyyy,checkdate)+datename(mm,checkdate) =datename(yyyy,getdate())+datename(mm,dateadd(mm,-1,getdate())) 
+	 group by   empid ,datename(yyyy,checkdate)+datename(mm,checkdate)) t_pre  on t_check.reqemp=t_pre.empid  
+	   and t_check.checktime=t_pre.checktime full  join ( select    t_job_check.reqemp empid,
+	   sum(t_job_check.acceptnum*t_job_check.price)  jobprice, datename(yyyy,checktime)+datename(mm,checktime) jobdate 
+	   from    t_job_check , t_admin    where  t_job_check.reqemp=t_admin.adminid  
+	   and datename(yyyy,checktime)+datename(mm,checktime)  =datename(yyyy,getdate())+datename(mm,dateadd(mm,-1,getdate()))
+	  group by  t_job_check.reqemp, datename(yyyy,checktime)+datename(mm,checktime)  )  t_job_check   on t_check.reqemp=t_job_check.empid  
+	   and t_check.checktime=t_job_check.jobdate , t_admin where   ( t_job_check.empid=t_admin.adminid or t_check.reqemp=t_admin.adminid 
+	  or t_pre.empid=t_admin.adminid )) tempreport where not exists(select * from t_his_report where tempreport.checktime=t_his_report.checktime and tempreport.reqemp=t_his_report.empid)
+		
+	</insert>
+	<update id="HisReport.update" parameterClass="com.terrence.crm.dol.bean.HisReport">         
+        UPDATE t_his_report 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checktime">
+	        	checktime = #checktime# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="money">
+	        	money = #money# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="jobprice">
+	        	jobprice = #jobprice# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminname">
+	        	adminname = #adminname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="HisReport.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_his_report where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="HisReport.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_his_report 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="HisReport.getById" resultMap="RM.HisReport">
+	    select <include refid="HisReport.columns"/>
+	    
+	        from t_his_report 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="HisReport.getByProperty" resultMap="RM.HisReport">
+		select <include refid="HisReport.columns"/> from t_his_report where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="HisReport.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_his_report.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_his_report.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_his_report.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checktime">
+	             t_his_report.checktime = #checktime#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="money">
+	             t_his_report.money = #money#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="jobprice">
+	             t_his_report.jobprice = #jobprice#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminname">
+	             t_his_report.adminname = #adminname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_his_report.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_his_report.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="HisReport.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_his_report.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_his_report.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_his_report.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checktime">
+	             t_his_report.checktime = #checktime#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="money">
+	             t_his_report.money = #money#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="jobprice">
+	             t_his_report.jobprice = #jobprice#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminname">
+	             t_his_report.adminname = #adminname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_his_report.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_his_report.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="HisReport.findList" resultMap="RM.HisReport">
+    	SELECT 
+    		<include refid="HisReport.columns"/> 
+    	FROM 
+    		t_his_report
+		<include refid="HisReport.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="HisReport.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_his_report
+    ]]>
+		<include refid="HisReport.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.HisReport.findPage" resultMap="RM.HisReport">
+    	select <include refid="HisReport.columns"/>	    
+	        from t_his_report 	   
+		<include refid="HisReport.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="HisReport.findPage" resultMap="RM.HisReport">
+    	select <include refid="HisReport.columns"/>	    
+	        from t_his_report where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_his_report <include refid="HisReport.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="HisReport.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

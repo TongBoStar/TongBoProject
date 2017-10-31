@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.DeviceAff;
+import com.terrence.crm.dol.query.DeviceAffQuery;
+import com.terrence.crm.dol.dao.IDeviceAffDao;
+import com.terrence.crm.dol.service.IDeviceAffService;
+
+@Service
+@Transactional
+public class DeviceAffService extends BaseService implements IDeviceAffService {
+	protected static Logger logger = LoggerFactory.getLogger(DeviceAffService.class);
+	@Autowired
+	@Qualifier("deviceAffDao")
+	private IDeviceAffDao deviceAffDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "DeviceAff";
+	}
+	@Transactional(readOnly=true)
+	public DeviceAff getById(java.lang.Long id) throws ServiceException
+	{
+		return deviceAffDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DeviceAff entity) throws ServiceException
+	{
+		deviceAffDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DeviceAff entity) throws ServiceException
+	{
+		Long adId = deviceAffDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(DeviceAff entity) throws ServiceException
+	{
+		Integer returnValue =  deviceAffDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = deviceAffDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = deviceAffDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DeviceAffQuery query = new DeviceAffQuery();
+		try {
+			return deviceAffDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceAff> findPage(Page<DeviceAff> page, DeviceAffQuery query) throws ServiceException
+	{
+		return deviceAffDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceAff> findPage(Page<DeviceAff> page,String statement, DeviceAffQuery query) throws ServiceException
+	{
+		return deviceAffDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceAff> findList(DeviceAffQuery query) throws ServiceException
+	{
+		return deviceAffDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceAff> findList(DeviceAffQuery query,Integer pageSize) throws ServiceException
+	{
+		return deviceAffDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<DeviceAff> findList(DeviceAffQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return deviceAffDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceAff> findAllList() throws ServiceException
+	{
+		return deviceAffDao.findAllList();
+	}
+
+}

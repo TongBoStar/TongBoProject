@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Arvoice">
+
+<resultMap id="RM.Arvoice" class="com.terrence.crm.dol.bean.Arvoice">
+	<result property="id" column="id"/>
+	<result property="voiceName" column="voiceName"/>
+	<result property="voicePath" column="voicePath"/>
+	<result property="actionName" column="actionName"/>
+	<result property="fmark" column="fmark"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Arvoice.columns">
+	<![CDATA[
+		t_arvoice.id ,
+		t_arvoice.voiceName ,
+		t_arvoice.voicePath ,
+		t_arvoice.actionName ,
+		t_arvoice.fmark
+	]]>
+</sql>
+
+<insert id="Arvoice.insert" >
+	<![CDATA[
+	INSERT INTO t_arvoice (
+		voiceName,
+		voicePath,
+		actionName,
+		fmark
+	) VALUES (
+		#voiceName#,
+		#voicePath#,
+		#actionName#,
+		#fmark#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Arvoice.update" parameterClass="com.terrence.crm.dol.bean.Arvoice"> 
+	UPDATE t_arvoice 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="voiceName">
+			voiceName = #voiceName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="voicePath">
+			voicePath = #voicePath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="actionName">
+			actionName = #actionName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Arvoice.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_arvoice.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="voiceName">
+			t_arvoice.voiceName = #voiceName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="voicePath">
+			t_arvoice.voicePath = #voicePath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="actionName">
+			t_arvoice.actionName = #actionName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_arvoice.fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Arvoice.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_arvoice.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="voiceName">
+		t_arvoice.voiceName = #voiceName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="voicePath">
+		t_arvoice.voicePath = #voicePath# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="actionName">
+		t_arvoice.actionName = #actionName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_arvoice.fmark = #fmark# 
+	</isNotEmpty>
+</sql>
+
+<select id="Arvoice.getById" resultMap="RM.Arvoice">
+	select <include refid="Arvoice.columns"/> from t_arvoice where id=#id#
+</select>
+
+<select id="Arvoice.getByProperty" resultMap="RM.Arvoice">
+	select <include refid="Arvoice.columns"/> from t_arvoice where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Arvoice.delete">
+	<![CDATA[
+		DELETE FROM t_arvoice WHERE id=#id#
+	]]>
+</delete>
+<delete id="Arvoice.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_arvoice WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Arvoice.findPage.count" resultClass="long">
+	select count(*) from t_arvoice <include refid="Arvoice.findPage.where"/>
+</select>
+
+<select id="Arvoice.findPage" resultMap="RM.Arvoice">
+	select <include refid="Arvoice.columns"/> 
+		from t_arvoice 
+	<include refid="Arvoice.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Arvoice.findList" resultMap="RM.Arvoice">
+	SELECT <include refid="Arvoice.columns"/> FROM t_arvoice
+	<include refid="Arvoice.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Arvoice.find.unsync.android" resultMap="RM.Arvoice">
+	SELECT <include refid="Arvoice.columns"/> FROM t_arvoice where id>#id#
+</select>
+</sqlMap>

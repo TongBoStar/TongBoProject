@@ -1,0 +1,173 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyTaskFlow;
+import com.terrence.crm.dol.bean.FactoryReport;
+import com.terrence.crm.dol.bean.ReportTec;
+import com.terrence.crm.dol.query.AssemblyTaskFlowQuery;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+import com.terrence.crm.dol.query.FactoryReportQuery;
+import com.terrence.crm.dol.query.ReportTecQuery;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.dao.IReportTecDao;
+import com.terrence.crm.dol.service.IReportTecService;
+
+@Service
+@Transactional
+public class ReportTecService extends BaseService implements IReportTecService {
+	protected static Logger logger = LoggerFactory.getLogger(ReportTecService.class);
+	@Autowired
+	@Qualifier("reportTecDao")
+	private IReportTecDao reportTecDao;
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("assemblyTaskFlowDao")
+	private IAssemblyTaskFlowDao assemblyTaskFlowDao;
+	@Autowired
+	@Qualifier("factoryReportDao")
+	private IFactoryReportDao factoryReportDao;
+	public String getIbatisSqlMapNamespace() {
+		return "ReportTec";
+	}
+	@Transactional(readOnly=true)
+	public ReportTec getById(java.lang.Long id) throws ServiceException
+	{
+		return reportTecDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ReportTec entity) throws ServiceException
+	{
+		/**ReportTecQuery reportTecQuery = new ReportTecQuery();
+		reportTecQuery.setPlandetailid(entity.getPlandetailid());
+		List<ReportTec> reportTecs = reportTecDao.findList(reportTecQuery);
+		if(reportTecs.size()==1){
+			AssemblyTaskQuery query1 = new AssemblyTaskQuery();
+			query1.setProductid(entity.getPlandetailid());
+			List<AssemblyTask> list1 =  assemblyTaskDao.findList(query1);
+			if(list1.size()>0){
+				AssemblyTaskFlowQuery query2 = new AssemblyTaskFlowQuery();
+				query2.setTaskid(list1.get(0).getId());
+				List<AssemblyTaskFlow> list2 = assemblyTaskFlowDao.findList(query2);
+				if(list2.size()>0){
+					FactoryReportQuery query3 = null;
+					List<FactoryReport> list3 = null;
+					String seqno = "";
+					for(AssemblyTaskFlow flow:list2){
+						if(flow.getSeqcode().equals(seqno)){
+							continue;
+						}
+						seqno = flow.getSeqcode();
+						query3 = new FactoryReportQuery();
+						query3.setSerial(flow.getSeqcode());
+						list3 = factoryReportDao.findList(query3);
+						reportTecs.get(0).setReportid(list3.get(0).getReportid());
+						reportTecs.get(0).setSerial(list3.get(0).getSerial());
+						reportTecDao.save(reportTecs.get(0));
+					}
+				}
+			}
+		}else{
+			reportTecDao.saveOrUpdate(entity);
+		}*/
+		reportTecDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ReportTec entity) throws ServiceException
+	{
+		Long adId = reportTecDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ReportTec entity) throws ServiceException
+	{
+		Integer returnValue =  reportTecDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = reportTecDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = reportTecDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ReportTecQuery query = new ReportTecQuery();
+		try {
+			return reportTecDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ReportTec> findPage(Page<ReportTec> page, ReportTecQuery query) throws ServiceException
+	{
+		return reportTecDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ReportTec> findPage(Page<ReportTec> page,String statement, ReportTecQuery query) throws ServiceException
+	{
+		return reportTecDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportTec> findList(ReportTecQuery query) throws ServiceException
+	{
+		return reportTecDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportTec> findList(ReportTecQuery query,Integer pageSize) throws ServiceException
+	{
+		return reportTecDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ReportTec> findList(ReportTecQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return reportTecDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportTec> findAllList() throws ServiceException
+	{
+		return reportTecDao.findAllList();
+	}
+
+}

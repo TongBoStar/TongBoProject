@@ -1,0 +1,552 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.net.InetAddress;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.Teams;
+import com.terrence.crm.dol.bean.Workarea;
+import com.terrence.crm.dol.query.AdttQuery;
+import com.terrence.crm.dol.query.WorkareaQuery;
+import com.terrence.crm.dol.service.IAdttService;
+import com.terrence.crm.dol.service.ITeamsService;
+import com.terrence.crm.dol.service.IWorkareaService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/adtt")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "adtt." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class AdttAction extends CrudActionSupport<Adtt>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("adttService")
+	private IAdttService adttService;
+	@Autowired
+	@Qualifier("teamsService")
+	private ITeamsService teamsService;
+	@Autowired
+	@Qualifier("workareaService")
+	private IWorkareaService workareaService;
+	
+	private Adtt entity;
+
+	private AdttQuery adttQuery;
+	
+	
+	private java.lang.Long adttId;
+	
+	/** 分页器 */
+	private Page<Adtt> page = new Page<Adtt>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Adtt> adttList;
+	private String params;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (adttId != null ) {
+			entity = adttService.getById(adttId);
+		} else {
+			entity = new Adtt();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			adttService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(adttQuery == null) {
+			adttQuery = new AdttQuery();
+		}
+		
+		try {
+			adttList = adttService.findList(adttQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("adttId");
+			page.setOrder(Page.DESC);
+		}
+		if(adttQuery == null) {
+			adttQuery = new AdttQuery();
+		}
+		
+		try {
+			/*Integer teamid=SpringSecurityUtils.getCurrentTeamid();
+			
+			if(teamid.intValue()!=0)
+			{
+				List<Teams> list=teamsService.findrecursive(teamid.longValue());
+				String teamids="";
+				int i=0;
+				for(Teams team:list)
+				{
+					teamids+=team.getTeamid();
+					i++;
+					if(i<list.size())
+					{
+						teamids+=",";
+					}
+				}
+				System.out.println(teamids);
+			adttQuery.setTeamids(teamids);
+			}*/
+			//===========================区域相关========================================查询有错，暂时屏蔽20114-09-17
+		
+			String ip = getMyIP();
+			System.out.println("ip是="+ip);
+			if(ip.length()>0){
+				WorkareaQuery  wquery = new WorkareaQuery();
+				wquery.setIpaddr(ip);
+				//Workarea ware = workareaService.findEntity(wquery);
+				List<Workarea> listware = workareaService.findEntity(wquery);
+				
+				if(listware.size()>0){
+					String areads = "";
+					for(int sq=0;sq<listware.size();sq++){
+						if((sq+1)==listware.size()){
+							areads+=listware.get(sq).getAreaid().toString();
+						}else{
+							areads+=listware.get(sq).getAreaid().toString()+",";
+						}
+					}
+					adttQuery.setAreaids(areads);
+				}
+//				if(ware != null){
+//					adttQuery.setAreaid(ware.getAreaid());
+//				}
+			}
+			
+			
+			//===================================================================
+			
+			page = adttService.findPage(page, adttQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	public String getMyIP() {
+		   try {
+		        HttpServletRequest request =getRequest();
+		        return request.getRemoteAddr();
+		   } catch (Exception e) {
+		        e.printStackTrace();
+		   }
+		   return "";
+		}
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			adttService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = adttService.getById(adttId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			adttList = adttService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 更改延迟原因
+	 * @throws Exception
+	 */
+	public void prepareUpdateReason() throws Exception {
+		prepareModel();
+	}
+	public String updateReason() throws Exception {
+			
+			try {
+				adttService.updateReason(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+			}
+			return JSON;
+		}
+	
+	
+	/**
+	 * 根据adttid修改status状态
+	 * @return
+	 * @throws Exception
+	 */
+	public String deleData() throws Exception {
+			
+			try {
+				adttService.deleData(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+				addActionMessage("删除成功");
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+				addActionMessage("删除失败");
+			}
+			return JSON;
+		}
+	
+	public void prepareSaveAddedItem() throws Exception {
+		prepareModel();
+	}
+	public String saveAddedItem() throws Exception{
+		try{
+			adttService.saveAddedItem(entity,params);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Adtt getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public AdttQuery getAdttQuery() {
+		return adttQuery;
+	}
+
+	
+	public void setAdttQuery(AdttQuery adttQuery) {
+		this.adttQuery = adttQuery;
+	}
+
+	public void setAdttId(java.lang.Long adttId) {
+		this.adttId = adttId;
+	}
+	
+	
+	public java.lang.Long getAdttId() {
+		return this.adttId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Adtt> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Adtt> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Adtt> getAdttList() {
+		return adttList;
+	}
+
+	public String getParams() {
+		return params;
+	}
+
+	public void setParams(String params) {
+		this.params = params;
+	}
+	
+	
+}

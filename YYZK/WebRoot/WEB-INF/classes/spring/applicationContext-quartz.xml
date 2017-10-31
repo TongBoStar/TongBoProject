@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+	<description>Quartz的本地Cron式执行任务配置</description>
+	<!-- Quartz本地Schduler -->
+	<bean id="localQuartzScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+		<!-- Triggers集成 -->
+		<property name="triggers">
+			<list>
+				<ref bean="updateAccessTokenTrigger" />
+				<ref bean="grabOrderInfoTrigger" />
+				<ref bean="parseLogInfoTrigger" />
+				<ref bean="testTuringTrigger" />
+			</list>
+		</property>
+		<!-- Quartz配置 -->
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.threadCount">5</prop>
+			</props>
+		</property>
+		<!-- 启动时延期3秒开始任务 -->
+		<property name="startupDelay" value="3" />
+	</bean>
+	<!-- 每隔10分钟执行一次 -->
+	<bean id="updateAccessTokenTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="updateAccessTokenDetail" />
+		<property name="cronExpression" value="0 */10 * * * ?"/>
+	</bean>
+	
+	<bean id="updateAccessTokenDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="updateAccessToken" />
+		<property name="targetMethod" value="execupdateaccesstoken" />
+		<!-- 同一任务在前一次执行未完成而Trigger时间又到时是否并发开始新的执行, 默认为true. -->
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="grabOrderInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="grabOrderInfoDetail" />
+		<property name="cronExpression" value="0 */30 * * * ?"/>
+	</bean>
+	
+	<bean id="grabOrderInfoDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="grabOrderInfo" />
+		<property name="targetMethod" value="execGragOrderInfo" />
+		<!-- 同一任务在前一次执行未完成而Trigger时间又到时是否并发开始新的执行, 默认为true. -->
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="parseLogInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="parseLogInfoDetail" />
+		<property name="cronExpression" value="0 */5 * * * ?"/>
+	</bean>
+	
+	<bean id="parseLogInfoDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="parseLogInfo" />
+		<property name="targetMethod" value="execParseLogInfo" />
+		<!-- 同一任务在前一次执行未完成而Trigger时间又到时是否并发开始新的执行, 默认为true. -->
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="testTuringTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="testTuringDetail" />
+		<property name="cronExpression" value="0 0 1 * * ?"/>
+	</bean>
+	
+	<bean id="testTuringDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="testTuring" />
+		<property name="targetMethod" value="execTestTuring" />
+		<!-- 同一任务在前一次执行未完成而Trigger时间又到时是否并发开始新的执行, 默认为true. -->
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="updateAccessToken" class="com.terrence.crm.schedule.UpdateAccessToken"/>
+	<bean id="grabOrderInfo" class="com.terrence.crm.schedule.GragOrderInfo"/>
+	<bean id="parseLogInfo" class="com.terrence.crm.schedule.ParseLogInfo"/>
+	<bean id="testTuring" class="com.terrence.crm.schedule.TestTuring"/>
+</beans>

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckStepRec;
+import com.terrence.crm.dol.query.CheckStepRecQuery;
+import com.terrence.crm.dol.dao.ICheckStepRecDao;
+import com.terrence.crm.dol.service.ICheckStepRecService;
+
+@Service
+@Transactional
+public class CheckStepRecService extends BaseService implements ICheckStepRecService {
+	protected static Logger logger = LoggerFactory.getLogger(CheckStepRecService.class);
+	@Autowired
+	@Qualifier("checkStepRecDao")
+	private ICheckStepRecDao checkStepRecDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CheckStepRec";
+	}
+	@Transactional(readOnly=true)
+	public CheckStepRec getById(java.lang.Long id) throws ServiceException
+	{
+		return checkStepRecDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CheckStepRec entity) throws ServiceException
+	{
+		checkStepRecDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CheckStepRec entity) throws ServiceException
+	{
+		Long adId = checkStepRecDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CheckStepRec entity) throws ServiceException
+	{
+		Integer returnValue =  checkStepRecDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = checkStepRecDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = checkStepRecDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CheckStepRecQuery query = new CheckStepRecQuery();
+		try {
+			return checkStepRecDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckStepRec> findPage(Page<CheckStepRec> page, CheckStepRecQuery query) throws ServiceException
+	{
+		return checkStepRecDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckStepRec> findPage(Page<CheckStepRec> page,String statement, CheckStepRecQuery query) throws ServiceException
+	{
+		return checkStepRecDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckStepRec> findList(CheckStepRecQuery query) throws ServiceException
+	{
+		return checkStepRecDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckStepRec> findList(CheckStepRecQuery query,Integer pageSize) throws ServiceException
+	{
+		return checkStepRecDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CheckStepRec> findList(CheckStepRecQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return checkStepRecDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckStepRec> findAllList() throws ServiceException
+	{
+		return checkStepRecDao.findAllList();
+	}
+
+}

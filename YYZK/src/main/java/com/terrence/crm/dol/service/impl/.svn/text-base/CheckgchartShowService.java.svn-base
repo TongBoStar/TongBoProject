@@ -1,0 +1,102 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckgchartShow;
+import com.terrence.crm.dol.dao.ICheckgchartShowDao;
+import com.terrence.crm.dol.query.CheckgchartShowQuery;
+import com.terrence.crm.dol.service.ICheckgchartShowService;
+@Service
+@Transactional
+public class CheckgchartShowService implements ICheckgchartShowService {
+	@Autowired
+	@Qualifier("checkgchartShowDao")
+	private ICheckgchartShowDao checkgchartShowDao;
+	
+	@Override
+	public CheckgchartShow getById(Long id) throws ServiceException {
+		return checkgchartShowDao.getById(id);
+	}
+
+	@Override
+	public void saveOrUpdate(CheckgchartShow entity) throws ServiceException {
+		checkgchartShowDao.saveOrUpdate(entity);
+		List<String> list = checkgchartShowDao.findysstring(entity.getGshowid());
+		if(list.size()>0){
+			checkgchartShowDao.deleteysBygshowid(entity.getGshowid());
+		}
+		if(entity.getYzs().length()>0){
+			String[] strs = entity.getYzs().split(",");
+			for(int i=0;i<strs.length;i++){
+				checkgchartShowDao.saveys(entity.getGshowid(),strs[i].trim());
+			}
+		}
+	}
+
+	@Override
+	public Long save(CheckgchartShow entity) throws ServiceException {
+		return checkgchartShowDao.save(entity);
+	}
+
+	@Override
+	public Integer update(CheckgchartShow entity) throws ServiceException {
+		return checkgchartShowDao.update(entity);
+	}
+
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		List<String> list = checkgchartShowDao.findysstring(id);
+		if(list.size()>0){
+			checkgchartShowDao.deleteysBygshowid(id);
+		}
+		return checkgchartShowDao.deleteById(id);
+	}
+
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Page<CheckgchartShow> findPage(Page<CheckgchartShow> page,
+			CheckgchartShowQuery query) throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<CheckgchartShow> findList(CheckgchartShowQuery query)
+			throws ServiceException {
+		return checkgchartShowDao.findList(query);
+	}
+
+	@Override
+	public List<CheckgchartShow> findList(CheckgchartShowQuery query, Integer pageSize)
+			throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<CheckgchartShow> findAllList() throws ServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+}

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrialTestLine">
+	<resultMap id="RM.TrialTestLine" class="com.terrence.crm.dol.bean.TrialTestLine">
+        <result property="did" column="did"/>
+        <result property="trialid" column="trialid"/>
+        <result property="serialnumber" column="serialnumber"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="tplid" column="tplid"/>
+        <result property="isenabled" column="isenabled"/>
+        <result property="testtimes" column="testtimes"/>
+        <result property="checktimeid" column="checktimeid"/>
+        <result property="isrun" column="isrun"/>
+        <result property="linecode" column="linecode"/>
+    </resultMap>
+    <resultMap id="RM.TrialTestLineAll" class="com.terrence.crm.dol.bean.TrialTestLine">
+        <result property="did" column="did"/>
+        <result property="trialid" column="trialid"/>
+        <result property="serialnumber" column="serialnumber"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="tplid" column="tplid"/>
+        <result property="isenabled" column="isenabled"/>
+        <result property="isrun" column="isrun"/>
+        <result property="testtimes" column="testtimes"/>
+        <result property="checktimeid" column="checktimeid"/>
+        <result property="linecode" column="linecode"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrialTestLine.columns">
+	    <![CDATA[
+        	t_trial_testline.did ,
+        	t_trial_testline.trialid,
+        	t_trial_testline.serialnumber ,
+        	t_trial_testline.tplid,
+        	t_trial_testline.isenabled,
+        	t_trial_testline.isrun,
+        	t_trial_testline.testtimes,
+        	t_trial_testline.itemcode,
+        	t_trial_testline.checktimeid,
+        	t_trial_testline.linecode
+	    ]]>
+	</sql>
+	
+   <insert id="TrialTestLine.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_trial_testline (
+        	trialid,
+        	serialnumber ,
+        	tplid,
+        	isenabled,
+        	isrun,
+        	testtimes,
+        	checktimeid,
+        	itemcode,
+        	linecode
+        ) VALUES (
+        	#trialid#,
+        	#serialnumber#,
+        	#tplid#,
+        	#isenabled#,
+        	#isrun#,
+        	#checktimeid#,
+        	#itemcode#,
+        	#linecode#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="did" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <select id="TrialTestLine.findList" resultMap="RM.TrialTestLine">
+    	select <include refid="TrialTestLine.columns"/>   
+	        from t_trial_testline 
+	        <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="linecode">
+	             linecode = #linecode#
+	       </isNotEmpty>
+	    </dynamic>	
+    </select>
+    <select id="TrialTestLine.getById" resultMap="RM.TrialTestLine">
+    	select <include refid="TrialTestLine.columns"/> from t_trial_testline where trialid = $did$ 
+    </select>
+	<update id="TrialTestLine.update" parameterClass="com.terrence.crm.dol.bean.TrialTestLine">         
+        UPDATE t_trial_testline set 
+        	trialid = #trialid# ,serialnumber = #serialnumber#,itemcode=#itemcode# ,
+        	tplid = #tplid# ,isenabled = #isenabled#,isrun=#isrun# ,
+        	testtimes = #testtimes# ,checktimeid = #checktimeid# ,
+        	stepids =#stepids#  ,linecode=#linecode#
+        	
+        WHERE 
+	        linecode=#linecode#
+    </update>
+    
+	<delete id="TrialTestLine.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trial_testline where did = #did# 
+    ]]>
+    </delete>
+</sqlMap>

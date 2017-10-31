@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Dfiletype;
+import com.terrence.crm.dol.query.DfiletypeQuery;
+import com.terrence.crm.dol.dao.IDfiletypeDao;
+import com.terrence.crm.dol.service.IDfiletypeService;
+
+@Service
+@Transactional
+public class DfiletypeService extends BaseService implements IDfiletypeService {
+	protected static Logger logger = LoggerFactory.getLogger(DfiletypeService.class);
+	@Autowired
+	@Qualifier("dfiletypeDao")
+	private IDfiletypeDao dfiletypeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Dfiletype";
+	}
+	@Transactional(readOnly=true)
+	public Dfiletype getById(java.lang.Long id) throws ServiceException
+	{
+		return dfiletypeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Dfiletype entity) throws ServiceException
+	{
+		dfiletypeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Dfiletype entity) throws ServiceException
+	{
+		Long adId = dfiletypeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Dfiletype entity) throws ServiceException
+	{
+		Integer returnValue =  dfiletypeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = dfiletypeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = dfiletypeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DfiletypeQuery query = new DfiletypeQuery();
+		try {
+			return dfiletypeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Dfiletype> findPage(Page<Dfiletype> page, DfiletypeQuery query) throws ServiceException
+	{
+		return dfiletypeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Dfiletype> findPage(Page<Dfiletype> page,String statement, DfiletypeQuery query) throws ServiceException
+	{
+		return dfiletypeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Dfiletype> findList(DfiletypeQuery query) throws ServiceException
+	{
+		return dfiletypeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Dfiletype> findList(DfiletypeQuery query,Integer pageSize) throws ServiceException
+	{
+		return dfiletypeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Dfiletype> findList(DfiletypeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return dfiletypeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Dfiletype> findAllList() throws ServiceException
+	{
+		return dfiletypeDao.findAllList();
+	}
+
+}

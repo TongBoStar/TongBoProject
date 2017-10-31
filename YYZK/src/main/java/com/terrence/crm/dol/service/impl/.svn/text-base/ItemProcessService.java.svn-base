@@ -1,0 +1,607 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.Lists;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.UserContextHolder;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.ItemProcessVo;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.contasnt.ItemProcessStatus;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IItemVerDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IProcessDao;
+import com.terrence.crm.dol.event.AdminLogEvent;
+import com.terrence.crm.dol.query.IcmoQuery;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.query.PrepareEmpQuery;
+import com.terrence.crm.dol.query.ProcessQuery;
+import com.terrence.crm.dol.service.IItemProcessService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class ItemProcessService extends BaseService implements IItemProcessService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemProcessService.class);
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	
+	@Autowired
+	@Qualifier("processDao")
+	private IProcessDao processDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	@Autowired
+	@Qualifier("itemVerDao")
+	private IItemVerDao itemVerDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemProcess";
+	}
+	@Transactional(readOnly=true)
+	public ItemProcess getById(java.lang.Long id) throws ServiceException
+	{
+		return itemProcessDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemProcess entity) throws ServiceException
+	{
+		//System.out.println(entity.toString());
+		com.terrence.crm.dol.bean.Process process=processDao.getById(entity.getProcessid());
+		entity.setPrice(process.getPrice());
+		entity.setRatio(process.getRatio());
+		entity.setCreatedate(DateConvertUtils.getCurrentDateTime());
+		entity.setAdminid(UserContextHolder.get().getId());
+		entity.setTeamid(process.getTeamid());
+		entity.setTeamname(process.getTeamname());
+				
+		entity.setProcessname(processDao.getById(entity.getProcessid()).getProcessname());
+		
+		Integer orderid=1;
+		if(entity.getItemprocessid()==null)
+		{
+			orderid=itemProcessDao.getMaxOrderId(entity.getItemcode());
+			if(orderid==null)
+				orderid=1;
+			else 
+				orderid=orderid+1;
+			entity.setOrderid(orderid);
+		}
+		/*else
+		{
+			orderid=itemProcessDao.getById(entity.getItemprocessid()).getOrderid();
+		}*/
+		itemProcessDao.saveOrUpdate(entity);
+		/** 修改工艺--首检金额--变t_prepare_emp金额关联t_check_record 仅修改当月 **/
+		
+		PrepareEmpQuery prepareEmpQuery=new PrepareEmpQuery();
+		prepareEmpQuery.setItemprocessid(entity.getItemprocessid());
+		
+		List<PrepareEmp> prepareEmpList=new ArrayList<PrepareEmp>();
+		prepareEmpList=prepareEmpDao.findList("PrepareEmp.findList.checkrecord", prepareEmpQuery);
+		
+		for(PrepareEmp pp:prepareEmpList){
+			pp.setMoney(entity.getReservefund());
+			prepareEmpDao.update(pp);
+		}
+		
+		
+		
+		BaseItem baseitem=baseItemDao.getByProperty("itemcode", itemProcessDao.getById(entity.getItemprocessid()).getItemcode());
+		baseitem.setWfstatus(BaseItem.ISHAVE);//待审核
+		baseItemDao.update(baseitem);
+		
+		
+		ItemProcess itprocess = itemProcessDao.getById(entity.getItemprocessid());
+		AdminLogEvent event=new AdminLogEvent("");
+		event.setAdminId(SpringSecurityUtils.getCurrentUserId());
+		event.setOperatingContent(SpringSecurityUtils.getCurrentUserName()+"对物料编号:"+itprocess.getItemcode()+",物料名称："+itprocess.getItemname()+"进行了工艺修改");
+		this.publishEvent(event);
+		/*if(entity.getItemprocessid()!=null)
+		{		
+			DispatchWork dwork=dispatchWorkDao.getByProperty("itemprocessid", entity.getItemprocessid().toString());
+			if(dwork==null)
+			{
+				dwork=new DispatchWork();			
+				dwork.setItemprocessid(entity.getItemprocessid());
+				dwork.setStatus(1);
+				dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+				dwork.setAcceptednum(0);			
+			}
+			else
+			{
+				entity.setIcmoid(dwork.getWorkid());
+			}
+			if(entity.getIcmoid()!=null)
+			{
+				Icmo icmo=icmoDao.getById(entity.getIcmoid());
+				dwork.setProcessnum(icmo.getFqty());
+				dwork.setProcessname(entity.getProcessname());
+				dwork.setProgramname(entity.getProgramname());
+				dwork.setTeamid(entity.getTeamid());
+				dwork.setTeamname(entity.getTeamname());
+				dwork.setReadytime(entity.getPreparemins());
+				dwork.setProcesstime(entity.getProcessmins());
+				dwork.setPiecesalary(entity.getWage());
+				dwork.setTools(entity.getFrockclarmp());
+				dwork.setBlades(entity.getToolsname());
+				dwork.setContent(entity.getExplain());
+				dwork.setDeviceid(process.getDeviceid());
+				dwork.setWorkid(entity.getIcmoid());
+				dwork.setItemcode(entity.getItemcode());
+				dwork.setItemname(entity.getItemname());
+				
+				dwork.setReadymoney(entity.getReservefund());
+				dwork.setOrderid(orderid);
+				dispatchWorkDao.saveOrUpdate(dwork);
+			}
+		}*/
+	}
+	
+	public java.lang.Long save(ItemProcess entity) throws ServiceException
+	{
+		Long adId = itemProcessDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemProcess entity) throws ServiceException
+	{
+		Integer returnValue =  itemProcessDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemProcessDao.deleteById(id);		
+		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		List<ItemProcess> list=new ArrayList<ItemProcess>();
+		List<Icmo> icmoList=new ArrayList<Icmo>();
+		String delIds = StringUtils.join(idList, ",");
+		
+		ItemProcess itemProcess = itemProcessDao.getByProperty("itemprocessid", delIds);
+		IcmoQuery icmoQuery=new IcmoQuery();
+		
+		icmoQuery.setItemcode(itemProcess.getItemcode());
+		icmoQuery.setDispathstatu(1);//Dispathstatu==1为已分配状态0为未分配
+    	icmoList = icmoDao.findList(icmoQuery);//查询出已分配的集合
+
+    	if(icmoList.size()!=0){//如果已分派任务则不允许删除
+			return -1;
+    	}else{
+			//------单个删除时对状态的检查和修改----------------------
+			Integer returnValue = itemProcessDao.deleteByMultipleId(delIds);
+			ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+			itemProcessQuery.setItemcode(itemProcess.getItemcode());
+			 list = itemProcessDao.findList(itemProcessQuery);
+			 //System.out.println(list);
+			 BaseItem baseItem = baseItemDao.getByProperty("itemcode", itemProcess.getItemcode());
+			 if(list.size()==0){
+				baseItem.setWfstatus(0);//未制作
+				baseItemDao.update(baseItem);
+			}else{
+				baseItem.setWfstatus(BaseItem.ISHAVE);//待审核
+				baseItemDao.update(baseItem);
+			}
+
+			 //dispatchWorkDao.deleteByProperty("itemprocessid", delIds);
+			//------------------------
+			AdminLogEvent event=new AdminLogEvent("");
+			event.setAdminId(SpringSecurityUtils.getCurrentUserId());
+			event.setOperatingContent(SpringSecurityUtils.getCurrentUserName()+
+					"对物料编号:"+itemProcess.getItemcode()+",物料名称："+itemProcess.getItemname()+"进行了工艺删除");
+			this.publishEvent(event);
+			
+			//------------------------
+			return returnValue;
+			//------------------------------
+		}
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemProcessQuery query = new ItemProcessQuery();
+		try {
+			return itemProcessDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemProcess> findPage(Page<ItemProcess> page, ItemProcessQuery query) throws ServiceException
+	{
+		return itemProcessDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemProcess> findList(ItemProcessQuery query) throws ServiceException
+	{
+		return itemProcessDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemProcess> findAllList() throws ServiceException
+	{
+		return itemProcessDao.findAllList();
+	}
+	@Override
+	public Integer updateUpOrDown(Long itemProcessId, Long subitemProcessId)
+			throws ServiceException {
+		ItemProcess mainitemprocess=itemProcessDao.getById(itemProcessId);
+		ItemProcess subitemprocess=itemProcessDao.getById(subitemProcessId);
+		Integer orderid=mainitemprocess.getOrderid();
+		mainitemprocess.setOrderid(subitemprocess.getOrderid());
+		subitemprocess.setOrderid(orderid);		
+		itemProcessDao.update(mainitemprocess);
+		itemProcessDao.update(subitemprocess);
+		return 0;
+	}
+	@Override
+	public Page<ItemProcess> findPage(Page<ItemProcess> page, String statement,
+			ItemProcessQuery query) throws ServiceException {
+		
+		return itemProcessDao.findPage(page, statement, query);
+	}
+	@Override
+	public void saveItemProcess(ItemProcessVo ipvo, ItemProcess entity)
+			throws ServiceException {
+		//System.out.println("==entity:"+entity.toString());
+		//--删除所有未分派-----
+		/*List<Icmo> icmlist=new ArrayList<Icmo>();
+		IcmoQuery icmoQuery=new IcmoQuery();
+		icmoQuery.setItemcode(entity.getItemcode());
+		icmoQuery.setDispathstatu(0);
+		 icmlist = icmoDao.findList(icmoQuery);
+		for(Icmo ic:icmlist){
+			if(ic.getDispathstatu()==0){//0:未分配
+				dispatchWorkDao.deleteByWorkid(ic.getIcmoid());
+			}
+		}
+		*/
+		//--------------------------------------------------------------
+		
+		Long []idlist=ipvo.getProcessid();
+		List ids=Lists.newArrayList();
+		Integer []isdefaults=ipvo.getIsdefault();
+		for(Long id:idlist)
+		{
+			if(id!=null)
+			{
+				ids.add(id);
+			}
+		}
+		String delIds = StringUtils.join(ids, ",");
+		ProcessQuery query=new ProcessQuery();
+		query.setProcessids(delIds);
+		List <com.terrence.crm.dol.bean.Process>list=processDao.findList(query);
+		Map<Long,com.terrence.crm.dol.bean.Process> map=new HashMap<Long,com.terrence.crm.dol.bean.Process>();
+		for(com.terrence.crm.dol.bean.Process p:list)
+		{
+			map.put(p.getProcessid(), p);
+		}
+		//itemProcessDao.deleteByItemcode(entity.getItemcode());
+		
+		Long []ipid=ipvo.getItemprocessid();
+		for(int i=0;i<idlist.length;i++)
+		{
+			
+			com.terrence.crm.dol.bean.Process process=map.get(idlist[i]);
+			if(process!=null)
+			{
+				ItemProcess itemProcess=new ItemProcess();
+				if(null!=ipid&&ipid.length>i)
+				{
+					itemProcess=itemProcessDao.getById(ipid[i]);
+					if(itemProcess.getProcessid().longValue()!=idlist[i].longValue()||itemProcess.getIsdefault().intValue()!=isdefaults[i].intValue())
+					{
+						itemProcess.setItemcode(entity.getItemcode());
+						itemProcess.setItemname(entity.getItemname());
+						itemProcess.setProcessid(process.getProcessid());
+						itemProcess.setProcessname(process.getProcessname());
+						itemProcess.setPreparemins(process.getPreparemin());
+						
+						itemProcess.setProcessmins(0.0);
+						itemProcess.setProgramname("");
+						itemProcess.setPrice(process.getPrice());
+						itemProcess.setBladename("");
+						itemProcess.setCreatedate(DateConvertUtils.getCurrentDateTime());
+						itemProcess.setTeamid(process.getTeamid());
+						itemProcess.setTeamname(process.getTeamname());
+						itemProcess.setExplain("");
+						itemProcess.setFrockclarmp("");
+						itemProcess.setOrderid((Integer.parseInt(process.getProcessid().toString())));
+						itemProcess.setProgramname("");
+						itemProcess.setRatio(process.getRatio());
+						itemProcess.setWage(0.0);
+						itemProcess.setToolsid("");
+						itemProcess.setToolsname("");
+						itemProcess.setReservefund(0.0);
+						itemProcess.setKeypoint("");
+						itemProcess.setAdminid(UserContextHolder.get().getId());
+						itemProcess.setIsdefault(isdefaults[i]);
+						itemProcessDao.update(itemProcess);
+						
+						AdminLogEvent event=new AdminLogEvent("");
+						event.setAdminId(SpringSecurityUtils.getCurrentUserId());
+						event.setOperatingContent(SpringSecurityUtils.getCurrentUserName()+"对物料编号:"+entity.getItemcode()+",物料名称："+entity.getItemname()+"进行了工艺修改");
+						this.publishEvent(event);
+						
+					}
+				}
+				else
+				{
+					itemProcess.setItemcode(entity.getItemcode());
+					itemProcess.setItemname(entity.getItemname());
+					itemProcess.setProcessid(process.getProcessid());
+					itemProcess.setProcessname(process.getProcessname());
+					itemProcess.setPreparemins(process.getPreparemin());
+					
+					itemProcess.setProcessmins(0.0);
+					itemProcess.setProgramname("");
+					itemProcess.setPrice(process.getPrice());
+					itemProcess.setBladename("");
+					itemProcess.setCreatedate(DateConvertUtils.getCurrentDateTime());
+					itemProcess.setTeamid(process.getTeamid());
+					itemProcess.setTeamname(process.getTeamname());
+					itemProcess.setExplain("");
+					itemProcess.setFrockclarmp("");
+					itemProcess.setOrderid((Integer.parseInt(process.getProcessid().toString())));
+					itemProcess.setProgramname("");
+					itemProcess.setRatio(process.getRatio());
+					itemProcess.setWage(0.0);
+					itemProcess.setToolsid("");
+					itemProcess.setToolsname("");
+					itemProcess.setReservefund(0.0);
+					itemProcess.setKeypoint("");
+					itemProcess.setAdminid(UserContextHolder.get().getId());
+					itemProcess.setIsdefault(isdefaults[i]);
+					itemProcessDao.save(itemProcess);
+					AdminLogEvent event=new AdminLogEvent("");
+					event.setAdminId(UserContextHolder.get().getId());
+					event.setOperatingContent(UserContextHolder.get().getName()+"对物料编号:"+entity.getItemcode()+",物料名称："+entity.getItemname()+"进行了工艺添加");
+					this.publishEvent(event);
+				}
+			}
+		}
+		
+		/**流水线制作工艺，未进行明细的修改，不能视为工艺已制作**/
+		BaseItem baseitem=baseItemDao.getByProperty("itemcode", entity.getItemcode());
+//		if(baseitem.getWfstatus().intValue()==BaseItem.NOHAVE)
+//		{
+//			baseitem.setWfstatus(BaseItem.ISHAVE);
+//			baseItemDao.update(baseitem);   
+//		}
+
+		baseitem.setWfstatus(BaseItem.ISHAVE);
+		baseItemDao.update(baseitem);   
+		
+	}
+	@Override
+	public void saveNext(ItemProcessVo ipvo, ItemProcess entity)
+			throws ServiceException {
+
+		//System.out.println("==entity:"+entity.toString());
+		//--删除所有未分派-----
+		/*List<Icmo> icmlist=new ArrayList<Icmo>();
+		IcmoQuery icmoQuery=new IcmoQuery();
+		icmoQuery.setItemcode(entity.getItemcode());
+		icmoQuery.setDispathstatu(0);
+		 icmlist = icmoDao.findList(icmoQuery);
+		for(Icmo ic:icmlist){
+			if(ic.getDispathstatu()==0){//0:未分配
+				dispatchWorkDao.deleteByWorkid(ic.getIcmoid());
+			}
+		}
+		*/
+		//--------------------------------------------------------------
+		
+		Long []idlist=ipvo.getProcessid();
+		List ids=Lists.newArrayList();
+		Integer []isdefaults=ipvo.getIsdefault();
+		for(Long id:idlist)
+		{
+			if(id!=null)
+			{
+				ids.add(id);
+			}
+		}
+		String delIds = StringUtils.join(ids, ",");
+		ProcessQuery query=new ProcessQuery();
+		query.setProcessids(delIds);
+		List <com.terrence.crm.dol.bean.Process>list=processDao.findList(query);
+		Map<Long,com.terrence.crm.dol.bean.Process> map=new HashMap<Long,com.terrence.crm.dol.bean.Process>();
+		for(com.terrence.crm.dol.bean.Process p:list)
+		{
+			map.put(p.getProcessid(), p);
+		}
+		//itemProcessDao.deleteByItemcode(entity.getItemcode());
+		
+		Long []ipid=ipvo.getItemprocessid();
+		for(int i=0;i<idlist.length;i++)
+		{
+			
+			com.terrence.crm.dol.bean.Process process=map.get(idlist[i]);
+			if(process!=null)
+			{
+				ItemProcess itemProcess=new ItemProcess();
+				if(null!=ipid&&ipid.length>i)
+				{
+					itemProcess=itemProcessDao.getById(ipid[i]);
+					
+					if(itemProcess.getProcessid().longValue()!=idlist[i].longValue()||itemProcess.getIsdefault().intValue()!=isdefaults[i].intValue())
+					{
+						itemProcess.setItemcode(entity.getItemcode());
+						itemProcess.setItemname(entity.getItemname());
+						itemProcess.setProcessid(process.getProcessid());
+						itemProcess.setProcessname(process.getProcessname());
+						itemProcess.setPreparemins(process.getPreparemin());
+						
+						itemProcess.setProcessmins(0.0);
+						itemProcess.setProgramname("");
+						itemProcess.setPrice(process.getPrice());
+						itemProcess.setBladename("");
+						itemProcess.setCreatedate(DateConvertUtils.getCurrentDateTime());
+						itemProcess.setTeamid(process.getTeamid());
+						itemProcess.setTeamname(process.getTeamname());
+						itemProcess.setExplain("");
+						itemProcess.setFrockclarmp("");
+						itemProcess.setOrderid((Integer.parseInt(process.getProcessid().toString())));
+						itemProcess.setProgramname("");
+						itemProcess.setRatio(process.getRatio());
+						itemProcess.setWage(0.0);
+						itemProcess.setToolsid("");
+						itemProcess.setToolsname("");
+						itemProcess.setReservefund(0.0);
+						itemProcess.setKeypoint("");
+						itemProcess.setAdminid(UserContextHolder.get().getId());
+						itemProcess.setIsdefault(isdefaults[i]);
+						itemProcessDao.update(itemProcess);
+						AdminLogEvent event=new AdminLogEvent("修改工艺");
+						event.setAdminId(UserContextHolder.get().getId());
+						event.setOperatingContent(UserContextHolder.get().getName()+"对物料编号:"+entity.getItemcode()+",物料名称："+entity.getItemname()+"进行了工艺修改");
+						this.publishEvent(event);
+					}
+				}
+				else
+				{
+					itemProcess.setItemcode(entity.getItemcode());
+					itemProcess.setItemname(entity.getItemname());
+					itemProcess.setProcessid(process.getProcessid());
+					itemProcess.setProcessname(process.getProcessname());
+					itemProcess.setPreparemins(process.getPreparemin());
+					
+					itemProcess.setProcessmins(0.0);
+					itemProcess.setProgramname("");
+					itemProcess.setPrice(process.getPrice());
+					itemProcess.setBladename("");
+					itemProcess.setCreatedate(DateConvertUtils.getCurrentDateTime());
+					itemProcess.setTeamid(process.getTeamid());
+					itemProcess.setTeamname(process.getTeamname());
+					itemProcess.setExplain("");
+					itemProcess.setFrockclarmp("");
+					itemProcess.setOrderid((Integer.parseInt(process.getProcessid().toString())));
+					itemProcess.setProgramname("");
+					itemProcess.setRatio(process.getRatio());
+					itemProcess.setWage(0.0);
+					itemProcess.setToolsid("");
+					itemProcess.setToolsname("");
+					itemProcess.setReservefund(0.0);
+					itemProcess.setKeypoint("");
+					itemProcess.setAdminid(UserContextHolder.get().getId());
+					itemProcess.setIsdefault(isdefaults[i]);
+					itemProcessDao.save(itemProcess);
+					AdminLogEvent event=new AdminLogEvent("添加工艺");
+					event.setAdminId(UserContextHolder.get().getId());
+					event.setOperatingContent(UserContextHolder.get().getName()+"对物料编号:"+entity.getItemcode()+",物料名称："+entity.getItemname()+"进行了工艺添加");
+					this.publishEvent(event);
+				}
+			}
+		}
+
+	}
+	@Override
+	public Long getMaxpid(String itemcode) throws ServiceException {
+		return itemProcessDao.getMaxpid(itemcode);
+	}
+	@Override
+	public void updatelist(ItemProcess entity) {
+		Long[] itemprocessidlist = entity.getItemprocessidlist();
+		Double[] prepareminslist = entity.getPrepareminslist();
+		Double[] processminslist = entity.getProcessminslist();
+		String [] explainlist=entity.getExplainlist();
+
+		Double[] wagelist=entity.getWagelist();//计件工资
+		Double[] reservefundlist=entity.getReservefundlist();//准备金额
+		
+		ItemVer itemVer=new ItemVer();
+		itemVer.setFverid(entity.getFverid());
+		itemVer.setBaseitemid(entity.getItemid());
+		itemVer.setAdminid(SpringSecurityUtils.getCurrentUserId());//当前提交人为制表人
+		itemVer.setWfstatus(ItemProcessStatus.MAKING.getIndex());//状态修改为待审核
+		//NOTMAKE("未制做",0),MAKING("制做中",5),WAITCHECK("待审核",1),REGECT("驳回",2),PASS("通过",3);
+		if(entity.getFinishstatus().intValue()==1){
+			itemVer.setFinishstatus(1);//完成状态修改为完成
+		}else{
+			itemVer.setFinishstatus(0);//完成状态修改为未完成
+		}
+		itemVerDao.saveOrUpdate(itemVer);
+		/*
+		BaseItem baseItem=new BaseItem(); 
+		//System.out.println("====="+entity.getItemid());
+		baseItem.setBaseitemid(entity.getItemid());
+		baseItem.setAdminid(SpringSecurityUtils.getCurrentUserId());//当前提交人为制表人
+		//baseItem.setWfstatus(BaseItem.ISHAVE);//状态修改为待审核
+		//NOTMAKE("未制做",0),MAKING("制做中",5),WAITCHECK("待审核",1),REGECT("驳回",2),PASS("通过",3);
+		baseItem.setWfstatus(ItemProcessStatus.MAKING.getIndex());//状态修改为在制作
+		if(entity.getFinishstatus().intValue()==1){
+			baseItem.setFinishstatus(1);//完成状态修改为完成
+		}else{
+			baseItem.setFinishstatus(0);//完成状态修改为未完成
+		}
+		baseItemDao.saveOrUpdate(baseItem);
+		*/
+		ItemProcess itemProcess=new ItemProcess();
+		for(int i=0;i<itemprocessidlist.length;i++){
+			itemProcess.setItemprocessid(itemprocessidlist[i]);
+			itemProcess.setPreparemins(prepareminslist[i]);
+			itemProcess.setProcessmins(processminslist[i]);
+			itemProcess.setExplain(explainlist[i]);
+			
+			itemProcess.setWage(wagelist[i]);
+			itemProcess.setReservefund(reservefundlist[i]);
+			
+			itemProcessDao.saveOrUpdate(itemProcess);	
+		}
+	}
+}

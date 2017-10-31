@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssignedSerial">
+
+        
+	<resultMap id="RM.AssignedSerial" class="com.terrence.crm.dol.bean.AssignedSerial">
+        <result property="serialid" column="serialid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="fitemid" column="fitemid"/>
+        <result property="fserialnum" column="fserialnum"/>
+        <result property="usestatus" column="usestatus"/>
+        <result property="db" column="db"/>
+        <result property="dispatchid" column="dispatchid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssignedSerial.columns">
+	    <![CDATA[
+        	t_assigned_serial.serialid ,
+        	t_assigned_serial.itemcode ,
+        	t_assigned_serial.fitemid ,
+        	t_assigned_serial.fserialnum ,
+        	t_assigned_serial.usestatus ,
+        	t_assigned_serial.db ,
+        	t_assigned_serial.dispatchid 
+	    ]]>
+	</sql>
+	
+   <insert id="AssignedSerial.insert" >
+        INSERT INTO
+        t_assigned_serial (
+        	itemcode ,
+        	fserialnum ,
+        	usestatus ,
+        	db ,
+        	dispatchid 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="fitemid">
+		        	fitemid
+		        </isNotEmpty>
+	        </dynamic>
+        ) VALUES (
+        	#itemcode# ,
+        	#fserialnum# ,
+        	#usestatus# ,
+        	#db# ,
+        	#dispatchid# 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="fitemid">
+		        	#fitemid#
+		        </isNotEmpty>
+	        </dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="serialid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<update id="AssignedSerial.update.Where" parameterClass="com.terrence.crm.dol.bean.AssignedSerial">
+		UPDATE t_assigned_serial set usestatus = #usestatus# where itemcode = #itemcode# and fserialnum = #fserialnum# and db = #db# 
+	</update>
+	<update id="AssignedSerial.update" parameterClass="com.terrence.crm.dol.bean.AssignedSerial">         
+        UPDATE t_assigned_serial 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fitemid">
+	        	fitemid = #fitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fserialnum">
+	        	fserialnum = #fserialnum# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="usestatus">
+	        	usestatus = #usestatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="db">
+	        	db = #db# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dispatchid">
+	        	dispatchid = #dispatchid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        serialid = #serialid# 
+    </update>
+    <update id="AssignedSerial.update.where" parameterClass="com.terrence.crm.dol.bean.AssignedSerial">
+    	UPDATE t_assigned_serial 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fitemid">
+	        	fitemid = #fitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fserialnum">
+	        	fserialnum = #fserialnum# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="usestatus">
+	        	usestatus = #usestatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="db">
+	        	db = #db# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dispatchid">
+	        	dispatchid = #dispatchid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE itemcode = #itemcode# and  fserialnum = #fserialnum# and db = #db# 
+    </update>
+    
+    <update id="AssignedSerial.update.void.data" parameterClass="com.terrence.crm.dol.bean.AssignedSerial">         
+        UPDATE t_assigned_serial set
+       
+	        	usestatus = #usestatus# 
+	      
+        WHERE 
+	       itemcode=#itemcode# and dispatchid=#dispatchid# and fserialnum=#fserialnum#
+    </update>
+    
+	<delete id="AssignedSerial.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assigned_serial where
+       serialid = #serialid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssignedSerial.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assigned_serial 
+        WHERE
+       serialid in ($serialid$) 
+    ]]>
+    </delete>
+    
+    
+     <delete id="AssignedSerial.delete.fserial.data">
+    
+        DELETE FROM 
+        	t_assigned_serial 
+       
+		where itemcode = #itemcode# and fserialnum = #fserialnum# 
+		 <isNotEmpty prepend="AND" property="dispatchid">
+	             t_assigned_serial.dispatchid = #dispatchid#
+	       </isNotEmpty>
+   
+    </delete>
+    
+    
+      <delete id="AssignedSerial.delete.assdel.data">
+    
+        DELETE FROM 
+        	t_assigned_serial 
+       
+		where itemcode = #itemcode# and fserialnum = #fserialnum# and dispatchid=#dispatchid#
+   
+    </delete>
+    
+    
+    <delete id="AssignedSerial.delete.for.isreturnStock"><!-- 退库单删除数据 -->
+    
+        DELETE FROM 
+        	t_assigned_serial 
+       
+		where t_assigned_serial.itemcode = #itemcode# and t_assigned_serial.fserialnum = #fserialnum# and t_assigned_serial.db = #db#
+   
+    </delete>
+    
+    <select id="AssignedSerial.getById" resultMap="RM.AssignedSerial">
+	    select <include refid="AssignedSerial.columns"/>
+	    
+	        from t_assigned_serial 
+	        where 
+		        serialid = #serialid# 
+	    
+    </select>
+    
+	<select id="AssignedSerial.getByProperty" resultMap="RM.AssignedSerial">
+		select <include refid="AssignedSerial.columns"/> from t_assigned_serial where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssignedSerial.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="serialid">
+	             t_assigned_serial.serialid = #serialid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assigned_serial.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_assigned_serial.fitemid = #fitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fserialnum">
+	             t_assigned_serial.fserialnum = #fserialnum#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="usestatus">
+	             t_assigned_serial.usestatus = #usestatus#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="db">
+	             t_assigned_serial.db = #db#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dispatchid">
+	             t_assigned_serial.dispatchid = #dispatchid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssignedSerial.findPage.and">
+			<isNotEmpty prepend="AND" property="serialid">
+	             t_assigned_serial.serialid = #serialid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assigned_serial.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_assigned_serial.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fserialnum">
+	             t_assigned_serial.fserialnum = #fserialnum#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="usestatus">
+	             t_assigned_serial.usestatus = #usestatus#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="db">
+	             t_assigned_serial.db = #db#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dispatchid">
+	             t_assigned_serial.dispatchid = #dispatchid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssignedSerial.Entity" resultMap="RM.AssignedSerial">
+    	SELECT 	<include refid="AssignedSerial.columns"/> FROM t_assigned_serial <include refid="AssignedSerial.findPage.where"/>
+    </select>
+    
+    <select id="AssignedSerial.findList" resultMap="RM.AssignedSerial">
+    	SELECT 
+    		<include refid="AssignedSerial.columns"/> 
+    	FROM 
+    		t_assigned_serial
+		<include refid="AssignedSerial.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssignedSerial.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assigned_serial
+    ]]>
+		<include refid="AssignedSerial.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssignedSerial.findPage" resultMap="RM.AssignedSerial">
+    	select <include refid="AssignedSerial.columns"/>	    
+	        from t_assigned_serial 	   
+		<include refid="AssignedSerial.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssignedSerial.findPage" resultMap="RM.AssignedSerial">
+    	select <include refid="AssignedSerial.columns"/>	    
+	        from t_assigned_serial where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       serialid 
+	   not in(select $notTop$ 
+       serialid 
+	   from t_assigned_serial <include refid="AssignedSerial.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssignedSerial.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+     <delete id="AssignedSerial.delete.serialnum.for.pickingdetail">
+    
+        DELETE FROM 
+        	t_assigned_serial 
+       
+		where itemcode = #itemcode# and fserialnum = #fserialnum# and dispatchid=#dispatchid# and  t_assigned_serial.db = #db#
+   
+    </delete>
+	
+</sqlMap>

@@ -1,0 +1,54 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Sortcodefir;
+import com.terrence.crm.dol.dao.ISortcodefirDao;
+import com.terrence.crm.dol.query.SortcodefirQuery;
+
+@Repository
+public class SortcodefirDao extends BaseIbatisDao<Sortcodefir,java.lang.Long> implements ISortcodefirDao{
+
+		
+	public void saveOrUpdate(Sortcodefir entity) {
+		if(entity.getFirid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Sortcodefir";
+	}
+	public Sortcodefir getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Sortcodefir)this.getSqlMapClientTemplate().queryForObject("Sortcodefir.getByProperty", map);		
+	}
+
+	@Override
+	public Sortcodefir findSortCode(SortcodefirQuery sortcodefirQuery) {
+		return (Sortcodefir)this.getSqlMapClientTemplate().queryForObject("SortCodeFind", sortcodefirQuery);
+	}
+
+	@Override
+	public Sortcodefir firSortCode(SortcodefirQuery sortcodefirQuery) {
+		return (Sortcodefir) this.getSqlMapClientTemplate().queryForObject("SortCodefir.find.firCode", sortcodefirQuery);
+	}
+	@Override
+	public Sortcodefir findlistfirSec(SortcodefirQuery sortcodefirQuery) {
+		return (Sortcodefir) this.getSqlMapClientTemplate().queryForObject("Sortcodefir.getByFircode", sortcodefirQuery);
+	}
+
+}

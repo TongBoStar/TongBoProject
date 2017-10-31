@@ -1,0 +1,224 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.DepartmentQuery;
+import com.terrence.crm.dol.service.IDepartmentService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+
+@Service
+@Transactional
+public class DepartmentService extends BaseService implements IDepartmentService {
+	protected static Logger logger = LoggerFactory.getLogger(DepartmentService.class);
+	@Autowired
+	@Qualifier("departmentDao")
+	private IDepartmentDao departmentDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Department";
+	}
+	@Transactional(readOnly=true)
+	public Department getById(java.lang.Long id) throws ServiceException
+	{
+		return departmentDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Department entity) throws ServiceException
+	{
+		Long id=null;
+		if(entity.getTeamid()!=null){
+			id=entity.getTeamid();
+		}
+
+		Long idnew=null;
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(id==null){	
+			entity.setIsused("0");
+			idnew = departmentDao.save(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_DEPARTMENT_MANAGE,ConfigTerrence.OPT_ADD, "添加部门的主键ID为："+idnew+"，操作人为"+admin.getAdmin().getAdminName());
+		}else{
+			departmentDao.saveOrUpdate(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_DEPARTMENT_MANAGE,ConfigTerrence.OPT_EDIT, "修改部门的主键ID为："+entity.getTeamid()+"，操作人为"+admin.getAdmin().getAdminName());
+		}	
+	}
+	
+	public java.lang.Long save(Department entity) throws ServiceException
+	{
+		Long adId = departmentDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Department entity) throws ServiceException
+	{
+		Integer returnValue =  departmentDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = departmentDao.deleteById(id);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_DEPARTMENT_MANAGE,ConfigTerrence.OPT_DEL, "删除的部门主键ID为："+id+"，操作人为"+admin.getAdmin().getAdminName());
+
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		DepartmentQuery query=new DepartmentQuery();
+		query.setParentids(delIds);
+		if(departmentDao.findList(query).size()>0)
+		{
+			return -1;
+		}
+		Integer returnValue = departmentDao.deleteByMultipleId(delIds);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_DEPARTMENT_MANAGE,ConfigTerrence.OPT_DEL, "删除部门主键ID为："+delIds+"，操作人为"+admin.getAdmin().getAdminName());
+
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DepartmentQuery query = new DepartmentQuery();
+		try {
+			return departmentDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Department> findPage(Page<Department> page, DepartmentQuery query) throws ServiceException
+	{
+		return departmentDao.findPage(page, query);
+	}
+	/**
+	 * 查找部门
+	 * @param adminQuery
+	 * @return
+	 */
+	@Transactional(readOnly=true)
+	public List<Department> findDepartList(DepartmentQuery query) throws ServiceException {
+		return departmentDao.findDepartList(query);
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<Department> findPage(Page<Department> page,String statement, DepartmentQuery query) throws ServiceException
+	{
+		return departmentDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Department> findList(DepartmentQuery query) throws ServiceException
+	{
+		return departmentDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Department> findList(DepartmentQuery query,Integer pageSize) throws ServiceException
+	{
+		return departmentDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Department> findList(DepartmentQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return departmentDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Department> findAllList() throws ServiceException
+	{
+		return departmentDao.findAllList();
+	}
+	@Override
+	public List<Department> findNameList(DepartmentQuery departmentQuery) 
+	{
+		//return departmentDao.findNameList(departmentQuery);
+		
+		List<Department> returnlist=new ArrayList<Department>();
+		departmentList(-1L,departmentDao.findNameList(departmentQuery),0,returnlist);
+		
+		for(Department tt:returnlist){
+			System.out.println(tt.getTeamname());
+		}
+		return returnlist;
+	}
+	
+	public void departmentList(Long superior,List<Department> departmentList,int n,List<Department> returnlist){
+		for(Department t:departmentList){
+			if(t.getTeamsuperior()!=null&&t.getTeamsuperior().intValue()==superior.intValue()){
+				String space="";
+				if(superior.intValue()!=0){
+					for(int i=1;i<t.getTeamlevel();i++){
+						System.out.print("  ");
+						space+="&nbsp&nbsp&nbsp&nbsp";
+					}
+				}
+				System.out.println("--"+t.getTeamname());
+				
+				t.setTeamname(space+t.getTeamname());
+				returnlist.add(t);
+				departmentList(t.getTeamid(),departmentList,0,returnlist);
+			}else{
+				n++;
+				if(n==departmentList.size()){
+					return;
+				}
+			}
+		}
+}
+	@Override
+	public Department getDepartmentById(Long userId) {
+		return departmentDao.getById("Department.getDepartmentById", userId);
+	}
+	@Override
+	public void syncDepERPData() throws ServiceException {
+		departmentDao.syncDepERPData();
+	}
+	@Override
+	public List<Department> findListAll(DepartmentQuery departmentQuery)
+			throws ServiceException {
+		return departmentDao.findListAll(departmentQuery);
+	}
+	@Override
+	public List<Department> findListDept(DepartmentQuery departmentQuery)
+			throws ServiceException {
+		return departmentDao.findListDept(departmentQuery);
+	}
+
+
+}

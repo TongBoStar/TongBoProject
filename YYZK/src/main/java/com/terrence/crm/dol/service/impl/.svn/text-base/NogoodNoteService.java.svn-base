@@ -1,0 +1,331 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.bean.Nogood;
+import com.terrence.crm.dol.bean.NogoodNote;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.NogoodNoteQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.dao.INogoodDao;
+import com.terrence.crm.dol.dao.INogoodNoteDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.service.INogoodNoteService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class NogoodNoteService extends BaseService implements INogoodNoteService {
+	protected static Logger logger = LoggerFactory.getLogger(NogoodNoteService.class);
+	@Autowired
+	@Qualifier("nogoodNoteDao")
+	private INogoodNoteDao nogoodNoteDao;
+	
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	
+	@Autowired
+	@Qualifier("nogoodDao")
+	private INogoodDao nogoodDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+	
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	
+	@Autowired
+	@Qualifier("pickingDetailDao")
+	private IPickingDetailDao pickingDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "NogoodNote";
+	}
+	@Transactional(readOnly=true)
+	public NogoodNote getById(java.lang.Long id) throws ServiceException
+	{
+		return nogoodNoteDao.getById(id);
+	}
+	
+	public void saveOrUpdate(NogoodNote entity) throws ServiceException
+	{
+		nogoodNoteDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(NogoodNote entity) throws ServiceException
+	{
+		Long adId = nogoodNoteDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(NogoodNote entity) throws ServiceException
+	{
+		Integer returnValue =  nogoodNoteDao.update(entity);
+		
+		return returnValue;
+	}
+	public Integer updatecconfirm(NogoodNote entity){
+		return nogoodNoteDao.update("NogoodNote.updatecconfirm", entity);
+	}
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = nogoodNoteDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = nogoodNoteDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		NogoodNoteQuery query = new NogoodNoteQuery();
+		try {
+			return nogoodNoteDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<NogoodNote> findPage(Page<NogoodNote> page, NogoodNoteQuery query) throws ServiceException
+	{
+		return nogoodNoteDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<NogoodNote> findPage(Page<NogoodNote> page,String statement, NogoodNoteQuery query) throws ServiceException
+	{
+		return nogoodNoteDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<NogoodNote> findList(NogoodNoteQuery query) throws ServiceException
+	{
+		return nogoodNoteDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<NogoodNote> findList(NogoodNoteQuery query,Integer pageSize) throws ServiceException
+	{
+		return nogoodNoteDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<NogoodNote> findList(NogoodNoteQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return nogoodNoteDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<NogoodNote> findAllList() throws ServiceException
+	{
+		return nogoodNoteDao.findAllList();
+	}
+	@Override
+	public void saveNew(NogoodNote entity) throws ServiceException {
+		
+		
+		
+		IcbillnoQuery icbill = new IcbillnoQuery();
+		icbill.setFpreletter("BHG");
+		Icbillno icb = icbillnoDao.findfcurno(icbill);
+		
+		Icbillno icq = new Icbillno();
+		icq.setFcurno(icb.getFcurno()+1);
+		icq.setFbillid(icb.getFbillid());
+		icq.setFpreletter(icb.getFpreletter());
+		icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		
+		String sss = "BHG";
+		String ym=DateUtils.GetFormatDate("yyyyMM");
+		sss+=ym;
+		Integer sun = icb.getFcurno();//当前编号
+		Integer l = icb.getFlength();//编号长度
+		Long fbid = icb.getFbillid();//编号类型id
+		Integer fno = sun + 1;//先加1再用
+		Integer s2= fno.toString().length();
+		if((l - s2)>0){
+//			for(int i = 0;i<(l-s2);i++){
+//				sss+='0';
+//			}
+			sss+=fno.toString();
+		}else{
+			sss+=fno.toString();
+		}
+		
+		
+		ItemWait iw = itemWaitDao.getById("ItemWait.find.data.in.nogoodnote", entity.getWaitid());
+		
+		ItemWait wait = new ItemWait();
+		wait.setWaitid(iw.getWaitid());
+		wait.setReviewstatus1(0);
+		wait.setReviewstatus2(0);
+		itemWaitDao.update(wait);
+		
+		Poorder poorder = poorderDao.getByProperty("fbillno", iw.getPoorderno());
+		
+		BaseItem base = baseItemDao.getBaseByColumn("itemcode", iw.getItemcode());
+		Long id=-1L;
+		Nogood nogood = new Nogood();
+		nogood.setItemcode(iw.getItemcode());
+		nogood.setItemname(base.getItemname());
+		nogood.setItemmode(base.getFormatno());
+		nogood.setCheckid(iw.getWaitid());//-----质检单的id
+		nogood.setFbatchno(iw.getBatchno());
+		//nogood.setEmp(iw.getEmpid());//操作者----外购检验的申请人
+		nogood.setEmp(SpringSecurityUtils.getCurrentUserId());//当前登录人
+		nogood.setFqty(iw.getNopassfqty());
+		nogood.setClosestatus(0);//未关闭
+		nogood.setQc(iw.getCheckemp());
+		nogood.setSourceid(poorder.getFinterid());//采购订单原单id
+		nogood.setFtype(711);//单据类型，711外购来料检验，713产品检验单
+		nogood.setFsrcno(iw.getPoorderno());//采购订单单据编号
+		nogood.setWorkno(sss);
+		nogood.setTablesum(TerrcnceConstants.T_TABLE_SUM);
+		nogood.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		
+		id = nogoodDao.save(nogood, "Nogood.newData.insert");
+		
+		
+		List<String> fdescriptions = entity.getFdescriptions();
+		List<Double> fqtys = entity.getFqtys();
+		List<Integer> severitys = entity.getSeveritys();
+		for(int sq =0;sq<fdescriptions.size();sq++){
+			NogoodNote ngn = new NogoodNote();
+			if(fdescriptions.get(sq)!=null && !fdescriptions.get(sq).equals("")){
+				ngn.setFdescription(fdescriptions.get(sq));
+			}else{
+				break;
+			}
+			ngn.setRid(id);
+			ngn.setFqty(fqtys.get(sq));
+			ngn.setSeverity(severitys.get(sq));
+			nogoodNoteDao.save(ngn, "NogoodNote.newdata.insert");
+			
+		}
+		
+		
+	}
+	@Override
+	public void savefromassmbly(NogoodNote entity) {
+		IcbillnoQuery icbill = new IcbillnoQuery();
+		icbill.setFpreletter("BHG");
+		Icbillno icb = icbillnoDao.findfcurno(icbill);
+		
+		Icbillno icq = new Icbillno();
+		icq.setFcurno(icb.getFcurno()+1);
+		icq.setFbillid(icb.getFbillid());
+		icq.setFpreletter(icb.getFpreletter());
+		icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		
+		String sss = "BHG";
+		String ym=DateUtils.GetFormatDate("yyyyMM");
+		sss+=ym;
+		Integer sun = icb.getFcurno();//当前编号
+		Integer l = icb.getFlength();//编号长度
+		Long fbid = icb.getFbillid();//编号类型id
+		Integer fno = sun + 1;//先加1再用
+		Integer s2= fno.toString().length();
+		if((l - s2)>0){
+//			for(int i = 0;i<(l-s2);i++){
+//				sss+='0';
+//			}
+			sss+=fno.toString();
+		}else{
+			sss+=fno.toString();
+		}
+		PickingDetail pdeDetail = pickingDetailDao.getById(entity.getPickingid());
+		Picking picking = pickingDao.getById(pdeDetail.getPickingid());
+		BaseItem base = baseItemDao.getBaseByColumn("itemcode", pdeDetail.getItemcode());
+		Long id=-1L;
+		Nogood nogood = new Nogood();
+		nogood.setItemcode(pdeDetail.getItemcode());
+		nogood.setItemname(base.getItemname());
+		nogood.setItemmode(base.getFormatno());
+		nogood.setCheckid(picking.getPickingid());//-----质检单的id
+		nogood.setFbatchno(pdeDetail.getBatchno());
+		//nogood.setEmp(iw.getEmpid());//操作者----外购检验的申请人
+		nogood.setEmp(SpringSecurityUtils.getCurrentUserId());//当前登录人
+		Double count = 0D;
+		for(int sq =0;sq<entity.getFdescriptions().size();sq++){
+			count += entity.getFqtys().get(sq);
+		}
+		nogood.setFqty(count);
+		nogood.setClosestatus(0);//未关闭
+		//nogood.setQc(picking.getFcheckerid());
+		nogood.setSourceid(picking.getFsourcebillid());//采购订单原单id
+		nogood.setFtype(712);//单据类型，711外购来料检验，713产品检验单
+		nogood.setFsrcno(picking.getFbillno());//采购订单单据编号
+		nogood.setWorkno(sss);
+		//nogood.setTablesum(TerrcnceConstants.T_TABLE_SUM);
+		nogood.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		
+		id = nogoodDao.save(nogood, "Nogood.newData.insert");
+		
+		
+		List<String> fdescriptions = entity.getFdescriptions();
+		List<Double> fqtys = entity.getFqtys();
+		List<Integer> severitys = entity.getSeveritys();
+		for(int sq =0;sq<fdescriptions.size();sq++){
+			NogoodNote ngn = new NogoodNote();
+			if(fdescriptions.get(sq)!=null && !fdescriptions.get(sq).equals("")){
+				ngn.setFdescription(fdescriptions.get(sq));
+			}else{
+				break;
+			}
+			ngn.setRid(id);
+			ngn.setFqty(fqtys.get(sq));
+			ngn.setSeverity(severitys.get(sq));
+			nogoodNoteDao.save(ngn, "NogoodNote.newdata.insert");
+			
+		}
+	}
+
+}

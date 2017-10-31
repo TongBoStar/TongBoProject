@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+
+@Repository
+public class PickingDetailDao extends BaseIbatisDao<PickingDetail,java.lang.Long> implements IPickingDetailDao{
+
+		
+	public void saveOrUpdate(PickingDetail entity) {
+		if(entity.getDetailid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PickingDetail";
+	}
+	public PickingDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PickingDetail)this.getSqlMapClientTemplate().queryForObject("PickingDetail.getByProperty", map);		
+	}
+
+	@Override
+	public List<PickingDetail> findList(String statement,PickingDetail pickingDetail) {
+		// TODO Auto-generated method stub
+		return this.getSqlMapClientTemplate().queryForList(statement, pickingDetail);
+	}
+
+}

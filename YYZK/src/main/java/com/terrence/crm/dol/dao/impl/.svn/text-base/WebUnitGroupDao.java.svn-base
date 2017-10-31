@@ -1,0 +1,37 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WebUnitGroup;
+import com.terrence.crm.dol.dao.IWebUnitGroupDao;
+
+@Repository
+public class WebUnitGroupDao extends BaseIbatisDao<WebUnitGroup,java.lang.Long> implements IWebUnitGroupDao{
+
+		
+	public void saveOrUpdate(WebUnitGroup entity) {
+		if(entity.getFunitGroupId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WebUnitGroup";
+	}
+	public WebUnitGroup getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WebUnitGroup)this.getSqlMapClientTemplate().queryForObject("WebUnitGroup.getByProperty", map);		
+	}
+	public WebUnitGroup getByFname(java.lang.String v) {
+		return (WebUnitGroup)getSqlMapClientTemplate().queryForObject("WebUnitGroup.getByUsername",v);
+	}	
+
+}

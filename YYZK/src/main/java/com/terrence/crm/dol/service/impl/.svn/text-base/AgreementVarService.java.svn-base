@@ -1,0 +1,71 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgreementVar;
+import com.terrence.crm.dol.dao.IAgreementVarDao;
+import com.terrence.crm.dol.query.AgreementVarQuery;
+import com.terrence.crm.dol.service.IAgreementVarService;
+@Service
+@Transactional
+public class AgreementVarService extends BaseService implements IAgreementVarService {
+	@Autowired
+	@Qualifier("agreementVarDao")
+	private IAgreementVarDao agreementVarDao;
+	@Override
+	public AgreementVar getById(Long id) throws ServiceException {
+		return agreementVarDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(AgreementVar entity) throws ServiceException {
+		agreementVarDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(AgreementVar entity) throws ServiceException {
+		return agreementVarDao.save(entity);
+	}
+	@Override
+	public Integer update(AgreementVar entity) throws ServiceException {
+		return agreementVarDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return agreementVarDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = agreementVarDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementVar> findPage(Page<AgreementVar> page, AgreementVarQuery query) throws ServiceException{
+		return agreementVarDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementVar> findPage(Page<AgreementVar> page,String statement, AgreementVarQuery query) throws ServiceException{
+		return agreementVarDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementVar> findList(AgreementVarQuery query) throws ServiceException{
+		return agreementVarDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementVar> findList(AgreementVarQuery query,Integer pageSize) throws ServiceException{
+		return agreementVarDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementVar> findList(AgreementVarQuery query,String statement,Integer pageSize) throws ServiceException{
+		return agreementVarDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementVar> findAllList() throws ServiceException{
+		return agreementVarDao.findAllList();
+	}
+}

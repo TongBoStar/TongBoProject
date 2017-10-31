@@ -1,0 +1,246 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.bean.OrdersProductView;
+import com.terrence.crm.dol.query.InventoryQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.service.IInventoryService;
+
+@Service
+@Transactional
+public class InventoryService extends BaseService implements IInventoryService {
+	protected static Logger logger = LoggerFactory.getLogger(InventoryService.class);
+	@Autowired
+	@Qualifier("inventoryDao")
+	private IInventoryDao inventoryDao;
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Inventory";
+	}
+	@Transactional(readOnly=true)
+	public Inventory getById(java.lang.Long id) throws ServiceException
+	{
+		return inventoryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Inventory entity) throws ServiceException
+	{
+		inventoryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Inventory entity) throws ServiceException
+	{
+		Long adId = inventoryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Inventory entity) throws ServiceException
+	{
+		Integer returnValue =  inventoryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = inventoryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = inventoryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		InventoryQuery query = new InventoryQuery();
+		try {
+			return inventoryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Inventory> findPage(Page<Inventory> page, InventoryQuery query) throws ServiceException
+	{
+		return inventoryDao.findPage(page, query);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Inventory> findList(InventoryQuery query) throws ServiceException
+	{
+		return inventoryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Inventory> findList(InventoryQuery query,Integer pageSize) throws ServiceException
+	{
+		return inventoryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Inventory> findAllList() throws ServiceException
+	{
+		return inventoryDao.findAllList();
+	}
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void saveSync(String statement) throws ServiceException {
+		inventoryDao.saveSync(statement);
+	}
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void updateSync(String statement) throws ServiceException {
+		inventoryDao.updateSync(statement);
+	}
+	/**
+	 * 添加订单
+	 */
+	@Override
+	public void updateDemand(OrdersProductView ordersProductView)
+			throws ServiceException {
+		String[] itemcode=ordersProductView.getItemcode();
+		Double[] amount=ordersProductView.getAmount();	
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		List<OrderBom> list=null;
+		for(int i=0;i<itemcode.length;i++)
+		{
+			if(!"".equals(itemcode[i]))
+			{
+			Inventory invent=new Inventory();
+			invent.setItemcode(itemcode[i]);
+			invent.setDemand(amount[i]);
+			inventoryDao.update("Inventory.update.demand.add",invent);
+			orderBomQuery.setItemcode(itemcode[i]);
+			list=orderBomDao.findList(orderBomQuery);
+			updateSubItemcode(list,amount[i],1);
+			}
+		}
+	}
+	/**
+	 * 装配产品
+	 * @param itemcode
+	 * @param demand
+	 */
+	public void updateDemand(String itemcode,Double demand)throws ServiceException
+	{
+		Inventory invent=new Inventory();
+		invent.setItemcode(itemcode);
+		invent.setDemand(demand);
+		inventoryDao.update("Inventory.update.demand.substract",invent);
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		orderBomQuery.setItemcode(itemcode);
+		List<OrderBom> list=orderBomDao.findList(orderBomQuery);
+		updateSubItemcode(list,demand,0);
+	}
+	public void updateSubItemcode(List<OrderBom> list,Double demain,int addOrsub)
+	{
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		for(OrderBom bom:list)
+		{
+			Inventory invent=new Inventory();
+			invent.setItemcode(bom.getParentcode());
+			invent.setDemand(demain*bom.getParentqty());
+			if(addOrsub==1)/***添加订单***/
+				inventoryDao.update("Inventory.update.demand.add",invent);
+			else if(addOrsub==0)/**装配**/
+				inventoryDao.update("Inventory.update.demand.substract",invent);
+			orderBomQuery.setItemcode(bom.getParentcode());
+			updateSubItemcode(orderBomDao.findList(orderBomQuery),invent.getDemand(),addOrsub);
+		}
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<Inventory> findPage(Page<Inventory> page,String statement, BaseQuery query) throws ServiceException
+	{
+		return inventoryDao.findPage(page,statement, query);
+	}
+	@Override
+	public Inventory getByItemcode(InventoryQuery query)
+			throws ServiceException {
+		return inventoryDao.getByItemcode(query);
+	}
+	@Override
+	public void updateDemand(List<OrdersProduct> list) throws ServiceException {
+		OrderBomQuery orderBomQuery = new OrderBomQuery();
+		List<OrderBom> listbom=null;
+		for(OrdersProduct pd:list)
+		{
+			if(!"".equals(pd.getItemcode()))
+			{
+			Inventory invent=new Inventory();
+			invent.setItemcode(pd.getItemcode());
+			invent.setDemand(pd.getAmount());
+			
+			inventoryDao.update("Inventory.update.demand.add",invent);
+			orderBomQuery.setItemcode(pd.getItemcode());
+			listbom=orderBomDao.findList(orderBomQuery);
+			updateSubItemcode(listbom,pd.getAmount(),1);
+			}
+		}
+	}
+	@Override
+	public List<Inventory> findList(InventoryQuery query, String statement)
+			throws ServiceException {
+		return inventoryDao.findList(statement, query);
+	}
+	@Override
+	public List<Inventory> updateInventory(InventoryQuery query,
+			String statement) throws ServiceException {
+		List<Inventory> list=inventoryDao.findList(statement, query);
+		for(Inventory inventory:list)
+		{
+			OrderBomQuery orderBomQuery = new OrderBomQuery();
+			orderBomQuery.setItemcode(inventory.getItemcode());
+			List<OrderBom> bomlist=orderBomDao.findList(orderBomQuery);
+			updateSubItemcode(bomlist,inventory.getDemand(),1);
+		}
+		return null;
+	}
+	@Override
+	public List<Inventory> findBatchno(Inventory entity) throws ServiceException {
+		return inventoryDao.findBatchno(entity);
+	}
+	
+	@Override
+	public Inventory find(InventoryQuery inventoryQuery)
+			throws ServiceException {
+		return inventoryDao.find(inventoryQuery);
+	}
+}

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Order">
+
+<resultMap id="RM.Order" class="com.terrence.crm.dol.bean.Order">
+	<result property="id" column="id"/>
+	<result property="orderCode" column="orderCode"/>
+	<result property="itemId" column="itemId"/>
+	<result property="serviceType" column="serviceType"/>
+	<result property="serviceAddress" column="serviceAddress"/>
+	<result property="userId" column="userId"/>
+	<result property="userTel" column="userTel"/>
+	<result property="fixTime" column="fixTime"/>
+	<result property="createTime" column="createTime"/>
+	<result property="payTime" column="payTime"/>
+	<result property="orderStatus" column="orderStatus"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="remark" column="remark"/>
+	<result property="serviceReceiver" column="serviceReceiver"/>
+	<result property="wxProductId" column="wxProductId"/>
+	<result property="item" resultMap="RM.Order.Item"/>
+</resultMap>
+<resultMap id="RM.Order.Item" class="com.terrence.crm.dol.bean.Item">
+	<result property="itemName" column="itemName"/>
+	<result property="itemPriceAux" column="itemPriceAux"/>
+	<result property="wxProductId" column="wxProductId"/>
+</resultMap>
+<resultMap id="RM.Order.LastTime" class="com.terrence.crm.dol.bean.Order">
+	<result property="id" column="id"/>
+	<result property="createTime" column="createTime"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Order.columns">
+	<![CDATA[
+		t_order.id ,
+		t_order.orderCode ,
+		t_order.itemId ,
+		t_order.serviceType ,
+		t_order.serviceAddress ,
+		t_order.userId ,
+		t_order.userTel ,
+		t_order.fixTime ,
+		t_order.createTime ,
+		t_order.payTime ,
+		t_order.orderStatus ,
+		t_order.modifyTime ,
+		t_order.remark ,
+		t_order.serviceReceiver,
+		t_order.wxProductId
+	]]>
+</sql>
+
+<insert id="Order.insert" >
+	<![CDATA[
+	INSERT INTO t_order (
+		orderCode,
+		itemId,
+		serviceType,
+		serviceAddress,
+		userId,
+		userTel,
+		fixTime,
+		createTime,
+		payTime,
+		orderStatus,
+		modifyTime,
+		remark,
+		serviceReceiver,
+		wxProductId
+	) VALUES (
+		#orderCode#,
+		#itemId#,
+		#serviceType#,
+		#serviceAddress#,
+		#userId#,
+		#userTel#,
+		#fixTime#,
+		#createTime#,
+		#payTime#,
+		#orderStatus#,
+		#modifyTime#,
+		#remark#,
+		#serviceReceiver#,
+		#wxProductId#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Order.update" parameterClass="com.terrence.crm.dol.bean.Order"> 
+	UPDATE t_order 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="orderCode">
+			orderCode = #orderCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemId">
+			itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serviceType">
+			serviceType = #serviceType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serviceAddress">
+			serviceAddress = #serviceAddress# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="userId">
+			userId = #userId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="userTel">
+			userTel = #userTel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fixTime">
+			fixTime = #fixTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="payTime">
+			payTime = #payTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="orderStatus">
+			orderStatus = #orderStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="remark">
+			remark = #remark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serviceReceiver">
+			serviceReceiver = #serviceReceiver# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="wxProductId">
+			wxProductId = #wxProductId# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Order.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_order.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orderCode">
+			t_order.orderCode = #orderCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemId">
+			t_order.itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serviceType">
+			t_order.serviceType = #serviceType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serviceAddress">
+			t_order.serviceAddress = #serviceAddress# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userId">
+			t_order.userId = #userId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userTel">
+			t_order.userTel = #userTel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fixTime">
+			t_order.fixTime = #fixTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_order.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="payTime">
+			t_order.payTime = #payTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orderStatus">
+			t_order.orderStatus = #orderStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_order.modifyTime = #modifyTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="remark">
+			t_order.remark = #remark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serviceReceiver">
+			t_order.serviceReceiver = #serviceReceiver# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="wxProductId">
+			t_order.wxProductId = #wxProductId# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Order.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_order.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="orderCode">
+		t_order.orderCode = #orderCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemId">
+		t_order.itemId = #itemId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serviceType">
+		t_order.serviceType = #serviceType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serviceAddress">
+		t_order.serviceAddress = #serviceAddress# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userId">
+		t_order.userId = #userId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userTel">
+		t_order.userTel = #userTel# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fixTime">
+		t_order.fixTime = #fixTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_order.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="payTime">
+		t_order.payTime = #payTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="orderStatus">
+		t_order.orderStatus = #orderStatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_order.modifyTime = #modifyTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="remark">
+		t_order.remark = #remark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serviceReceiver">
+		t_order.serviceReceiver = #serviceReceiver# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="wxProductId">
+		t_order.wxProductId = #wxProductId# 
+	</isNotEmpty>
+</sql>
+
+<select id="Order.getById" resultMap="RM.Order">
+	select <include refid="Order.columns"/> ,t_item.itemName ,t_item.itemPriceAux,
+	t_item.wxProductId 
+	FROM t_order 
+	left join t_item on t_order.wxProductId = t_item.wxProductId 
+	 where id=#id#
+</select>
+
+<select id="Order.getByProperty" resultMap="RM.Order">
+	select <include refid="Order.columns"/> from t_order where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Order.delete">
+	<![CDATA[
+		DELETE FROM t_order WHERE id=#id#
+	]]>
+</delete>
+<delete id="Order.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_order WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Order.findPage.count" resultClass="long">
+	select count(*) from t_order <include refid="Order.findPage.where"/>
+</select>
+
+<select id="Order.findPage" resultMap="RM.Order">
+	select <include refid="Order.columns"/>  ,t_item.itemName ,t_item.itemPriceAux,
+	t_item.wxProductId 
+	FROM t_order 
+	left join t_item on t_order.wxProductId = t_item.wxProductId 
+	<include refid="Order.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Order.findList" resultMap="RM.Order">
+	SELECT <include refid="Order.columns"/> ,t_item.itemName ,t_item.itemPriceAux,
+	t_item.wxProductId 
+	FROM t_order 
+	left join t_item on t_order.wxProductId = t_item.wxProductId 
+	<include refid="Order.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Order.getLastTime" resultMap="RM.Order.LastTime">
+	select max(id) id,createTime FROM t_order where serviceType=2
+</select>
+</sqlMap>

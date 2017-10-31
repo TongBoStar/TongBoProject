@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Pdparameter">
+
+        
+	<resultMap id="RM.Pdparameter" class="com.terrence.crm.dol.bean.Pdparameter">
+        <result property="paramid" column="paramid"/>
+        <result property="flevels" column="flevels"/>
+        <result property="parametername" column="parametername"/>
+        <result property="fparentid" column="fparentid"/>
+        <result property="seqno" column="seqno"/>
+        <result property="fdescript" column="fdescript"/>
+        <result property="parametercode" column="parametercode"/>
+        <result property="isshow" column="isshow"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Pdparameter.columns">
+	    <![CDATA[
+        	t_pdparameter.paramid ,
+        	t_pdparameter.flevels ,
+        	t_pdparameter.parametername ,
+        	t_pdparameter.fparentid ,
+        	t_pdparameter.seqno ,
+        	t_pdparameter.fdescript ,
+        	t_pdparameter.parametercode,
+        	t_pdparameter.isshow 
+	    ]]>
+	</sql>
+	
+   <insert id="Pdparameter.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pdparameter (
+        	flevels ,
+        	parametername ,
+        	fparentid ,
+        	seqno ,
+        	fdescript ,
+        	parametercode,
+        	isshow 
+        ) VALUES (
+        	#flevels# ,
+        	#parametername# ,
+        	#fparentid# ,
+        	#seqno# ,
+        	#fdescript# ,
+        	#parametercode#,
+        	#isshow#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="paramid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Pdparameter.update" parameterClass="com.terrence.crm.dol.bean.Pdparameter">         
+        UPDATE t_pdparameter 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="flevels">
+	        	flevels = #flevels# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parametername">
+	        	parametername = #parametername# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fparentid">
+	        	fparentid = #fparentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdescript">
+	        	fdescript = #fdescript# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parametercode">
+	        	parametercode = #parametercode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isshow">
+	        	isshow = #isshow# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        paramid = #paramid# 
+    </update>
+    
+	<delete id="Pdparameter.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pdparameter where
+       paramid = #paramid# 
+    ]]>
+    </delete>
+    
+    <delete id="Pdparameter.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pdparameter 
+        WHERE
+       paramid in ($paramid$) 
+    ]]>
+    </delete>
+    
+    <select id="Pdparameter.getById" resultMap="RM.Pdparameter">
+	    select <include refid="Pdparameter.columns"/>
+	    
+	        from t_pdparameter 
+	        where 
+		        paramid = #paramid# 
+	    
+    </select>
+    
+	<select id="Pdparameter.getByProperty" resultMap="RM.Pdparameter">
+		select <include refid="Pdparameter.columns"/> from t_pdparameter where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Pdparameter.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="paramid">
+	             t_pdparameter.paramid = #paramid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="flevels">
+	             t_pdparameter.flevels = #flevels#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parametername">
+	             t_pdparameter.parametername like ('%$parametername$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fparentid">
+	             t_pdparameter.fparentid = #fparentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_pdparameter.seqno = #seqno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdescript">
+	             t_pdparameter.fdescript = #fdescript#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parametercode">
+	             t_pdparameter.parametercode like ('%$parametercode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isshow">
+	             t_pdparameter.isshow = #isshow#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Pdparameter.findPage.and">
+			<isNotEmpty prepend="AND" property="paramid">
+	             t_pdparameter.paramid = #paramid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevels">
+	             t_pdparameter.flevels = #flevels#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parametername">
+	             t_pdparameter.parametername like ('%$parametername$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fparentid">
+	             t_pdparameter.fparentid = #fparentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_pdparameter.seqno = #seqno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdescript">
+	             t_pdparameter.fdescript = #fdescript#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parametercode">
+	             t_pdparameter.parametercode like ('%$parametercode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="isshow">
+	             t_pdparameter.isshow = #isshow#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Pdparameter.Entity" resultMap="RM.Pdparameter">
+    	SELECT 	<include refid="Pdparameter.columns"/> FROM t_pdparameter <include refid="Pdparameter.findPage.where"/>
+    </select>
+    
+    <select id="Pdparameter.findList" resultMap="RM.Pdparameter">
+    	SELECT 
+    		<include refid="Pdparameter.columns"/> 
+    	FROM 
+    		t_pdparameter
+		<include refid="Pdparameter.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Pdparameter.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pdparameter
+    ]]>
+		<include refid="Pdparameter.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Pdparameter.findPage" resultMap="RM.Pdparameter">
+    	select <include refid="Pdparameter.columns"/>	    
+	        from t_pdparameter 	   
+		<include refid="Pdparameter.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Pdparameter.findPage" resultMap="RM.Pdparameter">
+    	select <include refid="Pdparameter.columns"/>	    
+	        from t_pdparameter where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       paramid 
+	   not in(select $notTop$ 
+       paramid 
+	   from t_pdparameter <include refid="Pdparameter.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Pdparameter.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

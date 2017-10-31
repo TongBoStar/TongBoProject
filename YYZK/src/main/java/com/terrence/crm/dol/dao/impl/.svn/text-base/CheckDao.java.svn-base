@@ -1,0 +1,87 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.dao.ICheckDao;
+
+@Repository
+public class CheckDao extends BaseIbatisDao<Check,java.lang.Long> implements ICheckDao{
+
+		
+	public void saveOrUpdate(Check entity) {
+		if(entity.getCheckid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Check";
+	}
+	public Check getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Check)this.getSqlMapClientTemplate().queryForObject("Check.getByProperty", map);		
+	}
+
+	@Override
+	public void updateByprocessid(Long processid, Double price) {
+		Map map=new HashMap();		
+		map.put("propertyId", processid);
+		map.put("propertyPrice", price);
+		this.getSqlMapClientTemplate().update("Check.updateByProcessid", map);
+		
+	}
+	
+	public void deleteByemployeeid(Long employeetaskid) {
+		
+		this.getSqlMapClientTemplate().delete("Check.deleteByemployeeid", employeetaskid);
+		
+	}
+
+	@Override
+	public List<Check> findEmployeekLogs(Check entity) {
+
+		return (List<Check>)this.getSqlMapClientTemplate().queryForList("Check.findEmployeeLogs", entity);		
+		
+		
+	}
+
+	@Override
+	public Integer getIsLast(Long checkId) {
+
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("Check.findTheLastId", checkId);
+		
+		
+		//return null;
+	}
+
+	@Override
+	public Integer getAllAccept(Long checkId) {
+		 
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("Check.findAllAccept", checkId);
+		
+	}
+
+	@Override
+	public Integer getAllDownK3(Long checkId) {
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("Check.findAllDownK3", checkId);
+
+	}
+	
+	
+
+}

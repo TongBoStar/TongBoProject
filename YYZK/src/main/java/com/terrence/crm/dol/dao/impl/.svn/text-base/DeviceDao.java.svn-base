@@ -1,0 +1,62 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Device;
+import com.terrence.crm.dol.dao.IDeviceDao;
+import com.terrence.crm.dol.query.DeviceQuery;
+
+@Repository
+public class DeviceDao extends BaseIbatisDao<Device,java.lang.Long> implements IDeviceDao{
+
+		
+	public void saveOrUpdate(Device entity) {
+		if(entity.getDeviceid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Device";
+	}
+	public Device getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Device)this.getSqlMapClientTemplate().queryForObject("Device.getByProperty", map);		
+	}
+
+	@Override
+	public Device getByItemProcessId(Long itemprocessid) {
+		return (Device)this.getSqlMapClientTemplate().queryForObject("Device.getByItemProcessId",itemprocessid);
+	}
+
+	@Override
+	public List<Device> findListIncludeTime(DeviceQuery deviceQuery) {
+
+		return (List<Device>)this.getSqlMapClientTemplate().queryForList("Device.findListIncludTime", deviceQuery);
+	}
+
+	@Override
+	public List<Device> findDeviceList(DeviceQuery deviceQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Divce.find.device.list", deviceQuery);
+	}
+
+	@Override
+	public Device findEntityById(DeviceQuery deviceQuery) {
+		return (Device) this.getSqlMapClientTemplate().queryForObject("Device.find.entityById", deviceQuery);
+	}
+
+}

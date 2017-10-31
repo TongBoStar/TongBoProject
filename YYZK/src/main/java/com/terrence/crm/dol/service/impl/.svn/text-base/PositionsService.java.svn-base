@@ -1,0 +1,209 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Positions;
+import com.terrence.crm.dol.query.PositionsQuery;
+import com.terrence.crm.dol.dao.IItemPostionDao;
+import com.terrence.crm.dol.dao.IPositionsDao;
+import com.terrence.crm.dol.service.IPositionsService;
+
+@Service
+@Transactional
+public class PositionsService extends BaseService implements IPositionsService {
+	protected static Logger logger = LoggerFactory.getLogger(PositionsService.class);
+	@Autowired
+	@Qualifier("positionsDao")
+	private IPositionsDao positionsDao;
+	@Autowired
+	@Qualifier("itemPostionDao")
+	private IItemPostionDao itemPostionDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Positions";
+	}
+	@Transactional(readOnly=true)
+	public Positions getById(java.lang.Long id) throws ServiceException
+	{
+		return positionsDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Positions entity) throws ServiceException
+	{
+		positionsDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Positions entity) throws ServiceException
+	{
+		Long adId = positionsDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Positions entity) throws ServiceException
+	{
+		Integer returnValue =  positionsDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = positionsDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = positionsDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PositionsQuery query = new PositionsQuery();
+		try {
+			return positionsDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Positions> findPage(Page<Positions> page, PositionsQuery query) throws ServiceException
+	{
+		return positionsDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Positions> findPage(Page<Positions> page,String statement, PositionsQuery query) throws ServiceException
+	{
+		return positionsDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Positions> findList(PositionsQuery query) throws ServiceException
+	{
+		return positionsDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Positions> findList(PositionsQuery query,Integer pageSize) throws ServiceException
+	{
+		return positionsDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Positions> findList(PositionsQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return positionsDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Positions> findAllList() throws ServiceException
+	{
+		return positionsDao.findAllList();
+	}
+	@Override
+	public Positions getByProperty(String str, String positionname)
+			throws ServiceException {
+		return positionsDao.getByProperty(str, positionname);
+	}
+
+	public Positions getByEntity(String statement, PositionsQuery query)
+	throws ServiceException {
+		return positionsDao.getByEntity(statement, query);
+	}
+	@Override
+	public void saveOrupdatePositions(Positions entity) throws ServiceException {
+		if(null==entity.getPositionid()){
+			String number = getPositionNumber(entity);
+			entity.setNumber(number);
+			entity.setAllnumber(positionsDao.getById(entity.getParentid()).getAllnumber()+entity.getNumber());
+			if(entity.getLevels().intValue()==4){//仓位
+				entity.setPositionname(entity.getAllnumber());
+			}
+			positionsDao.save(entity);
+			
+		}else{
+			positionsDao.update(entity);
+		}
+		
+	}
+	/*生成代码规则 1:机加工仓库--1：外面原材料仓库--01：第一排	--1：第一层--01：第1位置		1101101
+	 * 
+	 */
+	public String getPositionNumber(Positions entity){
+		if(entity.getLevels().intValue()==1||entity.getLevels().intValue()==3){//生成一位1,2,3,4
+			PositionsQuery query=new PositionsQuery();
+			query.setParentid(entity.getParentid());
+			Positions pp =new Positions();
+			pp=positionsDao.getByEntity("Positions.getlastEntity", query);
+			if(null==pp){
+				return "1";
+			}else{
+				return (Integer.valueOf(pp.getNumber())+1)+"";
+			}
+		}else{
+			PositionsQuery query=new PositionsQuery();
+			query.setParentid(entity.getParentid());
+			Positions pp =new Positions();
+			pp=positionsDao.getByEntity("Positions.getlastEntity", query);
+			if(null==pp){
+				return "01";
+			}else{
+				 int number=Integer.valueOf(pp.getNumber())+1;
+				 if(number<10){
+					 return "0"+number;
+				 }else{
+					 return number+"";
+				 }
+			}
+		}
+		
+	}
+
+	@Override
+	public List<Positions> findList(String statement, PositionsQuery pQuery)
+			throws ServiceException {
+		return positionsDao.findList(statement, pQuery); 
+	}
+
+	@Override
+	public List<Positions> findPositionidNameList(PositionsQuery positionsQuery)
+			throws ServiceException {
+		return positionsDao.findPositionidNameList(positionsQuery);
+	}
+	@Override
+	public List<Positions> findPositionidPoorder(PositionsQuery positionsQuery) {
+		return positionsDao.findPositionidPoorder(positionsQuery);
+	}
+	@Override
+	public void deleteToItemPosition(List<Long> idList)
+			throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemPostionDao.deleteByMultipleId(delIds);
+	}
+
+	
+}

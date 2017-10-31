@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblySubRecord">
+
+        
+	<resultMap id="RM.AssemblySubRecord" class="com.terrence.crm.dol.bean.AssemblySubRecord">
+        <result property="subrecid" column="subrecid"/>
+        <result property="recordid" column="recordid"/>
+        <result property="keyname" column="keyname"/>
+        <result property="keyexplain" column="keyexplain"/>
+        <result property="ispass" column="ispass"/>
+        <result property="fsexplain" column="fsexplain"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblySubRecord.columns">
+	    <![CDATA[
+        	t_assembly_sub_record.subrecid ,
+        	t_assembly_sub_record.recordid ,
+        	t_assembly_sub_record.keyname ,
+        	t_assembly_sub_record.keyexplain ,
+        	t_assembly_sub_record.ispass ,
+        	t_assembly_sub_record.fsexplain 
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblySubRecord.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_assembly_sub_record (
+        	recordid ,
+        	keyname ,
+        	keyexplain ,
+        	ispass ,
+        	fsexplain 
+        ) VALUES (
+        	#recordid# ,
+        	#keyname# ,
+        	#keyexplain# ,
+        	#ispass# ,
+        	#fsexplain# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="subrecid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    
+    
+    <insert id="AssemblySubRecord.insert.new.in.data" ><!-- 保存数据 -->
+    
+        INSERT INTO
+        t_assembly_sub_record (
+        	recordid 
+        	 <isNotEmpty prepend="," property="keyname">
+	        	keyname
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyexplain">
+	        	keyexplain
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispass">
+	        	ispass
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsexplain">
+	        	fsexplain
+	        </isNotEmpty>
+        ) VALUES (
+        	#recordid# 
+        	 <isNotEmpty prepend="," property="keyname">
+	        	#keyname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyexplain">
+	        	#keyexplain# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispass">
+	        	#ispass# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsexplain">
+	        	#fsexplain# 
+	        </isNotEmpty>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="subrecid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssemblySubRecord.update" parameterClass="com.terrence.crm.dol.bean.AssemblySubRecord">         
+        UPDATE t_assembly_sub_record 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="recordid">
+	        	recordid = #recordid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyname">
+	        	keyname = #keyname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyexplain">
+	        	keyexplain = #keyexplain# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispass">
+	        	ispass = #ispass# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsexplain">
+	        	fsexplain = #fsexplain# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        subrecid = #subrecid# 
+    </update>
+    
+    
+    
+    <update id="AssemblySubRecord.update.data.to.new" parameterClass="com.terrence.crm.dol.bean.AssemblySubRecord"><!-- 更新数据 -->         
+        UPDATE t_assembly_sub_record 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="recordid">
+	        	recordid = #recordid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyname">
+	        	keyname = #keyname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="keyexplain">
+	        	keyexplain = #keyexplain# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispass">
+	        	ispass = #ispass# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsexplain">
+	        	fsexplain = #fsexplain# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        subrecid = #subrecid# 
+    </update>
+    
+	<delete id="AssemblySubRecord.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_sub_record where
+       subrecid = #subrecid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblySubRecord.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_sub_record 
+        WHERE
+       subrecid in ($subrecid$) 
+    ]]>
+    </delete>
+    
+    <select id="AssemblySubRecord.getById" resultMap="RM.AssemblySubRecord">
+	    select <include refid="AssemblySubRecord.columns"/>
+	    
+	        from t_assembly_sub_record 
+	        where 
+		        subrecid = #subrecid# 
+	    
+    </select>
+    
+	<select id="AssemblySubRecord.getByProperty" resultMap="RM.AssemblySubRecord">
+		select <include refid="AssemblySubRecord.columns"/> from t_assembly_sub_record where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblySubRecord.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="subrecid">
+	             t_assembly_sub_record.subrecid = #subrecid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="recordid">
+	             t_assembly_sub_record.recordid = #recordid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="keyname">
+	             t_assembly_sub_record.keyname = #keyname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="keyexplain">
+	             t_assembly_sub_record.keyexplain = #keyexplain#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ispass">
+	             t_assembly_sub_record.ispass = #ispass#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsexplain">
+	             t_assembly_sub_record.fsexplain = #fsexplain#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblySubRecord.findPage.and">
+			<isNotEmpty prepend="AND" property="subrecid">
+	             t_assembly_sub_record.subrecid = #subrecid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="recordid">
+	             t_assembly_sub_record.recordid = #recordid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="keyname">
+	             t_assembly_sub_record.keyname = #keyname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="keyexplain">
+	             t_assembly_sub_record.keyexplain = #keyexplain#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ispass">
+	             t_assembly_sub_record.ispass = #ispass#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsexplain">
+	             t_assembly_sub_record.fsexplain = #fsexplain#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssemblySubRecord.Entity" resultMap="RM.AssemblySubRecord">
+    	SELECT 	<include refid="AssemblySubRecord.columns"/> FROM t_assembly_sub_record <include refid="AssemblySubRecord.findPage.where"/>
+    </select>
+    
+    <select id="AssemblySubRecord.findList" resultMap="RM.AssemblySubRecord">
+    	SELECT 
+    		<include refid="AssemblySubRecord.columns"/> 
+    	FROM 
+    		t_assembly_sub_record
+		<include refid="AssemblySubRecord.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssemblySubRecord.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_sub_record
+    ]]>
+		<include refid="AssemblySubRecord.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblySubRecord.findPage" resultMap="RM.AssemblySubRecord">
+    	select <include refid="AssemblySubRecord.columns"/>	    
+	        from t_assembly_sub_record 	   
+		<include refid="AssemblySubRecord.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblySubRecord.findPage" resultMap="RM.AssemblySubRecord">
+    	select <include refid="AssemblySubRecord.columns"/>	    
+	        from t_assembly_sub_record where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       subrecid 
+	   not in(select $notTop$ 
+       subrecid 
+	   from t_assembly_sub_record <include refid="AssemblySubRecord.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblySubRecord.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

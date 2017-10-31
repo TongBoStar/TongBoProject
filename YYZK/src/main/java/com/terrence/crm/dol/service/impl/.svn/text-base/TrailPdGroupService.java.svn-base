@@ -1,0 +1,217 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailPdGroup;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.query.TrailPdGroupQuery;
+import com.terrence.crm.dol.query.TrailRecSetQuery;
+import com.terrence.crm.dol.dao.ITrailPdGroupDao;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.dao.ITrailUseColDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.service.ITrailPdGroupService;
+
+@Service
+@Transactional
+public class TrailPdGroupService extends BaseService implements ITrailPdGroupService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailPdGroupService.class);
+	@Autowired
+	@Qualifier("trailPdGroupDao")
+	private ITrailPdGroupDao trailPdGroupDao;
+	
+	@Autowired
+	@Qualifier("trailRecSetDao")
+	private ITrailRecSetDao trailRecSetDao;
+	
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	
+	@Autowired
+	@Qualifier("trailUseColDao")
+	private ITrailUseColDao trailUseColDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailPdGroup";
+	}
+	@Transactional(readOnly=true)
+	public TrailPdGroup getById(java.lang.Long id) throws ServiceException
+	{
+		return trailPdGroupDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailPdGroup entity) throws ServiceException
+	{
+		trailPdGroupDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailPdGroup entity) throws ServiceException
+	{
+		Long adId = trailPdGroupDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailPdGroup entity) throws ServiceException
+	{
+		Integer returnValue =  trailPdGroupDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailPdGroupDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailPdGroupDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailPdGroupQuery query = new TrailPdGroupQuery();
+		try {
+			return trailPdGroupDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdGroup> findPage(Page<TrailPdGroup> page, TrailPdGroupQuery query) throws ServiceException
+	{
+		return trailPdGroupDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdGroup> findPage(Page<TrailPdGroup> page,String statement, TrailPdGroupQuery query) throws ServiceException
+	{
+		return trailPdGroupDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdGroup> findList(TrailPdGroupQuery query) throws ServiceException
+	{
+		return trailPdGroupDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdGroup> findList(TrailPdGroupQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailPdGroupDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailPdGroup> findList(TrailPdGroupQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailPdGroupDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdGroup> findAllList() throws ServiceException
+	{
+		return trailPdGroupDao.findAllList();
+	}
+	
+	@Override
+	public void saveToDetail(TrailPdGroup entity) throws ServiceException {
+		String[] coltitlelist = null;
+		Long[] didlist = null;
+		Integer[] fcollist = null;
+		Integer[] frowlist = null;
+		
+		coltitlelist = entity.getColtitlelist();
+		didlist = entity.getDidlist();
+		fcollist = entity.getFcol();
+		frowlist = entity.getFrow();
+		
+		Long groupid = null;
+		if(entity.getGid()==null){
+			groupid =trailPdGroupDao.save(entity);
+		}else{
+			trailPdGroupDao.update(entity);
+			groupid=entity.getGid();
+			
+			TrailRecSetQuery trailRecSetQuery=new TrailRecSetQuery();
+			trailRecSetQuery.setGid(groupid);
+			
+			trailRecSetDao.deleteByWhere("TrailRecSet.deletebygid", trailRecSetQuery);
+			
+		}
+		
+		if(coltitlelist==null){
+			return ;
+		}
+		
+		int alllength = coltitlelist.length;
+		TrailRecSet trailRecSet=new TrailRecSet();
+		for(int i=0;i<alllength;i++){
+			trailRecSet=new TrailRecSet();
+		//	trailRecSet.setColtitle(coltitlelist[i]);
+
+			trailRecSet.setColid(didlist[i]);
+		//	trailRecSet.setFename(trialDeviceDao.getById(didlist[i]).getDivicename());
+//			if(didlist[i]==null){
+//				trailRecSet.setFename("");	
+//			}else{
+//				trailRecSet.setFename(trailUseColDao.getById(didlist[i]).getFcolumn());
+//			}
+			if(didlist[i]==null){
+				trailRecSet.setColtitle("");
+				trailRecSet.setFename("");
+			}else{
+				trailRecSet.setColtitle(trailUseColDao.getById(didlist[i]).getFcolumn());
+				trailRecSet.setFename(trailUseColDao.getById(didlist[i]).getFrealvar());
+			}
+				
+			
+			trailRecSet.setFcol(fcollist[i]);
+			trailRecSet.setFrow(frowlist[i]);
+			trailRecSet.setGid(groupid);
+			trailRecSet.setTplid(entity.getTplid());
+			
+			
+			trailRecSet.setFcnname(coltitlelist[i]);
+			trailRecSetDao.save(trailRecSet);
+		}
+			
+	}
+	@Override
+	public TrailPdGroup getdetailById(Long trailPdGroupId)
+			throws ServiceException {
+			
+		
+		//return trailPdGroupDao.getById(trailPdGroupId);
+		return trailPdGroupDao.getById("TrailPdGroup.getDetailById", trailPdGroupId);
+		
+		
+	}
+	
+
+}

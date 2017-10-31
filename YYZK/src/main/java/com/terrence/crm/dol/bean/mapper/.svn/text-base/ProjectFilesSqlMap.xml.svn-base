@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProjectFiles">
+
+        
+	<resultMap id="RM.ProjectFiles" class="com.terrence.crm.dol.bean.ProjectFiles">
+        <result property="id" column="id"/>
+        <result property="fileName" column="fileName"/>
+        <result property="filePath" column="filePath"/>
+        <result property="createTime" column="createTime"/>
+        <result property="uploaderid" column="uploaderid"/>
+        <result property="uploader" column="uploader"/>
+        <result property="fnote" column="fnote"/>
+        <result property="filetype" column="filetype"/>
+        <result property="maker" column="maker"/>
+        <result property="validitydate" column="validitydate"/>
+    </resultMap>
+	<resultMap id="RM.ProjectFiles.tmp" class="com.terrence.crm.dol.bean.ProjectFiles">
+        <result property="id" column="id"/>
+        <result property="filePath" column="filePath"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ProjectFiles.columns">
+	    <![CDATA[
+        	t_project_files.id ,
+        	t_project_files.fileName ,
+        	t_project_files.filePath ,
+        	t_project_files.createTime ,
+        	t_project_files.fnote ,
+        	t_project_files.uploaderid, 
+        	t_project_files.filetype,
+        	t_project_files.maker,
+        	t_project_files.validitydate
+	    ]]>
+	</sql>
+	
+   <insert id="ProjectFiles.insert" >
+        INSERT INTO
+        t_project_files (
+        	fileName ,
+        	filePath ,
+        	fnote ,
+        	createTime ,
+        	uploaderid
+        	<isNotEmpty prepend="," property="filetype">filetype</isNotEmpty> 
+        	<isNotEmpty prepend="," property="maker">maker</isNotEmpty> 
+        	<isNotEmpty prepend="," property="validitydate">validitydate</isNotEmpty> 
+        ) VALUES (
+        	#fileName#,
+        	#filePath#,
+        	#fnote#,
+        	#createTime#,
+        	#uploaderid# 
+        	<isNotEmpty prepend="," property="filetype">#filetype#</isNotEmpty> 
+        	<isNotEmpty prepend="," property="maker">#maker#</isNotEmpty> 
+        	<isNotEmpty prepend="," property="validitydate">#validitydate#</isNotEmpty> 
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ProjectFiles.update" parameterClass="com.terrence.crm.dol.bean.ProjectFiles">         
+        UPDATE t_project_files 
+        <dynamic prepend="SET">
+        	<isNotEmpty prepend="," property="fileName">
+	      	fileName = #fileName#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="filePath">
+        	filePath = #filePath#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fnote">
+        	fnote = #fnote#
+        	</isNotEmpty>
+	        <isNotEmpty prepend="," property="createTime">
+        	createTime = #createTime# 
+        	</isNotEmpty>
+	        <isNotEmpty prepend="," property="uploaderid">
+        	uploaderid = #uploaderid# 
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="filetype">
+        	filetype = #filetype# 
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="maker">
+        	maker = #maker# 
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="validitydate">
+        	validitydate = #validitydate# 
+        	</isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="ProjectFiles.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_project_files where id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="ProjectFiles.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_project_files 
+        WHERE id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="ProjectFiles.getById" resultMap="RM.ProjectFiles">
+	    select <include refid="ProjectFiles.columns"/>,t_admin.adminName uploader 
+	        from t_project_files 
+	        left join t_admin on t_project_files.uploaderid = t_admin.adminId
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="ProjectFiles.getByProperty" resultMap="RM.ProjectFiles">
+		select <include refid="ProjectFiles.columns"/>,t_admin.adminName uploader 
+	        from t_project_files 
+	        left join t_admin on t_project_files.uploaderid = t_admin.adminId
+	         where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ProjectFiles.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_project_files.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fileName">
+	             t_project_files.fileName like ('%$fileName$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="filePath">
+	             t_project_files.filePath = #filePath#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="uploaderid">
+	             t_project_files.uploaderid = #uploaderid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createTime">
+	             t_project_files.createTime = #createTime#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="filetype">
+	             t_project_files.filetype = #filetype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="maker">
+	             t_project_files.maker = #maker#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="validitydate">
+	             t_project_files.validitydate &lt;= #validitydate#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ProjectFiles.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_project_files.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fileName">
+	             t_project_files.fileName like ('%$fileName$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="filePath">
+	             t_project_files.filePath = #filePath#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="uploaderid">
+	             t_project_files.uploaderid = #uploaderid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createTime">
+	             t_project_files.createTime = #createTime#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="filetype">
+	             t_project_files.filetype = #filetype#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="maker">
+	             t_project_files.maker = #maker#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="validitydate">
+	             t_project_files.validitydate &lt;= #validitydate#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ProjectFiles.Entity" resultMap="RM.ProjectFiles">
+    	SELECT 	<include refid="ProjectFiles.columns"/> FROM t_project_files <include refid="ProjectFiles.findPage.where"/>
+    </select>
+    
+    <select id="ProjectFiles.findList" resultMap="RM.ProjectFiles">
+    	SELECT 
+    		<include refid="ProjectFiles.columns"/>,t_admin.adminName uploader 
+	        from t_project_files 
+	        left join t_admin on t_project_files.uploaderid = t_admin.adminId 
+	    where 1=1 
+		<include refid="ProjectFiles.findPage.and"/>
+		<isNotEmpty property="uploader">
+	        	and t_admin.adminName like ('%$uploader$%')
+	    </isNotEmpty> 
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ProjectFiles.findPage.count" resultClass="long">
+        select 
+        count(*)
+        from t_project_files
+        left join t_admin on t_project_files.uploaderid = t_admin.adminId 
+        where 1=1
+		<include refid="ProjectFiles.findPage.and"/>
+		<isNotEmpty property="uploader">
+	        	and t_admin.adminName like ('%$uploader$%')
+	    </isNotEmpty> 
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ProjectFiles.findPage" resultMap="RM.ProjectFiles">
+    	select <include refid="ProjectFiles.columns"/>,t_admin.adminName uploader 
+	        from t_project_files 
+	        left join t_admin on t_project_files.uploaderid = t_admin.adminId 	   
+		where 1=1
+		<include refid="ProjectFiles.findPage.and"/>
+		<isNotEmpty property="uploader">
+	        	and t_admin.adminName like ('%$uploader$%')
+	    </isNotEmpty> 	
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+    </select>
+    
+	<select id="ProjectFiles.findPage" resultMap="RM.ProjectFiles">
+    	select <include refid="ProjectFiles.columns"/>,t_admin.adminName uploader 
+	        from t_project_files 
+	        left join t_admin on t_project_files.uploaderid = t_admin.adminId where 1=1 
+	        
+	   <isNotEmpty property="notTop">  
+		   and id not in(select $notTop$ 
+	       id  
+		   from t_project_files  left join t_admin on t_project_files.uploaderid = t_admin.adminId where 1=1  <include refid="ProjectFiles.findPage.and"/>
+		   <isNotEmpty property="uploader">
+	        	and t_admin.adminName like ('%$uploader$%')
+	       </isNotEmpty>
+		   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ProjectFiles.findPage.and"/>
+	   	<isNotEmpty property="uploader">
+	        	and t_admin.adminName like ('%$uploader$%')
+	    </isNotEmpty>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="ProjectFiles.find.tmpconvert" resultMap="RM.ProjectFiles.tmp">
+    	select id,filePath from t_project_files_temp
+    </select>
+    <delete id="ProjectFiles.deleteAll.tmp">
+    	delete from t_project_files_temp
+    </delete>
+</sqlMap>

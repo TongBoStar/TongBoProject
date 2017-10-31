@@ -1,0 +1,60 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.GroupProvince;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.dao.IGroupProvinceDao;
+
+@Repository
+public class GroupProvinceDao extends BaseIbatisDao<GroupProvince,java.lang.Long> implements IGroupProvinceDao{
+
+		
+	public void saveOrUpdate(GroupProvince entity) {
+		if(entity.getFitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "GroupProvince";
+	}
+	public GroupProvince getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (GroupProvince)this.getSqlMapClientTemplate().queryForObject("GroupProvince.getByProperty", map);		
+	}
+
+	@Override
+	public GroupProvince findGroupIdByProvince(GroupProvince groupProvince) {
+		
+		return (GroupProvince) this.getSqlMapClientTemplate().queryForObject("GroupProvince.Entity", groupProvince);
+	}
+
+	@Override
+	public List<GroupProvince> findList(GroupProvince groupProvince2) {
+	
+		return this.getSqlMapClientTemplate().queryForList("GroupProvince.Entity", groupProvince2);
+				
+	}
+
+	@Override
+	public void deleteIdByGroupIds(String delIds) {
+		
+		this.getSqlMapClientTemplate().delete("GroupProvince.deleteIdByGroupIds", delIds);
+	}
+
+}

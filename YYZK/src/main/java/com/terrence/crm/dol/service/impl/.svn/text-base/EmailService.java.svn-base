@@ -1,0 +1,306 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.mail.internet.MimeMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.event.EmailSendEvent;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.utils.EmailManager;
+import com.terrence.crm.dol.utils.MailSenderInfo;
+import com.terrence.crm.dol.utils.SimpleMailSender;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
+@Service
+public class EmailService implements IEmailService 
+	, ApplicationEventPublisherAware {
+	private static final String DEFAULT_ENCODING = "utf-8";
+
+	private static Logger logger = LoggerFactory.getLogger(EmailService.class);
+	@Autowired
+	@Qualifier("mailSender")
+	private JavaMailSender mailSender;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+	
+	@Value("${email.host}")
+	private String host;
+	@Value("${email.username}")
+	private String username;
+	@Value("${email.password}")
+	private String password;
+	
+	@Value("${email.from}")
+	private String from;
+	@Value("${email.cc}")
+	private String cc;
+	@Value("${email.to}")
+	private String to;
+
+	
+	@Override
+	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+		// TODO Auto-generated method stub
+		this.emailContextListener = applicationEventPublisher;
+	} 
+
+	//private String word;
+	private ApplicationEventPublisher emailContextListener;
+
+	/*public void setWord(String w) {
+		this.word = w;
+	}*/
+
+	public void say() {
+		//System.out.println("say : " + this.word);
+		// construct a TradeEvent instance and publish it
+		EmailSendEvent emailLogEvent = new EmailSendEvent(new String("emailEvent"));
+		emailLogEvent.setEmailsubject("11");
+		//emailLogEvent.setEmailto("1.@126.com");
+		this.emailContextListener.publishEvent(emailLogEvent);
+	}
+	/**
+	 * 发布邮件通知事件
+	 * @param fromEmail
+	 * @param toEmails
+	 * @param ccEmails
+	 * @param subject
+	 * @param content
+	 * @param attachFileUrl
+	 * @param attachFileUrl2
+	 */
+	public void publishEmailEvent(String fromEmail, String[] toEmails, String[] ccEmails, String subject,
+			String content,String attachFileUrl ,String attachFileUrl2) {
+		//System.out.println("say : " + this.word);
+		// construct a TradeEvent instance and publish it
+		
+		EmailSendEvent emailLogEvent = new EmailSendEvent(new String("emailEvent"));
+		emailLogEvent.setEmailsubject(subject);
+		//emailLogEvent.setEmailfrom(this.from);
+		emailLogEvent.setEmailfrom(fromEmail);
+		emailLogEvent.setEmailto(toEmails);
+		emailLogEvent.setEmailcc(ccEmails);
+		emailLogEvent.setMainbody(content);
+		
+		emailLogEvent.setPdfFilePath(attachFileUrl);
+		String attachFullFileUrl2=attachFileUrl2;
+		if(null!=attachFullFileUrl2&&!"".equals(attachFullFileUrl2)){
+			emailLogEvent.setAttachpath(attachFullFileUrl2);
+		}
+		emailLogEvent.setSmtp(this.host);
+		emailLogEvent.setUsername(this.username);
+		emailLogEvent.setPassword(this.password);
+		this.emailContextListener.publishEvent(emailLogEvent);
+	}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.woai9.dol.service.IEmailService#sendEmail(java.lang.String,
+	 * java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public int sendEmail(String fromEmail, String toEmail, String subject,
+			String content) throws ServiceException {
+		try {
+			MimeMessage msg = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(msg, true,
+					DEFAULT_ENCODING);
+			helper.setTo(toEmail.split(";")); //leo.lian@terrence.com.cn
+			//String tocc[] = cc.split(";");
+			//for (String tomail : tocc) {
+			//	helper.addCc(tomail);
+			//}
+			helper.addCc(to);// leo.lian@terrence.com.cn
+			if (fromEmail == null || "".equals(fromEmail)) {
+				helper.setFrom(this.from);//admin@terrence.com.cn
+			} else {
+				helper.setFrom(fromEmail);//
+			}
+			helper.setSubject(subject);
+			helper.setText(content, true);
+			mailSender.send(msg);
+			
+			logger.info("邮件已发送至 {}", toEmail);
+			return 1;
+		} catch (Exception e) {
+			logger.error("发送邮件失败", e);
+			return -1;
+		}
+	}
+	public int sendEmailComm(String fromEmail, String toEmail, String ccEmail,String subject,
+			String content) throws ServiceException {
+		try {
+			MimeMessage msg = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(msg, true, DEFAULT_ENCODING);
+			
+			if(toEmail == null || "".equals(toEmail)) {
+				helper.setTo(toEmail);
+				String tocc[]=ccEmail.split(";");
+				for(String tomail:tocc)
+				{
+					helper.addCc(tomail);
+				}
+				
+			}else{
+				String toemail[]=toEmail.split(";");
+				helper.setTo(toemail[0]);//把第一个人定位收件人
+				for(String tomail:toemail)//抄送的人
+				{
+					helper.addCc(tomail);
+				}
+			}
+			
+			
+			if(fromEmail == null || "".equals(fromEmail)) {
+				helper.setFrom(fromEmail);
+			} else {
+				helper.setFrom(fromEmail);
+			}
+			
+			helper.setSubject(subject);
+
+			
+			helper.setText(content, true);
+
+			mailSender.send(msg);
+			logger.info("邮件已发送至 {}",toEmail);
+			return 1;
+		} catch (Exception e) {
+			logger.error("发送邮件失败", e);
+			return -1;
+		}
+
+	}
+	/**
+	 * 发送通知邮件
+	 * @param fromEmail
+	 * @param toEmails
+	 * @param ccEmails
+	 * @param subject
+	 * @param content
+	 * @param attachFileUrl
+	 * @return
+	 * @throws ServiceException
+	 */
+	public boolean sendNoticeEmail(String fromEmail, String[] toEmails, String[] ccEmails, String subject,
+			String content,String attachFileUrl ) throws ServiceException {
+		
+		/*MailSenderInfo mailInfo = new MailSenderInfo();
+		mailInfo.setMailServerHost("smtp.163.com");//  发送邮箱的服务器（163的邮箱就为：smtp.163.com） 
+		mailInfo.setMailServerPort("25");
+		mailInfo.setValidate(true);
+		mailInfo.setUserName("abtianliyuan"); //  邮箱账户   
+		mailInfo.setPassword("ohblue123456,.;");//  邮箱密码 
+		mailInfo.setFromAddress(fromEmail); //  "abtianliyuan@163.com"发送人的邮箱地址   
+		mailInfo.setToAddress("tlynewcity@163.com"); //  要发送的邮箱地址   
+		mailInfo.setSubject(subject); //  "关于开会的通知" 邮箱标题
+		//  邮件内容 
+		//  mailInfo.setContent("你好！");  //文本格式的邮件内容    
+		//  html页面格式的邮件内容 
+		StringBuffer sb = new StringBuffer();
+		//String content = "";
+		try {
+			Template template = freemarkerConfiguration.getTemplate("template/examineEmailTemplate.ftl", "utf-8");
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			
+			paramMap.put("workno","333");
+			content = FreeMarkerTemplateUtils.processTemplateIntoString(template, paramMap);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TemplateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		mailInfo.setContent(content);
+		//  这个类主要来发送邮件 
+		SimpleMailSender sms = new SimpleMailSender();
+		// boolean flag = sms.sendTextMail(mailInfo);// 发送文体格式    
+		boolean flag = sms.sendHtmlMail(mailInfo);//  发送html格式    
+		if (flag) {
+			System.out.println("发送成功！");
+		} else {
+			System.out.println("发送失败！");
+		}*/
+		String smtp = "smtp.163.com";
+        String username="abtianliyuan";
+        String password="";
+        String from = "abtianliyuan@163.com";
+        String[] to = {"tlybj2015@163.com","tlyterrence@163.com"};//abtianliyuan@.com
+        //String[] copyto = {"xxx@qq.com"};
+        String[] copyto = {"tlynewcity@163.com","ohjoneterrence@163.com"};
+        //String subject = "关于年会的通知2015";
+        //String content = "关于年会的通知2015";
+        String filename = "D:\\路线-车辆-桌次.xls";
+        EmailManager email = new EmailManager(smtp, username, password);
+        return email.sendMail(from, to, copyto, subject, content, filename);
+	}
+	
+	/**
+	 * 发送通知邮件
+	 * @param fromEmail
+	 * @param toEmails
+	 * @param ccEmails
+	 * @param subject
+	 * @param content
+	 * @param attachFileUrl
+	 * @return
+	 * @throws ServiceException
+	 */
+	public boolean sendEmailNotice(String fromEmail, String[] toEmails, String[] ccEmails, String subject,
+			String content,String attachFileUrl ) throws ServiceException {
+		String smtp = this.host;
+        String username=this.username;
+        String password=this.password;
+        
+        String from = this.from;
+        //String filename = "D:\\路线-车辆-桌次.xls";
+        EmailManager email = new EmailManager(smtp, username, password);
+        return email.sendMail(from, toEmails, ccEmails, subject, content, attachFileUrl);
+	}
+	/**
+	 * 发送通知邮件
+	 * @param fromEmail
+	 * @param toEmails
+	 * @param ccEmails
+	 * @param subject
+	 * @param content
+	 * @param attachFileUrl
+	 * @return
+	 * @throws ServiceException
+	 */
+	public boolean sendEmailNotice(String fromEmail, String[] toEmails, String[] ccEmails, String subject,
+			String content,String attachFileUrl ,String attachFileUrl2) throws ServiceException {
+		String smtp = this.host;
+        String username=this.username;
+        String password=this.password;
+        //String from = this.from;
+        EmailManager email = new EmailManager(smtp, username, password);
+        //return email.sendMail(from, toEmails, ccEmails, subject, content, attachFileUrl,attachFileUrl2);
+        return email.sendMail(fromEmail, toEmails, ccEmails, subject, content, attachFileUrl,attachFileUrl2);
+        
+	}
+
+	
+	
+}

@@ -1,0 +1,121 @@
+package com.terrence.crm.dol.service.impl;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseitemApply;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.PlanTask;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProductmanageTask;
+import com.terrence.crm.dol.bean.StoreroomTask;
+import com.terrence.crm.dol.dao.IBaseitemApplyDao;
+import com.terrence.crm.dol.query.BaseitemApplyQuery;
+import com.terrence.crm.dol.query.PlanTaskQuery;
+import com.terrence.crm.dol.query.ProductmanageTaskQuery;
+import com.terrence.crm.dol.query.StoreroomTaskQuery;
+import com.terrence.crm.dol.service.IBaseitemApplyService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+@Service
+@Transactional
+public class BaseitemApplyService extends BaseService implements IBaseitemApplyService {
+	@Autowired
+	@Qualifier("baseitemApplyDao")
+	private IBaseitemApplyDao baseitemApplyDao;
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Override
+	public BaseitemApply getById(Long id) throws ServiceException {
+		return baseitemApplyDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(BaseitemApply entity) throws ServiceException {
+		Long id =null;
+		if(entity.getId()!=null){
+			id = entity.getId();
+		}
+		baseitemApplyDao.saveOrUpdate(entity);
+		if(id==null){
+			operationLogDao.save(ConfigTerrence.MODEL_ITEMAPPLY, ConfigTerrence.OPT_ADD, "编码为："+entity.getItemcode()+"的物料申请单添加成功");
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_ITEMAPPLY, ConfigTerrence.OPT_EDIT, "编码为："+entity.getItemcode()+"的物料申请单修改成功");
+		}
+	}
+	@Override
+	public Long save(BaseitemApply entity) throws ServiceException {
+		return baseitemApplyDao.save(entity);
+	}
+	@Override
+	public Integer update(BaseitemApply entity) throws ServiceException {
+		return baseitemApplyDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		Integer result = baseitemApplyDao.deleteById(id);
+		operationLogDao.save(ConfigTerrence.MODEL_ITEMAPPLY, ConfigTerrence.OPT_DEL, "主键为："+id+"的物料申请单删除成功");
+		return result;
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = baseitemApplyDao.deleteByMultipleId(delIds);
+		operationLogDao.save(ConfigTerrence.MODEL_ITEMAPPLY, ConfigTerrence.OPT_DEL, "主键为："+delIds+"的物料申请单删除成功");
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<BaseitemApply> findPage(Page<BaseitemApply> page, BaseitemApplyQuery query) throws ServiceException{
+		return baseitemApplyDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<BaseitemApply> findPage(Page<BaseitemApply> page,String statement, BaseitemApplyQuery query) throws ServiceException{
+		return baseitemApplyDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseitemApply> findList(BaseitemApplyQuery query) throws ServiceException{
+		return baseitemApplyDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseitemApply> findList(BaseitemApplyQuery query,Integer pageSize) throws ServiceException{
+		return baseitemApplyDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseitemApply> findList(BaseitemApplyQuery query,String statement,Integer pageSize) throws ServiceException{
+		return baseitemApplyDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseitemApply> findAllList() throws ServiceException{
+		return baseitemApplyDao.findAllList();
+	}
+	@Override
+	public void exeProcess(BaseitemApply entity, ProcessExetask processExetask) {
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);//需要分发节点
+		if(!(Boolean)map.get("flag")){//流程有异常
+			throw new ServiceException((String)map.get("msg"));
+		}else if((Boolean)map.get("rebackTag")){//被驳回
+			entity.setFstatus((Integer)map.get("step"));
+			entity.setFstatusDesc((String)map.get("stepName"));
+		}else if((Boolean)map.get("flag")){//是正常的往下执行的流程
+			Integer step = (Integer)map.get("step");//获取下一步的序号
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");//获取下一步的名称和执行人
+			entity.setFstatus(step);
+			entity.setFstatusDesc(desc);
+			entity.setExecutors((String)map.get("handlers"));
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		baseitemApplyDao.update(entity);
+	}
+}

@@ -1,0 +1,32 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgreementContent;
+import com.terrence.crm.dol.dao.IAgreementContentDao;
+@Repository
+public class AgreementContentDao extends BaseIbatisDao<AgreementContent,java.lang.Long> implements IAgreementContentDao{
+	public String getIbatisSqlMapNamespace() {
+		return "AgreementContent"; 
+	}
+	public void saveOrUpdate(AgreementContent entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public AgreementContent getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AgreementContent)this.getSqlMapClientTemplate().queryForObject("AgreementContent.getByProperty", map);
+	}
+	@Override
+	public void deleteByAgreeId(Integer agreeId, String sql) throws ServiceException {
+		Map map=new HashMap();
+		map.put("agreeId", agreeId);
+		this.getSqlMapClientTemplate().delete(sql, map);
+	}
+}

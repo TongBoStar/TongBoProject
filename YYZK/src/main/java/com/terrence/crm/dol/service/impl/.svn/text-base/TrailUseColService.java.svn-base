@@ -1,0 +1,316 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.aspectj.weaver.patterns.IfPointcut.IfTruePointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sun.org.apache.xml.internal.serializer.ElemDesc;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailStepExpl;
+import com.terrence.crm.dol.bean.TrailUseCol;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.bean.TrialExpress;
+import com.terrence.crm.dol.query.TrailStepExplQuery;
+import com.terrence.crm.dol.query.TrailUseColQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.query.TrialExpressQuery;
+import com.terrence.crm.dol.dao.ITrailStepExplDao;
+import com.terrence.crm.dol.dao.ITrailUseColDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.dao.ITrialExpressDao;
+import com.terrence.crm.dol.service.ITrailUseColService;
+import com.thoughtworks.xstream.alias.ClassMapper.Null;
+
+@Service
+@Transactional
+public class TrailUseColService extends BaseService implements ITrailUseColService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailUseColService.class);
+	@Autowired
+	@Qualifier("trailUseColDao")
+	private ITrailUseColDao trailUseColDao;
+	
+	
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	
+	@Autowired
+	@Qualifier("trialExpressDao")
+	private ITrialExpressDao trialExpressDao;
+	
+	@Autowired
+	@Qualifier("trailStepExplDao")
+	private ITrailStepExplDao trailStepExplDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailUseCol";
+	}
+	@Transactional(readOnly=true)
+	public TrailUseCol getById(java.lang.Long id) throws ServiceException
+	{
+		return trailUseColDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailUseCol entity) throws ServiceException
+	{
+		trailUseColDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailUseCol entity) throws ServiceException
+	{
+		Long adId = trailUseColDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailUseCol entity) throws ServiceException
+	{
+		Integer returnValue =  trailUseColDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailUseColDao.deleteById(id);		
+		return returnValue;
+	}
+	/**
+	 * 删除用户已选字段信息和已用字段
+	 */
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		for (Long id : idList) {
+			TrailUseColQuery trailUseCol = new TrailUseColQuery();
+			trailUseCol.setDid(id);
+			List<TrailUseCol> taCols= trailUseColDao.findList(trailUseCol);
+			if (taCols!=null&&!taCols.isEmpty()) {
+				trailUseColDao.deleteTrailUseCol(trailUseCol);
+			}
+			TrailStepExplQuery trailStepExpl = new TrailStepExplQuery();
+			trailStepExpl.setDid(id);
+			List<TrailStepExpl> trailStepExpls = trailStepExplDao.findList(trailStepExpl);
+			if(trailStepExpls!=null && !trailStepExpls.isEmpty()){
+				trailStepExplDao.deleteDataByDid(trailStepExpl);
+			}
+			TrialExpressQuery trialExpressQuery = new TrialExpressQuery();
+			trialExpressQuery.setDid(id);
+			List<TrialExpress> trialExpresses = trialExpressDao.findList(trialExpressQuery);
+			if(trialExpresses!=null && !trialExpresses.isEmpty()){
+				trialExpressDao.deleteDataByDid(trialExpressQuery);	
+			}
+		}
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trialDeviceDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailUseColQuery query = new TrailUseColQuery();
+		try {
+			return trailUseColDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailUseCol> findPage(Page<TrailUseCol> page, TrailUseColQuery query) throws ServiceException
+	{
+		return trailUseColDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailUseCol> findPage(Page<TrailUseCol> page,String statement, TrailUseColQuery query) throws ServiceException
+	{
+		return trailUseColDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailUseCol> findList(TrailUseColQuery query) throws ServiceException
+	{
+		return trailUseColDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailUseCol> findList(TrailUseColQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailUseColDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailUseCol> findList(TrailUseColQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailUseColDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailUseCol> findAllList() throws ServiceException
+	{
+		return trailUseColDao.findAllList();
+	}
+	/**
+	 * 取出没有被选用的列字段
+	 */
+	public List<String> findUnColumn(TrailUseColQuery query,String tableName) throws ServiceException {
+		//取出所有的列
+		List<String> allCloumns = this.allColumn(tableName);
+		if(query==null){
+			return allCloumns;
+		}
+		//取出表中已有的列
+		List<String> existColumns = this.existColumn(query);
+		if (existColumns==null ||existColumns.isEmpty()) {
+			return allCloumns;
+		}else {
+			for (String string : existColumns) {
+				if (allCloumns.contains(string)) {
+					allCloumns.remove(string);
+				}
+			}
+			return allCloumns;
+		}
+	}
+	/**
+	 *<p>取出表中所有的列<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-26下午5:00:45
+	 * @param tableName
+	 * @return
+	 */
+	public List<String> allColumn(String tableName){
+		List<String> allCloumns = null;
+		 allCloumns = trailUseColDao.findColumn("select * from "+tableName);
+		if(tableName.equals("t_train_record")){
+			allCloumns.remove("checktimeid");
+			allCloumns.remove("seqno");
+			allCloumns.remove("itemcode");
+			allCloumns.remove("createdate");
+			allCloumns.remove("recid");
+		}else if(tableName.equals("t_trail_tab_record")){
+			allCloumns.remove("checktimeid");
+			allCloumns.remove("createdate");
+		}
+		return allCloumns;
+	}
+	/**
+	 *<p>取出已经在表中添加的列<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-6-24上午9:27:58
+	 * @return
+	 */
+	private List<String> existColumn(TrailUseColQuery query){
+		
+		List<TrailUseCol> tList = trailUseColDao.findList(query);
+		if(!tList.isEmpty()){
+			List<String> columnList = new ArrayList<String>();
+			for (TrailUseCol trailUseCol : tList) {
+				columnList.add(trailUseCol.getFcolumn());
+			}
+			return columnList;
+		}
+		return null;
+	}
+	/**
+	 * 保存检测全局输出变量
+	 */
+	public void saveGlobarOut(TrailUseCol entity) throws ServiceException {
+		//在保存或者更新时要查询一下数据库里是够已经存在改字段，若存在就不能再保存或者修改
+		TrailUseColQuery trailUseColQuery = new TrailUseColQuery();
+		trailUseColQuery.setFcolumn(entity.getFcolumn());
+		trailUseColQuery.setTrialid(entity.getTrialid());
+		trailUseColQuery.setFename(entity.getFename());
+		List<TrailUseCol> trailUseCols = findList(trailUseColQuery);
+		
+		
+			TrialDevice trialDevice = new TrialDevice();
+			if(entity.getDid()!=null){//说明是编辑
+				
+				 Integer oldtype =trialDeviceDao.getById(entity.getDid()).getDevicetype();
+					//首先保存TrailDivice表
+					if(oldtype==2||oldtype==7){
+						trialDevice.setSwitch1(0.0);
+					}else if(oldtype==6){
+						TrialExpressQuery	trialExpressQuery = new TrialExpressQuery();
+						trailUseColQuery.setDid(entity.getDid());
+						trialExpressDao.deleteDataByDid(trialExpressQuery);
+					}else {
+						TrailUseCol trailUseCol = null;
+						if(entity.getColid()!=null){
+							trailUseCol = getById(entity.getColid());
+						}else{
+							TrailUseColQuery trailUseColQuery2 = new TrailUseColQuery();
+							trailUseColQuery2.setDevicetype(entity.getDevicetype());
+							trailUseColQuery2.setTrialid(entity.getTrialid());
+							trailUseColQuery2.setFcolumn(entity.getFcolumn());
+							trailUseCol = trailUseColDao.getByEntity("TrailUseCol.Entity", trailUseColQuery2);
+						}
+						if(trailUseCol==null){
+							trailUseCol= new TrailUseCol();
+						}
+						trailUseCol.setDid(entity.getDid());
+						trailUseCol.setFvarname(entity.getDivicename());
+						trailUseCol.setFrealvar(entity.getFename());
+						trailUseCol.setDevicetype(entity.getDevicetype());
+						trailUseCol.setTrailname(entity.getTrailname());
+						trailUseCol.setTrialid(entity.getTrialid());
+						
+						trialDevice.setDid(entity.getDid());
+						trialDevice.setDevicetype(entity.getDevicetype());
+						trialDevice.setDivicename(entity.getDivicename());
+						trialDevice.setTrialid(entity.getTrialid());
+						if(trailUseCols.isEmpty()&&trailUseCols.size()==0){
+							trailUseCol.setFcolumn(entity.getFcolumn());
+							trailUseCol.setFrealvar(entity.getFename());
+							trialDevice.setFename(entity.getFename());
+						}
+						trialDeviceDao.saveOrUpdate(trialDevice);
+						trailUseColDao.saveOrUpdate(trailUseCol);
+					}
+			}else {
+				if(!trailUseCols.isEmpty()&&trailUseCols.size()!=0){
+					throw new ServiceException("此字段或者此变量已经存在数据库已经在数据库中存在", "-1");
+				}
+				trialDevice.setDid(entity.getDid());
+				trialDevice.setDevicetype(entity.getDevicetype());
+				trialDevice.setDivicename(entity.getDivicename());
+				trialDevice.setFename(entity.getFename());
+				trialDevice.setTrialid(entity.getTrialid());
+				trialDeviceDao.saveOrUpdate(trialDevice);
+				entity.setDid(trialDevice.getDid());
+				entity.setFrealvar(entity.getFename());
+				entity.setFvarname(entity.getDivicename());
+				trailUseColDao.saveOrUpdate(entity);
+			}//保存
+	}
+	@Override
+	public List<TrailUseCol> findListDevice(TrailUseColQuery trailUseColQuery)
+			throws ServiceException {
+		
+		
+		return trailUseColDao.findList("TrailUseCol.findlist.tagname", trailUseColQuery);
+		
+		
+	}
+}

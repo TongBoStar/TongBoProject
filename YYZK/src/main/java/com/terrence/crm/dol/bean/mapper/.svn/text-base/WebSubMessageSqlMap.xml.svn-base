@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WebSubMessage">
+
+       
+	<resultMap id="RM.WebSubMessage" class="com.terrence.crm.dol.bean.WebSubMessage">
+        <result property="fbrNo" column="FBrNo"/>
+        <result property="finterId" column="FInterID"/>
+        <result property="fid" column="FID"/>
+        <result property="fparentId" column="FParentID"/>
+        <result property="fname" column="FName"/>
+        <result property="ftypeId" column="FTypeID"/>
+        <result property="fdetail" column="FDetail"/>
+        <result property="fdeleted" column="FDeleted"/>
+        <result property="fmodifyTime" column="FModifyTime"/>
+        <result property="fsystemType" column="FSystemType"/>
+        <result property="fspec" column="FSpec"/>
+        <result property="uuid" column="UUID"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="WebSubMessage.columns">
+	    <![CDATA[
+        	t_web_SubMessage.FBrNo ,
+        	t_web_SubMessage.FInterID ,
+        	t_web_SubMessage.FID ,
+        	t_web_SubMessage.FParentID ,
+        	t_web_SubMessage.FName ,
+        	t_web_SubMessage.FTypeID ,
+        	t_web_SubMessage.FDetail ,
+        	t_web_SubMessage.FDeleted ,
+        	t_web_SubMessage.FModifyTime ,
+        	t_web_SubMessage.FSystemType ,
+        	t_web_SubMessage.FSpec ,
+        	t_web_SubMessage.UUID 
+	    ]]>
+	</sql>
+	
+   <insert id="WebSubMessage.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_web_SubMessage (
+        	FBrNo ,
+        	FID ,
+        	FParentID ,
+        	FName ,
+        	FTypeID ,
+        	FDetail ,
+        	FDeleted ,
+        	FModifyTime ,
+        	FSystemType ,
+        	FSpec ,
+        	UUID 
+        ) VALUES (
+        	#fbrNo# ,
+        	#fid# ,
+        	#fparentId# ,
+        	#fname# ,
+        	#ftypeId# ,
+        	#fdetail# ,
+        	#fdeleted# ,
+        	#fmodifyTime# ,
+        	#fsystemType# ,
+        	#fspec# ,
+        	#uuid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="finterId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="WebSubMessage.update" parameterClass="com.terrence.crm.dol.bean.WebSubMessage">         
+        UPDATE t_web_SubMessage 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbrNo">
+	        	FBrNo = #fbrNo# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fid">
+	        	FID = #fid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fparentId">
+	        	FParentID = #fparentId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	FName = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftypeId">
+	        	FTypeID = #ftypeId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdetail">
+	        	FDetail = #fdetail# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdeleted">
+	        	FDeleted = #fdeleted# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmodifyTime">
+	        	FModifyTime = #fmodifyTime# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsystemType">
+	        	FSystemType = #fsystemType# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fspec">
+	        	FSpec = #fspec# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="uuid">
+	        	UUID = #uuid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        FInterID = #finterId# 
+    </update>
+    
+	<delete id="WebSubMessage.delete" parameterClass="java.lang.Integer">
+    <![CDATA[
+        delete from t_web_SubMessage where
+       FInterID = #finterId# 
+    ]]>
+    </delete>
+    
+    <delete id="WebSubMessage.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_web_SubMessage 
+        WHERE
+       FInterID in ($finterId$) 
+    ]]>
+    </delete>
+    
+    <select id="WebSubMessage.getById" resultMap="RM.WebSubMessage">
+	    select <include refid="WebSubMessage.columns"/>
+	    
+	        from t_web_SubMessage 
+	        where 
+		        FInterID = #finterId# 
+	    
+    </select>
+    
+	<select id="WebSubMessage.getByProperty" resultMap="RM.WebSubMessage">
+		select <include refid="WebSubMessage.columns"/> from t_web_SubMessage where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="WebSubMessage.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fbrNo">
+	             t_web_SubMessage.FBrNo = #fbrNo#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finterId">
+	             t_web_SubMessage.FInterID = #finterId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fid">
+	             t_web_SubMessage.FID = #fid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fparentId">
+	             t_web_SubMessage.FParentID = #fparentId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_web_SubMessage.FName = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftypeId">
+	             t_web_SubMessage.FTypeID = #ftypeId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdetail">
+	             t_web_SubMessage.FDetail = #fdetail#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_web_SubMessage.FDeleted = #fdeleted#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fmodifyTime">
+	             t_web_SubMessage.FModifyTime = #fmodifyTime#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsystemType">
+	             t_web_SubMessage.FSystemType = #fsystemType#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fspec">
+	             t_web_SubMessage.FSpec = #fspec#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="uuid">
+	             t_web_SubMessage.UUID = #uuid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="WebSubMessage.findPage.and">
+			<isNotEmpty prepend="AND" property="fbrNo">
+	             t_web_SubMessage.FBrNo = #fbrNo#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finterId">
+	             t_web_SubMessage.FInterID = #finterId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fid">
+	             t_web_SubMessage.FID = #fid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fparentId">
+	             t_web_SubMessage.FParentID = #fparentId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_web_SubMessage.FName = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftypeId">
+	             t_web_SubMessage.FTypeID = #ftypeId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdetail">
+	             t_web_SubMessage.FDetail = #fdetail#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_web_SubMessage.FDeleted = #fdeleted#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmodifyTime">
+	             t_web_SubMessage.FModifyTime = #fmodifyTime#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsystemType">
+	             t_web_SubMessage.FSystemType = #fsystemType#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fspec">
+	             t_web_SubMessage.FSpec = #fspec#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="uuid">
+	             t_web_SubMessage.UUID = #uuid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="WebSubMessage.Entity" resultMap="RM.WebSubMessage">
+    	SELECT 	<include refid="WebSubMessage.columns"/> FROM t_web_SubMessage <include refid="WebSubMessage.findPage.where"/>
+    </select>
+    
+    <select id="WebSubMessage.findList" resultMap="RM.WebSubMessage">
+    	SELECT 
+    		<include refid="WebSubMessage.columns"/> 
+    	FROM 
+    		t_web_SubMessage
+		<include refid="WebSubMessage.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="WebSubMessage.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_web_SubMessage
+    ]]>
+		<include refid="WebSubMessage.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.WebSubMessage.findPage" resultMap="RM.WebSubMessage">
+    	select <include refid="WebSubMessage.columns"/>	    
+	        from t_web_SubMessage 	   
+		<include refid="WebSubMessage.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="WebSubMessage.findPage" resultMap="RM.WebSubMessage">
+    	select <include refid="WebSubMessage.columns"/>	    
+	        from t_web_SubMessage where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       FInterID 
+	   not in(select $notTop$ 
+       FInterID 
+	   from t_web_SubMessage <include refid="WebSubMessage.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="WebSubMessage.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

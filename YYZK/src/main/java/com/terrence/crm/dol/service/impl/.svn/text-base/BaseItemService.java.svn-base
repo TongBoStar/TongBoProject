@@ -1,0 +1,2307 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.Iterator;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.DVConstraint;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFDataValidation;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.CellRangeAddressList;
+import org.apache.poi.hssf.util.Region;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.ItemDetailK3;
+import com.terrence.crm.dol.bean.WebIdentity;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.bean.IcitemQuality;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.ItemDetailK3;
+import com.terrence.crm.dol.bean.ItemPostion;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.bean.Measureunit;
+import com.terrence.crm.dol.bean.ProcessCycle;
+import com.terrence.crm.dol.bean.Stock;
+import com.terrence.crm.dol.bean.WebAccount;
+import com.terrence.crm.dol.bean.WebIcitemPlan;
+import com.terrence.crm.dol.bean.WebIdentity;
+import com.terrence.crm.dol.bean.WebItemMaterial;
+import com.terrence.crm.dol.bean.WebSubMessage;
+import com.terrence.crm.dol.bean.WebWorkType;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IProcessTaskBjDao;
+import com.terrence.crm.dol.dao.IWebIdentityDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IMeasureunitDao;
+import com.terrence.crm.dol.dao.IProcessCycleDao;
+import com.terrence.crm.dol.dao.IWebIdentityDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.WebAccountQuery;
+import com.terrence.crm.dol.query.WebIcitemPlanQuery;
+import com.terrence.crm.dol.query.WebSubMessageQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.service.IItemBasicService;
+import com.terrence.crm.dol.service.IStockService;
+import com.terrence.crm.dol.service.IWebAccountService;
+import com.terrence.crm.dol.service.IWebSubMessageService;
+import com.terrence.crm.dol.service.IWebWorkTypeService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.k3.dol.service.IItemOptService;
+import com.terrence.k3.dol.service.impl.ItemOptService;
+import com.terrence.k3.dol.util.TREReturn;
+import com.terrence.k3.dol.vo.ItemVo;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.query.ProcessTaskQuery;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.contasnt.ItemProcessStatus;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.crm.dol.dao.IItemVerDao;
+import com.terrence.crm.dol.bean.ProcessTaskBj;
+import com.terrence.crm.dol.query.ProcessTaskBjQuery;
+
+ 
+
+@Service
+@Transactional
+public class BaseItemService extends BaseService implements IBaseItemService {
+	protected static Logger logger = LoggerFactory.getLogger(BaseItemService.class);
+	private String basePath = ""; 
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("stockService")
+	private IStockService stockService;
+	@Autowired
+	@Qualifier("webSubMessageService")
+	private IWebSubMessageService webSubMessageService;
+	@Autowired
+	@Qualifier("itemBasicService")
+	private IItemBasicService itemBasicService;
+	@Autowired
+	@Qualifier("webAccountService")
+	private IWebAccountService webAccountService;
+	@Autowired
+	@Qualifier("webWorkTypeService")
+	private IWebWorkTypeService webWorkTypeService;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("itemVerDao")
+	private IItemVerDao itemVerDao;
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	/*@Autowired
+	@Qualifier("webIdentityDao")
+	private IWebIdentityDao webIdentityDao;*/
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("processCycleDao")
+	private IProcessCycleDao processCycleDao;
+	@Autowired
+	@Qualifier("processTaskBjDao")
+	private IProcessTaskBjDao processTaskBjDao;
+	@Autowired
+	@Qualifier("measureunitDao")
+	private IMeasureunitDao measureunitDao;
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "BaseItem";
+	}
+	@Autowired
+	@Qualifier("webIdentityDao")
+	private IWebIdentityDao webIdentityDao;
+	
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void SyncBaseItem() {
+		/*//先查询出待从K3中取出的数量
+		Long syncBeaseItemNum=baseItemDao.findSyncBeaseItemNum();
+		for (int i = 0; i < syncBeaseItemNum; i++) {
+			if(i%5000==0){
+				try {
+					Thread.sleep(10000);
+					System.out.println("每5000休眠10秒");
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			baseItemDao.syncBeaseItem();
+			//baseItemDao.saveItemFromERPDateToWeb();
+		}*/
+		baseItemDao.syncBeaseItem();
+		baseItemDao.syncBeaseItem2();
+		
+		
+	}
+	public void syncK3ItemDetail() throws ServiceException {
+		//先查询 从K3中取出的需要同步的
+		List<ItemDetailK3> itemDetailK3List= baseItemDao.findAllK3ItemDetail();
+		for (Iterator iterator = itemDetailK3List.iterator(); iterator
+				.hasNext();) {
+			ItemDetailK3 itemDetailK3 = (ItemDetailK3) iterator.next();
+			BaseItem baseItem=new BaseItem();
+			
+			baseItem.setDeleted(itemDetailK3.getFdeleted());
+			baseItem.setFlevel(itemDetailK3.getFlevel()+"");
+			baseItem.setItemcode(itemDetailK3.getFnumber());
+			baseItem.setItemname(itemDetailK3.getFname());
+			baseItem.setDetail(itemDetailK3.getFdetail());
+			baseItem.setShortnumber(itemDetailK3.getFshortNumber());
+			
+			int lastIndexPosition=itemDetailK3.getFnumber().lastIndexOf(".") ;
+			if(-1==lastIndexPosition){
+				baseItem.setItemparentcode("ROOT");
+			}else{
+				
+				baseItem.setItemparentcode(itemDetailK3.getFnumber().substring(0, itemDetailK3.getFnumber().lastIndexOf(".")));
+			}
+			baseItem.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),
+			"yyyy-MM-dd HH:mm:ss"));
+			//
+			/*WebIdentity identity = webIdentityDao.getByPropertyt("tname",
+			"t_base_item");
+			baseItem.setBaseitemid(identity.getTnextValue());*/
+			baseItem.setBaseitemid(Long.valueOf(itemDetailK3.getFitemId()));
+			
+			baseItemDao.saveItemFromk3SyncDetail(baseItem);
+		}
+	}
+	
+	
+//	@Autowired
+//	@Qualifier("itemPostionDao")
+//	private IItemPostionDao itemPostionDao;
+//	
+	@Transactional(readOnly=true)
+	public BaseItem getById(java.lang.Long id) throws ServiceException
+	{
+		return baseItemDao.getById(id);
+	}
+	public void saveOrUpdateInfo(BaseItem entity) throws ServiceException
+	{
+		if(null==entity.getBaseitemid()){
+			WebIdentity identity = webIdentityDao.getByPropertyt("tname",
+			"t_base_item");
+			entity.setBaseitemid(identity.getTnextValue());
+			entity.setOptType(1);
+		}else{
+			//Baseitemid 存在
+			entity.setOptType(2);
+		}
+		baseItemDao.saveOrUpdate(entity);//保存或更新排产
+		 //同时保存或更新K3
+		 IItemOptService service = new ItemOptService();
+		 if(2==entity.getOptType()){//更新操作
+			 ItemVo itemVo=new ItemVo();
+			 itemVo.setName(entity.getItemname());
+			 itemVo.setOldnumber(entity.getFoldnumber());//保存旧编码
+			 TREReturn trereturn = service.updateBaseItem(entity.getItemcode(),itemVo);//操作排产
+			 if (trereturn.getnCode() != 1) {
+					throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+			 } 
+		 }
+		 if(1==entity.getOptType()){//保存操作
+			 ItemVo itemVo=new ItemVo();
+			 itemVo.setName(entity.getItemname());
+			 itemVo.setNumber(entity.getItemcode());
+			 itemVo.setParentNumber(entity.getItemparentcode());
+			 
+			 itemVo.setShortNumber(entity.getShortnumber());
+			 TREReturn trereturn = service.saveBaseItem(entity.getItemcode(),itemVo);//操作排产
+			 if (trereturn.getnCode() != 1) {
+					throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+			 } 
+		 }
+		 
+	}
+	/**
+	 * 工艺审核通过，添加班组任务
+	 */
+	public void saveOrUpdate(BaseItem entity) throws ServiceException
+	{
+		//entity.setAuditor(SpringSecurityUtils.getCurrentUserId());//审核人id
+				//baseItemDao.saveOrUpdate(entity);
+				ItemVer itemVer=new ItemVer(); 
+				itemVer.setFverid(entity.getItemVer().getFverid());
+				itemVer.setWfstatus(entity.getWfstatus());
+				itemVer.setAuditor(SpringSecurityUtils.getCurrentUserId());//审核人id
+				itemVerDao.update(itemVer);
+				
+				
+				if(entity.getWfstatus().intValue()==ItemProcessStatus.PASS.getIndex())
+				{
+					BaseItem baseitem=baseItemDao.getById(entity.getBaseitemid());
+//					IcmoQuery icmoQuery=new IcmoQuery();
+//					icmoQuery.setItemcode(baseitem.getItemcode());
+//					List<Icmo> list=icmoDao.findList("Icmo.ItemProcess", icmoQuery);
+
+			/*	==旧版
+			 * 	ItemProcessQuery ipQuery=new ItemProcessQuery();
+					List<ItemProcess> listitemprocess=new ArrayList<ItemProcess>();
+					ipQuery.setItemcode(baseitem.getItemcode());
+					ipQuery.setSortColumns("itemprocessid asc");
+					listitemprocess=itemProcessDao.findList(ipQuery);
+				*/
+					ItemProcedureQuery itemPQuery=new ItemProcedureQuery();
+					itemPQuery.setItemid(entity.getBaseitemid());
+					itemPQuery.setFverid(entity.getItemVer().getFverid());
+					List<ItemProcedure> itemProcedurelist=new ArrayList<ItemProcedure>(); 
+					itemProcedurelist= itemProcedureDao.findList(itemPQuery);
+					
+					int lengtht=itemProcedurelist.size();
+					Long[] itpids=new Long[lengtht];
+					for(int i=0;i<lengtht;i++){
+						itpids[i]=itemProcedurelist.get(i).getItemprocedureid();
+					}
+					
+					String queryIds = StringUtils.join(itpids, ",");
+					if(null==queryIds||queryIds==""){
+						return ;
+					}
+					ItemProcessQuery ipQuery=new ItemProcessQuery();
+					List<ItemProcess> listitemprocess=new ArrayList<ItemProcess>();
+					ipQuery.setItemcode(queryIds);
+					listitemprocess	=itemProcessDao.findList("ItemProcess.findListByItemProcedureid", ipQuery);
+					
+					DispatchWork dwork=null;
+					EmployeeTask etask=null;
+					Check check=null;
+					CheckRecord crecord=null;
+					for(ItemProcess itemprocess:listitemprocess)
+					{
+						dwork=new DispatchWork();
+						dwork.setItemprocessid(itemprocess.getItemprocessid());
+						dispatchWorkDao.update("DispatchWork.update.ForItemProcess",dwork);/**更新班组任务中价格**/
+						/**更新个人任务表价格**/
+						etask=new EmployeeTask();
+						etask.setYearMonth(DateUtils.GetFormatDate("yyyyMM"));
+						etask.setItemprocessid(itemprocess.getItemprocessid());
+						employeeTaskDao.update("EmpoyeeTask.update.foritemprocess", etask);
+										
+						/**更新质检任务表价格**/
+						check=new Check();
+						check.setYearMonth(DateUtils.GetFormatDate("yyyyMM"));
+						check.setItemprocessid(itemprocess.getItemprocessid());
+						checkDao.update("Check.update.foritemprocess", check);
+						/**更新质检记录表价格**/
+						crecord=new CheckRecord();
+						crecord.setItemprocessid(itemprocess.getItemprocessid());
+						crecord.setMonthYear(DateUtils.GetFormatDate("yyyyMM"));
+						checkRecordDao.update("CheckRecord.update.foritemprocess", crecord);
+					}
+					/*for(Icmo icmo:list)
+					{
+						ipQuery.setItemcode(icmo.getItemcode());
+						ipQuery.setSortColumns("itemprocessid asc");
+						listitemprocess=itemProcessDao.findList(ipQuery);
+						Long preorder=0l;
+						for(ItemProcess itemprocess:listitemprocess)
+						{
+							DispatchWork dw=new DispatchWork();
+							dw.setItemcode(itemprocess.getItemcode());
+							dw.setItemname(itemprocess.getItemname());
+							dw.setItemprocessid(itemprocess.getItemprocessid());
+							dw.setWorkid(icmo.getIcmoid());
+							dw.setTeamid(itemprocess.getTeamid());
+							dw.setTeamname(itemprocess.getTeamname());
+							dw.setProcessnum(icmo.getFqty());
+							dw.setStatus(0);
+							dw.setAcceptednum(0);
+							dw.setProcessid(itemprocess.getProcessid());
+							dw.setProcessname(itemprocess.getProcessname());
+							dw.setCreatetime(icmo.getCreatedate());
+							dw.setReadymoney(itemprocess.getReservefund());
+							dw.setReadytime(itemprocess.getPreparemins());
+							dw.setPreorder(preorder);
+							dw.setProcesstime(itemprocess.getProcessmins());
+							dw.setPiecesalary(itemprocess.getWage());
+							preorder=dispatchWorkDao.createDispatchWork(dw);
+						}
+					}*/
+				}
+	}
+
+	public int saveIte(BaseItem entity,BaseItemQuery baseItemQuery) throws ServiceException{
+		
+		List<BaseItem> baseItemList=new ArrayList<BaseItem>();
+		int resultInfo=0;
+		if(null!=entity.getBaseitemid()){
+			//System.out.println(entity.getBaseitemid());
+			int k=0;
+			baseItemList = baseItemDao.findList(baseItemQuery);
+			for(BaseItem bitem:baseItemList){
+				if(bitem.getItemcode().equals(entity.getItemcode())&&entity.getBaseitemid().intValue()!=bitem.getBaseitemid().intValue()){
+					k=-1;
+				}
+			}
+			if(k==0){
+				//entity.setFormatno("不详");
+				baseItemDao.update(entity);
+			}else{
+				resultInfo =-1;
+			}
+			
+		}else{
+			int f=0;
+			baseItemList = baseItemDao.findList(baseItemQuery);
+			if(baseItemList.size()!=0){
+				for(BaseItem bitem:baseItemList){
+					if(bitem.getItemcode().equals(entity.getItemcode())){
+						f=-1;
+					}
+				}
+			}
+			if(baseItemList.size()==0){
+				entity.setCreatedate(new Date());
+				entity.setWfstatus(0);
+				//entity.setFormatno("不详");
+				entity.setFitemid(0L);
+				baseItemDao.save(entity);
+			}else if(f==0){
+				entity.setCreatedate(new Date());
+				entity.setWfstatus(0);
+				//entity.setFormatno("不详");
+				entity.setFitemid(0L);
+				baseItemDao.save(entity);
+			}else{
+				resultInfo =-1;
+			}
+			
+		}
+		return resultInfo;
+		
+	}
+	
+	public java.lang.Long save(BaseItem entity) throws ServiceException
+	{
+		Long adId = baseItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(BaseItem entity) throws ServiceException
+	{
+		Integer returnValue =  baseItemDao.update(entity);
+		
+		return returnValue;
+	}
+	@Override
+	public Integer updatefinspectionlevel(BaseItem entity) throws ServiceException
+	{
+		Integer returnValue=null;
+		entity.setIds(entity.getBaseitemid()+"");
+		
+		//修改批次号和序列号时的操作--
+		//System.out.println("=========批次管理："+entity.getIsbatch()+"=========序列号管理："+entity.getFissnmanager());
+		BaseItemQuery bquery=new BaseItemQuery();
+		bquery.setBaseitemid(entity.getBaseitemid());
+		BaseItem checkitem = baseItemDao.getByEntity("BaseItem.getIsbatch.Issn", bquery);
+		
+		InventoryBatchQuery inventoryquery=new InventoryBatchQuery();
+		inventoryquery.setItemcode(checkitem.getItemcode());
+		InventoryBatch inventory=null;
+		 inventory = inventoryBatchDao.getByEntity("InventoryBatch.getfqty.ByItemcode", inventoryquery);
+		//fqty--dbno
+		
+		if(checkitem.getIsbatch().intValue()!=entity.getIsbatch().intValue()){//批次管理状态修改
+			//System.out.println("======="+checkitem.getIsbatch()+"========="+entity.getIsbatch());
+			if(inventory!=null&&inventory.getFqty()!=0){
+				throw new ServiceException("操作失败！不可修改 批次管理 属性！(此物料库存量不为0，物料只有在库存量为0时才可修改批次管理状态！)");
+			}
+		}
+		if(checkitem.getFissnmanager().intValue()!=entity.getFissnmanager().intValue()){//序列号管理状态修改
+			if(inventory!=null&&inventory.getFqty()!=0){
+				throw new ServiceException("操作失败！不可修改 序列号管理 属性！(此物料库存量不为0，物料只有在库存量为0时才可修改序列号管理状态！)");
+			}
+		}
+		
+		//--修改批次号和序列号时的操作--END------------------------------------
+		Long count = baseItemDao.getFinspctionlevelCount("BaseItem.count.finspectionlevel",entity);
+		if(count<1){
+			 returnValue =  baseItemDao.update(entity);
+		}else {
+			baseItemDao.update("BaseItem.update.finspectionlevel", entity);
+			 returnValue =  baseItemDao.update(entity);
+		}
+		return returnValue;
+	}
+	public void updatewfstauts(BaseItem entity) throws ServiceException
+	{ 
+		BaseItem bitem=baseItemDao.getById(entity.getBaseitemid());
+		 ItemVer itemVer = itemVerDao.getById(entity.getItemVer().getFverid());
+		 itemVer.setWfstatus(entity.getWfstatus());
+		 itemVerDao.update(itemVer);
+		
+	//	baseItemDao.update(entity);
+		ProcessTaskBj pt=null;
+		ProcessTaskBjQuery query=new ProcessTaskBjQuery();
+		query.setItemcode(baseItemDao.getById(entity.getBaseitemid()).getItemcode());
+		query.setFverid(entity.getItemVer().getFverid());
+		
+		
+		List<ProcessTaskBj> list=processTaskBjDao.findList(query, 1);
+		if(list.size()>0)
+		{
+			pt=list.get(0);
+		}
+		if(null==pt){
+			pt=new ProcessTaskBj();
+			Date cdate=new Date();
+		   	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  
+			pt.setItemcode(query.getItemcode());
+			pt.setAmount(0D);
+			pt.setExplain(" ");
+			
+			try {
+				pt.setPlanenddate(sdf.parse(DateUtils.DateAdd(sdf.format(cdate), 7, 2)));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			pt.setOri(ProcessTaskBj.FROM_PROCESS);
+			pt.setIcmoid(0L);
+			
+		}
+			pt.setCreatedate(DateUtils.GetDateTime());
+			pt.setWaitnote(entity.getWaitnote());
+			if(itemVer.getFinishstatus().intValue()==1){//全部完成
+				pt.setTasktype(ProcessTaskBj.CHECKTYPE_FINISH);	
+			}else{
+				pt.setTasktype(ProcessTaskBj.CHECKTYPE_GENERAL);
+			}
+			pt.setFverid(itemVer.getFverid());
+			pt.setFversion(itemVer.getFversion());
+			processTaskBjDao.saveOrUpdate(pt);
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = baseItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = baseItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BaseItemQuery query = new BaseItemQuery();
+		try {
+			return baseItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<BaseItem> findPage(Page<BaseItem> page, BaseItemQuery query) throws ServiceException
+	{
+		
+		return baseItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseItem> findList(BaseItemQuery query) throws ServiceException
+	{
+		return baseItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseItem> findItemList(BaseItemQuery query) throws ServiceException
+	{
+		return baseItemDao.findItemList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseItem> findListv(BaseItemQuery query) throws ServiceException
+	{
+		return baseItemDao.findListv(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BaseItem> findAllList() throws ServiceException
+	{
+		return baseItemDao.findAllList();
+	}
+	@Override
+	public Page<BaseItem> findPage(Page<BaseItem> page,String statement, BaseItemQuery query)
+			throws ServiceException {
+		return baseItemDao.findPage(page,statement, query);
+	}
+	@Override
+	public BaseItem getByProperty(String propertyName, Object propertyValue)
+			throws ServiceException {
+		return baseItemDao.getByProperty(propertyName, propertyValue);
+	}
+	@Override
+	public Integer saveOrUpdateXlsData(String xlsfile) throws ServiceException {
+		readxls(basePath+xlsfile);
+		return null;
+	}
+	public void readxls(String xls)
+	{
+		
+	}
+	public String getBasePath() {
+		return basePath;
+	}
+	public void setBasePath(String basePath) {
+		this.basePath = basePath;
+	}
+
+
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void saveBaseItem() throws ServiceException {
+		baseItemDao.saveBaseItem();
+	}
+
+
+	
+	private void makeSheet(HSSFSheet sheet, HSSFWorkbook wb ) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+		  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+		  font.setFontHeightInPoints((short) 12);//设置字体大小
+		  cellstyl.setFont(font);
+		  sheet.setDefaultColumnWidth((short) 20);//列宽
+		  HSSFRow firstrow = sheet.createRow(0);
+		  HSSFRow secondRow = sheet.createRow(1);
+		  firstrow.createCell((short) 0).setCellValue("物料代码");
+		  firstrow.createCell((short) 1).setCellValue("物料名称");
+		  firstrow.createCell((short) 2).setCellValue("工艺状态");
+		  firstrow.createCell((short) 3).setCellValue("上级代码");
+		  firstrow.createCell((short) 4).setCellValue("上级名称 ");
+		  firstrow.createCell((short) 5).setCellValue("用量 ");
+		  for(short i=0;i<firstrow.getLastCellNum();i++){
+			  firstrow.getCell(i).setCellStyle(cellstyl);  
+		  }
+		  /**合并单元格:物料代码   物料名称 工艺状态 上级代码  上级名称  用量*/
+		  Region[] regionHeadList=new Region[6];
+		  for(int i=0;i<6;i++){
+		  /**参数1：行号   2：起始列号  3：行号  4：终止列号*/  
+			  regionHeadList[i] = new Region(0, (short) i, 1, (short) i);  
+			  sheet.addMergedRegion(regionHeadList[i]);
+		  }
+		  /**序1到序12的单元格合并*/
+		  Region[] processRegionList=new Region[12];
+		  for(int i=0;i<12;i++){
+			  processRegionList[i]=new Region(0, (short) (6*(i+1)), 0, (short) ((i+2)*6-1));
+			  sheet.addMergedRegion(processRegionList[i]);
+		  }
+		  /**序1到序12的子列内容*/
+		  for(int i=0;i<12;i++){
+			  firstrow.createCell((short) ((i+1)*6)).setCellValue("序"+(i+1));  
+			  secondRow.createCell((short) ((i+1)*6)).setCellValue("工艺名");
+			  secondRow.createCell((short) ((i+1)*6+1)).setCellValue("准备时间");
+			  secondRow.createCell((short) ((i+1)*6+2)).setCellValue("加工时间");
+			  secondRow.createCell((short) ((i+1)*6+3)).setCellValue("工作内容");
+			  secondRow.createCell((short) ((i+1)*6+4)).setCellValue("工艺重点");
+			  secondRow.createCell((short) ((i+1)*6+5)).setCellValue("程序名称");
+		  }
+	}
+
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void updateItemName() {
+		baseItemDao.updateItemName();
+		
+	}
+
+	@Override
+	public Integer update(String statement, BaseItem entity)
+			throws ServiceException {
+		return baseItemDao.update(statement, entity);
+	}
+/*
+	@Override
+	public Integer updateYoutput(BaseItem entity) throws ServiceException {
+		try {
+			OrderBomQuery obom=new OrderBomQuery();
+			obom.setItemcode(entity.getItemcode());
+			List<OrderBom> list=orderBomDao.findList(obom);
+			Double lastoutput=entity.getLastoutput();
+			lastoutput=(lastoutput==null?0:lastoutput);
+			entity.setLastoutput(entity.getYoutput());
+			baseItemDao.update("BaseItem.update.ByItemcode",entity);
+			for(OrderBom bom:list)
+			{
+				BaseItem item=baseItemDao.getByProperty("itemcode", bom.getParentcode());
+				item.setYoutput(item.getYoutput()+bom.getParentqty()*(entity.getYoutput()-lastoutput));
+				baseItemDao.update("BaseItem.update.ByItemcode",item);
+				item.setLastoutput(item.getLastoutput());
+				//item.setLastoutput(item.getYoutput()+(bom.getParentqty()*lastoutput));
+				updateYoutput(item);
+			}
+			return 0;
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			return -1;
+		}
+		
+	}
+*/	
+
+	@Override
+	public List<BaseItem> findList(String statement, BaseItemQuery query)
+			throws ServiceException {
+		return baseItemDao.findList(statement, query);
+	}
+	/**
+	 * 单位用量变更，同步ERP,更新年需求。
+	 */
+/*	@Override
+	public Integer updateYoutput() throws ServiceException {
+		try 
+		{
+			baseItemDao.update("BaseItem.Update.Youtput", new BaseItem());
+			BaseItemQuery query=new BaseItemQuery();
+			List<BaseItem> list=baseItemDao.findList("Baseitem.findList.Changed.Youtput",query);
+			for(BaseItem item:list)
+			{
+				updateYoutput(item);
+			}
+			orderBomDao.update("Bom.Update.childqty",new OrderBom());
+			return 1;
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}*/
+	/**
+	 * 追加
+	 * 
+	 * @throws Exception
+	 */
+	public   String append(String savePath,BaseItemQuery baseItemQuery) throws Exception {
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().
+		getContextClassLoader().getResourceAsStream("application.properties");
+        prop.load(inputStream);
+     	String exportPlmName = prop.getProperty("export.plm.file").trim();
+     	String rootPath = prop.getProperty("upload.rootPath").trim();
+     	
+		FileInputStream fs = new FileInputStream(rootPath+exportPlmName); // 获取d://f:/物料导出模版.xls
+		POIFSFileSystem ps = new POIFSFileSystem(fs); // 使用POI提供的方法得到excel的信息
+		HSSFWorkbook wb = new HSSFWorkbook(ps);
+		HSSFSheet sheet = wb.getSheetAt(0); // 获取到工作表，因为一个excel可能有多个工作表
+		HSSFRow row = sheet.getRow(0); // 获取第一行（excel中的行默认从0开始，所以这就是为什么，一个excel必须有字段列头），即，字段列头，便于赋值
+		System.out.println(sheet.getLastRowNum() + " " + row.getLastCellNum()); // 分别得到最后一行的行号，和一条记录的最后一个单元格
+		String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"PLMItem.xls";
+		// System.out.println("现在的日期是 = " + df2.format(date));
+		FileOutputStream out = new FileOutputStream(savePath
+				+ fileName); // 向f:/t2.xls中写数据
+		// row=sheet.createRow((short)(sheet.getLastRowNum()+1)); //在现有行号后追加数据
+		row = sheet.createRow((short) (5));// 在现有行号后追加数据 行号从0开始
+
+		// row.createCell(0).setCellValue("leilei"); //设置第一个（从0开始）单元格的数据
+		// row.createCell(1).setCellValue(24); //设置第二个（从0开始）单元格的数据
+
+		// 从数据库中选择数据插入
+		/*List<BaseItem> list=new ArrayList<BaseItem>();
+		list= baseItemDao.*/
+		
+		row.createCell(0).setCellValue(1);
+		row.createCell(1).setCellValue("800.020.62/02/C");
+		row.createCell(2).setCellValue("调压阀瓣");
+		row.createCell(3).setCellValue(1);
+		row.createCell(4).setCellValue("A");
+		row.createCell(5).setCellValue(3);
+		row.createCell(6).setCellValue("PL零部件_M2000");
+
+		row.createCell(8).setCellValue("个");
+		row.createCell(9).setCellValue("个");
+		row.createCell(10).setCellValue("个");
+		row.createCell(11).setCellValue("外购件");
+
+		row.createCell(12).setCellValue("M2000 DN100 MP");
+		row.createCell(13).setCellValue("2Cr13+NBR");
+
+		row.createCell(17).setCellValue("装配原料库1");
+
+		row.createCell(19).setCellValue("原材料");
+		row.createCell(20).setCellValue("普通订单");
+
+		row.createCell(21).setCellValue("N");
+		row.createCell(22).setCellValue("Y");
+		row.createCell(23).setCellValue("全检");
+		row.createCell(24).setCellValue("全检");
+
+		out.flush();
+		wb.write(out);
+		out.close();
+		System.out.println(row.getPhysicalNumberOfCells() + " "
+				+ row.getLastCellNum());
+		return fileName;
+	}
+	/**
+	 * 追加
+	 * 
+	 * @throws Exception
+	 */
+	public   String appendItem(String savePath,BaseItem baseItem) throws Exception {
+		
+
+		return "";
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public String findPLMItem(String savePath,BaseItemQuery baseItemQuery) throws ServiceException {
+		try {
+			return append(savePath,baseItemQuery);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@SuppressWarnings("deprecation")
+	@Override
+	public String findAllitemXls(String savePath,BaseItemQuery baseItemQuery) {
+
+		List<BaseItem> list=new ArrayList<BaseItem>();
+		//BaseItemQuery baseItemQuery=new BaseItemQuery();
+		baseItemQuery.setUsestatus(1);//使用中的物料
+		//baseItemQuery.setItemcls(2);//物料分类 2:物料
+		System.out.println(baseItemQuery.getItemcode());
+		System.out.println(baseItemQuery.getItemname());
+		System.out.println(baseItemQuery.getItemproperty());
+		
+		list= baseItemDao.findList("BaseItem.findAllUseItem", baseItemQuery);
+		//============================================================================================== 
+		  HSSFWorkbook wb = new HSSFWorkbook();
+		  HSSFSheet sheet = wb.createSheet("new sheet");
+		  HSSFCellStyle cellstyle=wb.createCellStyle();
+		  cellstyle.setWrapText(true);//自动换行
+		  creatSheetHead(sheet,wb);//创建表头
+		  
+		  int i=1;
+		  short cellNumbers=0;
+		  HSSFRow rows =null;
+		  for(BaseItem bItem:list){
+			rows = sheet.createRow(i);
+			cellNumbers=0;
+			rows.createCell(cellNumbers++).setCellValue(bItem.getItemcode());
+			rows.createCell(cellNumbers++).setCellValue(bItem.getItemname());
+			rows.createCell(cellNumbers++).setCellValue(bItem.getFormatno());
+			if(bItem.getItemproperty()==null){
+				rows.createCell(cellNumbers++).setCellValue("");
+			}else{
+				if(bItem.getItemproperty().intValue()==1){
+					rows.createCell(cellNumbers++).setCellValue("外购");	
+				}else{
+					rows.createCell(cellNumbers++).setCellValue("自制");
+				}	
+			}
+			
+			if(bItem.getSecinv()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//安全库存	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getSecinv());//安全库存
+			}
+			if(bItem.getCycle()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//采购加工策略	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getCycle().getCyclename());//采购加工策略
+			}
+			if(bItem.getYoutput()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//年需求	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getYoutput());//年需求				
+			}
+			if(bItem.getUnitname()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//单位
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getUnitname());//单位
+			}
+			rows.createCell(cellNumbers++).setCellValue((bItem.getIscheck()==null?"":(bItem.getIscheck().intValue()==1?"否":"是")));//加工工艺
+			if(bItem.getFqtymin()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//最小需求	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getFqtymin());//最小需求
+			}
+			rows.createCell(cellNumbers++).setCellValue((bItem.getIsdeduct()==null?"":(bItem.getIsdeduct().intValue()==1?"是":"否")));//领料倒扣
+			if(bItem.getRefercost()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//参考成本
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getRefercost());//参考成本
+			}
+			if(bItem.getBuytime()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//采购时长	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getBuytime());//采购时长
+			}
+			if(bItem.getMaketime()==null){
+				rows.createCell(cellNumbers++).setCellValue("");//加工时长	
+			}else{
+				rows.createCell(cellNumbers++).setCellValue(bItem.getMaketime());//加工时长
+			}
+			rows.createCell(cellNumbers++).setCellValue((bItem.getIsbatch()==null?"":(bItem.getIsbatch().intValue()==1?"是":"否")));//批次管理
+			rows.createCell(cellNumbers++).setCellValue((bItem.getIsbarcode()==null?"":(bItem.getIsbarcode().intValue()==1?"是":"否")));//条码管理
+			rows.createCell(cellNumbers++).setCellValue((bItem.getFissnmanager()==null?"":(bItem.getFissnmanager().intValue()==1?"是":"否")));//序列号管理
+			
+			i++;
+		  }
+		  
+		  String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"work.xls";
+		  try {
+				FileOutputStream outputStream=new FileOutputStream(new File(savePath+fileName));
+				wb.write(outputStream);
+				outputStream.flush();
+				outputStream.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		return fileName;
+	}
+
+	private void creatSheetHead(HSSFSheet sheet, HSSFWorkbook wb) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+		  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+		  font.setFontHeightInPoints((short) 12);//设置字体大小
+		  cellstyl.setFont(font);
+		  sheet.setDefaultColumnWidth((short) 20);//列宽
+		  HSSFRow firstrow = sheet.createRow(0);
+		  HSSFRow secondRow = sheet.createRow(1);
+		  sheet.createFreezePane( 0, 1, 0, 1 );//冻结首行 
+		  firstrow.createCell((short) 0).setCellValue("代码");
+		  firstrow.createCell((short) 1).setCellValue("名称");
+		  firstrow.createCell((short) 2).setCellValue("规格");
+		  firstrow.createCell((short) 3).setCellValue("属性");
+		  firstrow.createCell((short) 4).setCellValue("安全库存");
+		  firstrow.createCell((short) 5).setCellValue("采购/加工策略");
+		  firstrow.createCell((short) 6).setCellValue("年需求");
+		  firstrow.createCell((short) 7).setCellValue("单位");
+		  firstrow.createCell((short) 8).setCellValue("加工工艺");
+		  firstrow.createCell((short) 9).setCellValue("最小需求量");
+		  firstrow.createCell((short) 10).setCellValue("领料倒扣");
+		  firstrow.createCell((short) 11).setCellValue("参考成本");
+		  firstrow.createCell((short) 12).setCellValue("采购时长");
+		  firstrow.createCell((short) 13).setCellValue("加工时长");
+		  firstrow.createCell((short) 14).setCellValue("批次管理");
+		  firstrow.createCell((short) 15).setCellValue("条码管理");
+		  firstrow.createCell((short) 16).setCellValue("序列号管理");
+	}
+
+	@Override
+	public void saveOrUpdateItemXlsData(String xlsfile) {
+		//System.out.println("====xlsfile:"+basePath+xlsfile);
+		readxlsUpdate(basePath+xlsfile);
+	}
+
+	@SuppressWarnings("deprecation")
+	private void readxlsUpdate(String xlsfile) {
+		   
+		   //====================判断excel版本==========================
+		   File xfile=new File(xlsfile);
+		   InputStream inp=null;
+			try {
+				inp = new FileInputStream(xfile);
+			} catch (FileNotFoundException e1) {
+				
+				e1.printStackTrace();
+			}
+				
+			if(! inp.markSupported()) {
+				inp = new PushbackInputStream(inp, 8);
+			}
+
+			try {
+				if(POIFSFileSystem.hasPOIFSHeader(inp)) {
+					 readxlsOldUpdate(xlsfile);
+				}
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+			/*try {
+				if(POIXMLDocument.hasOOXMLHeader(inp)) {
+					readxlsNewUpdate(xlsfile);
+				}
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}*/
+		   
+		   //==============================================
+		   
+		   
+		   
+		//String EXTENSION_XLS = "xls";
+		//String EXTENSION_XLSX = "xlsx"; 
+//		 if (xlsfile.endsWith(EXTENSION_XLS)) {
+//			 readxlsOldUpdate(xlsfile);
+//	        } else if (xlsfile.endsWith(EXTENSION_XLSX)) {
+//	        	readxlsNewUpdate(xlsfile);
+//	        }
+		
+		
+	/*		BaseItem baseItem=null;
+			BaseItemQuery baseItemQuery=new BaseItemQuery();
+			List<BaseItem> listbase=new ArrayList<BaseItem>();
+			File xfile=new File(xlsfile);
+			FileInputStream inputStream=null;
+			//HSSFWorkbook wbs=null;//修改之前的
+			Workbook wbs=null;
+			
+			try {
+				 inputStream=new FileInputStream(xfile);
+				 // wbs=new HSSFWorkbook(inputStream);//修改之前的
+				 wbs=new XSSFWorkbook(inputStream);
+				
+			} catch(Exception e){
+				e.printStackTrace();
+			}
+			//HSSFSheet childSheet=wbs.getSheetAt(0);//修改之前的
+			XSSFSheet childSheet=(XSSFSheet) wbs.getSheetAt(0);
+			int rows=childSheet.getLastRowNum();
+		
+			//HSSFRow row=null;//修改之前的
+			XSSFRow row=null;
+			ProcessCycle pCycle=null; 
+			Measureunit measureunit=null;
+			
+			double check=-1D;
+			for(int k=1;k<=rows;k++){
+				 row=childSheet.getRow(k);
+				 //int cells=row.getLastCellNum();
+				 //row.getCell(0).getStringCellValue();
+				 if(null!=childSheet.getRow(k)&&null!=row.getCell(0)){//行不为空//且代码不为空
+					 
+					 baseItemQuery.setItemcode(row.getCell(0).getStringCellValue());
+					 listbase=baseItemDao.findList(baseItemQuery);
+					 if(listbase.size()>0){//数据库中存在对应的物料
+					//-----------------------------------------------------------------------------
+						 baseItem=baseItemDao.getByProperty("itemcode", row.getCell(0).getStringCellValue());
+					//	 if(baseItem!=null){
+							 if(row.getCell(3)!=null){
+								 if(row.getCell(3).getStringCellValue().equals("外购")){
+									 baseItem.setItemproperty(1);//外购
+								 }else{
+									 baseItem.setItemproperty(2);//自制
+								 }
+							 }
+							 if(row.getCell(4)!=null&&row.getCell(4).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//安全库存
+								  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(4).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									 baseItem.setSecinv(check);	
+								}
+							 }
+							 if(row.getCell(5)!=null){//采购加工策略
+								  pCycle = processCycleDao.getByProperty("cyclename", row.getCell(5).getStringCellValue());
+								 if(pCycle!=null){
+									 baseItem.setCycleid(pCycle.getCycleid());
+								 }
+							 }
+							 if(row.getCell(7)!=null){//单位
+								 measureunit=measureunitDao.getByProperty("unitname", row.getCell(7).getStringCellValue());
+								 if(measureunit!=null){
+									 baseItem.setUnitid(measureunit.getUnitid().intValue());
+									 baseItem.setUnitname(measureunit.getUnitname());
+								 }
+							 }		 
+							 if(row.getCell(8)!=null){//加工工艺
+								 if(row.getCell(8).getStringCellValue().equals("是")){
+									 baseItem.setIscheck(1);
+								 }else if(row.getCell(8).getStringCellValue().equals("否")){
+									 baseItem.setIscheck(0);
+								 }
+							 }		 
+							 if(row.getCell(9)!=null&&row.getCell(9).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//最小需求量
+								  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(9).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									 baseItem.setFqtymin(check);	
+								}
+							 }		 
+							 if(row.getCell(10)!=null){//领料倒扣
+								 	if(row.getCell(10).getStringCellValue().equals("是")){
+								 		baseItem.setIsdeduct(1);
+								 	}else if(row.getCell(10).getStringCellValue().equals("否")){
+								 		baseItem.setIsdeduct(0);
+								 	}
+							 }		 
+							 if(row.getCell(11)!=null&&row.getCell(11).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//参考成本
+								  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(11).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									baseItem.setRefercost(check);	
+								}
+								 
+							 }		 
+							 if(row.getCell(12)!=null&&row.getCell(12).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//采购时长
+								  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(12).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									 baseItem.setBuytime(check);	
+								} 
+							 }		 
+							 if(row.getCell(13)!=null&&row.getCell(13).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//加工时长
+								  check=-1D;
+									 try {
+										 check=Double.valueOf(row.getCell(13).getNumericCellValue());
+									} catch (Exception e) {
+										System.out.println("不能转化为Double");
+									}
+									if(check!=-1){
+										 baseItem.setMaketime(check);	
+									} 
+							 }		 
+							 if(row.getCell(14)!=null){//批次管理
+								if(row.getCell(14).getStringCellValue().equals("是")){
+									baseItem.setIsbatch(1);
+								}else if(row.getCell(14).getStringCellValue().equals("否")){
+									baseItem.setIsbatch(0);
+								}					 
+							 }		 
+							 if(row.getCell(15)!=null){//条码管理
+								 if(row.getCell(15).getStringCellValue().equals("是")){
+										baseItem.setIsbarcode(1);
+									}else if(row.getCell(15).getStringCellValue().equals("否")){
+										baseItem.setIsbarcode(0);
+									}	 
+							 }	
+							 if(row.getCell(16)!=null){//序列号管理
+								 if(row.getCell(16).getStringCellValue().equals("是")){
+										baseItem.setFissnmanager(1);
+									}else if(row.getCell(16).getStringCellValue().equals("否")){
+										baseItem.setFissnmanager(0);
+									}	 
+							 }		
+							 baseItemDao.update(baseItem);
+							 
+					//	 }
+						 
+					//-----------------------------------------------------------------------------------
+					 }
+				 }
+				
+			}
+			
+			try {
+				//System.out.println(xfile.getPath());
+				inputStream.close();
+				xfile.delete();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}*/
+		
+		
+	}
+	
+	/**
+	 * excle 2003上传
+	 */
+	private void readxlsOldUpdate(String xlsfile){
+		BaseItem baseItem=null;
+		BaseItemQuery baseItemQuery=new BaseItemQuery();
+		List<BaseItem> listbase=new ArrayList<BaseItem>();
+		File xfile=new File(xlsfile);
+		FileInputStream inputStream=null;
+		HSSFWorkbook wbs=null;//修改之前的
+		
+		
+		try {
+			 inputStream=new FileInputStream(xfile);
+			 wbs=new HSSFWorkbook(inputStream);//修改之前的
+			 
+			
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+		HSSFSheet childSheet=wbs.getSheetAt(0);//修改之前的
+		
+		int rows=childSheet.getLastRowNum();
+	
+		HSSFRow row=null;//修改之前的
+		
+		ProcessCycle pCycle=null; 
+		Measureunit measureunit=null;
+		
+		double check=-1D;
+		for(int k=1;k<=rows;k++){
+			 row=childSheet.getRow(k);
+			 //int cells=row.getLastCellNum();
+			 //row.getCell(0).getStringCellValue();
+			 if(null!=childSheet.getRow(k)&&null!=row.getCell(0)){//行不为空//且代码不为空
+				 
+				 baseItemQuery.setItemcode(row.getCell(0).getStringCellValue());
+				 listbase=baseItemDao.findList(baseItemQuery);
+				 if(listbase.size()>0){//数据库中存在对应的物料
+				//-----------------------------------------------------------------------------
+					 baseItem=baseItemDao.getByProperty("itemcode", row.getCell(0).getStringCellValue());
+				//	 if(baseItem!=null){
+						 if(row.getCell(3)!=null){
+							 if(row.getCell(3).getStringCellValue().equals("外购")){
+								 baseItem.setItemproperty(1);//外购
+							 }else{
+								 baseItem.setItemproperty(2);//自制
+							 }
+						 }
+						 if(row.getCell(4)!=null&&row.getCell(4).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//安全库存
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(4).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setSecinv(check);	
+							}
+						 }
+						 if(row.getCell(5)!=null){//采购加工策略
+							 // pCycle = processCycleDao.getByProperty("cyclename", row.getCell(5).getStringCellValue());
+							 if(pCycle!=null){
+								 baseItem.setCycleid(pCycle.getCycleid());
+							 }
+						 }
+						 if(row.getCell(7)!=null){//单位
+							 measureunit=measureunitDao.getByProperty("unitname", row.getCell(7).getStringCellValue());
+							 if(measureunit!=null){
+//								 baseItem.setUnitid(measureunit.getUnitid().intValue());
+//								 baseItem.setUnitname(measureunit.getUnitname());
+							 }
+						 }		 
+						 if(row.getCell(8)!=null){//加工工艺
+							 if(row.getCell(8).getStringCellValue().equals("是")){
+								 baseItem.setIscheck(1);
+							 }else if(row.getCell(8).getStringCellValue().equals("否")){
+								 baseItem.setIscheck(0);
+							 }
+						 }		 
+						 if(row.getCell(9)!=null&&row.getCell(9).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//最小需求量
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(9).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setFqtymin(check);	
+							}
+						 }		 
+						 if(row.getCell(10)!=null){//领料倒扣
+							 	if(row.getCell(10).getStringCellValue().equals("是")){
+							 		baseItem.setIsdeduct(1);
+							 	}else if(row.getCell(10).getStringCellValue().equals("否")){
+							 		baseItem.setIsdeduct(0);
+							 	}
+						 }		 
+						 if(row.getCell(11)!=null&&row.getCell(11).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//参考成本
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(11).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								baseItem.setRefercost(check);	
+							}
+							 
+						 }		 
+						 if(row.getCell(12)!=null&&row.getCell(12).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//采购时长
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(12).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setBuytime(check);	
+							} 
+						 }		 
+						 if(row.getCell(13)!=null&&row.getCell(13).getCellType()==HSSFCell.CELL_TYPE_NUMERIC){//加工时长
+							  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(13).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									 baseItem.setMaketime(check);	
+								} 
+						 }		 
+						 if(row.getCell(14)!=null){//批次管理
+							if(row.getCell(14).getStringCellValue().equals("是")){
+								baseItem.setIsbatch(1);
+							}else if(row.getCell(14).getStringCellValue().equals("否")){
+								baseItem.setIsbatch(0);
+							}					 
+						 }		 
+						 if(row.getCell(15)!=null){//条码管理
+							 if(row.getCell(15).getStringCellValue().equals("是")){
+									baseItem.setIsbarcode(1);
+								}else if(row.getCell(15).getStringCellValue().equals("否")){
+									baseItem.setIsbarcode(0);
+								}	 
+						 }	
+						 if(row.getCell(16)!=null){//序列号管理
+							 if(row.getCell(16).getStringCellValue().equals("是")){
+									baseItem.setFissnmanager(1);
+								}else if(row.getCell(16).getStringCellValue().equals("否")){
+									baseItem.setFissnmanager(0);
+								}	 
+						 }		
+						 baseItemDao.update(baseItem);
+						 
+				//	 }
+					 
+				//-----------------------------------------------------------------------------------
+				 }
+			 }
+			
+		}
+		
+		try {
+			//System.out.println(xfile.getPath());
+			inputStream.close();
+			xfile.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * excle 2007上传
+	 */
+	/*private void readxlsNewUpdate(String xlsfile){
+		BaseItem baseItem=null;
+		BaseItemQuery baseItemQuery=new BaseItemQuery();
+		List<BaseItem> listbase=new ArrayList<BaseItem>();
+		File xfile=new File(xlsfile);
+		FileInputStream inputStream=null;
+		
+		XSSFWorkbook wbs=null;
+		
+		try {
+			 inputStream=new FileInputStream(xfile);
+			
+			 wbs=new XSSFWorkbook(inputStream);
+			
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		XSSFSheet childSheet= wbs.getSheetAt(0);
+		int rows=childSheet.getLastRowNum();
+	
+		
+		XSSFRow row=null;
+		ProcessCycle pCycle=null; 
+		Measureunit measureunit=null;
+		
+		double check=-1D;
+		for(int k=1;k<=rows;k++){
+			 row=childSheet.getRow(k);
+			 //int cells=row.getLastCellNum();
+			 //row.getCell(0).getStringCellValue();
+			 if(null!=childSheet.getRow(k)&&null!=row.getCell(0)){//行不为空//且代码不为空
+				 
+				 baseItemQuery.setItemcode(row.getCell(0).getStringCellValue());
+				 listbase=baseItemDao.findList(baseItemQuery);
+				 if(listbase.size()>0){//数据库中存在对应的物料
+				//-----------------------------------------------------------------------------
+					 baseItem=baseItemDao.getByProperty("itemcode", row.getCell(0).getStringCellValue());
+				//	 if(baseItem!=null){
+						 if(row.getCell(3)!=null){
+							 if(row.getCell(3).getStringCellValue().equals("外购")){
+								 baseItem.setItemproperty(1);//外购
+							 }else{
+								 baseItem.setItemproperty(2);//自制
+							 }
+						 }
+						 if(row.getCell(4)!=null&&row.getCell(4).getCellType()==XSSFCell.CELL_TYPE_NUMERIC){//安全库存
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(4).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setSecinv(check);	
+							}
+						 }
+						 if(row.getCell(5)!=null){//采购加工策略
+							  pCycle = processCycleDao.getByProperty("cyclename", row.getCell(5).getStringCellValue());
+							 if(pCycle!=null){
+								 baseItem.setCycleid(pCycle.getCycleid());
+							 }
+						 }
+						 if(row.getCell(7)!=null){//单位
+							 measureunit=measureunitDao.getByProperty("unitname", row.getCell(7).getStringCellValue());
+							 if(measureunit!=null){
+								 baseItem.setUnitid(measureunit.getUnitid().intValue());
+								 baseItem.setUnitname(measureunit.getUnitname());
+							 }
+						 }		 
+						 if(row.getCell(8)!=null){//加工工艺
+							 if(row.getCell(8).getStringCellValue().equals("是")){
+								 baseItem.setIscheck(1);
+							 }else if(row.getCell(8).getStringCellValue().equals("否")){
+								 baseItem.setIscheck(0);
+							 }
+						 }		 
+						 if(row.getCell(9)!=null&&row.getCell(9).getCellType()==XSSFCell.CELL_TYPE_NUMERIC){//最小需求量
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(9).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setFqtymin(check);	
+							}
+						 }		 
+						 if(row.getCell(10)!=null){//领料倒扣
+							 	if(row.getCell(10).getStringCellValue().equals("是")){
+							 		baseItem.setIsdeduct(1);
+							 	}else if(row.getCell(10).getStringCellValue().equals("否")){
+							 		baseItem.setIsdeduct(0);
+							 	}
+						 }		 
+						 if(row.getCell(11)!=null&&row.getCell(11).getCellType()==XSSFCell.CELL_TYPE_NUMERIC){//参考成本
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(11).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								baseItem.setRefercost(check);	
+							}
+							 
+						 }		 
+						 if(row.getCell(12)!=null&&row.getCell(12).getCellType()==XSSFCell.CELL_TYPE_NUMERIC){//采购时长
+							  check=-1D;
+							 try {
+								 check=Double.valueOf(row.getCell(12).getNumericCellValue());
+							} catch (Exception e) {
+								System.out.println("不能转化为Double");
+							}
+							if(check!=-1){
+								 baseItem.setBuytime(check);	
+							} 
+						 }		 
+						 if(row.getCell(13)!=null&&row.getCell(13).getCellType()==XSSFCell.CELL_TYPE_NUMERIC){//加工时长
+							  check=-1D;
+								 try {
+									 check=Double.valueOf(row.getCell(13).getNumericCellValue());
+								} catch (Exception e) {
+									System.out.println("不能转化为Double");
+								}
+								if(check!=-1){
+									 baseItem.setMaketime(check);	
+								} 
+						 }		 
+						 if(row.getCell(14)!=null){//批次管理
+							if(row.getCell(14).getStringCellValue().equals("是")){
+								baseItem.setIsbatch(1);
+							}else if(row.getCell(14).getStringCellValue().equals("否")){
+								baseItem.setIsbatch(0);
+							}					 
+						 }		 
+						 if(row.getCell(15)!=null){//条码管理
+							 if(row.getCell(15).getStringCellValue().equals("是")){
+									baseItem.setIsbarcode(1);
+								}else if(row.getCell(15).getStringCellValue().equals("否")){
+									baseItem.setIsbarcode(0);
+								}	 
+						 }	
+						 if(row.getCell(16)!=null){//序列号管理
+							 if(row.getCell(16).getStringCellValue().equals("是")){
+									baseItem.setFissnmanager(1);
+								}else if(row.getCell(16).getStringCellValue().equals("否")){
+									baseItem.setFissnmanager(0);
+								}	 
+						 }		
+						 baseItemDao.update(baseItem);
+						 
+				//	 }
+					 
+				//-----------------------------------------------------------------------------------
+				 }
+			 }
+			
+		}
+		try {
+			//System.out.println(xfile.getPath());
+			inputStream.close();
+			xfile.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}*/
+	
+	
+	
+	
+	
+	
+
+	@Override
+	public void updateItem() throws Exception {
+		BaseItem item=new BaseItem();
+		baseItemDao.update("BaseItem.update.Checkednum.Clear", item);
+		baseItemDao.update("BaseItem.update.Checkednum", item);
+		baseItemDao.update("BaseItem.update.Unchecknum.Clear", item);
+		baseItemDao.update("BaseItem.update.Unchecknum", item);
+		baseItemDao.update("BaseItem.update.Existdemand", item);
+		baseItemDao.update("BaseItem.update.Forecast", item);
+		baseItemDao.update("Baseitem.update.Makingnum.init",item);
+		baseItemDao.update("Baseitem.update.Makingnum",item);
+	}
+
+	@Override
+	public Integer updateById(BaseItem entity) throws ServiceException{
+		Integer resultValue = baseItemDao.updateById(entity);
+		return resultValue;
+		
+	}
+	
+	/**
+	 * 按照选择的导出物料
+	 * @throws IOException 
+	 * 
+	 */
+	@Transactional(readOnly=true)
+	@Override
+	public String exportItemPLMItem(BaseItem entity,String savePath) throws Exception{
+		    BaseItemQuery baseitemQuery = new BaseItemQuery();
+			baseitemQuery.setBaseitemids(entity.getIds());
+			Properties prop = new Properties();   
+			InputStream inputStream = Thread.currentThread().
+			getContextClassLoader().getResourceAsStream("comm.properties");
+	        prop.load(inputStream);
+	     	String exportPlmName = prop.getProperty("export.plm.file").trim();
+	     	String rootPath = savePath;
+			FileInputStream fs = new FileInputStream(rootPath+exportPlmName);   
+			POIFSFileSystem ps = new POIFSFileSystem(fs); // 使用POI提供的方法得到excel的信息
+			HSSFWorkbook wb = new HSSFWorkbook(ps);
+			HSSFSheet sheet = wb.getSheetAt(0); // 获取到工作表，因为一个excel可能有多个工作表
+			HSSFRow row = sheet.getRow(0); // 获取第一行（excel中的行默认从0开始，所以这就是为什么，一个excel必须有字段列头），即，字段列头，便于赋值
+			String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"PLMItem.xls";
+			FileOutputStream out = new FileOutputStream(savePath
+					+ fileName);  
+			List<BaseItem> baseList = baseItemDao.findList("BaseItem.findlistByIds", baseitemQuery);//查询出所有的选择的物料
+			int i=5;
+			List<Stock> stockList=stockService.findAllList();
+			String[] pullDown17Value={""};
+			if(null!=stockList&&0<stockList.size()){
+				pullDown17Value = new String[stockList.size()] ;
+				for (int j = 0; j < stockList.size(); j++) {
+					pullDown17Value[j]=  stockList.get(j).getFname() ;
+				}
+			}
+			
+			List<WebWorkType> webWorkTypeList=webWorkTypeService.findAllList();
+			String[] pullDown20Value={""};
+			if(null!=webWorkTypeList&&0<webWorkTypeList.size()){
+				pullDown20Value = new String[webWorkTypeList.size()] ;
+				for (int j = 0; j < webWorkTypeList.size(); j++) {
+					pullDown20Value[j]=  webWorkTypeList.get(j).getFname() ;
+				}
+			}
+			WebSubMessageQuery query=new WebSubMessageQuery();
+			query.setFtypeId(171);
+			List<WebSubMessage> webSubMessageList =webSubMessageService.findList(query);
+			String[] pullDown23Value={""};
+			if(null!=webSubMessageList&&0<webSubMessageList.size()){
+				pullDown23Value = new String[webSubMessageList.size()] ;
+				for (int j = 0; j < webSubMessageList.size(); j++) {
+					pullDown23Value[j]=  webSubMessageList.get(j).getFname() ;
+				}
+			}
+			for (BaseItem baseItem : baseList) {
+				
+				BaseItemQuery itemQuery = new BaseItemQuery();
+				itemQuery.setItemcode(baseItem.getItemcode());
+				row = sheet.createRow((short) (i));//  
+				row.createCell(0).setCellValue(i-4);
+				row.createCell(1).setCellValue(baseItem.getItemcode());//物料代码
+				row.createCell(2).setCellValue(baseItem.getItemname() );//物料名
+				
+				if(null!=baseItem.getItemproperty()){
+					int itemproperty=baseItem.getItemproperty();
+					if(itemproperty==2){//自制
+						row.createCell(3).setCellValue(0);
+					}else{
+						row.createCell(3).setCellValue(1);
+					}
+				}else{
+					row.createCell(3).setCellValue(1);
+				}
+				String[] pullDown3Value=new String[] { "0","1","2","3","4"};
+				setPullDownValue(sheet, i ,3,pullDown3Value);//设置下拉列表
+				
+				row.createCell(4).setCellValue("A");//全为A
+				
+				String[] pullDown4Value=new String[] { "A"};
+				setPullDownValue(sheet, i ,4,pullDown4Value);//设置下拉列表
+				
+				row.createCell(5).setCellValue(3);//?
+				String[] pullDown5Value=new String[] { "1","2","3"};
+				setPullDownValue(sheet, i ,5,pullDown5Value);//设置下拉列表
+				
+				BaseItem basePItemQuery=new BaseItem();
+				basePItemQuery.setItemcode(baseItem.getItemparentcode());
+				BaseItem basePItem=baseItemDao.getBaseByColumn("itemcode", baseItem.getItemparentcode());
+				if(null!=basePItem){
+					row.createCell(6).setCellValue(basePItem.getFullname());//?
+				}else{
+					row.createCell(6).setCellValue("");//
+				}
+
+				row.createCell(8).setCellValue(baseItem.getUnitname());
+				row.createCell(9).setCellValue(baseItem.getUnitname());
+				row.createCell(10).setCellValue(baseItem.getUnitname());
+				row.createCell(11).setCellValue("");//备注
+
+				row.createCell(12).setCellValue(baseItem.getFormatno());//型号
+				
+				IcitemDesign  webItemDesign =itemBasicService.getByItemDesignInfo(baseItem.getBaseitemid()+"");
+				if(null!=webItemDesign){
+					row.createCell(13).setCellValue(webItemDesign.getFbody());//材质
+				}
+				
+				if(null!=baseItem.getStorage()&&0!=baseItem.getStorage()){//说明有仓库
+					if(null!=stockList&&0<stockList.size()){
+						for (int j = 0; j < stockList.size(); j++) {
+							if(baseItem.getStorage().equals(stockList.get(j).getFitemid())  ){
+								row.createCell(17).setCellValue(stockList.get(j).getFname() );
+							}
+						}
+					}
+				}
+				
+				
+				//row.createCell(17).setCellValue(baseItem.getStockName());
+				
+				
+				if(null!=stockList&&0<stockList.size()){
+					setPullDownValue(sheet, i ,17,pullDown17Value);//设置下拉列表
+					
+				}
+				
+				row.createCell(18).setCellValue(baseItem.getF101());//执行标准
+				
+				WebAccountQuery webAccountQuery =new WebAccountQuery();
+				webAccountQuery.setSortColumns("FNumber");
+				
+				WebItemMaterial webItemMaterial =itemBasicService.getByItemMaterialInfo(baseItem.getBaseitemid()+"");
+				String temAccName="";
+				if(null!=webItemMaterial ){
+				List<WebAccount> webAccountList=webAccountService.findAllAccountList(webAccountQuery);
+				for (Iterator iterator = webAccountList.iterator(); iterator
+						.hasNext();) {
+					WebAccount webAccount = (WebAccount) iterator
+							.next();
+					if(null!=webItemMaterial.getAcctId()){
+					long accid=webAccount.getFaccountId();
+					if(accid==webItemMaterial.getAcctId()){
+						row.createCell(19).setCellValue(webAccount.getFname());//存货科目
+						temAccName=webAccount.getFname();
+					}
+					}
+				}
+				}
+				if("".equalsIgnoreCase(temAccName)){
+					String[] pullDown19Value=new String[] { "机加工自制半成品","装配自制半成品","PL调压器","备件包","LNG自制半成品"};
+					setPullDownValue(sheet, i ,19,pullDown19Value);//设置下拉列表
+				}else{
+					String[] pullDown19Value=new String[] { temAccName+"","机加工自制半成品","装配自制半成品","PL调压器","备件包","LNG自制半成品"};
+					setPullDownValue(sheet, i ,19,pullDown19Value);//设置下拉列表
+				}
+				WebIcitemPlan webIcitemPlan =itemBasicService.getByItemPlanInfo(baseItem.getBaseitemid()+"");
+				
+				if(null!=webWorkTypeList&&0<webWorkTypeList.size()){
+					
+					setPullDownValue(sheet, i ,20,pullDown20Value);//设置下拉列表
+				}
+				WebIcitemPlanQuery webIcitemPlanQuery=new WebIcitemPlanQuery();
+				webIcitemPlanQuery.setDefaultWorkTypeId(1);
+				if(null!=webIcitemPlan ){
+					for (Iterator iterator = webWorkTypeList.iterator(); iterator
+							.hasNext();) {
+						WebWorkType webWorkType = (WebWorkType) iterator
+								.next();
+						if(null!=webIcitemPlan.getDefaultWorkTypeId()){
+							long defaultWorkTypeId=webIcitemPlan.getDefaultWorkTypeId();
+							if(defaultWorkTypeId==webWorkType.getFinterId()){
+								row.createCell(20).setCellValue(webWorkType.getFname());//默认生产类型
+							}
+						}
+					}
+				}
+				//if(null!=entity.getFissnmanager( )){
+				if(null!=baseItem.getFissnmanager( )){
+					//int issnmanager=entity.getFissnmanager( );
+					int issnmanager=baseItem.getFissnmanager( );
+					if(0==issnmanager){
+						row.createCell(21).setCellValue("N");
+					}else{
+						row.createCell(21).setCellValue("Y");
+					}
+				}
+				else{
+					row.createCell(21).setCellValue("N");
+				}
+				String[] pullDown21Value=new String[] { "Y","N"};
+				setPullDownValue(sheet, i ,21,pullDown21Value);//设置下拉列表
+				
+				//if(null!=entity.getIsbatch( )){
+				if(null!=baseItem.getIsbatch( )){
+					//int isbatch=entity.getIsbatch( );
+					int isbatch=baseItem.getIsbatch( );
+					if(0==isbatch){
+						row.createCell(22).setCellValue("N");
+					}else{
+						row.createCell(22).setCellValue("Y");
+					}
+				}else{
+					row.createCell(22).setCellValue("N");
+				}
+				String[] pullDown22Value=new String[] { "Y","N"};
+				setPullDownValue(sheet, i ,22,pullDown22Value);//设置下拉列表
+				
+				IcitemQuality  webItemQuality =itemBasicService.getByItemQualityInfo(baseItem.getBaseitemid()+"");
+				if(null!=webSubMessageList&&0<webSubMessageList.size()){
+					setPullDownValue(sheet, i ,23,pullDown23Value);//设置下拉列表
+					setPullDownValue(sheet, i ,24,pullDown23Value);//设置下拉列表
+				}
+				if(null!=webItemQuality ){
+				for (Iterator iterator = webSubMessageList.iterator(); iterator
+						.hasNext();) {
+					WebSubMessage webSubMessage = (WebSubMessage) iterator
+							.next();
+					if(null!=webItemQuality.getProChkMde()){
+						long proChkMde=webItemQuality.getProChkMde();
+						if(proChkMde==webSubMessage.getFinterId()){
+							row.createCell(23).setCellValue(webSubMessage.getFname());//产品检验方式
+						}
+						
+					}
+					if(null!=webItemQuality.getInspectionlevel()){
+						long inspectionlevel=webItemQuality.getInspectionlevel();
+						if(inspectionlevel==webSubMessage.getFinterId()){
+							row.createCell(24).setCellValue(webSubMessage.getFname());//采购检验方式
+						}
+					}
+				}
+				}
+				i++;
+				
+			}
+			out.flush();
+			wb.write(out);
+			out.close();
+			
+			return fileName ;
+	}
+	private void setPullDownValue(HSSFSheet sheet, int i ,int cellValue,String[] explicitListValues) {//
+		//设置下拉列表框
+		//四个参数分别是：起始行、终止行、起始列、终止列 
+		CellRangeAddressList regions = new CellRangeAddressList(i, i, cellValue, cellValue);
+		// 生成下拉框内容
+		DVConstraint constraint = DVConstraint.createExplicitListConstraint(explicitListValues);
+		// 绑定下拉框和作用区域
+		HSSFDataValidation data_validation = new HSSFDataValidation(regions,constraint);
+		// 对sheet页生效
+		sheet.addValidationData(data_validation);
+	}
+	
+	/**
+	 * 带K3同步操作
+	 * 
+	 */
+	@Override
+	public String [] findItemIsinventory(BaseItem entity) throws ServiceException{
+		    //baseItemDao.updateByIdWithK3(entity);//排产操作
+		    String [] resultArray = new String [2];
+		    BaseItemQuery baseitemQuery = new BaseItemQuery();
+		    
+			baseitemQuery.setBaseitemids(entity.getIds());
+			
+			
+			List<BaseItem> baseList = baseItemDao.findList("BaseItem.findlistByIds", baseitemQuery);
+			StringBuffer haveInventorysb=new StringBuffer();
+			for (BaseItem baseItem : baseList) {
+				BaseItemQuery itemQuery = new BaseItemQuery();
+				itemQuery.setItemcode(baseItem.getItemcode());
+				
+				Long  findresultlong= baseItemDao.findItemIsinventory(itemQuery);
+				if(findresultlong>0){
+					haveInventorysb.append(baseItem.getItemcode()+",");//记录有库存的物料代码
+				}
+				
+			}
+			if(0<haveInventorysb.toString().length()){//说明批量删除的物料中有库存的物料代码
+				resultArray[0]=haveInventorysb.toString();//排产中
+				return resultArray;
+			}
+			StringBuffer k3haveInventorysb=new StringBuffer();
+			for (BaseItem baseItem : baseList) {
+				BaseItemQuery k3itemQuery = new BaseItemQuery();
+				k3itemQuery.setItemcode(baseItem.getItemcode());
+				
+				Long  findk3resultlong= baseItemDao.findk3ItemIsinventory(k3itemQuery);
+				if(findk3resultlong>0){
+					k3haveInventorysb.append(baseItem.getItemcode()+",");//记录有库存的物料代码
+				}
+			}
+			if(0<k3haveInventorysb.toString().length()){//说明K3批量删除的物料中有库存的物料代码
+				resultArray[1]=k3haveInventorysb.toString();//K3
+				return resultArray;
+			}
+			
+			return resultArray;
+	}
+	
+    /**
+	 * 带K3同步操作
+	 * 
+	 */
+	@Override
+	public void updateByIdWithK3(BaseItem entity) throws ServiceException{
+		    baseItemDao.updateByIdWithK3(entity);//排产操作
+		  
+		    BaseItemQuery baseitemQuery = new BaseItemQuery();
+			baseitemQuery.setBaseitemids(entity.getIds());
+			List<BaseItem> baseList = baseItemDao.findList("BaseItem.findlistByIds", baseitemQuery);
+			StringBuffer sb=new StringBuffer();
+			for (BaseItem baseItem : baseList) {
+				sb.append("'"+baseItem.getItemcode()+"'"+",");
+			}
+			String numbers="";
+		    if(null!=baseList){
+		    	String temp=sb.toString();
+		    	numbers=temp.substring(0,temp.length()-1);
+		    }
+		  // 同时操作K3数据库
+		 IItemOptService service = new ItemOptService();
+		 //TREReturn trereturn = service.updateBaseItem(entity.getItemcode(),null);// 
+		 ItemVo itemVo=new ItemVo();
+		 itemVo.setDeleted(Integer.valueOf(entity.getDeleted()));
+		 TREReturn trereturn = service.updateBaseItemInfo( numbers,itemVo);//操作K3
+			if (trereturn.getnCode() != 1) {
+				throw new ServiceException("操作失败，原因：" + trereturn.getStrInfo());
+			}
+	}
+/*
+	@Override
+	public void updatecheckwfstauts(BaseItem entity) throws ServiceException {
+		String waitnote="";
+		waitnote=entity.getWaitnote();
+		//baseItemDao.update(entity);
+		ItemVer itemVer = itemVerDao.getById(entity.getItemVer().getFverid());
+		itemVer.setWfstatus(entity.getWfstatus());
+		itemVerDao.update(itemVer);
+		
+		ProcessTaskBj pt=null;
+		ProcessTaskBjQuery query=new ProcessTaskBjQuery();
+		query.setItemcode(baseItemDao.getById(entity.getBaseitemid()).getItemcode());
+		query.setFverid(entity.getItemVer().getFverid());
+		
+		
+		List<ProcessTaskBj> list=processTaskDao.findList(query, 1);
+		if(list.size()>0)
+		{
+			pt=list.get(0);
+		}
+		if(null==pt){
+			pt=new ProcessTaskBj();
+			Date cdate=new Date();
+		   	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  
+			pt.setItemcode(query.getItemcode());
+			pt.setAmount(0D);
+			pt.setExplain(" ");
+			try {
+				pt.setPlanenddate(sdf.parse(DateUtils.DateAdd(sdf.format(cdate), 7, 2)));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			pt.setOri(ProcessTaskBj.FROM_PROCESS);
+			pt.setIcmoid(0L);
+			pt.setFverid(entity.getItemVer().getFverid());
+			pt.setFversion(itemVer.getFversion());
+		}
+			pt.setCreatedate(DateUtils.GetDateTime());
+			
+			pt.setWaitnote(waitnote);
+			pt.setTasktype(ProcessTaskBj.CHECKTYPE_WORKTIME);//工时审核
+			
+			processTaskDao.saveOrUpdate(pt);
+		
+	}
+*/
+	@Override
+	public List<BaseItem> findList(BaseItemQuery baseItemQuery, Integer pageSize)
+			throws ServiceException {
+		return baseItemDao.findList(baseItemQuery, pageSize);
+	}
+
+//	@Override
+//	public void updatePosition(BaseItem entity) throws ServiceException {
+//	//新版的物料绑定-----------2013-12-19
+//		ItemPostion itemPostion=new ItemPostion();
+//		
+//		itemPostion.setFinterid(entity.getFinterid());
+//		itemPostion.setBaseitemid(entity.getBaseitemid());
+//		itemPostion.setPositionid(entity.getPositionid());
+//		
+//		itemPostionDao.saveOrUpdate(itemPostion);			
+//		
+//		
+//	//旧版的物料仓位绑定------
+//	/*	if(null!=entity.getFirstid()){
+//			BaseItem bitem=new BaseItem();
+//			bitem.setBaseitemid(entity.getFirstid());
+//			bitem.setPositionid(0L);
+//			baseItemDao.update(bitem);//解除前一个物料仓位的绑定
+//		}
+//		
+//		baseItemDao.update(entity);
+//	*/	
+//	}
+
+	@Override
+	public BaseItem getByIdBaseItem(Long baseItemId) throws ServiceException {
+		return baseItemDao.getByIdBaseItem(baseItemId);
+	}
+
+	@Override
+	public void saveANDupdate(BaseItem entity) throws ServiceException {
+
+		baseItemDao.saveANDupdate(entity);
+	}
+
+	@Override
+	public void updateBaseItemById(BaseItem entity) throws ServiceException {
+		baseItemDao.updateBaseItemById(entity);
+		
+	}
+
+	@Override
+	public BaseItem findBaseItemList(Long baseItemId) throws ServiceException {
+		return baseItemDao.findBaseItemList(baseItemId);
+	}
+
+	@Override
+	public void updateBaseItemBangById(BaseItem entity) throws ServiceException {
+		baseItemDao.updateBaseItemBangById(entity);
+	}
+
+	@Override
+	public void saveSolution(BaseItem entity) throws ServiceException {
+		baseItemDao.saveSolution(entity);
+	}
+
+	@Override
+	public BaseItem getSolutionById(Long baseItemId) throws ServiceException {
+		return baseItemDao.getSolutionById(baseItemId);
+	}
+
+	@Override
+	public BaseItem getByEntityVer(String statement, BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return  baseItemDao.getByEntityVer(statement, baseItemQuery);
+	}
+//	@Override
+//	public void updateVersion(BaseItem entity) throws ServiceException {
+//		ItemVer itemVer = itemVerDao.getById(entity.getItemVer().getFverid());
+//		itemVer.setWfstatus(entity.getWfstatus());
+//		itemVerDao.update(itemVer);
+//		
+//	}
+	
+	@Override
+	public List<BaseItem> finditemforPorequest(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.finditemforPorequest(baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> finditemforTakeStock(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.finditemforTakeStock(baseItemQuery);
+	}
+	@Override
+	public BaseItem getpositionBycode(String itemcode) throws ServiceException {
+		//itemPostionDao
+		BaseItemQuery baseItemQuery=new BaseItemQuery();
+		baseItemQuery.setItemcode(itemcode);
+		
+		BaseItem base=new BaseItem();
+		 base = baseItemDao.getByEntity("BaseItem.getpositionBycode", baseItemQuery);
+				
+		return base;
+	}
+	/*@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void SyncBaseItem() {
+		//先查询出待从K3中取出的数量
+		Long syncBeaseItemNum=baseItemDao.findSyncBeaseItemNum();
+		for (int i = 0; i < syncBeaseItemNum; i++) {
+			baseItemDao.syncBeaseItem();
+		}
+	}*/
+	public static void main(String[] args) {
+		System.out.println("800.90".lastIndexOf(".") );
+		System.out.println("800".lastIndexOf(".") );
+		System.out.println("800.90.90".lastIndexOf(".") );
+		System.out.println( "800.90.90".substring(0, "800.90.90".lastIndexOf("."))   );
+		System.out.println( "800.90.90".substring(0, "800.90.90".lastIndexOf(".")-1 )   );
+	}
+	 
+	/*public void syncK3ItemDetail() throws ServiceException {
+		//先查询 从K3中取出的需要同步的
+	//	List<ItemDetailK3> itemDetailK3List= baseItemDao.findAllK3ItemDetail();
+		List<ItemDetailK3> itemDetailK3List=null;
+		for (Iterator iterator = itemDetailK3List.iterator(); iterator
+				.hasNext();) {
+			ItemDetailK3 itemDetailK3 = (ItemDetailK3) iterator.next();
+			BaseItem baseItem=new BaseItem();
+			
+			baseItem.setDeleted(itemDetailK3.getFdeleted());
+			baseItem.setFlevel(itemDetailK3.getFlevel()+"");
+			baseItem.setItemcode(itemDetailK3.getFnumber());
+			baseItem.setItemname(itemDetailK3.getFname());
+			baseItem.setDetail(itemDetailK3.getFdetail());
+			baseItem.setShortnumber(itemDetailK3.getFshortNumber());
+			
+			int lastIndexPosition=itemDetailK3.getFnumber().lastIndexOf(".") ;
+			if(-1==lastIndexPosition){
+				baseItem.setItemparentcode("ROOT");
+			}else{
+				
+				baseItem.setItemparentcode(itemDetailK3.getFnumber().substring(0, itemDetailK3.getFnumber().lastIndexOf(".")));
+			}
+			baseItem.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),
+			"yyyy-MM-dd HH:mm:ss"));
+			//
+			WebIdentity identity = webIdentityDao.getByPropertyt("tname",
+			"t_base_item");
+			baseItem.setBaseitemid(identity.getTnextValue());
+			
+			baseItemDao.saveItemFromk3SyncDetail(baseItem);
+		}
+	}*/
+	
+	/**
+	 * 修改是否免检
+	 */
+	@Override
+	public void updateFinspectionlevel(BaseItem entity) throws ServiceException {
+		//修改之前先查询一下
+		String ids =entity.getIds();
+		String[] idArray = StringUtils.split(ids,",");
+		for (int i = 0; i < idArray.length; i++) {
+			entity.setIds(idArray[i]);
+			Long count = baseItemDao.getFinspctionlevelCount("BaseItem.count.finspectionlevel",entity);
+			if(count<1){
+				throw new ServiceException("免检表里没有对应的物料，物料ID为"+ entity.getIds()+"请单个修改此物料！", "-1");
+			}else {
+				baseItemDao.update("BaseItem.update.finspectionlevel", entity);
+			}
+		}
+		
+	}
+	@Override
+	public BaseItem findbaseguide(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.findbaseguide(baseItemQuery);
+	}
+	@Override
+	public BaseItem findInKey(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.findInKey(baseItemQuery);
+	}
+	@Override
+	public BaseItem getByBaseFqty(String statement, BaseItemQuery baseItemQuery)
+			throws ServiceException {
+
+		return  baseItemDao.getByEntity(statement, baseItemQuery);
+	}
+	@Override
+	public void updateByRpid(BaseItem entity, List<Long> checkedIdList) {
+		BaseItem temp = null;
+		if(null!=checkedIdList&&checkedIdList.size()>0){
+			for(Long ln:checkedIdList){
+				temp = new BaseItem();
+				temp.setRpid(entity.getRpid());
+				temp.setBaseitemid(ln);
+				baseItemDao.update(temp);
+			}
+		}
+	}
+	
+	public Integer deleteInfoByItemcode(String itemcode) throws ServiceException
+	{
+		//String delIds = StringUtils.join(idList, ",");//以,分割id
+		BaseItemQuery query=new BaseItemQuery();
+		//String itemcode=baseItemDao.getById(id).getItemcode();
+		BaseItem  baseItem =baseItemDao.getByProperty("itemcode", itemcode);
+		if (null==baseItem) {
+			throw new ServiceException("保存失败，原因：" + "规则代码在物料中不存在!");
+		}
+		query.setItemparentcode( itemcode );//y 查找id 对应的物料
+		//然后设置查询条件为父编码为 当前物料编码的查询条件
+		
+		Integer returnValueWeb=0;
+		Integer returnValue=0;
+		if(baseItemDao.findList(query).size()>0)//y 如果按照查询条件 返回集合 数大于0,不允许删除
+		{
+			return 0;
+		}
+		else
+		{   BaseItem  entity=new  BaseItem();
+		    //entity.setBaseitemid(Long.valueOf(id+""));
+		    entity.setBaseitemid( baseItem.getBaseitemid() );
+		
+			entity.setDeleted((short)1);
+			//entity.setOptType(2);
+			returnValue = baseItemDao.updateinfo(entity);//排产中假删除
+			
+			// 同时操作K3数据库
+			 IItemOptService service = new ItemOptService();
+			 TREReturn trereturn = service.updateBaseItem(itemcode,null);//操作排产
+				if (trereturn.getnCode() != 1) {
+					throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+				}
+			if(1==returnValue&&1==trereturn.getnCode()){
+				returnValueWeb=1;
+			}
+			//returnValue = webBaseItemParentDao.deleteByMultipleId(delIds);//如果按照查询条件 返回集合 数小于等于0,
+			//即没有父编码为当前物料的编码,即没有孩子
+			return returnValueWeb;
+		}
+	}
+	
+	public Integer deleteInfoById(Long id) throws ServiceException
+	{
+		//String delIds = StringUtils.join(idList, ",");//以,分割id
+		BaseItemQuery query=new BaseItemQuery();
+		String itemcode=baseItemDao.getById(id).getItemcode();
+		query.setItemparentcode( itemcode );//y 查找id 对应的物料
+		//然后设置查询条件为父编码为 当前物料编码的查询条件
+		
+		Integer returnValueWeb=0;
+		Integer returnValue=0;
+		if(baseItemDao.findList(query).size()>0)//y 如果按照查询条件 返回集合 数大于0,不允许删除
+		{
+			return 0;
+		}
+		else
+		{    BaseItem  entity=new  BaseItem();
+		    entity.setBaseitemid(Long.valueOf(id+""));
+			entity.setDeleted((short)1);
+			//entity.setOptType(2);
+			returnValue = baseItemDao.updateinfo(entity);//排产中假删除
+			
+			// 同时操作K3数据库
+			 IItemOptService service = new ItemOptService();
+			 TREReturn trereturn = service.updateBaseItem(itemcode,null);//操作排产
+				if (trereturn.getnCode() != 1) {
+					throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+				}
+			if(1==returnValue&&1==trereturn.getnCode()){
+				returnValueWeb=1;
+			}
+			//returnValue = webBaseItemParentDao.deleteByMultipleId(delIds);//如果按照查询条件 返回集合 数小于等于0,
+			//即没有父编码为当前物料的编码,即没有孩子
+			return returnValueWeb;
+		}
+	}
+	
+	
+	@Override
+	public BaseItem getByTecsn(String statement, BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		
+		return baseItemDao.getByEntity(statement, baseItemQuery);
+		
+	}
+	@Override
+	public List<BaseItem> getBaseItemCallslip(BaseItemQuery bQuery) {
+		return baseItemDao.getBaseItemCallslip(bQuery);
+	}
+	@Override
+	public List<BaseItem> findBaseItemPorequest(BaseItemQuery bQuery)
+			throws ServiceException {
+		return baseItemDao.findBaseItemPorequest(bQuery);
+	}
+	@Override
+	public List<BaseItem> findBaseItemPoorder(BaseItemQuery bQuery)
+			throws ServiceException {
+		return baseItemDao.findBaseItemPoorder(bQuery);
+	}
+	@Override
+	public List<BaseItem> listItemInfo(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.listItemInfo(baseItemQuery);
+	}
+	@Override
+	public BaseItem getItemInfoByFNumber(String itemcode)
+			throws ServiceException {
+		return baseItemDao.getByColumn("BaseItem.getItemInfoByFNumber", itemcode);
+	}
+	@Override
+	public void updatecheckwfstauts(BaseItem entity) throws ServiceException {
+		String waitnote="";
+		waitnote=entity.getWaitnote();
+		//baseItemDao.update(entity);
+		ItemVer itemVer = itemVerDao.getById(entity.getItemVer().getFverid());
+		itemVer.setWfstatus(entity.getWfstatus());
+		itemVerDao.update(itemVer);
+		
+		ProcessTaskBj pt=null;
+		ProcessTaskBjQuery query=new ProcessTaskBjQuery();
+		query.setItemcode(baseItemDao.getById(entity.getBaseitemid()).getItemcode());
+		query.setFverid(entity.getItemVer().getFverid());
+		
+		
+		List<ProcessTaskBj> list=processTaskBjDao.findList(query, 1);
+		if(list.size()>0)
+		{
+			pt=list.get(0);
+		}
+		if(null==pt){
+			pt=new ProcessTaskBj();
+			Date cdate=new Date();
+		   	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  
+			pt.setItemcode(query.getItemcode());
+			pt.setAmount(0D);
+			pt.setExplain(" ");
+			try {
+				pt.setPlanenddate(sdf.parse(DateUtils.DateAdd(sdf.format(cdate), 7, 2)));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			pt.setOri(ProcessTaskBj.FROM_PROCESS);
+			pt.setIcmoid(0L);
+			pt.setFverid(entity.getItemVer().getFverid());
+			pt.setFversion(itemVer.getFversion());
+		}
+			pt.setCreatedate(DateUtils.GetDateTime());
+			
+			pt.setWaitnote(waitnote);
+			pt.setTasktype(ProcessTaskBj.CHECKTYPE_WORKTIME);//工时审核
+			
+			processTaskBjDao.saveOrUpdate(pt);
+		
+	}
+	@Override
+	public List<BaseItem> findBaseItemSeoutstock(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.findBaseItemSeoutstock(baseItemQuery);
+	}
+	@Override
+	public BaseItem finditemforStoreRoom(BaseItemQuery baseItemQuery)
+			throws ServiceException {
+		return baseItemDao.findBaseItemStoreRoom(baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findDifferentItems() throws ServiceException {
+		//得到常州系统中存在但是ERP中不存在的物料
+		return baseItemDao.findDifferentItems();
+	}
+	@Override
+	public void updateVersion(BaseItem entity) throws ServiceException {
+		ItemVer itemVer = itemVerDao.getById(entity.getItemVer().getFverid());
+		itemVer.setWfstatus(entity.getWfstatus());
+		itemVerDao.update(itemVer);
+		
+	}
+}

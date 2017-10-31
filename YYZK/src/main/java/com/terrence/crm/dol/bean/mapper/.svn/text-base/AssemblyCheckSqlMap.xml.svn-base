@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblyCheck">
+
+        
+	<resultMap id="RM.AssemblyCheck" class="com.terrence.crm.dol.bean.AssemblyCheck">
+        <result property="checkid" column="checkid"/>
+        <result property="seqno" column="seqno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="ftimes" column="ftimes"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblyCheck.columns">
+	    <![CDATA[
+        	t_assembly_check.checkid ,
+        	t_assembly_check.seqno ,
+        	t_assembly_check.itemcode ,
+        	t_assembly_check.ftimes 
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblyCheck.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_assembly_check (
+        	seqno ,
+        	itemcode ,
+        	ftimes 
+        ) VALUES (
+        	#seqno# ,
+        	#itemcode# ,
+        	#ftimes# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="checkid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssemblyCheck.update" parameterClass="com.terrence.crm.dol.bean.AssemblyCheck">         
+        UPDATE t_assembly_check 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftimes">
+	        	ftimes = #ftimes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        checkid = #checkid# 
+    </update>
+    
+	<delete id="AssemblyCheck.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_check where
+       checkid = #checkid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblyCheck.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_check 
+        WHERE
+       checkid in ($checkid$) 
+    ]]>
+    </delete>
+    
+    <select id="AssemblyCheck.getById" resultMap="RM.AssemblyCheck">
+	    select <include refid="AssemblyCheck.columns"/>
+	    
+	        from t_assembly_check 
+	        where 
+		        checkid = #checkid# 
+	    
+    </select>
+    
+	<select id="AssemblyCheck.getByProperty" resultMap="RM.AssemblyCheck">
+		select <include refid="AssemblyCheck.columns"/> from t_assembly_check where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblyCheck.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="checkid">
+	             t_assembly_check.checkid = #checkid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_assembly_check.seqno = #seqno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_check.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftimes">
+	             t_assembly_check.ftimes = #ftimes#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblyCheck.findPage.and">
+			<isNotEmpty prepend="AND" property="checkid">
+	             t_assembly_check.checkid = #checkid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_assembly_check.seqno = #seqno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_check.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftimes">
+	             t_assembly_check.ftimes = #ftimes#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssemblyCheck.Entity" resultMap="RM.AssemblyCheck">
+    	SELECT 	<include refid="AssemblyCheck.columns"/> FROM t_assembly_check <include refid="AssemblyCheck.findPage.where"/>
+    </select>
+    
+    <select id="AssemblyCheck.findList" resultMap="RM.AssemblyCheck">
+    	SELECT 
+    		<include refid="AssemblyCheck.columns"/> 
+    	FROM 
+    		t_assembly_check
+		<include refid="AssemblyCheck.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssemblyCheck.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_check
+    ]]>
+		<include refid="AssemblyCheck.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblyCheck.findPage" resultMap="RM.AssemblyCheck">
+    	select <include refid="AssemblyCheck.columns"/>	    
+	        from t_assembly_check 	   
+		<include refid="AssemblyCheck.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblyCheck.findPage" resultMap="RM.AssemblyCheck">
+    	select <include refid="AssemblyCheck.columns"/>	    
+	        from t_assembly_check where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       checkid 
+	   not in(select $notTop$ 
+       checkid 
+	   from t_assembly_check <include refid="AssemblyCheck.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyCheck.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

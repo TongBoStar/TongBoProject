@@ -1,0 +1,63 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+
+@Repository
+public class ItemProcessDao extends BaseIbatisDao<ItemProcess,java.lang.Long> implements IItemProcessDao{
+
+		
+	public void saveOrUpdate(ItemProcess entity) {
+		if(entity.getItemprocessid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemProcess";
+	}
+	public ItemProcess getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ItemProcess)this.getSqlMapClientTemplate().queryForObject("ItemProcess.getByProperty", map);		
+	}
+
+	@Override
+	public Integer getMaxOrderId(String itemcode) throws DataAccessException {
+		Integer orderid=(Integer)this.getSqlMapClientTemplate().queryForObject("ItemProcess.getMaxOrderId",itemcode);
+		return orderid;
+	}
+
+	@Override
+	public void deleteByItemcode(String itemcode) throws DataAccessException {
+		this.getSqlMapClientTemplate().delete("ItemProcess.deleteByItemcode", itemcode);
+	}
+
+	@Override
+	public Long getMaxpid(String itemcode) throws DataAccessException {
+		Long iprocessid=(Long)this.getSqlMapClientTemplate().queryForObject("ItemProcess.findItem.maxprocessid",itemcode);
+		return iprocessid;
+	}
+
+	@Override
+	public void deleteByItemProcedureId(long itemProcedureId) {
+		this.getSqlMapClientTemplate().delete("ItemProcess.deleteByItemProcedureId", itemProcedureId);
+
+	}
+
+}

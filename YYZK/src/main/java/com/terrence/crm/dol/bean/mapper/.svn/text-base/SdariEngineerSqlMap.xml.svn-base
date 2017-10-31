@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SdariEngineer">
+
+        
+	<resultMap id="RM.SdariEngineer" class="com.terrence.crm.dol.bean.SdariEngineer">
+        <result property="engineerid" column="engineerid"/>
+        <result property="finterid" column="finterid"/>
+        <result property="engname" column="engname"/>
+    </resultMap>
+	
+
+	<resultMap id="RM.SdariEngineer.allName" class="com.terrence.crm.dol.bean.SdariEngineer">
+        <result property="engineerid" column="engineerid"/>
+        <result property="engname" column="engname"/>
+    </resultMap>
+		  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="SdariEngineer.columns">
+	    <![CDATA[
+        	t_sdari_engineer.engineerid ,
+        	t_sdari_engineer.finterid ,
+        	t_sdari_engineer.engname 
+	    ]]>
+	</sql>
+	
+   <insert id="SdariEngineer.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_sdari_engineer (
+        	finterid ,
+        	engname 
+        ) VALUES (
+        	#finterid# ,
+        	#engname# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="engineerid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="SdariEngineer.update" parameterClass="com.terrence.crm.dol.bean.SdariEngineer">         
+        UPDATE t_sdari_engineer 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="finterid">
+	        	finterid = #finterid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="engname">
+	        	engname = #engname# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        engineerid = #engineerid# 
+    </update>
+    
+	<delete id="SdariEngineer.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_sdari_engineer where
+       engineerid = #engineerid# 
+    ]]>
+    </delete>
+    
+    <delete id="SdariEngineer.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_sdari_engineer 
+        WHERE
+       engineerid in ($engineerid$) 
+    ]]>
+    </delete>
+    
+    <select id="SdariEngineer.getById" resultMap="RM.SdariEngineer">
+	    select <include refid="SdariEngineer.columns"/>
+	    
+	        from t_sdari_engineer 
+	        where 
+		        engineerid = #engineerid# 
+	    
+    </select>
+    
+	<select id="SdariEngineer.getByProperty" resultMap="RM.SdariEngineer">
+		select <include refid="SdariEngineer.columns"/> from t_sdari_engineer where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="SdariEngineer.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="engineerid">
+	             t_sdari_engineer.engineerid = #engineerid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_sdari_engineer.finterid = #finterid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="engname">
+	             t_sdari_engineer.engname = #engname#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="SdariEngineer.findPage.and">
+			<isNotEmpty prepend="AND" property="engineerid">
+	             t_sdari_engineer.engineerid = #engineerid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finterid">
+	             t_sdari_engineer.finterid = #finterid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="engname">
+	             t_sdari_engineer.engname = #engname#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="SdariEngineer.Entity" resultMap="RM.SdariEngineer">
+    	SELECT 	<include refid="SdariEngineer.columns"/> FROM t_sdari_engineer <include refid="SdariEngineer.findPage.where"/>
+    </select>
+    
+    <select id="SdariEngineer.findList" resultMap="RM.SdariEngineer">
+    	SELECT 
+    		<include refid="SdariEngineer.columns"/> 
+    	FROM 
+    		t_sdari_engineer
+		<include refid="SdariEngineer.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SdariEngineer.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_sdari_engineer
+    ]]>
+		<include refid="SdariEngineer.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.SdariEngineer.findPage" resultMap="RM.SdariEngineer">
+    	select <include refid="SdariEngineer.columns"/>	    
+	        from t_sdari_engineer 	   
+		<include refid="SdariEngineer.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="SdariEngineer.findPage" resultMap="RM.SdariEngineer">
+    	select <include refid="SdariEngineer.columns"/>	    
+	        from t_sdari_engineer where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       engineerid 
+	   not in(select $notTop$ 
+       engineerid 
+	   from t_sdari_engineer <include refid="SdariEngineer.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="SdariEngineer.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+
+    <select id="SdariEngineer.findlist.Allname" resultMap="RM.SdariEngineer.allName">
+    		select engineerid,engname from t_sdari_engineer where 1=1
+    			<isNotEmpty property="engname" prepend="">
+    				and  engname  like('%$engname$%')
+    			</isNotEmpty>
+    			<isNotEmpty property="finterid" prepend="">
+    				and  finterid = #finterid#
+    			</isNotEmpty>
+    </select>
+
+
+
+	
+</sqlMap>

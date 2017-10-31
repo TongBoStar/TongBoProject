@@ -1,0 +1,1754 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+
+import java.util.ArrayList;
+
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import java.util.List;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.bean.SaleOutbound;
+import com.terrence.crm.dol.bean.SalesDetail;
+import com.terrence.crm.dol.bean.SalesDetailSum;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IOrdersProductDao;
+import com.terrence.crm.dol.dao.IOrganizationDao;
+import com.terrence.crm.dol.dao.ISaleOutboundDao;
+import com.terrence.crm.dol.dao.ISalesDetailDao;
+import com.terrence.crm.dol.dao.ISalesDetailSumDao;
+import com.terrence.crm.dol.dao.IStockDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.query.IcserialQuery;
+import com.terrence.crm.dol.query.SalesDetailSumQuery;
+import com.terrence.crm.dol.service.ISalesDetailSumService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+@Service
+@Transactional
+public class SalesDetailSumService extends BaseService implements
+		ISalesDetailSumService {
+	protected static Logger logger = LoggerFactory
+			.getLogger(SalesDetailSumService.class);
+	@Autowired
+	@Qualifier("salesDetailSumDao")
+	private ISalesDetailSumDao salesDetailSumDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+
+	@Autowired
+	@Qualifier("salesDetailDao")
+	private ISalesDetailDao salesDetailDao;
+
+	@Autowired
+	@Qualifier("saleOutboundDao")
+	private ISaleOutboundDao saleOutboundDao;
+
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+
+	@Autowired
+	@Qualifier("departmentDao")
+	private IDepartmentDao departmentDao;
+
+	@Autowired
+	@Qualifier("stockDao")
+	private IStockDao stockDao;
+
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	
+	@Autowired
+	@Qualifier("organizationDao")
+	private IOrganizationDao organizationDao;
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	@Autowired
+	@Qualifier("ordersProductDao")
+	private IOrdersProductDao ordersProductDao;
+	
+
+	public String getIbatisSqlMapNamespace() {
+		return "SalesDetailSum";
+	}
+
+	@Transactional(readOnly = true)
+	public SalesDetailSum getById(java.lang.Long id) throws ServiceException {
+		return salesDetailSumDao.getById(id);
+	}
+
+	public void saveOrUpdate(SalesDetailSum entity) throws ServiceException {
+		salesDetailSumDao.saveOrUpdate(entity);
+	}
+
+	public java.lang.Long save(SalesDetailSum entity) throws ServiceException {
+		Long adId = salesDetailSumDao.save(entity);
+
+		return adId;
+	}
+
+	public Integer update(SalesDetailSum entity) throws ServiceException {
+		Integer returnValue = salesDetailSumDao.update(entity);
+
+		return returnValue;
+	}
+
+	public Integer deleteById(java.lang.Long id) throws ServiceException {
+		Integer returnValue = salesDetailSumDao.deleteById(id);
+		return returnValue;
+	}
+
+	public Integer deleteByMultipleId(List<java.lang.Long> idList)
+			throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = salesDetailSumDao.deleteByMultipleId(delIds);
+
+		return returnValue;
+	}
+
+	public boolean isUnique(String uniquePropertyNames, Object newValue,
+			Object oldValue) throws ServiceException {
+		SalesDetailSumQuery query = new SalesDetailSumQuery();
+		try {
+			return salesDetailSumDao.isUnique(query, uniquePropertyNames,
+					newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public Page<SalesDetailSum> findPage(Page<SalesDetailSum> page,
+			SalesDetailSumQuery query) throws ServiceException {
+		return salesDetailSumDao.findPage(page, query);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<SalesDetailSum> findPage(Page<SalesDetailSum> page,
+			String statement, SalesDetailSumQuery query)
+			throws ServiceException {
+		return salesDetailSumDao.findPage(page, statement, query);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SalesDetailSum> findList(SalesDetailSumQuery query)
+			throws ServiceException {
+		return salesDetailSumDao.findList(query);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SalesDetailSum> findList(SalesDetailSumQuery query,
+			Integer pageSize) throws ServiceException {
+		return salesDetailSumDao.findList(query, pageSize);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SalesDetailSum> findList(SalesDetailSumQuery query,
+			String statement, Integer pageSize) throws ServiceException {
+		return salesDetailSumDao.findList(query, statement, pageSize);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SalesDetailSum> findAllList() throws ServiceException {
+		return salesDetailSumDao.findAllList();
+	}
+
+	@Override
+	public SalesDetailSum saveNewSales(SalesDetailSum entity,
+			List<Long> checkedIdList) throws ServiceException {
+		String salesids = StringUtils.join(checkedIdList, ",");
+		Long said = null;
+		// ========================保存出库单表头======================================
+		SaleOutbound saleOutbound = new SaleOutbound();
+		if (entity.getFmarketingstyle() != null) {
+			saleOutbound.setFmarketingstyle(entity.getFmarketingstyle());
+		}
+		if (entity.getFfetchdate() != null) {
+			saleOutbound.setFfetchdate(entity.getFfetchdate());
+		}
+		if (entity.getFfetchadd() != null) {
+			saleOutbound.setFfetchadd(entity.getFfetchadd());
+		}
+		if (entity.getFconsignee() != null) {
+			saleOutbound.setFconsignee(entity.getFconsignee());
+		}
+		if (entity.getFsalestyle() != null) {
+			saleOutbound.setFsalestyle(entity.getFsalestyle());
+		}
+		if (entity.getFexplanation() != null) {
+			saleOutbound.setFexplanation(entity.getFexplanation());
+		}
+		if (entity.getFbillno() != null) {
+			saleOutbound.setFbillno(entity.getFbillno());
+		}
+		if (entity.getFseltrantype() != null) {
+			saleOutbound.setFseltrantype(entity.getFseltrantype());
+		}
+		if (entity.getFchoosebillno() != null) {
+			saleOutbound.setFchoosebillno(entity.getFchoosebillno());
+		}
+		
+		if(entity.getFdate() != null){
+			saleOutbound.setFdate(entity.getFdate());
+		}else{	
+			saleOutbound.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+		}
+		
+		if (entity.getFscstockid() != null) {
+			saleOutbound.setFscstockid(entity.getFscstockid());
+		}
+		saleOutbound.setFbillerid(SpringSecurityUtils.getCurrentUserId());// 制单人
+		if (entity.getFsendempid() != null) {
+			saleOutbound.setFsendempid(entity.getFsendempid());
+		}// 发货人
+		if (entity.getFdeptid() != null) {
+			saleOutbound.setFdeptid(entity.getFdeptid());
+		}// 部门
+		if (entity.getFempid() != null) {
+			saleOutbound.setFempid(entity.getFempid());
+		}// 业务员
+		if (entity.getFsmanagerid() != null) {
+			saleOutbound.setFsmanagerid(entity.getFsmanagerid());
+		}// 保管员
+		if(entity.getStockidsss()!=null){saleOutbound.setFscstockid(entity.getStockidsss());}
+		saleOutbound.setFstatus(0);// 未审核
+		if(entity.getFfrom() != null){
+			saleOutbound.setFfrom(entity.getFfrom());//单据来源
+		}
+		
+		if (entity.getSaleid() == null) {
+			said = saleOutboundDao.save(saleOutbound,"SaleOutbound.insert.new.data.save");
+		} else {
+			said = entity.getSaleid();
+			saleOutbound.setSaleid(entity.getSaleid());
+			saleOutboundDao.update("SaleOutbound.update.data.saveAfter",saleOutbound);
+		}
+
+		// ==============================================================
+
+		List<String> itemcodes = entity.getItemcodes();
+		List<String> itemnames = entity.getItemnames();
+		List<String> itemmodes = entity.getItemmodes();
+		List<Long> unitids = entity.getUnitids();
+		List<Double> fqtys = entity.getFqtys();
+		List<Double> payfqtys = entity.getPayfqtys();// -----
+		List<String> notess = entity.getNotess();
+		List<Long> stockids = entity.getStockids();
+		List<Double> saleprices = entity.getSaleprices();
+		List<Double> saleamounts = entity.getSaleamounts();
+		List<String> fsourcecodes = entity.getFsourcecodes();
+		List<Long> baseunitids = entity.getBaseunitids();// ------------
+		List<String> fbatchnos = entity.getFbatchnos();
+		List<Integer> dbnos = entity.getDbnos();
+		List<Long> sdetailids = entity.getSdetailids();
+		List<String> searilSums = entity.getSearilSums();
+		List<Long>  productides = entity.getProductides();
+		List<Long> putentitys = entity.getPutentitys();
+		
+		for (int i = 0; i < itemcodes.size(); i++) {
+			Long id = null;
+			SalesDetailSum salesSum = new SalesDetailSum();
+			if (itemcodes.get(i) != null && !itemcodes.get(i).equals("")) {
+				salesSum.setSaleid(said);
+				salesSum.setItemcode(itemcodes.get(i));
+			} else {
+				break;
+			}
+			BaseItem bitem = baseItemDao.getByProperty("itemcode",itemcodes.get(i));
+
+			if (itemnames.get(i) != null && !itemnames.get(i).equals("null")) {
+				salesSum.setItemname(itemnames.get(i));
+			}
+			if (itemmodes.get(i) != null && !itemmodes.get(i).equals("null")) {
+				salesSum.setItemmode(itemmodes.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setUnitid(unitids.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setBaseunitid(unitids.get(i));
+			}
+			if (fqtys.get(i) != null) {
+				salesSum.setFqty(fqtys.get(i));
+			}
+			if (notess.get(i) != null) {
+				salesSum.setNotes(notess.get(i));
+			}
+			if (stockids.get(i) != null) {
+				salesSum.setStockid(stockids.get(i));
+			}
+			if (saleprices.get(i) != null) {
+				salesSum.setSaleprice(saleprices.get(i));
+			}
+			if (saleamounts.get(i) != null) {
+				salesSum.setSaleamount(saleamounts.get(i));
+			}
+			if (fsourcecodes.get(i) != null) {
+				salesSum.setFsourcecode(fsourcecodes.get(i));
+			}
+			
+			
+			if(bitem.getFissnmanager() != 1){//非序列号管理的
+				if (fbatchnos.get(i) != null && !fbatchnos.get(i).equals("")) {
+					salesSum.setFbatchno(fbatchnos.get(i));
+				}
+				
+			}
+					
+			
+			
+			if (dbnos.get(i) != null) {
+				salesSum.setDbno(dbnos.get(i));
+			}
+			salesSum.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+			
+			if(entity.getFfrom()!=null && entity.getFfrom()==2){//销售订单下推来的
+				if(productides.get(i)!=null){
+					salesSum.setProductid(productides.get(i));					
+				}
+				
+			}
+			if(entity.getFfrom()!=null && entity.getFfrom()==4){//外购入库单推的
+				if(putentitys.get(i)!=null){
+					salesSum.setOldsdetailid(putentitys.get(i));
+				}
+				
+			}
+			if (sdetailids.get(i) == null) {
+				
+				
+				id = salesDetailSumDao.save(salesSum,"SalesDetailSum.insert.newData.save");
+				
+				if(entity.getFfrom()!=null && entity.getFfrom()==2){//销售订单下推来的
+					if(productides.get(i)!=null){
+						//SalesDetailSum sds = new SalesDetailSum();
+						//sds.setProductid(productides.get(i));
+						//SalesDetailSum salesDS = salesDetailSumDao.findSDS(sds);//查询此销售订单总的已下推多少了
+						OrdersProduct porder = new OrdersProduct();
+						porder.setId(productides.get(i));
+						OrdersProduct orpro  = ordersProductDao.findorderentity(porder);
+						OrdersProduct op = ordersProductDao.getById(productides.get(i));
+						
+						if((op.getAmount()-orpro.getPushqty())<0){
+							
+							throw new ServiceException ("下推数量大于订单数，请修改数量再保存");
+						}
+						
+						
+						OrdersProduct orproduct = new OrdersProduct();
+						orproduct.setId(productides.get(i));
+						orproduct.setPushqty(orpro.getPushqty()+fqtys.get(i));
+						if((op.getAmount()-(orpro.getPushqty()+fqtys.get(i)))==0){
+							orproduct.setIsclose(1);//行关闭
+						}
+						ordersProductDao.update("OrdersProduct.update.data.pushfqty", orproduct);//更新订单的已下推数
+					}
+					
+				}
+				
+				if (checkedIdList != null) {
+					SalesDetail sdetail = new SalesDetail();
+					sdetail.setDetailids(salesids);
+					sdetail.setIsout(1);// 待出库
+					sdetail.setSdetailid(id);
+					if (itemnames.get(i) != null) {
+						sdetail.setItemcode(itemcodes.get(i));
+					}
+					if (fbatchnos.get(i) != null) {
+						sdetail.setBatchno(fbatchnos.get(i));
+					}
+//					if (stockids.get(i) != null) {
+//						sdetail.setFscstockid(stockids.get(i));
+//					}
+					if (dbnos.get(i) != null) {
+						sdetail.setDbno(dbnos.get(i));
+					}
+					
+					if (entity.getFbillno() != null) {sdetail.setSalecode(entity.getFbillno());}
+					
+					salesDetailDao.update("SalesDetail.update.newDate.in.Detailsum", sdetail);
+
+				}
+				
+				if(entity.getFfrom() != null){//修改，数据来源是手添加的时候才进行锁库处理，因为从装配下推下来的数据已经锁库了
+					if(entity.getFfrom()==0 || entity.getFfrom()==2 || entity.getFfrom()==4){//Ffrom 4、外购入库单
+						
+						//================锁库===================
+						InventoryBatch inbatchno = new InventoryBatch();
+						inbatchno.setItemcode(itemcodes.get(i));
+						inbatchno.setFitemid(stockids.get(i).intValue());
+						inbatchno.setDbno(dbnos.get(i));
+						if (fbatchnos.get(i) != null) {
+							inbatchno.setBatchno(fbatchnos.get(i));
+						}
+						InventoryBatch inba = inventoryBatchDao.findbatch(inbatchno);
+						if(dbnos.get(i)==4){
+							if((fqtys.get(i)+inba.getFqtylock())>inba.getFqty2()){
+								throw new ServiceException("物料 "+ itemcodes.get(i) +"锁库数大于库存");								
+							}
+						}else{
+							if((fqtys.get(i)+inba.getFqtylock())>inba.getFqty()){
+								throw new ServiceException("物料 "+ itemcodes.get(i) +"锁库数大于库存");								
+							}
+							
+						}
+						
+						
+						InventoryBatch inventoryBatch = new InventoryBatch();
+						inventoryBatch.setItemcode(itemcodes.get(i));
+						inventoryBatch.setFitemid(stockids.get(i).intValue());
+						inventoryBatch.setDbno(dbnos.get(i));
+						if (fbatchnos.get(i) != null) {
+							inventoryBatch.setBatchno(fbatchnos.get(i));
+						}
+						if(dbnos.get(i)==4){
+							inventoryBatch.setFqty2(fqtys.get(i));			
+						}else{
+							inventoryBatch.setFqty(fqtys.get(i));
+						}
+						
+						inventoryBatchDao.update("InventoryBatch.update.fqtylock.data", inventoryBatch);
+					
+					}
+				}
+				
+				//================锁序列号===================
+				if(searilSums.size()>0){
+					if(searilSums.get(i)!=null&&!searilSums.get(i).equals("")){
+						String[] seriallistsum = searilSums.get(i).toString().split(",");
+						for(int st=0;st<seriallistsum.length;st++){
+							
+							Icserial icserial = new Icserial();
+							icserial.setLockstatus(1);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(id);//销售出库单的明细id
+							icserial.setIdserials(seriallistsum[st]);
+							icserialDao.update("Icserial.update.data.lockstatus", icserial);
+						}
+						
+					}
+				}
+				
+				//===================================
+				
+			} else {
+				
+				//================锁序列号===================
+				if(searilSums.size()>0){
+					if(searilSums.get(i)!=null&&!searilSums.get(i).equals("")){
+						String[] seriallistsum = searilSums.get(i).toString().split(",");
+						for(int st=0;st<seriallistsum.length;st++){
+							
+							Icserial icserial = new Icserial();
+							icserial.setLockstatus(1);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(sdetailids.get(i));//销售出库单的明细id
+							icserial.setIdserials(seriallistsum[st]);
+							icserialDao.update("Icserial.update.data.lockstatus", icserial);
+						}
+						
+					}
+				}
+				
+				//===================================
+				
+				salesSum.setSdetailid(sdetailids.get(i));
+				salesDetailSumDao.update("SalesDetailSum.update.entity.for.save", salesSum);
+				
+				
+				if(entity.getFfrom()!=null && entity.getFfrom()==2){//销售订单下推来的
+					if(productides.get(i)!=null){
+						SalesDetailSum sds = new SalesDetailSum();
+						sds.setProductid(productides.get(i));
+						//SalesDetailSum salesDS = salesDetailSumDao.findSDS(sds);//查询此销售订单总的已下推多少了
+						OrdersProduct porder = new OrdersProduct();
+						porder.setId(productides.get(i));
+						OrdersProduct orpro  = ordersProductDao.findorderentity(porder);
+						OrdersProduct op = ordersProductDao.getById(productides.get(i));
+						
+						if((op.getAmount()-orpro.getPushqty())<0){
+							throw new ServiceException ("下推数量大于订单数，请修改数量再保存");
+						}
+						OrdersProduct orproduct = new OrdersProduct();
+						orproduct.setId(productides.get(i));
+						orproduct.setPushqty(orpro.getPushqty()+fqtys.get(i));
+						if((op.getAmount()-(orpro.getPushqty()+fqtys.get(i)))==0){
+							orproduct.setIsclose(1);//行关闭
+						}
+						ordersProductDao.update("OrdersProduct.update.data.pushfqty", orproduct);//更新订单的已下推数
+						
+					}
+					
+				}
+			}
+			
+			
+			if (saleprices.get(i) != null) {
+				BaseItem baseItem = new BaseItem();
+				baseItem.setItemcode(itemcodes.get(i));
+				baseItem.setFsaleprice(saleprices.get(i));
+				baseItemDao.update("BaseItem.update.data.fsaleprice", baseItem);
+			}
+			
+			
+			
+			
+			//
+			//
+			// SalesDetail sdetail = new SalesDetail();
+			// sdetail.setDetailids(salesids);
+			// sdetail.setIsout(1);//待出库
+			// sdetail.setSdetailid(id);
+			// if(itemnames.get(i)!=null){sdetail.setItemcode(itemcodes.get(i));}
+			// if(fbatchnos.get(i)!=null){sdetail.setBatchno(fbatchnos.get(i));}
+			// if(stockids.get(i)!=null){sdetail.setFscstockid(stockids.get(i));}
+			// if(dbnos.get(i)!=null){sdetail.setDbno(dbnos.get(i));}
+			//
+			// salesDetailDao.update("SalesDetail.update.newDate.in.Detailsum",
+			// sdetail);
+		}
+
+		SalesDetailSum detailSum = new SalesDetailSum();
+		detailSum.setSaleid(said);
+
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if (entity.getSaleid() == null) {
+			operationLogDao.save(ConfigTerrence.MODEL_SALESOUTBOUND, ConfigTerrence.OPT_ADD, "销售出库单号为："+saleOutbound.getFbillno()+"的销售出库单添加成功，操作人为"+admin.getAdmin().getAdminName());
+		} else {
+			operationLogDao.save(ConfigTerrence.MODEL_SALESOUTBOUND, ConfigTerrence.OPT_EDIT, "销售出库单号为："+saleOutbound.getFbillno()+"的销售出库单修改成功，操作人为"+admin.getAdmin().getAdminName());
+		}
+		return detailSum;
+
+	}
+
+	@Override
+	public List<SalesDetailSum> findsaleSumList(
+			SalesDetailSumQuery salesDetailSumQuery) throws ServiceException {
+		return salesDetailSumDao.findsaleSumList(salesDetailSumQuery);
+	}
+
+	/**
+	 * 销售出库单审核 falg = true 为正审，=false 为反审
+	 * @param query 
+	 * 
+	 * @throws SQLException
+	 */
+	@Override
+	public void updateSaleDetailSum(List<Long> checkedIdList, boolean falg, SalesDetailSumQuery query)
+			throws ServiceException, SQLException {
+		SaleOutbound saleOutbound = null;
+		List<SalesDetailSum> salesDetailSumsK3=new ArrayList<SalesDetailSum>();
+		List<Long> ids = new ArrayList<Long>();
+		for (Long Id : checkedIdList) {
+			saleOutbound = saleOutboundDao.getById(Id);
+			if(saleOutbound.getIsreturn()==1 && saleOutbound.getFfrom()==3){//销售出库单下推的红色冲账
+				updateOrderDetail(saleOutbound,falg);
+			}
+			
+			// 3.更新出库单表中的状态和审核人
+			this.updateSaleOutBound(saleOutbound, falg);
+			SalesDetailSumQuery salesDetailSumQuery = new SalesDetailSumQuery();
+			salesDetailSumQuery.setSaleid(Id);
+			List<SalesDetailSum> list = salesDetailSumDao.findList(salesDetailSumQuery);
+			for (SalesDetailSum salesDetailSum : list) {
+				if (salesDetailSum.getDbno()==3) {
+					salesDetailSumsK3.add(salesDetailSum);
+					if(!ids.contains(salesDetailSum.getSaleid())){
+						ids.add(salesDetailSum.getSaleid());
+					}
+				}
+			}
+		}
+		SalesDetailSumQuery salesDetailSumQuery = new SalesDetailSumQuery();
+		salesDetailSumQuery.setIdList(checkedIdList);
+		List<SalesDetailSum> salesDetailSums = salesDetailSumDao.findList(salesDetailSumQuery);
+		for (SalesDetailSum salesDetailSum : salesDetailSums) {
+			// 1.更新库存
+				this.updateInventory(salesDetailSum, falg);
+			// 2.更新销售单详细表状态
+			if(saleOutbound.getFfrom()!=null){
+				if(saleOutbound.getFfrom()==1){
+					this.updateSalesDetail(salesDetailSum, falg);
+				}
+			}
+			//3.如果是序列号管理需要更新序列号表数据
+			this.updateSerial(salesDetailSum,falg);
+		}
+		// 6.同步K3
+		for (Long id : ids) {
+			SaleOutbound sale = saleOutboundDao.getById(id);
+			SalesDetailSumQuery salesDetailSumQuery2 = new SalesDetailSumQuery();
+			salesDetailSumQuery2.setSaleid(id);
+			List<SalesDetailSum> salesDetailSumList =salesDetailSumDao.findList(salesDetailSumQuery2); 
+			if(salesDetailSumList.size()>0){
+				this.putkingdeeSales(sale, salesDetailSumList, falg,query);
+			}
+		}
+	}
+	/**
+	 * 红色冲账判断源单是否从销售订单下推，如果是修改销售订单状态
+	 * @param saleOutbound
+	 */
+	private void updateOrderDetail(SaleOutbound saleOutbound, boolean falg) {
+		SalesDetailSumQuery salesDetailSumQuery2 = new SalesDetailSumQuery();
+		salesDetailSumQuery2.setSaleid(saleOutbound.getSaleid());
+		List<SalesDetailSum> salesDetailSumList =salesDetailSumDao.findList(salesDetailSumQuery2);
+		if(salesDetailSumList.size()>0){
+			for(SalesDetailSum salesds:salesDetailSumList){
+				SalesDetailSum sds = salesDetailSumDao.getById(salesds.getOldsdetailid());
+				if(sds.getFsourcecode()!=null &&  sds.getFsourcecode().toString().substring(0,5).equals("SEORD") && sds.getProductid()!=null){//源单的源单编号
+					if(falg){
+						OrdersProduct op = new OrdersProduct();
+						op.setId(sds.getProductid());
+						OrdersProduct opentity = ordersProductDao.findentity(op);
+						if(opentity != null ){
+							OrdersProduct prorder = new OrdersProduct();
+							prorder.setId(sds.getProductid());
+							prorder.setIsclose(0);//未关闭
+							prorder.setPushqty(opentity.getPushqty()+salesds.getFqty());
+							ordersProductDao.update("OrdersProduct.update.data.pushfqty", prorder);//更新订单的已下推数
+							
+						}else{
+							throw new ServiceException("订单明细中找不到要修改的相关的数据明细");
+						}
+						
+					}else{
+						OrdersProduct op = new OrdersProduct();
+						op.setId(sds.getProductid());
+						OrdersProduct opentityentity = ordersProductDao.findentity(op);
+						OrdersProduct opentity = ordersProductDao.getById(sds.getProductid());
+						if(opentity != null ){
+							OrdersProduct prorder = new OrdersProduct();
+							prorder.setId(sds.getProductid());
+							Double dt = Double.valueOf(opentityentity.getPushqty()-salesds.getFqty());
+							Double cha = Double.valueOf(opentity.getAmount()-dt);
+							if(cha<=0){
+								prorder.setIsclose(1);//关闭
+							}else{
+								prorder.setIsclose(0);//未关闭
+							}
+							
+							prorder.setPushqty(opentityentity.getPushqty()-salesds.getFqty());
+							ordersProductDao.update("OrdersProduct.update.data.pushfqty", prorder);//更新订单的已下推数
+							
+						}else{
+							throw new ServiceException("订单明细中找不到要修改的相关的数据明细");
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	/**
+	 *<p>更新序列号表<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-5-21上午9:39:06
+	 * @param salesDetailSum
+	 * @param falg 
+	 */
+	private void updateSerial(SalesDetailSum salesDetailSum, boolean falg) {
+		SaleOutbound saleOutbound = saleOutboundDao.getById(salesDetailSum.getSaleid());
+		
+		IcserialQuery serQuery= new IcserialQuery();
+		serQuery.setFinterid(salesDetailSum.getSdetailid());
+		serQuery.setItemcode(salesDetailSum.getItemcode());
+		serQuery.setFtrantypeid(21L);
+		if(saleOutbound.getIsreturn()!=null && saleOutbound.getIsreturn()==1){
+			serQuery.setLockstatus(0);
+		}else{
+			if(falg){
+				serQuery.setLockstatus(1);
+			}else{
+				serQuery.setLockstatus(0);
+			}
+			
+		}
+		
+		serQuery.setFstockid(salesDetailSum.getStockid().intValue());
+		serQuery.setDb(salesDetailSum.getDbno());
+		List<Icserial> icserials = icserialDao.findList(serQuery);
+		if(!icserials.isEmpty()){
+			for (Icserial icserial : icserials) {
+				if(saleOutbound.getIsreturn()!=null && saleOutbound.getIsreturn()==1){
+					if(falg){
+						icserial.setFstatus(1);
+						icserial.setFvalid(1);
+						icserial.setLockstatus(0);
+					}else {
+						icserial.setFstatus(0);
+						icserial.setFvalid(0);
+						icserial.setLockstatus(0);
+					}
+				}else{
+					if(falg){
+						icserial.setFstatus(0);
+						icserial.setFvalid(0);
+						icserial.setLockstatus(0);
+					}else {
+						icserial.setFstatus(1);
+						icserial.setFvalid(1);
+						icserial.setLockstatus(1);
+					}
+				}
+				
+				icserialDao.update(icserial);
+			}
+		}
+	}
+
+	public String findDeptNameById(Long id){
+		if(id!=null){
+			return departmentDao.getById(id).getTeamname();
+		}
+		return null;
+	}
+	public String findrOganizationName(Long id){
+		
+		if(id !=null){
+			//return organizationDao.getById(id).getFname();
+			return organizationDao.getByProperty("fitemid", id.toString()).getFname();
+		}
+		return null;
+	}
+	/**
+	 * k3赋值--销售出库
+	 * 
+	 * @param pk
+	 * @param saleOutbound
+	 * @param pDetaillist
+	 * @throws ServiceException
+	 * @throws SQLException
+	 */
+	public void putkingdeeSales(SaleOutbound saleOutbound,
+			List<SalesDetailSum> salesDetailSums, boolean falg,SalesDetailSumQuery query)
+			throws ServiceException, NullPointerException, SQLException {
+		JSONObject jsonObj = new JSONObject();
+		JSONObject jsonstockbill = new JSONObject();
+		String Fmanager = this.getAdminName(saleOutbound.getFsendempid());
+		String Fsmanager = this.getAdminName(saleOutbound.getFsmanagerid());
+		String Fbillerid = this.getAdminName(saleOutbound.getFbillerid());
+		String fempid = this.getAdminName(saleOutbound.getFempid());
+		String coustomer =findrOganizationName(saleOutbound.getFconsignee());;
+		
+		String deptName = this.findDeptNameById(saleOutbound.getFdeptid());
+		jsonstockbill.put("fbrno", 0);
+		jsonstockbill.put("ftrantype", 21);
+		// jsonstockbill.put("fpurposeid", 12000);
+		jsonstockbill.put("fupstockwhensave", 1);
+		jsonstockbill.put("ffmanagerid", Fmanager==null?"":Fmanager);
+		jsonstockbill.put("fsmanagerid", Fsmanager==null?"":Fsmanager);// 保管人
+		jsonstockbill.put("fbillerid", Fbillerid==null?"":Fbillerid);
+
+		
+		jsonstockbill.put("fdeptid", deptName==null?"":deptName);
+		jsonstockbill.put("fcheckerid",
+				SpringSecurityUtils.getCurrentRealName());
+		jsonstockbill.put("fstatus", 1);
+		jsonstockbill.put("fbillno", saleOutbound.getFbillno());
+		/********* Zhang and ************/
+		jsonstockbill.put("fsalestyle", saleOutbound.getFsalestyle());
+		jsonstockbill.put("ftrantype", 21);
+		if(saleOutbound.getIsreturn()!=null && saleOutbound.getIsreturn()==1){
+			jsonstockbill.put("frob", -1);
+		}else{
+			jsonstockbill.put("frob", 1);
+		}
+		
+		jsonstockbill.put("fempid", fempid);
+		jsonstockbill.put("fdate", saleOutbound.getFdate());
+		jsonstockbill.put("ffetchAdd", saleOutbound.getFfetchadd());
+		jsonstockbill.put("coustomer", coustomer);//客户
+		
+		if(query.getDatecheck()!=null && !query.getDatecheck().equals("null") && !query.getDatecheck().equals("")){
+			jsonstockbill.put("checkdate", query.getDatecheck());
+		}else{
+			jsonstockbill.put("checkdate", "");
+		}
+
+		jsonObj.put("stockbill", jsonstockbill);
+
+		JSONArray jsonstockbillEntry = new JSONArray();
+		for (SalesDetailSum salesDetailSum : salesDetailSums) {
+			BaseItem baseItem = baseItemDao.getByProperty("itemcode",
+					salesDetailSum.getItemcode());
+			if(baseItem==null){
+				throw new ServiceException("没有找到相应的物料", "-1");
+			}
+			JSONObject jsonEntry = new JSONObject();
+			String stockName = this.getStockNameById(salesDetailSum.getStockid());
+			jsonEntry.put("fbrno", 0);
+			jsonEntry.put("fitemid", salesDetailSum.getItemcode());
+			jsonEntry.put("fqty", salesDetailSum.getFqty());
+			jsonEntry.put("funitid", baseItem.getUnitname());
+			jsonEntry.put("fscstockid",stockName==null?"":stockName);
+
+			jsonEntry.put("fbatchno",(salesDetailSum.getFbatchno() == null ? ""	: (salesDetailSum.getFbatchno() == "" ? "": salesDetailSum.getFbatchno())));
+			jsonEntry.put("freproducetype", 1059);
+			jsonEntry.put("dbno", salesDetailSum.getDbno());
+			
+			jsonEntry.put("funitid", salesDetailSum.getUnitid());
+			jsonEntry.put("famount", salesDetailSum.getSaleamount());
+			jsonEntry.put("fconsignAmount", salesDetailSum.getSaleamount());
+			jsonEntry.put("fconsignPrice", salesDetailSum.getSaleprice());
+			jsonEntry.put("fentryid", salesDetailSum.getSdetailid());
+			jsonEntry.put("fsourcecode", (salesDetailSum.getFsourcecode()==null?"":salesDetailSum.getFsourcecode()));
+			jsonstockbillEntry.add(jsonEntry);
+		}
+
+		jsonObj.put("jsonstockbillEntry", jsonstockbillEntry);
+		TREReturn ret = new K3ServiceProxy().saveSalesInventory(jsonObj, falg);
+		if (ret.getnCode() < 0)
+			throw new ServiceException(ret.getStrText());
+
+	}
+
+	private String getStockNameById(Long id){
+		if(id==null ||stockDao.getById(id)==null){
+			throw new ServiceException("没有找到相应的仓库", "-1");
+		}
+		return stockDao.getById(id).getFname();
+	}
+	/**
+	 *<p>取出用户名<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-5-16上午10:16:43
+	 * @param fmanagerid
+	 * @return
+	 */
+	private String getAdminName(Long fmanagerid) {
+		if(fmanagerid!=null){
+			return adminDao.getById(fmanagerid).getAdminName();
+		}
+		return null;
+	}
+
+	/**
+	 * <p>
+	 * 根据物料代码取出物料ID
+	 * <p>
+	 * . Author:ZhangYuPeng CreatDate:2014-5-14下午3:04:24
+	 * 
+	 * @param itemcode
+	 * @param falg
+	 */
+	private BaseItem getItemId(String itemcode) {
+		BaseItem Item = new BaseItem();
+		Item.setItemcode(itemcode);
+		BaseItem baseitem = baseItemDao.findbitem(Item);
+		if (baseitem == null) {
+			throw new ServiceException("没有找到相应的物料", "-1");
+		}
+		return baseitem;
+	}
+
+	/**
+	 * <p>
+	 * 更新销售出库单
+	 * <p>
+	 * . Author:ZhangYuPeng CreatDate:2014-5-12下午4:14:34
+	 * 
+	 * @param saleid
+	 * @param falg
+	 */
+	private void updateSaleOutBound(SaleOutbound saleOutbound, boolean falg) {
+		if (falg) {
+			saleOutbound.setFcheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+			saleOutbound.setFstatus(1);
+			saleOutbound.setFcheckerid(SpringSecurityUtils.getCurrentUserId());
+		} else {
+			saleOutbound.setFcheckdate(null);
+			saleOutbound.setFstatus(0);
+			saleOutbound.setFcheckerid(null);
+		}
+		saleOutboundDao.update(saleOutbound);
+	}
+
+	/**
+	 * <p>
+	 * 更新销售出库单明细表
+	 * <p>
+	 * . Author:ZhangYuPeng CreatDate:2014-5-12下午3:25:21
+	 * 
+	 * @param entity
+	 * @param falg
+	 */
+	private void updateSalesDetail(SalesDetailSum entity, boolean falg) {
+		List<SalesDetail> salesDetails = salesDetailDao.getSalesDetail("SalesDetail.getSalesDetailBySdetailid", entity.getSdetailid());
+		if (salesDetails.isEmpty()) {
+			throw new ServiceException("没有在销售出库明细表中找到相应的物料", "-1");
+		}
+		for (SalesDetail salesDetail : salesDetails) {
+			if (falg) {
+				salesDetail.setIsout(2);// 更新库存状态为“已出库”
+			} else {
+				salesDetail.setIsout(1);// 更新库存状态为“待出库”
+			}
+			salesDetailDao.update(salesDetail);
+		}
+	}
+
+	/**
+	 * <p>
+	 * 更新库存
+	 * <p>
+	 * . Author:ZhangYuPeng CreatDate:2014-5-12下午2:59:35
+	 * 
+	 * @param falg
+	 * @param stockid
+	 * @param dbno
+	 */
+	private void updateInventory(SalesDetailSum entity, boolean falg) {
+		SaleOutbound saleOutbound = saleOutboundDao.getById(entity.getSaleid());
+		
+		// 取出库存
+		InventoryBatch inventoryBatch = this.getInventory(entity);
+		if (inventoryBatch == null) {
+			throw new ServiceException("没有找到相应的库存！", "-1");
+		}
+		Double fqty = null;
+		// 更新数量
+		if (falg) {
+			if (inventoryBatch.getDbno() == 3) {
+				fqty = inventoryBatch.getFqty() - entity.getFqty();
+				if(saleOutbound != null && saleOutbound.getIsreturn()==1){
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock());//下推退库的不涉及锁库数
+				}else{
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock() - entity.getFqty());
+				}
+				
+				
+			}
+			if (inventoryBatch.getDbno() == 4) {
+				fqty = inventoryBatch.getFqty2() - entity.getFqty();
+				if(saleOutbound != null && saleOutbound.getIsreturn()==1){
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock());
+				}else{
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock() - entity.getFqty());
+				}
+				
+			}
+			if (fqty < 0) {
+				throw new ServiceException("库存数量不足！", "-1");
+			}
+		} else {
+			if (inventoryBatch.getDbno() == 3) {
+				fqty = inventoryBatch.getFqty() + entity.getFqty();
+				if(saleOutbound != null && saleOutbound.getIsreturn()==1){
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock());
+				}else{
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock() + entity.getFqty());
+				}
+				
+			}
+			if (inventoryBatch.getDbno() == 4) {
+				fqty = inventoryBatch.getFqty2() + entity.getFqty();
+				
+				if(saleOutbound != null && saleOutbound.getIsreturn()==1){
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock());
+				}else{
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock() + entity.getFqty());
+				}
+				
+			}
+		}
+
+		if (inventoryBatch.getDbno() == 3) {
+			inventoryBatch.setFqty(fqty);
+		}
+		if (inventoryBatch.getDbno() == 4) {
+			inventoryBatch.setFqty2(fqty);
+		}
+		inventoryBatchDao.update(inventoryBatch);
+	}
+
+	/**
+	 * <p>
+	 * 取出库存
+	 * <p>
+	 * . Author:ZhangYuPeng CreatDate:2014-5-13上午9:41:54
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	private InventoryBatch getInventory(SalesDetailSum entity) {
+		InventoryBatch inventoryBatch = new InventoryBatch();
+		inventoryBatch.setDbno(entity.getDbno());
+		inventoryBatch.setFitemid(Integer.valueOf(entity.getStockid() + ""));
+		inventoryBatch.setItemcode(entity.getItemcode());
+		
+		InventoryBatch inBatch = null;
+		if(entity.getFbatchno()==null||"".equals(entity.getFbatchno())){
+		 inBatch = inventoryBatchDao.findIBentityBatchno(inventoryBatch);
+		}else {
+			inventoryBatch.setBatchno(entity.getFbatchno());
+			inBatch = inventoryBatchDao.findIBentity(inventoryBatch);
+		}
+		if (inBatch != null) {
+			return inBatch;
+		}
+		return null;
+	}
+
+	/**
+	 * 取出要更新的销售出库单明细合计表
+	 * 
+	 * @throws SQLException
+	 * @throws ServiceException
+	 */
+	public void findSaleDetailSum(List<Long> checkedIdList, boolean b, SalesDetailSumQuery query)
+			throws ServiceException, SQLException {
+		updateSaleDetailSum(checkedIdList,b,query);
+		if(checkedIdList!=null&&checkedIdList.size()>0){
+			String ids = "";
+			for(int i=0;i<checkedIdList.size();i++){
+				if(i==(checkedIdList.size()-1)){
+					ids+=checkedIdList.get(i);
+				}else{
+					ids+=checkedIdList.get(i)+",";
+				}
+			}
+
+			AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+			if(b){
+				operationLogDao.save(ConfigTerrence.MODEL_SALESOUTBOUND, ConfigTerrence.OPT_EXAMINE, "主键为："+ids+"的销售出库单审核成功，操作人为"+admin.getAdmin().getAdminName());
+			}else{
+				operationLogDao.save(ConfigTerrence.MODEL_SALESOUTBOUND, ConfigTerrence.OPT_UNEXAMINE, "主键为："+ids+"的销售出库单反审成功，操作人为"+admin.getAdmin().getAdminName());
+			}
+			
+		}
+		
+
+	}
+
+	@Override
+	public void deleteData(SalesDetailSumQuery salesDetailSumQuery)
+			throws ServiceException, SQLException {
+		Long id = salesDetailSumQuery.getSaleid();
+		
+		SaleOutbound saleOutbound = saleOutboundDao.getById(id);
+		
+		List<SalesDetailSum> sumlist = salesDetailSumDao.findList(salesDetailSumQuery);
+		if(saleOutbound.getFfrom()==2){//是销售订单下推的修改状态
+			
+			if(sumlist.size()>0){
+				for(int sq1 = 0;sq1<sumlist.size();sq1++){
+					
+					OrdersProduct op = new OrdersProduct();
+					op.setId(sumlist.get(sq1).getProductid());
+					OrdersProduct opentity = ordersProductDao.findentity(op);
+					if(opentity != null ){
+						OrdersProduct prorder = new OrdersProduct();
+						prorder.setId(sumlist.get(sq1).getProductid());
+						prorder.setIsclose(0);//未关闭
+						prorder.setPushqty(opentity.getPushqty()-sumlist.get(sq1).getFqty());
+						ordersProductDao.update("OrdersProduct.update.data.pushfqty", prorder);//更新订单的已下推数
+						
+					}else{
+						throw new ServiceException("订单明细中找不到要修改的相关的数据明细");
+					}
+			
+				}
+			}
+		}
+		
+		if(saleOutbound.getFfrom()==1){//是装配下推的修改状态
+			
+			if(sumlist.size()>0){
+				for(int sq1 = 0;sq1<sumlist.size();sq1++){
+					SalesDetail salesDetail = new SalesDetail(); 
+					salesDetail.setSdetailid(sumlist.get(sq1).getSdetailid());
+					salesDetailDao.update("SalesDetail.update.status.for.details", salesDetail);
+									
+				}
+			}
+		}
+		
+		if(saleOutbound.getFfrom()==0 || saleOutbound.getFfrom()==2){//修改，数据来源是手添加的时候才进行解锁处理，因为从装配下推下来的数据保存时没有做此操作
+			if(sumlist.size()>0){
+				for(int sq2 = 0;sq2<sumlist.size();sq2++){
+				
+					//===========更改锁库数量================
+						InventoryBatch inventoryBatch = new InventoryBatch(); 
+						inventoryBatch.setItemcode(sumlist.get(sq2).getItemcode());
+						inventoryBatch.setFqtylock(sumlist.get(sq2).getFqty());
+						inventoryBatch.setDbno(sumlist.get(sq2).getDbno());
+						if(sumlist.get(sq2).getFbatchno()!=null){
+							inventoryBatch.setBatchno(sumlist.get(sq2).getFbatchno());
+						}
+						if(sumlist.get(sq2).getStockid()!=null){
+							inventoryBatch.setFitemid(sumlist.get(sq2).getStockid().intValue());
+						}
+						
+						inventoryBatchDao.update("InventoryBatch.update.in.delete.salesDetailSum", inventoryBatch);
+					//===========================
+					
+					
+				}
+			}
+			
+			if(sumlist.size()>0){
+				for(int sq = 0;sq<sumlist.size();sq++){
+					
+					BaseItem baseItem=baseItemDao.getByProperty("itemcode", sumlist.get(sq).getItemcode());
+					
+					if(baseItem.getFissnmanager() != null){
+						if(baseItem.getFissnmanager()==1 && saleOutbound.getFfrom()!=3){
+							//===========更改序列号锁库状态================
+							Icserial icserial = new Icserial();
+							icserial.setItemcode(sumlist.get(sq).getItemcode());
+							icserial.setLockstatus(0);//未锁库
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(sumlist.get(sq).getSdetailid());//销售出库单的明细id
+							icserial.setDb(sumlist.get(sq).getDbno());
+							if(sumlist.get(sq).getStockid()!=null){
+								icserial.setFstockid(sumlist.get(sq).getStockid().intValue());
+							}
+						
+							icserialDao.update("Icserial.update.lockstatus.for.delete.salesDetail", icserial);
+							//===========================
+							
+						}else if(baseItem.getFissnmanager()==1 && saleOutbound.getFfrom()==3){
+							Icserial icserial = new Icserial();
+							icserial.setItemcode(sumlist.get(sq).getItemcode());
+							icserial.setLockstatus(0);//未锁库
+							icserial.setFstatus(0);
+							icserial.setFvalid(0);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(sumlist.get(sq).getOldsdetailid());//销售出库单的源单明细id
+							icserial.setOldfinterid(sumlist.get(sq).getSdetailid());//当前操作单据的明细id
+							icserial.setDb(sumlist.get(sq).getDbno());
+							if(sumlist.get(sq).getStockid()!=null){
+								icserial.setFstockid(sumlist.get(sq).getStockid().intValue());
+							}
+							icserialDao.update("Icserial.udpate.fvalid.fstatus.lockstatus", icserial);
+							
+						}
+						
+					}
+				}
+			}
+		}else if(saleOutbound.getIsreturn()==1 && saleOutbound.getFfrom()==3){
+			if(sumlist.size()>0){
+				for(int sq = 0;sq<sumlist.size();sq++){
+					
+					BaseItem baseItem=baseItemDao.getByProperty("itemcode", sumlist.get(sq).getItemcode());
+					
+					if(baseItem.getFissnmanager() != null){
+						if(baseItem.getFissnmanager()==1 && saleOutbound.getFfrom()==3){
+							Icserial icserial = new Icserial();
+							icserial.setItemcode(sumlist.get(sq).getItemcode());
+							icserial.setLockstatus(0);//未锁库
+							icserial.setFstatus(0);
+							icserial.setFvalid(0);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(sumlist.get(sq).getOldsdetailid());//销售出库单的源单明细id
+							icserial.setOldfinterid(sumlist.get(sq).getSdetailid());//当前操作单据的明细id
+							icserial.setDb(sumlist.get(sq).getDbno());
+							if(sumlist.get(sq).getStockid()!=null){
+								icserial.setFstockid(sumlist.get(sq).getStockid().intValue());
+							}
+							icserialDao.update("Icserial.udpate.fvalid.fstatus.lockstatus", icserial);
+							
+						}
+						
+					}
+				}
+			}
+		}
+		
+		if(sumlist.size()>0){
+			if(saleOutbound.getIsreturn()==1 && saleOutbound.getFfrom()==3){
+				for(int sq = 0;sq<sumlist.size();sq++){
+					SalesDetailSum sds = new SalesDetailSum();
+					sds.setSdetailid(sumlist.get(sq).getOldsdetailid());
+					SalesDetailSum salessum = salesDetailSumDao.findDataEntity(sds);
+					if(salessum==null){
+						throw new ServiceException("所删除单据的源单据明细未找到");
+					}
+					SalesDetailSum detailSale = new SalesDetailSum();
+					detailSale.setReturnqty(salessum.getReturnqty()+sumlist.get(sq).getFqty());
+					detailSale.setSdetailid(salessum.getSdetailid());
+					salesDetailSumDao.update(detailSale);
+					
+				}
+			}
+		}
+		
+		salesDetailSumDao.deleteData(salesDetailSumQuery);
+				
+		saleOutboundDao.deleteById(id);
+		
+		
+	}
+
+	@Override
+	public void delSalesSum(SalesDetailSumQuery salesDetailSumQuery) throws ServiceException,
+			SQLException {
+		
+		SalesDetailSum salesDetailSum = salesDetailSumDao.getById(salesDetailSumQuery.getSdetailid());
+		
+		if(salesDetailSumQuery.getFfrom()==2){//是销售订单下推的修改状态
+			OrdersProduct op = new OrdersProduct();
+			op.setId(salesDetailSum.getProductid());
+			OrdersProduct opentity = ordersProductDao.findentity(op);
+			if(opentity != null ){
+				OrdersProduct prorder = new OrdersProduct();
+				prorder.setId(salesDetailSum.getProductid());
+				prorder.setIsclose(0);//未关闭
+				prorder.setPushqty(opentity.getPushqty()-salesDetailSum.getFqty());
+				ordersProductDao.update("OrdersProduct.update.data.pushfqty", prorder);//更新订单的已下推数,修改状态为未关闭
+			}else{
+				throw new ServiceException("订单明细中找不到要删除的相关的数据明细");
+			}
+		}
+		
+		if(salesDetailSumQuery.getFfrom() == 1){
+			SalesDetail salesDetail = new SalesDetail(); 
+			salesDetail.setSdetailid(salesDetailSumQuery.getSdetailid());
+			salesDetailDao.update("SalesDetail.update.status.for.details", salesDetail);
+		}
+		
+			//===========更改锁库数量================
+			InventoryBatch inventoryBatch = new InventoryBatch(); 
+			inventoryBatch.setItemcode(salesDetailSumQuery.getItemcode());
+			inventoryBatch.setFqtylock(salesDetailSum.getFqty());
+			inventoryBatch.setDbno(salesDetailSumQuery.getDbno());
+			if(salesDetailSum.getFbatchno()!=null){
+				inventoryBatch.setBatchno(salesDetailSumQuery.getFbatchno());
+			}
+			if(salesDetailSum.getStockid()!=null){
+				inventoryBatch.setFitemid(salesDetailSum.getStockid().intValue());
+			}
+			
+			inventoryBatchDao.update("InventoryBatch.update.in.delete.salesDetailSum", inventoryBatch);
+		//===========================
+		if(salesDetailSumQuery.getFissnmanager() != null){
+			if(salesDetailSumQuery.getFissnmanager() == 1){
+				//===========更改序列号锁库状态================
+				Icserial icserial = new Icserial();
+				icserial.setItemcode(salesDetailSumQuery.getItemcode());
+				icserial.setLockstatus(0);//未锁库
+				icserial.setFtrantypeid(21L);//最后操作单据类型
+				icserial.setFinterid(salesDetailSumQuery.getSdetailid());//销售出库单的明细id
+				icserial.setDb(salesDetailSumQuery.getDbno());
+				if(salesDetailSum.getStockid()!=null){
+					icserial.setFstockid(salesDetailSum.getStockid().intValue());
+				}
+			
+				icserialDao.update("Icserial.update.lockstatus.for.delete.salesDetail", icserial);
+				//===========================
+				
+			}	
+		}
+			
+		
+		
+		salesDetailSumDao.deleteById(salesDetailSumQuery.getSdetailid());
+			
+	}
+
+	@Override
+	public SalesDetailSum saveNewSalesTwo(SalesDetailSum entity,
+			List<Long> checkedIdList) throws ServiceException, SQLException {
+
+		String salesids = StringUtils.join(checkedIdList, ",");
+		Long said = null;
+		// ========================保存出库单表头======================================
+		SaleOutbound saleOutbound = new SaleOutbound();
+		if (entity.getFmarketingstyle() != null) {
+			saleOutbound.setFmarketingstyle(entity.getFmarketingstyle());
+		}
+		if (entity.getFfetchdate() != null) {
+			saleOutbound.setFfetchdate(entity.getFfetchdate());
+		}
+		if (entity.getFfetchadd() != null) {
+			saleOutbound.setFfetchadd(entity.getFfetchadd());
+		}
+		if (entity.getFconsignee() != null) {
+			saleOutbound.setFconsignee(entity.getFconsignee());
+		}
+		if (entity.getFsalestyle() != null) {
+			saleOutbound.setFsalestyle(entity.getFsalestyle());
+		}
+		if (entity.getFexplanation() != null) {
+			saleOutbound.setFexplanation(entity.getFexplanation());
+		}
+		if (entity.getFbillno() != null) {
+			saleOutbound.setFbillno(entity.getFbillno());
+		}
+		if (entity.getFseltrantype() != null) {
+			saleOutbound.setFseltrantype(entity.getFseltrantype());
+		}
+		if (entity.getFchoosebillno() != null) {
+			saleOutbound.setFchoosebillno(entity.getFchoosebillno());
+		}
+		saleOutbound.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+		if (entity.getFscstockid() != null) {
+			saleOutbound.setFscstockid(entity.getFscstockid());
+		}
+		saleOutbound.setFbillerid(SpringSecurityUtils.getCurrentUserId());// 制单人
+		if (entity.getFsendempid() != null) {
+			saleOutbound.setFsendempid(entity.getFsendempid());
+		}// 发货人
+		if (entity.getFdeptid() != null) {
+			saleOutbound.setFdeptid(entity.getFdeptid());
+		}// 部门
+		if (entity.getFempid() != null) {
+			saleOutbound.setFempid(entity.getFempid());
+		}// 业务员
+		if (entity.getFsmanagerid() != null) {
+			saleOutbound.setFsmanagerid(entity.getFsmanagerid());
+		}// 保管员
+		if(entity.getStockidsss()!=null){saleOutbound.setFscstockid(entity.getStockidsss());}
+		saleOutbound.setFstatus(0);// 未审核
+		if(entity.getFfrom() != null){
+			saleOutbound.setFfrom(entity.getFfrom());//单据来源
+		}
+		if(entity.getIsreturn()!=null){
+			saleOutbound.setIsreturn(entity.getIsreturn());
+		}
+		if (entity.getSaleid() == null) {
+			said = saleOutboundDao.save(saleOutbound,"SaleOutbound.insert.new.data.save");
+		} else {
+			said = entity.getSaleid();
+			saleOutbound.setSaleid(entity.getSaleid());
+			saleOutboundDao.update("SaleOutbound.update.data.saveAfter",saleOutbound);
+		}
+
+		// ==============================================================
+
+		List<String> itemcodes = entity.getItemcodes();
+		List<String> itemnames = entity.getItemnames();
+		List<String> itemmodes = entity.getItemmodes();
+		List<Long> unitids = entity.getUnitids();
+		List<Double> fqtys = entity.getFqtys();
+		List<Double> payfqtys = entity.getPayfqtys();// -----
+		List<String> notess = entity.getNotess();
+		List<Long> stockids = entity.getStockids();
+		List<Double> saleprices = entity.getSaleprices();
+		List<Double> saleamounts = entity.getSaleamounts();
+		List<String> fsourcecodes = entity.getFsourcecodes();
+		List<Long> baseunitids = entity.getBaseunitids();// ------------
+		List<String> fbatchnos = entity.getFbatchnos();
+		List<Integer> dbnos = entity.getDbnos();
+		List<Long> sdetailids = entity.getSdetailids();
+		List<String> searilSums = entity.getSearilSums();
+
+		for (int i = 0; i < itemcodes.size(); i++) {
+			Long id = null;
+			SalesDetailSum salesSum = new SalesDetailSum();
+			if (itemcodes.get(i) != null && !itemcodes.get(i).equals("")) {
+				salesSum.setSaleid(said);
+				salesSum.setItemcode(itemcodes.get(i));
+			} else {
+				break;
+			}
+			BaseItem bitem = baseItemDao.getByProperty("itemcode",itemcodes.get(i));
+
+			if (itemnames.get(i) != null) {
+				salesSum.setItemname(itemnames.get(i));
+			}
+			if (itemmodes.get(i) != null) {
+				salesSum.setItemmode(itemmodes.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setUnitid(unitids.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setBaseunitid(unitids.get(i));
+			}
+			if (fqtys.get(i) != null) {
+				salesSum.setFqty(fqtys.get(i));
+			}
+			if (notess.get(i) != null) {
+				salesSum.setNotes(notess.get(i));
+			}
+			if (stockids.get(i) != null) {
+				salesSum.setStockid(stockids.get(i));
+			}
+			if (saleprices.get(i) != null) {
+				salesSum.setSaleprice(saleprices.get(i));
+			}
+			if (saleamounts.get(i) != null) {
+				salesSum.setSaleamount(saleamounts.get(i));
+			}
+			if (fsourcecodes.get(i) != null) {
+				salesSum.setFsourcecode(fsourcecodes.get(i));
+			}
+			
+			
+			if(bitem.getFissnmanager() != 1){//非序列号管理的
+				if (fbatchnos.get(i) != null && !fbatchnos.get(i).equals("")) {
+					salesSum.setFbatchno(fbatchnos.get(i));
+				}
+				
+			}
+					
+			
+			
+			if (dbnos.get(i) != null) {
+				salesSum.setDbno(dbnos.get(i));
+			}
+			salesSum.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+
+			if (sdetailids.get(i) == null) {
+				id = salesDetailSumDao.save(salesSum,"SalesDetailSum.insert.newData.save");
+
+				if (checkedIdList != null) {
+					SalesDetail sdetail = new SalesDetail();
+					sdetail.setDetailids(salesids);
+					sdetail.setIsout(1);// 待出库
+					sdetail.setSdetailid(id);
+					if (itemnames.get(i) != null) {
+						sdetail.setItemcode(itemcodes.get(i));
+					}
+					if (fbatchnos.get(i) != null) {
+						sdetail.setBatchno(fbatchnos.get(i));
+					}
+//					if (stockids.get(i) != null) {
+//						sdetail.setFscstockid(stockids.get(i));
+//					}
+					if (dbnos.get(i) != null) {
+						sdetail.setDbno(dbnos.get(i));
+					}
+					
+					if (entity.getFbillno() != null) {sdetail.setSalecode(entity.getFbillno());}
+					
+					salesDetailDao.update("SalesDetail.update.newDate.in.Detailsum", sdetail);
+
+				}
+				
+				if(entity.getFfrom() != null){//修改，数据来源是手添加的时候才进行锁库处理，因为从装配下推下来的数据已经锁库了
+					if(entity.getFfrom()==0){
+						//================锁库===================
+						InventoryBatch inventoryBatch = new InventoryBatch();
+						inventoryBatch.setItemcode(itemcodes.get(i));
+						inventoryBatch.setFitemid(stockids.get(i).intValue());
+						inventoryBatch.setDbno(dbnos.get(i));
+						if (fbatchnos.get(i) != null) {
+							inventoryBatch.setBatchno(fbatchnos.get(i));
+						}
+						if(dbnos.get(i)==4){
+							inventoryBatch.setFqty2(fqtys.get(i));			
+						}else{
+							inventoryBatch.setFqty(fqtys.get(i));
+						}
+						
+						inventoryBatchDao.update("InventoryBatch.update.fqtylock.data", inventoryBatch);
+						
+					
+					}
+				}
+				
+				//================锁序列号===================
+				if(searilSums.size()>0){
+					if(searilSums.get(i)!=null&&!searilSums.get(i).equals("")){
+						String[] seriallistsum = searilSums.get(i).toString().split(",");
+						for(int st=0;st<seriallistsum.length;st++){
+							
+							Icserial icserial = new Icserial();
+							icserial.setLockstatus(1);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(id);//销售出库单的明细id
+							icserial.setFstockid(stockids.get(i).intValue());
+							icserial.setDb(dbnos.get(i));
+							icserial.setItemcode(itemcodes.get(i));
+							icserial.setFserialnum(seriallistsum[st]);
+							icserialDao.update("Icserial.update.data.lockstatus.icserial", icserial);
+						}
+						
+					}
+				}
+				
+				//===================================
+				
+			} else {
+				
+				//================锁序列号===================
+				if(searilSums.size()>0){
+					if(searilSums.get(i)!=null&&!searilSums.get(i).equals("")){
+						String[] seriallistsum = searilSums.get(i).toString().split(",");
+						for(int st=0;st<seriallistsum.length;st++){
+							
+							Icserial icserial = new Icserial();
+							icserial.setLockstatus(1);
+							icserial.setFtrantypeid(21L);//最后操作单据类型
+							icserial.setFinterid(sdetailids.get(i));//销售出库单的明细id
+							icserial.setIdserials(seriallistsum[st]);
+							icserialDao.update("Icserial.update.data.lockstatus", icserial);
+						}
+						
+					}
+				}
+				
+				//===================================
+				
+				salesSum.setSdetailid(sdetailids.get(i));
+				salesDetailSumDao.update("SalesDetailSum.update.entity.for.save", salesSum);
+			}
+			
+			
+			if (saleprices.get(i) != null) {
+				BaseItem baseItem = new BaseItem();
+				baseItem.setItemcode(itemcodes.get(i));
+				baseItem.setFsaleprice(saleprices.get(i));
+				baseItemDao.update("BaseItem.update.data.fsaleprice", baseItem);
+			}
+			
+		}
+
+		SalesDetailSum detailSum = new SalesDetailSum();
+		detailSum.setSaleid(said);
+		return detailSum;
+	}
+
+	@Override
+	public void saveReturnStock(SalesDetailSum entity) throws ServiceException {
+		Long said = null;
+		
+		SaleOutbound saleOutbound = new SaleOutbound();
+		if (entity.getFmarketingstyle() != null) {
+			saleOutbound.setFmarketingstyle(entity.getFmarketingstyle());
+		}
+		if (entity.getFfetchdate() != null) {
+			saleOutbound.setFfetchdate(entity.getFfetchdate());
+		}
+		if (entity.getFfetchadd() != null) {
+			saleOutbound.setFfetchadd(entity.getFfetchadd());
+		}
+		if (entity.getFconsignee() != null) {
+			saleOutbound.setFconsignee(entity.getFconsignee());
+		}
+		if (entity.getFsalestyle() != null) {
+			saleOutbound.setFsalestyle(entity.getFsalestyle());
+		}
+		if (entity.getFexplanation() != null) {
+			saleOutbound.setFexplanation(entity.getFexplanation());
+		}
+		if (entity.getFbillno() != null) {
+			saleOutbound.setFbillno(entity.getFbillno());
+		}
+		if (entity.getFseltrantype() != null) {
+			saleOutbound.setFseltrantype(entity.getFseltrantype());
+		}
+		if (entity.getFchoosebillno() != null) {
+			saleOutbound.setFchoosebillno(entity.getFchoosebillno());
+		}
+		saleOutbound.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+		if (entity.getFscstockid() != null) {
+			saleOutbound.setFscstockid(entity.getFscstockid());
+		}
+		saleOutbound.setFbillerid(SpringSecurityUtils.getCurrentUserId());// 制单人
+		if (entity.getFsendempid() != null) {
+			saleOutbound.setFsendempid(entity.getFsendempid());
+		}// 发货人
+		if (entity.getFdeptid() != null) {
+			saleOutbound.setFdeptid(entity.getFdeptid());
+		}// 部门
+		if (entity.getFempid() != null) {
+			saleOutbound.setFempid(entity.getFempid());
+		}// 业务员
+		if (entity.getFsmanagerid() != null) {
+			saleOutbound.setFsmanagerid(entity.getFsmanagerid());
+		}// 保管员
+		if(entity.getStockidsss()!=null){saleOutbound.setFscstockid(entity.getStockidsss());}
+		saleOutbound.setFstatus(0);// 未审核
+		if(entity.getFfrom() != null){
+			saleOutbound.setFfrom(entity.getFfrom());//单据来源
+		}
+		if(entity.getIsreturn()!=null){
+			saleOutbound.setIsreturn(entity.getIsreturn());
+		}
+		
+		if (entity.getSaleid() == null) {
+			said =saleOutboundDao.save(saleOutbound,"SaleOutbound.insert.new.data.save");
+		} else {
+			said = entity.getSaleid();
+			saleOutbound.setSaleid(entity.getSaleid());
+			saleOutboundDao.update("SaleOutbound.update.data.saveAfter",saleOutbound);
+		}
+		
+		List<String> itemcodes = entity.getItemcodes();
+		List<String> itemnames = entity.getItemnames();
+		List<String> itemmodes = entity.getItemmodes();
+		List<Long> unitids = entity.getUnitids();
+		List<Double> fqtys = entity.getFqtys();
+		List<Double> payfqtys = entity.getPayfqtys();// -----
+		List<String> notess = entity.getNotess();
+		List<Long> stockids = entity.getStockids();
+		List<Double> saleprices = entity.getSaleprices();
+		List<Double> saleamounts = entity.getSaleamounts();
+		List<String> fsourcecodes = entity.getFsourcecodes();
+		List<Long> baseunitids = entity.getBaseunitids();// ------------
+		List<String> fbatchnos = entity.getFbatchnos();
+		List<Integer> dbnos = entity.getDbnos();
+		List<Long> sdetailids = entity.getSdetailids();
+		List<String> searilSums = entity.getSearilSums();
+		
+		
+		for (int i = 0; i < itemcodes.size(); i++) {
+			Long id = null;
+			SalesDetailSum salesSum = new SalesDetailSum();
+			if (itemcodes.get(i) != null && !itemcodes.get(i).equals("")) {
+				salesSum.setSaleid(said);
+				salesSum.setItemcode(itemcodes.get(i));
+			} else {
+				break;
+			}
+			BaseItem bitem = baseItemDao.getByProperty("itemcode",itemcodes.get(i));
+
+			if (itemnames.get(i) != null) {
+				salesSum.setItemname(itemnames.get(i));
+			}
+			if (itemmodes.get(i) != null) {
+				salesSum.setItemmode(itemmodes.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setUnitid(unitids.get(i));
+			}
+			if (unitids.get(i) != null) {
+				salesSum.setBaseunitid(unitids.get(i));
+			}
+			if (fqtys.get(i) != null) {
+				salesSum.setFqty(0-fqtys.get(i));
+			}
+			if (notess.get(i) != null) {
+				salesSum.setNotes(notess.get(i));
+			}
+			if (stockids.get(i) != null) {
+				salesSum.setStockid(stockids.get(i));
+			}
+			if (saleprices.get(i) != null) {
+				salesSum.setSaleprice(saleprices.get(i));
+			}
+			if (saleamounts.get(i) != null) {
+				salesSum.setSaleamount(0-saleamounts.get(i));
+			}
+			if (fsourcecodes.get(i) != null) {
+				salesSum.setFsourcecode(fsourcecodes.get(i));
+			}
+			
+			
+			if(bitem.getFissnmanager() != 1){//非序列号管理的
+				if (fbatchnos.get(i) != null && !fbatchnos.get(i).equals("")) {
+					salesSum.setFbatchno(fbatchnos.get(i));
+				}
+				
+			}
+			
+			if (dbnos.get(i) != null) {
+				salesSum.setDbno(dbnos.get(i));
+			}
+			salesSum.setFdate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+			if (sdetailids.get(i) != null) {
+				salesSum.setOldsdetailid(sdetailids.get(i));
+				SalesDetailSum sdetailsum = new SalesDetailSum();
+				sdetailsum.setSdetailid(sdetailids.get(i));
+				SalesDetailSum dss = salesDetailSumDao.findentity(sdetailsum);
+				if(dss!=null){
+					if(dss.getFqtysum()==null || dss.getFqtysum().equals("null")){
+						SalesDetailSum sumsales = salesDetailSumDao.getById(sdetailids.get(i));
+						if(sumsales!=null){
+							if((sumsales.getFqty()-(fqtys.get(i)))<0){
+								throw new ServiceException("下推退库数大于源单的出库数，请检查!");
+							}else{
+								SalesDetailSum sads = new SalesDetailSum();
+								sads.setSdetailid(sdetailids.get(i));
+								sads.setReturnqty(fqtys.get(i));
+								salesDetailSumDao.update("SalesDetailSum.update.reutrnqty.data", sads);
+							}
+						}
+						
+					}else{
+						SalesDetailSum sumsales = salesDetailSumDao.getById(sdetailids.get(i));
+						if(sumsales!=null){
+							if((sumsales.getFqty()-(fqtys.get(i)-dss.getFqtysum()))<0){
+								throw new ServiceException("下推退库数大于源单的出库数，请检查!");
+							}else{
+								SalesDetailSum sads = new SalesDetailSum();
+								sads.setSdetailid(sdetailids.get(i));
+								sads.setReturnqty(fqtys.get(i)-dss.getFqtysum());
+								salesDetailSumDao.update("SalesDetailSum.update.reutrnqty.data", sads);
+							}
+						}
+					}
+					
+					
+				}
+			}
+				id = salesDetailSumDao.save(salesSum,"SalesDetailSum.insert.newData.save");
+			/**保存时就修改序列号的最后操作单据明细id**/	
+			if(searilSums.size()>0){
+				if(searilSums.get(i)!=null&&!searilSums.get(i).equals("")){
+					String[] seriallistsum = searilSums.get(i).toString().split(",");
+					for(int st=0;st<seriallistsum.length;st++){
+						
+						Icserial icserial = new Icserial();
+						icserial.setLockstatus(0);
+						icserial.setFtrantypeid(21L);//最后操作单据类型
+						icserial.setFinterid(id);//销售出库单的明细id
+						icserial.setIdserials(seriallistsum[st]);
+						icserialDao.update("Icserial.update.data.lockstatus", icserial);
+					}
+					
+				}
+			}
+			
+	
+			
+		}
+		
+	}
+	
+	
+}

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyCheck;
+import com.terrence.crm.dol.dao.IAssemblyCheckDao;
+
+@Repository
+public class AssemblyCheckDao extends BaseIbatisDao<AssemblyCheck,java.lang.Long> implements IAssemblyCheckDao{
+
+		
+	public void saveOrUpdate(AssemblyCheck entity) {
+		if(entity.getCheckid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyCheck";
+	}
+	public AssemblyCheck getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyCheck)this.getSqlMapClientTemplate().queryForObject("AssemblyCheck.getByProperty", map);		
+	}
+
+}

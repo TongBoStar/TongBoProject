@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdExamineItem">
+
+        
+	<resultMap id="RM.PdExamineItem" class="com.terrence.crm.dol.bean.PdExamineItem">
+        <result property="itemid" column="itemid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="notes" column="notes"/>
+        <result property="itemcode" column="itemcode"/>
+    </resultMap>
+	
+	<resultMap class="com.terrence.crm.dol.bean.PdExamineItem" id="RM.PdExamineItem.PdExamineItemCol" groupBy="itemid">
+		<result property="itemid" column="itemid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="notes" column="notes"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="listcol" resultMap="RM.PdExamineItemCol.List"/>
+	</resultMap>  
+	<resultMap id="RM.PdExamineItemCol.List" class="com.terrence.crm.dol.bean.PdExamineItemCol">
+        <result property="colid" column="colid"/>
+        <result property="colname" column="colname"/>
+        <result property="colcode" column="colcode"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdExamineItem.columns">
+	    <![CDATA[
+        	t_pd_examine_item.itemid ,
+        	t_pd_examine_item.itemname ,
+        	t_pd_examine_item.notes ,
+        	t_pd_examine_item.itemcode 
+	    ]]>
+	</sql>
+	
+   <insert id="PdExamineItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_examine_item (
+        	itemname ,
+        	notes 
+        ) VALUES (
+        	#itemname# ,
+        	#notes# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="itemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdExamineItem.update" parameterClass="com.terrence.crm.dol.bean.PdExamineItem">         
+        UPDATE t_pd_examine_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        itemid = #itemid# 
+    </update>
+    
+	<delete id="PdExamineItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_examine_item where
+       itemid = #itemid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdExamineItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_examine_item 
+        WHERE
+       itemid in ($itemid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdExamineItem.getById" resultMap="RM.PdExamineItem">
+	    select <include refid="PdExamineItem.columns"/>
+	    
+	        from t_pd_examine_item 
+	        where 
+		        itemid = #itemid# 
+	    
+    </select>
+    
+	<select id="PdExamineItem.getByProperty" resultMap="RM.PdExamineItem">
+		select <include refid="PdExamineItem.columns"/> from t_pd_examine_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdExamineItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_examine_item.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_pd_examine_item.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_pd_examine_item.notes = #notes#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pd_examine_item.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdExamineItem.findPage.and">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_examine_item.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_pd_examine_item.itemname = #itemname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_pd_examine_item.notes = #notes#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pd_examine_item.itemcode = #itemcode#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdExamineItem.Entity" resultMap="RM.PdExamineItem">
+    	SELECT 	<include refid="PdExamineItem.columns"/> FROM t_pd_examine_item <include refid="PdExamineItem.findPage.where"/>
+    </select>
+    
+    <select id="PdExamineItem.findList" resultMap="RM.PdExamineItem">
+    	SELECT 
+    		<include refid="PdExamineItem.columns"/> 
+    	FROM 
+    		t_pd_examine_item
+		<include refid="PdExamineItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdExamineItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_examine_item
+    ]]>
+		<include refid="PdExamineItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdExamineItem.findPage" resultMap="RM.PdExamineItem">
+    	select <include refid="PdExamineItem.columns"/>	    
+	        from t_pd_examine_item 	   
+		<include refid="PdExamineItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdExamineItem.findPage" resultMap="RM.PdExamineItem">
+    	select <include refid="PdExamineItem.columns"/>	    
+	        from t_pd_examine_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       itemid 
+	   not in(select $notTop$ 
+       itemid 
+	   from t_pd_examine_item <include refid="PdExamineItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdExamineItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="PdExamineItem.PdExamineItemCol.findList" resultMap="RM.PdExamineItem.PdExamineItemCol">
+		select <include refid="PdExamineItem.columns"/>,t_pd_examine_item_col.colid ,t_pd_examine_item_col.colname ,
+        	t_pd_examine_item_col.colcode 	 from t_pd_examine_item,t_pd_examine_item_col
+        where t_pd_examine_item.itemid=t_pd_examine_item_col.itemid
+	</select>
+</sqlMap>

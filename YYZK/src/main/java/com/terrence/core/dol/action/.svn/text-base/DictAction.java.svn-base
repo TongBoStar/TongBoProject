@@ -1,0 +1,130 @@
+package com.terrence.core.dol.action;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+
+import com.base.BaseAction;
+import com.base.util.JsonUtil;
+import com.terrence.core.dol.bean.Dict;
+import com.terrence.core.dol.query.DictQuery;
+import com.terrence.core.dol.service.IDictService;
+import com.terrence.crm.dol.base.core.Page;
+
+
+@Scope("prototype")
+@Namespace("/dict")
+public class DictAction extends BaseAction{
+
+	private static final long serialVersionUID = 5021046762695769787L;
+
+	@Autowired
+	@Qualifier("dictService")
+	private IDictService dictService;
+
+	private Dict dict;
+	private DictQuery dictQuery;
+	private Page<Dict> dicPage = new Page<Dict>();
+	
+	public void list() throws Exception {
+//		page.setPageNo(this.getDraw()==0?1:this.getDraw());
+		
+		if(null==dictQuery){
+			dictQuery = new DictQuery();
+		}
+		
+		dicPage = dictService.findPage(dicPage, dictQuery);
+		response.getWriter().print(JsonUtil.getGridPageJson(dicPage.getTotalCount(), dicPage.getResult()));
+		response.getWriter().close();
+	}
+	
+	public void noPageList() throws IOException{
+		if(null==dictQuery){
+			dictQuery = new DictQuery();
+		}
+		
+		List<Dict> list = dictService.findList(dictQuery);
+		response.getWriter().print(JsonUtil.getListJson(list));
+	}
+	
+	public void treeGrid() throws IOException{
+		if(null==dictQuery){
+			dictQuery = new DictQuery();
+		}
+		dictQuery.setSortColumns(" id desc ");
+		List<Dict> list = dictService.findList(dictQuery);
+   		response.getWriter().print("["+toTreeGridJson(formatTree(list,0L))+"]");
+   	}
+	
+	
+	public String toTreeGridJson(List<Dict> list){
+		StringBuffer sbResult = new StringBuffer();
+		int listSize = list.size();
+		for(int i=0;i<listSize;i++){
+			Dict dictEntity = list.get(i);
+			sbResult.append("{");
+			sbResult.append("\"id\":").append(dictEntity.getId()).append(",");
+			sbResult.append("\"name\":\"").append(dictEntity.getName()).append("\",");
+			sbResult.append("\"code\":\"").append(dictEntity.getCode()).append("\",");
+			sbResult.append("\"pId\":").append(dictEntity.getpId()).append(",");
+			sbResult.append("\"pCode\":\"").append(dictEntity.getpCode()).append("\",");
+			sbResult.append("\"value\":\"").append(dictEntity.getValue()).append("\",");
+			sbResult.append("\"isChildren\":").append(dictEntity.getIsChildren()).append(",");
+			sbResult.append("\"sort\":").append(dictEntity.getSort()).append(",");
+			sbResult.append("\"webId\":").append(dictEntity.getWebId()).append(",");
+			sbResult.append("\"createOn\":\"").append(dictEntity.getCreateOn()).append("\",");
+			sbResult.append("\"createUserId\":").append(dictEntity.getCreateUserId()).append(",");
+			sbResult.append("\"modifiedOn\":\"").append(dictEntity.getModifiedOn()).append("\",");
+			sbResult.append("\"modifiedUserId\":").append(dictEntity.getModifiedUserId());
+			if(dictEntity.getChildren().size()>0){
+				sbResult.append(",\"children\":["+toTreeGridJson(dictEntity.getChildren())+"]");
+			}
+			if(i==(listSize-1)){
+				sbResult.append("}");
+			}else{
+				sbResult.append("},");
+			}
+		}
+		return sbResult.toString();
+	}
+	
+	
+	public List<Dict> formatTree(List<Dict> list,Long pId) {
+    	List<Dict> returnList = new ArrayList<Dict>();
+    	for(Dict dict : list){
+    		if(pId.equals(dict.getpId())){
+    			List<Dict> childList = formatTree(list,dict.getId());
+    			dict.setChildren(childList);
+    			returnList.add(dict);
+    		}
+    	}
+    	return returnList;
+    }
+	
+	
+	public Dict getDict() {
+		return dict;
+	}
+	public void setDict(Dict dict) {
+		this.dict = dict;
+	}
+	public DictQuery getDictQuery() {
+		return dictQuery;
+	}
+	public void setDictQuery(DictQuery dictQuery) {
+		this.dictQuery = dictQuery;
+	}
+
+	public Page<Dict> getDicPage() {
+		return dicPage;
+	}
+
+	public void setDicPage(Page<Dict> dicPage) {
+		this.dicPage = dicPage;
+	}
+}

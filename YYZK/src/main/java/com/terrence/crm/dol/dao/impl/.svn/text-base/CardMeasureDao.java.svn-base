@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CardMeasure;
+import com.terrence.crm.dol.dao.ICardMeasureDao;
+
+@Repository
+public class CardMeasureDao extends BaseIbatisDao<CardMeasure,java.lang.Long> implements ICardMeasureDao{
+
+		
+	public void saveOrUpdate(CardMeasure entity) {
+		if(entity.getCardmeasureid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CardMeasure";
+	}
+	public CardMeasure getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CardMeasure)this.getSqlMapClientTemplate().queryForObject("CardMeasure.getByProperty", map);		
+	}
+
+}

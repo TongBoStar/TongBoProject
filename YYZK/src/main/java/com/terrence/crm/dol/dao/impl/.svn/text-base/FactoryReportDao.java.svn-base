@@ -1,0 +1,65 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.FactoryReport;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.query.FactoryReportQuery;
+
+@Repository
+public class FactoryReportDao extends BaseIbatisDao<FactoryReport,java.lang.Long> implements IFactoryReportDao{
+
+		
+	public void saveOrUpdate(FactoryReport entity) {
+		if(entity.getReportid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "FactoryReport";
+	}
+	public FactoryReport getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (FactoryReport)this.getSqlMapClientTemplate().queryForObject("FactoryReport.getByProperty", map);		
+	}
+
+	@Override
+	public void saveOrUpdateReport(FactoryReport entity) {
+		if(entity.getReportid() == null) 
+		{
+			this.getSqlMapClientTemplate().insert("FactoryReport.insert.newreport", entity);		
+		}else {
+			update(entity);
+			}
+			
+	}
+
+	@Override
+	public FactoryReport findvalve(FactoryReportQuery factoryReportQuery) {
+		return (FactoryReport) this.getSqlMapClientTemplate().queryForObject("FactoryReport.find.data.and.valveParts", factoryReportQuery);
+	}
+
+	@Override
+	public FactoryReport findentity(FactoryReportQuery factoryReportQuery) {
+		return (FactoryReport) this.getSqlMapClientTemplate().queryForObject("FactoryReport.find.entity.data", factoryReportQuery);
+	}
+
+	@Override
+	public FactoryReport findDataEntity(FactoryReportQuery frport) {
+		return (FactoryReport) this.getSqlMapClientTemplate().queryForObject("FactoryReport.find.fr.data.select", frport);
+	}
+	
+	}
+

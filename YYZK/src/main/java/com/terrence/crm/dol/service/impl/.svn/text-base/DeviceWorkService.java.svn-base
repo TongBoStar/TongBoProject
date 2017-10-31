@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.DeviceWork;
+import com.terrence.crm.dol.dao.IDeviceWorkDao;
+import com.terrence.crm.dol.query.DeviceWorkQuery;
+import com.terrence.crm.dol.service.IDeviceWorkService;
+
+@Service
+@Transactional
+public class DeviceWorkService extends BaseService implements IDeviceWorkService {
+	protected static Logger logger = LoggerFactory.getLogger(DeviceWorkService.class);
+	@Autowired
+	@Qualifier("deviceWorkDao")
+	private IDeviceWorkDao deviceWorkDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "DeviceWork";
+	}
+	@Transactional(readOnly=true)
+	public DeviceWork getById(java.lang.Long id) throws ServiceException
+	{
+		return deviceWorkDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DeviceWork entity) throws ServiceException
+	{
+		deviceWorkDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DeviceWork entity) throws ServiceException
+	{
+		Long adId = deviceWorkDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(DeviceWork entity) throws ServiceException
+	{
+		Integer returnValue =  deviceWorkDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = deviceWorkDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = deviceWorkDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DeviceWorkQuery query = new DeviceWorkQuery();
+		try {
+			return deviceWorkDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceWork> findPage(Page<DeviceWork> page, DeviceWorkQuery query) throws ServiceException
+	{
+		return deviceWorkDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceWork> findPage(Page<DeviceWork> page,String statement, DeviceWorkQuery query) throws ServiceException
+	{
+		return deviceWorkDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceWork> findList(DeviceWorkQuery query) throws ServiceException
+	{
+		return deviceWorkDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceWork> findList(DeviceWorkQuery query,Integer pageSize) throws ServiceException
+	{
+		return deviceWorkDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<DeviceWork> findList(DeviceWorkQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return deviceWorkDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceWork> findAllList() throws ServiceException
+	{
+		return deviceWorkDao.findAllList();
+	}
+
+}

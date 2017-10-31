@@ -1,0 +1,29 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProcessDefine;
+import com.terrence.crm.dol.dao.IProcessDefineDao;
+import com.terrence.crm.dol.utils.DateUtils;
+@Repository
+public class ProcessDefineDao extends BaseIbatisDao<ProcessDefine,java.lang.Long> implements IProcessDefineDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ProcessDefine"; 
+	}
+	public void saveOrUpdate(ProcessDefine entity) {
+		if(entity.getId() == null) {
+			entity.setCreateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			save(entity);
+		}else {
+			update(entity);
+		}
+	}
+	public ProcessDefine getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProcessDefine)this.getSqlMapClientTemplate().queryForObject("ProcessDefine.getByProperty", map);
+	}
+}

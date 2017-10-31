@@ -1,0 +1,486 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.MachineMatch;
+import com.terrence.crm.dol.bean.MachineMatchEntity;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Reqtake;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.MachineMatchEntityQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.ReqtakeQuery;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchEntityDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IReqtakeDao;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+import com.terrence.crm.dol.service.IReqtakeService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+@Service
+@Transactional
+public class ReqtakeService extends BaseService implements IReqtakeService {
+	protected static Logger logger = LoggerFactory.getLogger(ReqtakeService.class);
+	@Autowired
+	@Qualifier("reqtakeDao")
+	private IReqtakeDao reqtakeDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("workPlanDao")
+	private IWorkPlanDao workPlanDao;
+	@Autowired
+	@Qualifier("machineMatchDao")
+	private IMachineMatchDao machineMatchDao;
+	@Autowired
+	@Qualifier("machineMatchEntityDao")
+	private IMachineMatchEntityDao machineMatchEntityDao;	
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+
+	@Autowired
+	@Qualifier("icbillnoDao")
+	IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	
+	@Autowired
+	@Qualifier("pickingDetailDao")
+	private IPickingDetailDao pickingDetailDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	
+	@Autowired
+	private K3ServiceProxy k3ServiceProxy;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Reqtake";
+	}
+	@Transactional(readOnly=true)
+	public Reqtake getById(java.lang.Long id) throws ServiceException
+	{
+		return reqtakeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Reqtake entity) throws ServiceException
+	{
+		reqtakeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Reqtake entity) throws ServiceException
+	{
+		Long adId = reqtakeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Reqtake entity) throws ServiceException
+	{
+		Integer returnValue =  reqtakeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = reqtakeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = reqtakeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ReqtakeQuery query = new ReqtakeQuery();
+		try {
+			return reqtakeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Reqtake> findPage(Page<Reqtake> page, ReqtakeQuery query) throws ServiceException
+	{
+		return reqtakeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Reqtake> findPage(Page<Reqtake> page,String statement, ReqtakeQuery query) throws ServiceException
+	{
+		return reqtakeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Reqtake> findList(ReqtakeQuery query) throws ServiceException
+	{
+		return reqtakeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Reqtake> findList(ReqtakeQuery query,Integer pageSize) throws ServiceException
+	{
+		return reqtakeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Reqtake> findList(ReqtakeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return reqtakeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Reqtake> findAllList() throws ServiceException
+	{
+		return reqtakeDao.findAllList();
+	}
+	@Override
+	public void saveReqtake(ReqtakeQuery reqtakeQuery) throws ServiceException {
+		Reqtake reqtake=new Reqtake();
+		EmployeeTask employeetask = employeeTaskDao.getById(reqtakeQuery.getEmployeetaskid());
+		
+		Reqtake r =null;
+		 r = reqtakeDao.getByProperty("fbillno", icmoDao.getById(employeetask.getWorkid()).getFbillno());
+		 if(r!=null){
+			 throw new ServiceException("已申请领料，请勿重复提交！！！");
+		 }
+		
+		reqtake.setReqemp(reqtakeQuery.getReqemp());
+		reqtake.setFbillno(icmoDao.getById(employeetask.getWorkid()).getFbillno());
+		reqtake.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		reqtake.setItemcode(employeetask.getItemcode());
+		reqtake.setStatus(TerrcnceConstants.STATUS_REQTAKE_REQ);//1:申请2已领
+		reqtake.setBatchno(workPlanDao.getByProperty("fbillno", reqtake.getFbillno()).getBatchno());
+		reqtakeDao.save(reqtake);
+		
+		Icmo icmo = icmoDao.getById(employeetask.getWorkid());
+		icmo.setIsreqtake(TerrcnceConstants.STATUS_REQTAKE_REQ);
+		icmoDao.update(icmo);
+		
+	}
+	/**
+	 * 领料审核
+	 */
+	@Override
+	public void saveToStatus(ReqtakeQuery reqtakeQuery) throws ServiceException {
+		//reqtakeQuery.
+				
+		Reqtake reqtake=new Reqtake();
+		reqtake.setReqtakeid(reqtakeQuery.getReqtakeid());
+		reqtake.setOutemp(SpringSecurityUtils.getCurrentUserId());
+		reqtake.setTakedate(DateConvertUtils.getCurrentDateTime());
+		reqtake.setStatus(TerrcnceConstants.STATUS_REQTAKE_REQED);//已领
+		reqtakeDao.update(reqtake);//更新领料状态,领料人,领料时间,
+		//--------车间任务单---更新领料状态
+		Icmo icmo = icmoDao.getByProperty("fbillno", reqtakeQuery.getFbillno());
+		icmo.setIsreqtake(TerrcnceConstants.STATUS_REQTAKE_REQED);//已领
+		icmoDao.update(icmo);
+
+		//--配料单更新领料状态-----------------------------
+		WorkPlan workPlan = workPlanDao.getByProperty("fbillno", reqtakeQuery.getFbillno());
+		//Reqtake retakeNew = reqtakeDao.getById(reqtakeQuery.getReqtakeid());
+		MachineMatch machineMatch = machineMatchDao.getByProperty("workplanid", workPlan.getWorkplanid()+"");		
+		machineMatch.setUsestatus(TerrcnceConstants.STATUS_REQTAKE_REQED);//已领
+		machineMatchDao.update(machineMatch);
+		
+		//--减库存--减锁库数量---------------------------------------------------------
+		MachineMatchEntityQuery machineMatchEntityQuery=new MachineMatchEntityQuery();
+		machineMatchEntityQuery.setFmatchid(machineMatch.getFmatchid());
+		List<MachineMatchEntity> mMList=new ArrayList<MachineMatchEntity>();
+		mMList= machineMatchEntityDao.findList(machineMatchEntityQuery);
+		if(mMList.size()>0){
+			InventoryBatch inventoryBatch=null;
+			for(MachineMatchEntity mm:mMList){
+				if(null!=mm.getUseage()&&mm.getUseage().doubleValue()>0){//实际用量不为空,不为零,则库存减实际用量,锁库数量减实际用量
+					inventoryBatch=new InventoryBatch();
+					inventoryBatch = inventoryBatchDao.getById(mm.getBatchid());
+					inventoryBatch.setFqtylock(inventoryBatch.getFqtylock()==null?0:inventoryBatch.getFqtylock().doubleValue()-mm.getUseage().doubleValue());
+					if(inventoryBatch.getDbno().intValue()==3){//fqty
+						 if( (double)((inventoryBatch.getFqty()==null?0:inventoryBatch.getFqty().doubleValue())-mm.getUseage().doubleValue())<0){
+							 throw new ServiceException("库存不足，库存不能更新为负数");
+						 }
+						
+						
+						inventoryBatch.setFqty((inventoryBatch.getFqty()==null?0:inventoryBatch.getFqty().doubleValue())-mm.getUseage().doubleValue());
+					 
+					
+					 
+					}else if(inventoryBatch.getDbno().intValue()==4){//fqty2
+						 if((double)((inventoryBatch.getFqty2()==null?0:inventoryBatch.getFqty2().doubleValue())-mm.getUseage().doubleValue())<0){
+							 throw new ServiceException("库存不足，库存不能更新为负数");
+						 }
+						
+					 //inventoryBatch.setFqty((inventoryBatch.getFqty()==null?0:inventoryBatch.getFqty().doubleValue())-mm.getUseage().doubleValue());
+					 inventoryBatch.setFqty2((inventoryBatch.getFqty2()==null?0:inventoryBatch.getFqty2().doubleValue())-mm.getUseage().doubleValue());
+					
+					 
+					}
+					inventoryBatchDao.update(inventoryBatch);
+				}
+			}
+		}
+		//----K3添加任务单和领料单----任务单OK-----领料单待处理01-21-----
+		 Icmo icmok3 = icmoDao.getById(icmo.getIcmoid());
+	
+		 Reqtake re = reqtakeDao.getById(reqtakeQuery.getReqtakeid());
+		String outName = adminDao.getById(re.getOutemp()).getAdminName();
+		String reName = adminDao.getById(re.getReqemp()).getAdminName();
+		String realName=SpringSecurityUtils.getCurrentRealName();
+		Icbillno icbi = icbillnoDao.getById(24L);//getByProperty("fbillid", 24);//24	生产领料单据	SOUT	100000	6
+		String icbinumber=icbi.getFpreletter()+(icbi.getFcurno().intValue()+1);
+		icbi.setFcurno(icbi.getFcurno().intValue()+1);
+		
+		String[] namelist=new String[]{outName,reName,realName,icbinumber};
+		//mMList//查询所有详细对应的t_inventory_batch.fitemid然后赋值传入
+		//MachineMatchEntity mm:mMList
+		int l=mMList.size();
+		for(int i=0;i<l;i++){
+			if(null!=mMList.get(i).getUseage()&&mMList.get(i).getUseage()>0){
+				InventoryBatchQuery query=new InventoryBatchQuery();
+				 query.setItemcode(mMList.get(i).getItemcode());
+				 query.setBatchno(mMList.get(i).getBatchno());
+				 query.setBatchid(mMList.get(i).getBatchid());
+				 //System.out.println("========"+mMList.get(i).getBatchid());
+				 mMList.get(i).setFitemid(inventoryBatchDao.findList(query).get(0).getFitemid());
+		//		 mMList.get(i).setBasefitemid(baseItemDao.getByProperty("itemcode", mMList.get(i).getItemcode()).getFitemid());
+			} 
+			
+		}
+		//---同步添加至出库单列表--------------------------------------------
+		//pickingDao
+		//pickingDetailDao
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHOUT_INVENTORY_TASK");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		ProcessDetail processDetail = processDetails.get(0);
+		String handlers = "";
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		Picking picking=new Picking();
+		Reqtake remp = reqtakeDao.getById(reqtakeQuery.getReqtakeid()); 
+		
+		picking.setFsourcebillno(icmok3.getFbillno());//生产任务单号----
+		//picking.setSeqcode(value);//装配序列号
+		//picking.setFstatus(0);
+		picking.setFstatusDesc("机加工中心直接确认发料!");
+		picking.setItemcode(icmok3.getItemcode());//物料编号
+		picking.setFbillno(icbinumber);//出库单号 
+		picking.setFstatus(100);//审核状态1:已审,0:未审
+		picking.setTakedate(DateConvertUtils.getCurrentDateTime());
+		picking.setFdate(remp.getCreatedate());//制单日期
+		picking.setFcheckdate(DateConvertUtils.getCurrentDateTime());
+		picking.setFseltrantype(85L);//原单类型---
+		picking.setFqty(icmok3.getFqty());//数量
+		Long uid = SpringSecurityUtils.getCurrentUserId();
+		picking.setFbillerid(uid);//制单人
+		picking.setFsmanagerid(uid);
+		picking.setFfmanagerid(uid);
+		picking.setFtrantype(24L);//--单据类型
+		picking.setFpurposeid(12000L);//领料类型
+		picking.setDbno(mMList.get(0).getDbno());//帐套
+		 
+		picking.setFdeptid(adminDao.getById(remp.getReqemp()).getTeamid().longValue());//领料部门
+		picking.setEmpid(remp.getReqemp());//领料人
+		picking.setFcheckerid(uid);
+		Long pickingid = pickingDao.save(picking, "Picking.insert.jijia");
+		
+		/*ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(picking.getFbillno());
+		processHistask.setSourceId(pickingid);
+		processHistask.setTaskCode("TO_PUSHOUT_INVENTORY_TASK");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHOUT_INVENTORY_TASK");
+		processExetask.setSourceCode(picking.getFbillno());
+		processExetask.setSourceId(pickingid);
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);*/
+		
+		//--领料单表头end----领料详细begin-------
+		
+		for(MachineMatchEntity mmpdetail:mMList){
+			PickingDetail pDetail=new PickingDetail();
+			pDetail.setPickingid(pickingid);
+			pDetail.setItemcode(mmpdetail.getItemcode());
+			pDetail.setItemname(mmpdetail.getItemname());
+			pDetail.setItemmode(mmpdetail.getItemmode());
+			pDetail.setFqty(mmpdetail.getUseage());
+			pDetail.setBatchno(mmpdetail.getBatchno()==null?"":mmpdetail.getBatchno());
+			pDetail.setFentryid(0);//分录号
+			BaseItem baseitem = baseItemDao.getByProperty("itemcode", mmpdetail.getItemcode());//.getFitemid().intValue()
+		//--	pDetail.setFitemid(baseitem.getFitemid().intValue());
+			//根据batchid获取仓库
+			pDetail.setFscstockid(inventoryBatchDao.getById(mmpdetail.getBatchid()).getFitemid().longValue());//调出仓库
+			pDetail.setFreproducetype(1059);//是否返工
+			pDetail.setFsourcetrantype(85L);//原单类型
+			pDetail.setFicmobillno(icmok3.getFbillno());//生产任务单编号
+		//	pDetail.setFsourcebillno(icmok3.getFbillno());//源单编号
+			pDetail.setDbno(mmpdetail.getDbno());
+			pDetail.setIssn(baseitem.getFissnmanager());//  是否批次管理
+				
+			//表头保存的sql未添加
+			pickingDetailDao.save(pDetail, "PickingDetail.insert.jijia");
+			
+		}
+		
+		
+		
+		//------同步添加至出库单列表--END------------------------------------------------------------------------
+		//TREReturn terReturn = k3ServiceProxy.saveIcmoToK3(k3ServiceProxy.icmoServicek3,icmok3,namelist,machineMatch,mMList);
+		//过滤四帐套---不同步ERP
+		
+		List<MachineMatchEntity> mMListDown=new ArrayList<MachineMatchEntity>();
+		for(MachineMatchEntity mme:mMList){
+			if(mme.getDbno()==null||mme.getDbno().intValue()==3){
+				mMListDown.add(mme);
+			}
+		}
+		TREReturn terReturn=new TREReturn();
+		terReturn.setnCode(1);
+		if(mMListDown.size()!=0){//
+			 terReturn = k3ServiceProxy.saveIcmoK3All(icmok3,namelist,mMListDown);
+		}
+		
+		if(terReturn.getnCode()==-1){
+			throw new ServiceException(terReturn.getStrText());
+		}
+		icbillnoDao.update(icbi);
+		
+	}
+	/**
+	 * 领料反审
+	 */
+	@Override
+	public Integer saveUndownK3(ReqtakeQuery reqtakeQuery)
+			throws ServiceException {
+			
+		//本地库存修改
+		WorkPlan workPlan = workPlanDao.getByProperty("fbillno", reqtakeQuery.getFbillno());
+		System.out.println("========="+workPlan.getWorkplanid());
+		MachineMatch machineMatch = machineMatchDao.getByProperty("workplanid",workPlan.getWorkplanid()+"");
+		MachineMatchEntityQuery query=new MachineMatchEntityQuery();
+		query.setFmatchid(machineMatch.getFmatchid());
+		List<MachineMatchEntity> mmList = machineMatchEntityDao.findList(query);
+		for(MachineMatchEntity mm:mmList){
+			if(mm.getBatchid()!=null){//无批次
+				InventoryBatch inventoryBatch=new InventoryBatch();
+				inventoryBatch.setBatchid(mm.getBatchid());
+				inventoryBatch.setFqty(mm.getUseage());
+				InventoryBatch ib = inventoryBatchDao.getById(mm.getBatchid());
+				
+				if(ib.getDbno().intValue()==3){//3帐套---SQL中已添加锁库数量
+					inventoryBatchDao.update("InventoryBatch.updatefqty.3", inventoryBatch);
+				}else if(ib.getDbno().intValue()==4){//4帐套
+					inventoryBatchDao.update("InventoryBatch.updatefqty.4", inventoryBatch);	
+				}
+			}
+		}
+		Reqtake reqtake=new Reqtake();
+		reqtake.setFbillno(reqtakeQuery.getFbillno());
+		//修改本地领料状态
+		reqtakeDao.update("Reqtake.update.status", reqtake);
+		machineMatch.setUsestatus(0);//领用状态:未领
+		machineMatchDao.update(machineMatch);
+		
+		//--K3库存修改------------------------------------------------------------------------------
+		TREReturn terReturn=k3ServiceProxy.unReqtakeDownK3(reqtakeQuery.getFbillno());
+		if(terReturn.getnCode()==1){//成功
+			return 1;
+		}else{
+			
+			throw new ServiceException();
+		}
+	}
+
+}

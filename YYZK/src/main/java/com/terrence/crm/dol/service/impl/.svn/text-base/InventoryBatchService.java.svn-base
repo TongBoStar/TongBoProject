@@ -1,0 +1,466 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.Stock;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IStockDao;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.StockQuery;
+import com.terrence.crm.dol.service.IInventoryBatchService;
+import com.terrence.crm.dol.utils.DateUtils;
+
+
+@Service
+@Transactional
+public class InventoryBatchService extends BaseService implements IInventoryBatchService {
+	protected static Logger logger = LoggerFactory.getLogger(InventoryBatchService.class);
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	
+	@Autowired
+	@Qualifier("stockDao")
+	private IStockDao stockDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "InventoryBatch";
+	}
+	@Transactional(readOnly=true)
+	public InventoryBatch getById(java.lang.Long id) throws ServiceException
+	{
+		return inventoryBatchDao.getById(id);
+	}
+	
+	public void saveOrUpdate(InventoryBatch entity) throws ServiceException
+	{
+		inventoryBatchDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(InventoryBatch entity) throws ServiceException
+	{
+		Long adId = inventoryBatchDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(InventoryBatch entity) throws ServiceException
+	{
+		Integer returnValue =  inventoryBatchDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = inventoryBatchDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = inventoryBatchDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		InventoryBatchQuery query = new InventoryBatchQuery();
+		try {
+			return inventoryBatchDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<InventoryBatch> findPage(Page<InventoryBatch> page, InventoryBatchQuery query) throws ServiceException
+	{
+		return inventoryBatchDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<InventoryBatch> findPage(Page<InventoryBatch> page,String statement, InventoryBatchQuery query) throws ServiceException
+	{
+		return inventoryBatchDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<InventoryBatch> findList(InventoryBatchQuery query) throws ServiceException
+	{
+		return inventoryBatchDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<InventoryBatch> findList(InventoryBatchQuery query,Integer pageSize) throws ServiceException
+	{
+		return inventoryBatchDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<InventoryBatch> findList(InventoryBatchQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return inventoryBatchDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<InventoryBatch> findAllList() throws ServiceException
+	{
+		return inventoryBatchDao.findAllList();
+	}
+	@Transactional(readOnly=true)
+	public List<InventoryBatch> findList(InventoryBatchQuery query,String statement) throws ServiceException
+	{
+		return inventoryBatchDao.findList(statement, query);
+	}
+	@Override
+	public void saveSync(String statement) throws ServiceException {
+		inventoryBatchDao.saveSync(statement);
+	}
+	@Override
+	public void updateSync(String statement) throws ServiceException {
+		inventoryBatchDao.updateSync(statement);
+	}
+	@Override
+	public void getSync(String statement) throws ServiceException {
+		inventoryBatchDao.getSync(statement);
+	}
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void updatek3k5(String statement) throws ServiceException {
+		inventoryBatchDao.save(null, statement);
+	}
+	@Override
+	public Page<InventoryBatch> findPagenew(Page<InventoryBatch> page,
+			String statement, InventoryBatchQuery query)
+			throws ServiceException {
+		if(query.getStockname()!=null){
+			StockQuery stockquery=new StockQuery();
+			stockquery.setFname(query.getStockname());
+			
+			List<Stock> slist = stockDao.findList("Stock.findByName.inventory", stockquery);
+			String idlist="";
+			long idsize=slist.size();
+			for(int i=0;i<idsize;i++){
+				if(i==idsize-1){
+					idlist+=slist.get(i).getFitemid();					
+				}else{
+					idlist+=slist.get(i).getFitemid()+",";	
+				}
+			}
+			System.out.println("======"+idlist);
+			if(!idlist.equals("")){
+				query.setFitemidlist(idlist);	
+			}else{
+				query.setFitemidlist("''");
+			}
+		}
+		
+		return inventoryBatchDao.findPage(page,statement, query);
+		
+	}
+	@Override
+	public InventoryBatch getByCode( InventoryBatchQuery query) throws ServiceException {
+
+		return inventoryBatchDao.getByEntity("InventoryBatch.getfqty.addicmo", query);
+		
+	}
+	@Override
+	public String findInventoryXls(String realPath,
+			InventoryBatchQuery inventoryBatchQuery) throws ServiceException {
+		
+		if(inventoryBatchQuery.getStockname()!=null){
+			StockQuery stockquery=new StockQuery();
+			stockquery.setFname(inventoryBatchQuery.getStockname());
+			
+			List<Stock> slist = stockDao.findList("Stock.findByName.inventory", stockquery);
+			String idlist="";
+			long idsize=slist.size();
+			for(int i=0;i<idsize;i++){
+				if(i==idsize-1){
+					idlist+=slist.get(i).getFitemid();					
+				}else{
+					idlist+=slist.get(i).getFitemid()+",";	
+				}
+			}
+			System.out.println("======"+idlist);
+			if(!idlist.equals("")){
+				inventoryBatchQuery.setFitemidlist(idlist);	
+			}else{
+				inventoryBatchQuery.setFitemidlist("''");
+			}
+		}
+	
+
+		  HSSFWorkbook wb = new HSSFWorkbook();
+		  
+		  HSSFSheet sheet = wb.createSheet("new sheet");
+		  HSSFCellStyle cellstyle=wb.createCellStyle();
+		  cellstyle.setWrapText(true);//自动换行
+		  creatSheetHead(sheet,wb);//创建表头
+		  
+		  int i=1;
+		  short cellNumbers=0;
+		 // HSSFRow rows =null;
+		  
+		  
+		  String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"work.xls";
+
+		  FileOutputStream outputStream=null;
+		  File file = new File(realPath+fileName);
+		  if(!file.exists()){
+			  try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		  }
+		for(int t2=1;;t2++){
+			 try {
+					outputStream=new FileOutputStream(file.getPath());
+					
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			//---------------------------------
+			int top = 100;
+			inventoryBatchQuery.setTop(String.valueOf(top));
+			
+			int notTop = (t2-1)*100;
+			
+			
+			if(notTop != 0){
+				inventoryBatchQuery.setNotTop(String.valueOf(notTop));
+			}
+			
+			List<InventoryBatch> listInvent = inventoryBatchDao.findList("InventoryBatch.InventoryExport.data", inventoryBatchQuery);
+			 HSSFRow rows =null;
+			 for(InventoryBatch potry:listInvent){
+				  
+				  
+					
+					for(int tt=0;tt<potry.getInvenlist().size();tt++){
+						
+						if(inventoryBatchQuery.getStockname()!=null && !inventoryBatchQuery.getStockname().equals("")){
+							
+							if(inventoryBatchQuery.getStockname().equals( potry.getInvenlist().get(tt).getStockname())){
+								rows = sheet.createRow(i);
+								cellNumbers=0;
+								
+								
+								if(potry.getItemcode()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getItemcode());//物料编号
+								}
+								
+								if(potry.getItemname()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getItemname());//物料名称
+								}
+								
+								if(potry.getItemmode()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getItemmode());//规格型号
+								}
+								
+								if(potry.getInvenlist().get(tt).getBatchno()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getBatchno());//批次号
+								}
+								if(potry.getBaseItem().getFissnmanager()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									if(potry.getBaseItem().getFissnmanager()==1){
+										rows.createCell(cellNumbers++).setCellValue("是");//序列号
+									}else{
+										
+										rows.createCell(cellNumbers++).setCellValue("否");//序列号
+									}
+									
+								}
+								if(potry.getInvenlist().get(tt).getFqty()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getFqty());//库存
+								}
+								if(potry.getInvenlist().get(tt).getFqtylock()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getFqtylock());//锁库
+								}
+								if(potry.getInvenlist().get(tt).getDbno()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getDbno());//帐套
+								}
+								if(potry.getInvenlist().get(tt).getFitemid()==null){
+									rows.createCell(cellNumbers++).setCellValue("");
+								}else{
+									rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getStockname());//仓库
+								}
+
+								i++;
+							}else{
+								continue;
+							}
+								
+						}else{
+							
+							rows = sheet.createRow(i);
+							cellNumbers=0;
+							
+							
+							if(potry.getItemcode()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getItemcode());//物料编号
+							}
+							
+							if(potry.getItemname()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getItemname());//物料名称
+							}
+							
+							if(potry.getItemmode()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getItemmode());//规格型号
+							}
+							
+							if(potry.getInvenlist().get(tt).getBatchno()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getBatchno());//批次号
+							}
+							if(potry.getBaseItem().getFissnmanager()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								if(potry.getBaseItem().getFissnmanager()==1){
+									rows.createCell(cellNumbers++).setCellValue("是");//序列号
+								}else{
+									
+									rows.createCell(cellNumbers++).setCellValue("否");//序列号
+								}
+								
+							}
+							if(potry.getInvenlist().get(tt).getFqty()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getFqty());//库存
+							}
+							if(potry.getInvenlist().get(tt).getFqtylock()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getFqtylock());//锁库
+							}
+							if(potry.getInvenlist().get(tt).getDbno()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getDbno());//帐套
+							}
+							if(potry.getInvenlist().get(tt).getFitemid()==null){
+								rows.createCell(cellNumbers++).setCellValue("");
+							}else{
+								rows.createCell(cellNumbers++).setCellValue(potry.getInvenlist().get(tt).getStockname());//仓库
+							}
+
+							i++;
+						}
+					}
+			  }//123
+			 
+			 try {
+					wb.write(outputStream);
+					outputStream.flush();
+					outputStream.close();
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				
+				if(t2!=1 && listInvent.size()<100){
+					break;
+				}
+				
+		}
+		//---
+		
+		 
+		return fileName;	
+		
+	}
+	
+	private void creatSheetHead(HSSFSheet sheet, HSSFWorkbook wb) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+		  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+		  font.setFontHeightInPoints((short) 12);//设置字体大小
+		  cellstyl.setFont(font);
+		  sheet.setDefaultColumnWidth((short) 20);//列宽
+		  HSSFRow firstrow = sheet.createRow(0);
+		  HSSFRow secondRow = sheet.createRow(1);
+		  sheet.createFreezePane( 0, 1, 0, 1 );//冻结首行 
+		
+		  firstrow.createCell((short) 0).setCellValue("物料编号");
+		  firstrow.createCell((short) 1).setCellValue("物料名称");
+		  firstrow.createCell((short) 2).setCellValue("规格型号");
+		  firstrow.createCell((short) 3).setCellValue("批次号");
+		  firstrow.createCell((short) 4).setCellValue("序列号");
+		  firstrow.createCell((short) 5).setCellValue("库存");
+		  firstrow.createCell((short) 6).setCellValue("锁库数");
+		  firstrow.createCell((short) 7).setCellValue("帐套");
+		  firstrow.createCell((short) 8).setCellValue("仓库");
+	}
+	@Override
+	public List<InventoryBatch> findStockList(
+			InventoryBatchQuery inventoryBatchQuery) throws ServiceException {
+		return this.inventoryBatchDao.findStockList(inventoryBatchQuery);
+	}
+	@Override
+	public void syncFromErp() throws Exception{
+		inventoryBatchDao.syncFromErp("syncInventory");
+	}
+}

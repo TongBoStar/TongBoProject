@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailOutVar">
+
+        
+	<resultMap id="RM.TrailOutVar" class="com.terrence.crm.dol.bean.TrailOutVar">
+        <result property="outvarid" column="outvarid"/>
+        <result property="did" column="did"/>
+        <result property="ftagname" column="ftagname"/>
+        <result property="fetagname" column="fetagname"/>
+        <result property="defval" column="defval"/>
+        <result property="showsort" column="showsort"/>
+        <result property="sgroup" column="sgroup"/>
+        <result property="bgroup" column="bgroup"/>
+        <result property="iotype" column="iotype"/>
+        <result property="rectype" column="rectype"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailOutVar.columns">
+	    <![CDATA[
+        	t_trail_out_var.outvarid ,
+        	t_trail_out_var.did ,
+        	t_trail_out_var.ftagname ,
+        	t_trail_out_var.fetagname ,
+        	t_trail_out_var.defval ,
+        	t_trail_out_var.showsort ,
+        	t_trail_out_var.sgroup ,
+        	t_trail_out_var.bgroup ,
+        	t_trail_out_var.iotype ,
+        	t_trail_out_var.rectype 
+	    ]]>
+	</sql>
+	
+   <insert id="TrailOutVar.insert" >
+        INSERT INTO
+        t_trail_out_var (
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="" property="did"> did</isNotEmpty>
+        		<isNotEmpty prepend="," property="ftagname">ftagname</isNotEmpty>
+        		<isNotEmpty prepend="," property="fetagname">fetagname</isNotEmpty>
+        		<isNotEmpty prepend="," property="defval">defval</isNotEmpty>
+        		<isNotEmpty prepend="," property="showsort">showsort</isNotEmpty>
+        		<isNotEmpty prepend="," property="sgroup">sgroup</isNotEmpty>
+        		<isNotEmpty prepend="," property="bgroup">bgroup</isNotEmpty>
+        		<isNotEmpty prepend="," property="iotype">iotype</isNotEmpty>
+        		<isNotEmpty prepend="," property="rectype">rectype</isNotEmpty>
+			</dynamic>
+        ) VALUES (
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="" property="did"> #did#</isNotEmpty>
+        		<isNotEmpty prepend="," property="ftagname">#ftagname#</isNotEmpty>
+        		<isNotEmpty prepend="," property="fetagname"> #fetagname#</isNotEmpty>
+        		<isNotEmpty prepend="," property="defval"> #defval#</isNotEmpty>
+        		<isNotEmpty prepend="," property="showsort"> #showsort#</isNotEmpty>
+        		<isNotEmpty prepend="," property="sgroup"> #sgroup#</isNotEmpty>
+        		<isNotEmpty prepend="," property="bgroup"> #bgroup#</isNotEmpty>
+        		<isNotEmpty prepend="," property="iotype"> #iotype#</isNotEmpty>
+        		<isNotEmpty prepend="," property="rectype"> #rectype#</isNotEmpty>
+			</dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="outvarid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailOutVar.update" parameterClass="com.terrence.crm.dol.bean.TrailOutVar">         
+        UPDATE t_trail_out_var 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="did">
+	        	did = #did# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftagname">
+	        	ftagname = #ftagname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fetagname">
+	        	fetagname = #fetagname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="defval">
+	        	defval = #defval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="showsort">
+	        	showsort = #showsort# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="sgroup">
+	        	sgroup = #sgroup# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bgroup">
+	        	bgroup = #bgroup# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="iotype">
+	        	iotype = #iotype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="rectype">
+	        	rectype = #rectype# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        outvarid = #outvarid# 
+    </update>
+    
+	<delete id="TrailOutVar.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_out_var where
+       outvarid = #outvarid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrailOutVar.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_out_var 
+        WHERE
+       outvarid in ($outvarid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrailOutVar.getById" resultMap="RM.TrailOutVar">
+	    select <include refid="TrailOutVar.columns"/>
+	    
+	        from t_trail_out_var 
+	        where 
+		        outvarid = #outvarid# 
+	    
+    </select>
+    
+	<select id="TrailOutVar.getByProperty" resultMap="RM.TrailOutVar">
+		select <include refid="TrailOutVar.columns"/> from t_trail_out_var where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailOutVar.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="outvarid">
+	             t_trail_out_var.outvarid = #outvarid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="did">
+	             t_trail_out_var.did = #did#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftagname">
+	             t_trail_out_var.ftagname = #ftagname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fetagname">
+	             t_trail_out_var.fetagname = #fetagname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="defval">
+	             t_trail_out_var.defval = #defval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="showsort">
+	             t_trail_out_var.showsort = #showsort#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="sgroup">
+	             t_trail_out_var.sgroup = #sgroup#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="bgroup">
+	             t_trail_out_var.bgroup = #bgroup#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="iotype">
+	             t_trail_out_var.iotype = #iotype#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="rectype">
+	             t_trail_out_var.rectype = #rectype#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailOutVar.findPage.and">
+			<isNotEmpty prepend="AND" property="outvarid">
+	             t_trail_out_var.outvarid = #outvarid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="did">
+	             t_trail_out_var.did = #did#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftagname">
+	             t_trail_out_var.ftagname = #ftagname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fetagname">
+	             t_trail_out_var.fetagname = #fetagname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="defval">
+	             t_trail_out_var.defval = #defval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="showsort">
+	             t_trail_out_var.showsort = #showsort#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="sgroup">
+	             t_trail_out_var.sgroup = #sgroup#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="bgroup">
+	             t_trail_out_var.bgroup = #bgroup#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="iotype">
+	             t_trail_out_var.iotype = #iotype#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="rectype">
+	             t_trail_out_var.rectype = #rectype#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrailOutVar.Entity" resultMap="RM.TrailOutVar">
+    	SELECT 	<include refid="TrailOutVar.columns"/> FROM t_trail_out_var <include refid="TrailOutVar.findPage.where"/>
+    </select>
+    
+    <select id="TrailOutVar.findList" resultMap="RM.TrailOutVar">
+    	SELECT 
+    		<include refid="TrailOutVar.columns"/> 
+    	FROM 
+    		t_trail_out_var
+		<include refid="TrailOutVar.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailOutVar.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_out_var
+    ]]>
+		<include refid="TrailOutVar.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailOutVar.findPage" resultMap="RM.TrailOutVar">
+    	select <include refid="TrailOutVar.columns"/>	    
+	        from t_trail_out_var 	   
+		<include refid="TrailOutVar.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailOutVar.findPage" resultMap="RM.TrailOutVar">
+    	select <include refid="TrailOutVar.columns"/>	    
+	        from t_trail_out_var where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       outvarid 
+	   not in(select $notTop$ 
+       outvarid 
+	   from t_trail_out_var <include refid="TrailOutVar.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailOutVar.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

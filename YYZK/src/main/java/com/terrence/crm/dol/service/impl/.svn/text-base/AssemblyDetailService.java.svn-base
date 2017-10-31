@@ -1,0 +1,1173 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.AssTaskSeq;
+import com.terrence.crm.dol.bean.AssemblyDetail;
+import com.terrence.crm.dol.bean.AssemblyExce;
+import com.terrence.crm.dol.bean.AssemblyRecord;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyTaskFlow;
+import com.terrence.crm.dol.bean.AssignedSerial;
+import com.terrence.crm.dol.bean.AtsEmp;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Bills;
+import com.terrence.crm.dol.bean.BillsDetail;
+import com.terrence.crm.dol.bean.FactoryReport;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.bean.PdKey;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.PickingDetail;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.ReportTec;
+import com.terrence.crm.dol.bean.SalesDetail;
+import com.terrence.crm.dol.bean.ValveParts;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IAdttDao;
+import com.terrence.crm.dol.dao.IAssTaskSeqDao;
+import com.terrence.crm.dol.dao.IAssemblyDetailDao;
+import com.terrence.crm.dol.dao.IAssemblyExceDao;
+import com.terrence.crm.dol.dao.IAssemblyRecordDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.dao.IAssignedSerialDao;
+import com.terrence.crm.dol.dao.IAtsEmpDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IBillsDao;
+import com.terrence.crm.dol.dao.IBillsDetailDao;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.dao.IPdKeyDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IPickingDetailDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IReportTecDao;
+import com.terrence.crm.dol.dao.ISalesDetailDao;
+import com.terrence.crm.dol.dao.IValvePartsDao;
+import com.terrence.crm.dol.query.AssemblyDetailQuery;
+import com.terrence.crm.dol.query.AssemblyRecordQuery;
+import com.terrence.crm.dol.query.AssemblyTaskFlowQuery;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+import com.terrence.crm.dol.query.PdKeyQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.ReportTecQuery;
+import com.terrence.crm.dol.service.IAssemblyDetailService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class AssemblyDetailService extends BaseService implements IAssemblyDetailService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyDetailService.class);
+	@Autowired
+	@Qualifier("assemblyDetailDao")
+	private IAssemblyDetailDao assemblyDetailDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("billsDetailDao")
+	private IBillsDetailDao billsDetailDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("atsEmpDao")
+	private IAtsEmpDao atsEmpDao;
+	@Autowired
+	@Qualifier("assemblyTaskFlowDao")
+	private IAssemblyTaskFlowDao assemblyTaskFlowDao;
+	@Autowired
+	@Qualifier("assignedSerialDao")
+	private IAssignedSerialDao assignedSerialDao;
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	@Autowired
+	@Qualifier("pickingDetailDao")
+	private IPickingDetailDao pickingDetailDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("salesDetailDao")
+	private ISalesDetailDao salesDetailDao;
+	
+	@Autowired
+	@Qualifier("assemblyRecordDao")
+	private IAssemblyRecordDao assemblyRecordDao;
+	
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	@Autowired
+	@Qualifier("assTaskSeqDao")
+	private IAssTaskSeqDao assTaskSeqDao;
+	
+	@Autowired
+	@Qualifier("assemblyExceDao")
+	private IAssemblyExceDao assemblyExceDao;
+	
+	
+	@Autowired
+	@Qualifier("adttDao")
+	private IAdttDao adttDao;
+	
+	@Autowired
+	@Qualifier("pdKeyDao")
+	private IPdKeyDao pdKeyDao;
+	@Autowired
+	@Qualifier("factoryReportDao")
+	private IFactoryReportDao factoryReportDao;
+	@Autowired
+	@Qualifier("valvePartsDao")
+	private IValvePartsDao valvePartsDao;
+	
+	@Autowired
+	@Qualifier("billsDao")
+	private IBillsDao billsDao;
+	
+	@Autowired
+	@Qualifier("reportTecDao")
+	private IReportTecDao reportTecDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyDetail";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyDetail getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyDetailDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyDetail entity) throws ServiceException
+	{
+
+//		AssemblyTaskFlow atf=new AssemblyTaskFlow();
+//		atf.setFlowid(entity.getFlowid());
+//		atf.setStatus(TerrcnceConstants.ASSEMBLYTASK_FLOW_WORKING);
+//		assemblyTaskFlowDao.update(atf);
+		
+		
+		
+		List<Long> detailnos=entity.getDetailnos();
+		List<Double> fqtys=entity.getFqtys();
+		List<String> itemcodes=entity.getItemcodes();
+		List<String> serials=entity.getSerials();
+		List<Long> assemblyids=entity.getAssemblyids();
+		List<Integer> dbnos=entity.getDbnos();
+		List<Integer> sns=entity.getSns();
+		List<Double> fqtyeds=entity.getFqtyeds();
+		List<Long> fstockids=entity.getFstockids();
+		
+		//================================================
+			List<String> buyizhis = entity.getBuyizhis();
+			List<Long> denoids = entity.getDenoids();
+		//================================================
+		for(int i=0;i<detailnos.size();i++)
+		{
+			if(!itemcodes.get(i).equals(""))
+			{
+			AssemblyDetail assemblyDetail=new AssemblyDetail();
+			assemblyDetail.setDetailno(detailnos.get(i));
+			assemblyDetail.setItemcode(itemcodes.get(i));
+			assemblyDetail.setSerial(serials.get(i));
+			assemblyDetail.setFqty(fqtys.get(i));
+			assemblyDetail.setSeqid(entity.getSeqid());
+			assemblyDetail.setDbno(dbnos.get(i));
+			assemblyDetail.setEmpid(SpringSecurityUtils.getCurrentUserId());
+			assemblyDetail.setFqtyed(fqtyeds.get(i));
+			if(fstockids.get(i)!=null)
+			{
+				assemblyDetail.setFstockid(fstockids.get(i));
+			}
+			if(assemblyids.get(i)!=null)
+			{
+			assemblyDetail.setAssemblyid(assemblyids.get(i));
+			}
+			else
+			{
+				/**更新投料单占用量**/
+				BillsDetail bDetail=billsDetailDao.getById(assemblyDetail.getDetailno());
+				bDetail.setTookqty((bDetail.getTookqty()==null?0:bDetail.getTookqty())+assemblyDetail.getFqty());
+				/**因update中有dosing = isnull(dosing,0)+#dosing# ,所以新创建对像，以免已配数量累加**/
+				BillsDetail detail=new BillsDetail();
+				detail.setDetailno(bDetail.getDetailno());
+				detail.setTookqty(bDetail.getTookqty());
+				//========================================
+				//detail.setQuantity((bDetail.getQuantity()==null?0:bDetail.getQuantity())+fqtyeds.get(i));//组装数量
+				//=======================================
+				billsDetailDao.saveOrUpdate(detail);
+				/**更新库存**/
+				/*InventoryBatch inventoryBatch=new InventoryBatch();
+				inventoryBatch.setItemcode(assemblyDetail.getItemcode());
+				inventoryBatch.setFqty(-assemblyDetail.getFqty());
+				inventoryBatch.setBatchno(assemblyDetail.getSerial());
+				inventoryBatch.setDbno(assemblyDetail.getDbno());
+				inventoryBatch.setFitemid(fstockids.get(i).intValue());
+				inventoryBatchDao.update("InventoryBatch.update.fqty",inventoryBatch);
+				*/
+			}
+			//======================================================更新组装数量===========2015-1-4在界面点击确定时就更改组装数量
+//			BillsDetail bDetaill=billsDetailDao.getById(assemblyDetail.getDetailno());
+//			BillsDetail detail=new BillsDetail();
+//			detail.setDetailno(bDetaill.getDetailno());
+//			detail.setQuantity((bDetaill.getQuantity()==null?0:bDetaill.getQuantity())+fqtyeds.get(i));//组装数量
+//			billsDetailDao.saveOrUpdate(detail);
+			//==================================================================
+			
+			
+				assemblyDetailDao.saveOrUpdate(assemblyDetail);
+				//=========================================
+					if(assemblyids.get(i)!=null  && !assemblyids.get(i).equals("")){
+						AssemblyDetail ad = new AssemblyDetail();
+						ad.setAssemblyid(assemblyDetail.getAssemblyid());
+						ad.setDetailno(detailnos.get(i));
+						ad.setSerial(serials.get(i));
+						ad.setFqtyed(fqtyeds.get(i));
+						assemblyDetailDao.saveOrUpdate(ad);
+					}
+				//=========================================
+				if(sns.get(i).intValue()==1)
+				{
+					AssignedSerial aSerial=new AssignedSerial();
+					aSerial.setFserialnum(serials.get(i));
+					aSerial.setItemcode(itemcodes.get(i));
+					aSerial.setUsestatus(1);
+					aSerial.setDb(dbnos.get(i));
+					assignedSerialDao.update("AssignedSerial.update.where",aSerial);
+				}
+			}
+			
+			//============================================
+			if(buyizhis.get(i)!=null && !buyizhis.get(i).equals("")){
+				BillsDetail bdtail = billsDetailDao.getById(denoids.get(i));
+				if(bdtail != null){
+					if(bdtail.getInconsistent()==null){
+						BillsDetail bdail = new BillsDetail();
+						bdail.setDetailno(denoids.get(i));
+			
+						if(buyizhis.get(i).equals("BOM错误")){
+							bdail.setInconsistent(1);
+						}else if(buyizhis.get(i).equals("配料错误")){
+							bdail.setInconsistent(2);
+						}else if(buyizhis.get(i).equals("版本更改")){
+							bdail.setInconsistent(3);
+						}else if(buyizhis.get(i).equals("其他")){
+							bdail.setInconsistent(4);	
+						}
+						billsDetailDao.update("BillsDetail.update.Data.YBom", bdail);
+						//BillsDetail bdtail = billsDetailDao.getById(denoids.get(i));
+						if(bdtail != null){
+							//entity.getSeqid()
+							AssTaskSeq atk = assTaskSeqDao.getById(entity.getSeqid());//查询获得序列号、物料编码等
+							AssemblyTask at = assemblyTaskDao.getById(entity.getTaskid());
+							if(atk != null && at != null){
+								AssemblyExce ae = new AssemblyExce();
+								ae.setItemcode(atk.getItemcode());
+								ae.setItemname(atk.getBaseItem().getItemname());
+								ae.setItemmode(atk.getBaseItem().getFormatno());
+								ae.setSeqcode(atk.getSeqcode());
+								
+								ae.setEitemcode(bdtail.getItemcode());
+								ae.setEitemname(bdtail.getItemname());
+								ae.setEnotes(buyizhis.get(i));
+								ae.setTaskcode(at.getTaskcode());
+								ae.setProcstatus(0);//未处理
+								ae.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+								ae.setCreateemp(SpringSecurityUtils.getCurrentUserId());//当前登录人Id
+								
+								assemblyExceDao.save(ae,"AssemblyExce.insert.new.data");
+							}
+							
+						}
+					}
+				}
+			}
+			
+			
+			
+			//============================================
+		}
+		Adtt ttda = adttDao.getById(entity.getAdttid());			
+		if(ttda != null ){
+			if(ttda.getStatus() == 0){//装配状态是0 未装配，第一次保存时更新开始时间
+				Adtt dt = new Adtt();
+				dt.setAdttid(entity.getAdttid());
+				dt.setStartdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd"));
+				adttDao.update("Adtt.update.start.date", dt);
+				
+				AssemblyTaskFlow atf=new AssemblyTaskFlow();
+				atf.setFlowid(entity.getFlowid());
+				atf.setStatus(TerrcnceConstants.ASSEMBLYTASK_FLOW_WORKING);
+				assemblyTaskFlowDao.update(atf);
+				
+				Adtt adtt=new Adtt();
+				adtt.setAdttid(entity.getAdttid());
+				adtt.setStatus(TerrcnceConstants.ADTT_DONE);
+				adttDao.update(adtt);
+			}else{
+				AssemblyTaskFlow atf=new AssemblyTaskFlow();
+				atf.setFlowid(entity.getFlowid());
+				atf.setStatus(TerrcnceConstants.ASSEMBLYTASK_FLOW_WORKING);
+				assemblyTaskFlowDao.update(atf);
+				
+				Adtt adtt=new Adtt();
+				adtt.setAdttid(entity.getAdttid());
+				adtt.setStatus(TerrcnceConstants.ADTT_DONE);
+				adttDao.update(adtt);
+			}
+		}else{
+			
+			AssemblyTaskFlow atf=new AssemblyTaskFlow();
+			atf.setFlowid(entity.getFlowid());
+			atf.setStatus(TerrcnceConstants.ASSEMBLYTASK_FLOW_WORKING);
+			assemblyTaskFlowDao.update(atf);
+			
+			Adtt adtt=new Adtt();
+			adtt.setAdttid(entity.getAdttid());
+			adtt.setStatus(TerrcnceConstants.ADTT_DONE);
+			adttDao.update(adtt);
+		}
+		
+	
+	}
+	
+	public java.lang.Long save(AssemblyDetail entity) throws ServiceException
+	{
+		Long adId = assemblyDetailDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyDetail entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyDetailDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyDetailDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyDetailDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyDetailQuery query = new AssemblyDetailQuery();
+		try {
+			return assemblyDetailDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyDetail> findPage(Page<AssemblyDetail> page, AssemblyDetailQuery query) throws ServiceException
+	{
+		return assemblyDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyDetail> findPage(Page<AssemblyDetail> page,String statement, AssemblyDetailQuery query) throws ServiceException
+	{
+		return assemblyDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDetail> findList(AssemblyDetailQuery query) throws ServiceException
+	{
+		return assemblyDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDetail> findList(AssemblyDetailQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyDetailDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyDetail> findList(AssemblyDetailQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDetail> findAllList() throws ServiceException
+	{
+		return assemblyDetailDao.findAllList();
+	}
+	@Override
+	public void saveList(AssemblyDetail entity) throws ServiceException {
+		List<Long> detailnos=entity.getDetailnos();
+		List<String> itemcodes=entity.getItemcodes();
+		List<String> serials=entity.getSerials();
+		List<Double> fqtys=entity.getFqtys();
+		for(int i=0;i<itemcodes.size();i++)
+		{
+			AssemblyDetail detail=new AssemblyDetail();
+			detail.setSeqid(entity.getSeqid());
+			detail.setFqty(fqtys.get(i));
+			detail.setItemcode(itemcodes.get(i));
+			detail.setDetailno(detailnos.get(i));
+			if(serials.get(i)!=null&&!serials.get(i).equals(""))
+			{
+				detail.setSerial(serials.get(i));
+			}
+			BaseItem baseItem=baseItemDao.getByProperty("itemcode", detail.getItemcode());
+			detail.setUnit(baseItem.getUnitname());
+			detail.setItemname(baseItem.getItemname());
+			detail.setItemmode(baseItem.getFormatno());
+			assemblyDetailDao.save(detail);
+		}
+	}
+	@Override
+	public void saveWork(AssemblyDetail entity) throws ServiceException {
+		
+		BaseItem itembs = new BaseItem();
+		itembs.setItemcode(entity.getItemcode());
+		BaseItem bsitem = baseItemDao.findbs(itembs);
+		if(bsitem.getGuideid() != null && !bsitem.getGuideid().equals("") && bsitem.getGuideis() !=null && !bsitem.getGuideis().equals("")){
+			AssemblyRecordQuery aR = new AssemblyRecordQuery();
+			aR.setItemcode(entity.getItemcode());
+			aR.setItemseq(entity.getSerial());//序列号
+			aR.setWorkno(entity.getIcbillno());
+			
+			AssemblyRecord assemRecord = assemblyRecordDao.findEntity(aR);
+			
+			if(assemRecord == null){//提示先屏蔽，之后再用
+				throw new ServiceException("未填写装配记录单，请先填写保存装配记录单","-1");
+			}
+			
+		}
+		
+		
+		//=======================================================================更改装配记录单状态为装配单提交状态，不可修改
+		AssemblyRecord aRquery = new AssemblyRecord();
+		aRquery.setItemcode(entity.getItemcode());
+		aRquery.setItemseq(entity.getSerial());//序列号
+		aRquery.setWorkno(entity.getIcbillno());
+		aRquery.setStatus(2);//1、审核 2、装配单提交
+		assemblyRecordDao.update("assemblyRecord.update.zpjl.status", aRquery);
+		//======================================================================
+		//==================保存产品档案============
+		BaseItem bt=baseItemDao.getByProperty("itemcode",entity.getItemcode());
+		AssemblyTask at = assemblyTaskDao.getByProperty("taskcode", entity.getIcbillno());
+	
+		PdFile pdfile = new PdFile();
+		pdfile.setSeqno(entity.getSerial());
+		pdfile.setItemcode(entity.getItemcode());
+		pdfile.setItemname(bt.getItemname());
+		pdfile.setItemmode(bt.getFormatno());
+		//pdfile.setOrderno();//订单号
+		pdfile.setWorkno(entity.getIcbillno());//生产任务单
+		if(at.getOrdercode() != null){
+			pdfile.setPlanno(at.getOrdercode());//计划单
+		}
+		
+		pdfile.setLoaddate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//装配日期---默认当前系统日期
+		pdfile.setIsm(1);
+		pdfile.setIsk(1);
+		pdfile.setIsr(1);
+		
+		pdfile.setFstatus(0);//有效状态
+		pdfile.setLoademp(SpringSecurityUtils.getCurrentRealName());//装配人员，当前登录人姓名
+		
+		pdFileDao.save(pdfile, "PdFile.insert.new.data");
+		//==============================
+		
+		//提交之前先做保存操作
+		this.saveOrUpdate(entity);
+		AssemblyTaskFlow atf=new AssemblyTaskFlow();
+		atf.setFlowid(entity.getFlowid());
+		atf.setStatus(TerrcnceConstants.ASSEMBLYTASK_FLOW_WORKED);
+		assemblyTaskFlowDao.update(atf);
+		
+	
+		
+		AtsEmp atsEmp=new AtsEmp();
+		atsEmp.setFlowid(entity.getFlowid());
+		atsEmp.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		atsEmp.setFinishdate(DateConvertUtils.getCurrentDate());
+		atsEmp.setFinishmonth(DateUtils.GetFormatDate("yyyyMM"));
+		atsEmpDao.save(atsEmp);
+		
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHOUT_INVENTORY_TASK");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		ProcessDetail processDetail = processDetails.get(0);
+		String handlers = "";
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		
+		/**创建出入库单**/
+		Picking picking=new Picking();
+		picking.setFstatus(0);
+		picking.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		picking.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		picking.setSeqcode(entity.getSerial());
+		picking.setTakedate(DateConvertUtils.getCurrentDate());
+		Icbillno icbillno=null;
+		
+		if(entity.getDbno()==3)
+		{
+			icbillno=icbillnoDao.getByProperty("fpreletter", "ODO");/**生产领料单（待出库单）**/
+		}
+		else if(entity.getDbno()==4)
+		{
+			icbillno=icbillnoDao.getByProperty("fpreletter", "SALE");/**销售出库单**/
+		}
+		else
+		{
+			throw new ServiceException("未选标记，请联系管理员","-1");
+		}
+		picking.setFbillno(icbillno.getFpreletter()+(icbillno.getFcurno()+1));
+		//picking.setDispatchid(entity.get)
+		picking.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+		picking.setFtrantype(icbillno.getFbillid());
+		picking.setFpurposeid(12000l);/**一般领料**/
+		picking.setFdeptid(SpringSecurityUtils.getCurrentTeamid().longValue());
+		if(entity.getDbno()==3)
+		{
+			picking.setFstatus(0);/**0：未审，1：已审**/
+		}
+		else if(entity.getDbno()==4)
+		{
+			//picking.setFstatus(2);/**不处理标记**/ 
+			picking.setFstatus(0);/**0：未审，1：已审**/
+			
+			/**理新单据编号**/
+			icbillno.setFcurno(icbillno.getFcurno()+1);
+			icbillnoDao.update(icbillno);
+		}
+		picking.setFupstockwhensave(1);/**库存更新方式**/
+		picking.setFdate(DateConvertUtils.getCurrentDate());
+		picking.setItemcode(entity.getItemcode());
+		picking.setFqty(entity.getFqty());
+		picking.setFsourcebillno(entity.getIcbillno());
+		picking.setFsourcebillid(entity.getTaskid());
+		picking.setDbno(entity.getDbno());
+		Long pid = pickingDao.save(picking);
+		
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(picking.getFbillno());
+		processHistask.setSourceId(pid);
+		processHistask.setTaskCode("TO_PUSHOUT_INVENTORY_TASK");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHOUT_INVENTORY_TASK");
+		processExetask.setSourceCode(picking.getFbillno());
+		processExetask.setSourceId(pid);
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+		
+		List<String> itemcodes=entity.getItemcodes();
+		List<String> serials=entity.getSerials();
+		List<Long> detailnos=entity.getDetailnos();
+		List<Double> fqtys=entity.getFqtys();
+		List<Long> assemblyids=entity.getAssemblyids();
+		List<Integer> dbnos=entity.getDbnos();
+		List<Integer> sns=entity.getSns();
+		List<Double> fqtyeds=entity.getFqtyeds();
+		List<Long> fstockids=entity.getFstockids();
+		List<Integer> delises = entity.getDelises();
+		
+		if(entity.getDbno()==3)/**3帐套处理**/
+		{
+			for(int i=0;i<itemcodes.size();i++)
+			{
+				BaseItem baseItem=baseItemDao.getByProperty("itemcode", itemcodes.get(i));
+				if(entity.getBuliao() ==1){
+					BillsDetail bdill = new BillsDetail();
+					bdill.setDetailno(detailnos.get(i));
+					BillsDetail dbtail = billsDetailDao.getEntityId(bdill);
+					
+					if(dbtail != null && dbtail.getFadditem()!=null && !dbtail.getFadditem().equals("") && dbtail.getFadditem()==1){
+						PickingDetail pdetail=new PickingDetail();
+						pdetail.setItemcode(itemcodes.get(i));
+						pdetail.setPickingid(picking.getPickingid());
+						pdetail.setBatchno(serials.get(i));
+						pdetail.setFentryid(i+1);
+						
+						pdetail.setFqty(fqtyeds.get(i));
+						pdetail.setSeqcode(entity.getSerial());
+						//pdetail.setFitemid();
+						if(null!=fstockids.get(i))
+						{
+							pdetail.setFscstockid(fstockids.get(i));
+						}
+						pdetail.setItemname(baseItem.getItemname());
+						pdetail.setFcostobjid(entity.getItemcode());
+						pdetail.setFreproducetype(1059);/**ERP的值是1059**/
+						pdetail.setFsourcetrantype(85L);/**ERP对应值为85**/
+						pdetail.setFicmobillno(entity.getIcbillno());
+						pdetail.setDbno(dbnos.get(i));
+						pdetail.setIssn(sns.get(i));
+						pdetail.setFsourceinterid(assemblyids.get(i));
+						pdetail.setDetailno(detailnos.get(i));
+						pickingDetailDao.save(pdetail);
+					}
+				}else{
+					if((fqtyeds.get(i)>0 && delises.get(i)!=1))//delises.get(i)!=1 配料单中未删除的保存，删除的不保存
+					{
+						PickingDetail pdetail=new PickingDetail();
+						pdetail.setItemcode(itemcodes.get(i));
+						pdetail.setPickingid(picking.getPickingid());
+						pdetail.setBatchno(serials.get(i));
+						pdetail.setFentryid(i+1);
+						pdetail.setFqty(fqtyeds.get(i));
+						pdetail.setSeqcode(entity.getSerial());
+						//pdetail.setFitemid();
+						//BaseItem baseItem=baseItemDao.getByProperty("itemcode", itemcodes.get(i));
+						if(null!=fstockids.get(i))
+						{
+							pdetail.setFscstockid(fstockids.get(i));
+						}
+						pdetail.setItemname(baseItem.getItemname());
+						pdetail.setFcostobjid(entity.getItemcode());
+						pdetail.setFreproducetype(1059);/**ERP的值是1059**/
+						pdetail.setFsourcetrantype(85L);/**ERP对应值为85**/
+						pdetail.setFicmobillno(entity.getIcbillno());
+						pdetail.setDbno(dbnos.get(i));
+						pdetail.setIssn(sns.get(i));
+						pdetail.setFsourceinterid(assemblyids.get(i));
+						pdetail.setDetailno(detailnos.get(i));
+						pickingDetailDao.save(pdetail);
+					}
+				}
+				
+			}
+			
+			/**理新单据编号**/
+			icbillno.setFcurno(icbillno.getFcurno()+1);
+			icbillnoDao.update(icbillno);
+		}
+		else if(entity.getDbno()==4)/**4帐套处理**/
+		{
+			for(int i=0;i<itemcodes.size();i++)
+			{
+				if(fqtyeds.get(i)>0  && delises.get(i)!=1)//delises.get(i)!=1 配料单中未删除的保存，删除的不保存
+				{
+					//PickingDetail pdetail=new PickingDetail();
+					SalesDetail salDeatil = new SalesDetail();
+					salDeatil.setItemcode(itemcodes.get(i));
+					salDeatil.setPickingid(picking.getPickingid());
+					salDeatil.setBatchno(serials.get(i));
+					salDeatil.setFentryid(i+1);
+					salDeatil.setFqty(fqtyeds.get(i));
+					salDeatil.setSeqcode(entity.getSerial());
+					//pdetail.setFitemid();
+					BaseItem baseItem=baseItemDao.getByProperty("itemcode", itemcodes.get(i));
+					if(null!=fstockids.get(i))
+					{
+						salDeatil.setFscstockid(fstockids.get(i));
+					}
+					salDeatil.setItemname(baseItem.getItemname());
+					salDeatil.setItemmode(baseItem.getFormatno());
+					salDeatil.setFcostobjid(entity.getItemcode());
+					salDeatil.setFreproducetype(1059);/**ERP的值是1059**/
+					salDeatil.setFsourcetrantype(85L);/**ERP对应值为85**/
+					salDeatil.setFicmobillno(entity.getIcbillno());
+					salDeatil.setDbno(dbnos.get(i));
+					salDeatil.setIssn(sns.get(i));
+					salDeatil.setFsourceinterid(assemblyids.get(i));
+					salDeatil.setIsout(0);//是否已出库
+					salDeatil.setDetailno(detailnos.get(i));
+					//salDeatil.setSalecode(icbillno.getFpreletter()+(icbillno.getFcurno()+1));//销售出库单号
+					salDeatil.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+					salesDetailDao.save(salDeatil, "SalesDetail.insert.save.new.data");
+				}
+			}
+		}
+		
+		
+		
+		//=====================判断装配单是否都已提交============================
+		//装配工序任务状态,0：未开始，1:进行中，2:已完工
+		AssemblyTaskFlowQuery atQuery = new AssemblyTaskFlowQuery();
+		atQuery.setAdttid(entity.getAdttid());
+		atQuery.setNodeid(2L);
+		atQuery.setStatus(2);
+		List<AssemblyTaskFlow> latf = assemblyTaskFlowDao.findList("AssemblyTaskFlow.find.shuliang.date", atQuery);
+		AssemblyTaskFlowQuery atQuery2 = new AssemblyTaskFlowQuery();
+		atQuery2.setAdttid(entity.getAdttid());
+		atQuery2.setNodeid(2L);
+		List<AssemblyTaskFlow> latf2 = assemblyTaskFlowDao.findList("AssemblyTaskFlow.find.shuliang.date", atQuery2);
+		
+		if(latf.size() == latf2.size()){//状态为已完工的数量和总的数量相等，则为结束时间
+			Adtt dt = new Adtt();
+			dt.setAdttid(entity.getAdttid());
+			dt.setWorkday(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd"));
+			adttDao.update("Adtt.update.end.date", dt);
+			
+		}
+		//=====================================================================
+		//=====================出厂报告的表头===================================
+		
+		if(entity.getItemcode().substring(0,3).equals("080")){
+			BaseItem bm = new BaseItem();
+			bm.setItemcode(entity.getItemcode());
+			BaseItem itemb = baseItemDao.findbaseEntity(bm);
+			AssemblyTaskQuery atq = new AssemblyTaskQuery();
+			atq.setId(entity.getTaskid());
+			AssemblyTask tasta = assemblyTaskDao.findEntity(atq);
+			FactoryReport fare = new FactoryReport();
+			ReportTecQuery queryTemp = new ReportTecQuery();
+			if(tasta != null){
+				List<ReportTec> reportTecs = null;
+				if(null!=tasta.getProductid()){
+					queryTemp.setPlandetailid(tasta.getProductid());
+					reportTecs = reportTecDao.findList(queryTemp);
+				}
+				List<FactoryReport> reportnos = factoryReportDao.findList("select_maxreportno.in.FactoryReport", null);
+				
+				if(null!=reportTecs&&reportTecs.size()==0){
+					//throw new ServiceException("计划号:"+queryTemp.getPlandetailid()+"的技术参数未初始化!");
+				}
+				
+				Calendar cal = Calendar.getInstance();
+				int year = cal.get(Calendar.YEAR)-2000;
+				String month = cal.get(Calendar.MONTH)+1>10?cal.get(Calendar.MONTH)+1+"":"0"+(cal.get(Calendar.MONTH)+1)+"";
+				if(null!=reportnos.get(0)&&null!=reportnos.get(0).getReportno()&&!reportnos.get(0).getReportno().equals("")){
+					String reportno = reportnos.get(0).getReportno();
+					if(!reportno.substring(4, 6).equals(month)){
+						fare.setReportno("TC"+year+""+month+"0001");
+					}else{
+						reportno = reportno.substring(6, reportno.length());
+						int tmp = Integer.valueOf(reportno)+1;
+						if(tmp<10){
+							reportno = "000"+tmp;
+						}else if(tmp<100){
+							reportno = "00"+tmp;
+						}else if(tmp<1000){
+							reportno = "0"+tmp;
+						}else{
+							reportno = tmp+"";
+						}
+						fare.setReportno("TC"+year+""+month+""+reportno);
+					}
+				}else{
+					fare.setReportno("TC"+year+""+month+"0001");
+				}
+				if(null!=reportTecs&&reportTecs.size()>0){
+					//if(tasta.getOrderlist() != null){
+						//if(tasta.getOrderlist().size()>0){
+							fare.setOrderno(reportTecs.get(0).getOrderno());
+							fare.setCustomername(reportTecs.get(0).getCustomername());
+						//}
+					//}
+				}
+			}
+			fare.setItemcode(entity.getItemcode());
+			fare.setItemmode(itemb.getFormatno());
+			fare.setItemname(itemb.getItemname());
+			fare.setPicpath(itemb.getInstalldiagram());
+			fare.setPicpath2(itemb.getMaintainpartdiagram());
+			fare.setPdtype(1);//1：产品，2：部件
+			fare.setCreatedate(DateUtils.GetDateTime());
+			fare.setSerial(entity.getSerial());//序列号
+			fare.setBillno(entity.getIcbillno());//任务单号
+			
+			AssemblyDetailQuery adq = new AssemblyDetailQuery();
+			adq.setSeqid(entity.getSeqid());
+			
+			List<AssemblyDetail> adlist = assemblyDetailDao.findadList(adq);
+			if(adlist.size()>0){
+				for(int sq=0;sq<adlist.size();sq++){//adlist.get(sq).getFtype()----0:其它，1:切断机构，2：指挥器，3：主阀
+					if((adlist.get(sq).getIssn()==1 && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null") && adlist.get(sq).getItemcode().substring(0,3).equals("081") && (adlist.get(sq).getFtype()!=null && adlist.get(sq).getFtype()==3)) || (adlist.get(sq).getIssn()==1 && adlist.get(sq).getItemcode().substring(0,3).equals("081")  && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null")  && (adlist.get(sq).getSerial().substring(0,3).equals("B02") || adlist.get(sq).getSerial().substring(0,3).equals("B03") || adlist.get(sq).getSerial().substring(0,3).equals("B04") || adlist.get(sq).getSerial().substring(0,3).equals("B05") || adlist.get(sq).getSerial().substring(0,3).equals("B06") || adlist.get(sq).getSerial().substring(0,3).equals("B07") || adlist.get(sq).getSerial().substring(0,3).equals("B08") || adlist.get(sq).getSerial().substring(0,3).equals("B09") || adlist.get(sq).getSerial().substring(0,3).equals("B10")))){//主阀
+						fare.setFmodel1(adlist.get(sq).getFactorymode());
+						fare.setFserial1(adlist.get(sq).getSerial());
+					
+						FactoryReport refac = factoryReportDao.getByProperty("serial", adlist.get(sq).getSerial());//查询是否已经有081的数据在t_factory_report中
+						
+						if(refac == null){//保存之前081的产品部件数据
+							 
+							AssTaskSeq fuatlk = new AssTaskSeq();
+//							fuatlk.setSeqid(adlist.get(sq).getSeqid());
+//							 AssTaskSeq ats =	assTaskSeqDao.findEntityData(fuatlk);
+							fuatlk.setSeqcode(adlist.get(sq).getSerial());
+							AssTaskSeq ats = assTaskSeqDao.finddata(fuatlk);
+							
+							
+							if(ats != null){
+								 AssemblyTask atas = assemblyTaskDao.getById(ats.getTaskid());	
+								 
+								 Bills illbs = new Bills();//查询配料人员
+								 illbs.setDispatchid(ats.getDispatchid());
+								 illbs.setTaskid(ats.getTaskid());
+								 Bills sbill = billsDao.findEntity(illbs);
+								
+								 
+									FactoryReport acre = new FactoryReport();
+									acre.setItemcode(adlist.get(sq).getItemcode());
+									acre.setItemmode(adlist.get(sq).getItemname());
+									acre.setItemmode(adlist.get(sq).getItemmode());
+									acre.setSerial(adlist.get(sq).getSerial());
+									if(atas != null){
+										acre.setBillno(atas.getTaskcode());//JOBXXX
+									}
+									acre.setPdtype(2);//1：产品，2：部件
+									acre.setCreatedate(DateUtils.GetDateTime());
+									Long iid = factoryReportDao.save(acre, "factoryReport.insert.save.data.new"); 
+									
+									PdKeyQuery pdquery = new PdKeyQuery();
+									//pdquery.setSeqid(adlist.get(sq).getSeqid());
+									pdquery.setSeqid(ats.getSeqid());
+									pdquery.setItemcode(adlist.get(sq).getItemcode());
+									List<PdKey> keylist = pdKeyDao.findMainKey(pdquery);
+									
+									for(int tt=0;tt<keylist.size();tt++){
+										ValveParts vp = new ValveParts();
+										vp.setItemcode(keylist.get(tt).getKeycode());
+										vp.setItemname(keylist.get(tt).getKeyname());
+										vp.setItemmode(keylist.get(tt).getKeymode());
+										vp.setReportid(iid);
+										vp.setMaterial(keylist.get(tt).getF102());
+										vp.setBatchno(keylist.get(tt).getSerial());
+										
+										 if(sbill != null){
+											 vp.setStockemp(sbill.getAdminName());
+										 }
+										
+										
+										valvePartsDao.saveOrUpdate(vp);
+										
+									}
+							}
+							
+						}
+						
+					}else if((adlist.get(sq).getIssn()==1 && adlist.get(sq).getItemcode().substring(0,3).equals("081") && (adlist.get(sq).getFtype()!=null && adlist.get(sq).getFtype()==2)  && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null") ) || (adlist.get(sq).getIssn()==1 && adlist.get(sq).getItemcode().substring(0,3).equals("081") && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null")  && adlist.get(sq).getSerial().substring(0,3).equals("B01"))){//指挥器
+						
+						fare.setFmodel2(adlist.get(sq).getFactorymode());
+						fare.setFserial2(adlist.get(sq).getSerial());
+
+						FactoryReport refac = factoryReportDao.getByProperty("serial", adlist.get(sq).getSerial());//查询是否已经有081的数据在t_factory_report中
+						
+						if(refac == null){//保存之前081的产品部件数据
+							 
+							AssTaskSeq fuatlk = new AssTaskSeq();
+//							fuatlk.setSeqid(adlist.get(sq).getSeqid());
+//							 AssTaskSeq ats =	assTaskSeqDao.findEntityData(fuatlk);
+							fuatlk.setSeqcode(adlist.get(sq).getSerial());
+							AssTaskSeq ats = assTaskSeqDao.finddata(fuatlk);
+							 
+							if(ats != null){
+								 AssemblyTask atas = assemblyTaskDao.getById(ats.getTaskid());
+								 
+								 Bills illbs = new Bills();//查询配料人员
+								 illbs.setDispatchid(ats.getDispatchid());
+								 illbs.setTaskid(ats.getTaskid());
+								 Bills sbill = billsDao.findEntity(illbs);
+								 
+									FactoryReport acre = new FactoryReport();
+									acre.setItemcode(adlist.get(sq).getItemcode());
+									acre.setItemmode(adlist.get(sq).getItemname());
+									acre.setItemmode(adlist.get(sq).getItemmode());
+									acre.setSerial(adlist.get(sq).getSerial());
+									if(atas != null){
+										acre.setBillno(atas.getTaskcode());//JOBXXX
+									}
+									acre.setPdtype(2);//1：产品，2：部件
+									acre.setCreatedate(DateUtils.GetDateTime());
+									Long iid = factoryReportDao.save(acre, "factoryReport.insert.save.data.new"); 
+									
+									
+									PdKeyQuery pdquery = new PdKeyQuery();
+									//pdquery.setSeqid(adlist.get(sq).getSeqid());
+									pdquery.setSeqid(ats.getSeqid());
+									pdquery.setItemcode(adlist.get(sq).getItemcode());
+									List<PdKey> keylist = pdKeyDao.findMainKey(pdquery);
+									
+									
+									for(int tt=0;tt<keylist.size();tt++){
+										ValveParts vp = new ValveParts();
+										vp.setItemcode(keylist.get(tt).getKeycode());
+										vp.setItemname(keylist.get(tt).getKeyname());
+										vp.setItemmode(keylist.get(tt).getKeymode());
+										vp.setReportid(iid);
+										vp.setMaterial(keylist.get(tt).getF102());
+										vp.setBatchno(keylist.get(tt).getSerial());
+										
+										 if(sbill != null){
+											 vp.setStockemp(sbill.getAdminName());
+										 }
+										
+										valvePartsDao.saveOrUpdate(vp);
+										
+									}
+							}
+							
+						}
+						
+					}else if((adlist.get(sq).getIssn()==1 && adlist.get(sq).getItemcode().substring(0,3).equals("081") && (adlist.get(sq).getFtype()!=null && adlist.get(sq).getFtype()==1) && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null") ) || (adlist.get(sq).getIssn()==1 && adlist.get(sq).getItemcode().substring(0,3).equals("081") && adlist.get(sq).getSerial()!=null && !adlist.get(sq).getSerial().equals("") && !adlist.get(sq).getSerial().equals("null")  && adlist.get(sq).getSerial().substring(0,3).equals("B00"))){//切断
+						
+						fare.setFmodel3(adlist.get(sq).getFactorymode());
+						fare.setFserial3(adlist.get(sq).getSerial());
+						
+
+						FactoryReport refac = factoryReportDao.getByProperty("serial", adlist.get(sq).getSerial());//查询是否已经有081的数据在t_factory_report中
+						
+						if(refac == null){//保存之前081的产品部件数据
+							 
+							
+							AssTaskSeq fuatlk = new AssTaskSeq();
+//							fuatlk.setSeqid(adlist.get(sq).getSeqid());
+//							 AssTaskSeq ats =	assTaskSeqDao.findEntityData(fuatlk);
+							fuatlk.setSeqcode(adlist.get(sq).getSerial());
+							AssTaskSeq ats = assTaskSeqDao.finddata(fuatlk);
+							
+							if(ats != null){
+								 AssemblyTask atas = assemblyTaskDao.getById(ats.getTaskid());
+								 
+								 Bills illbs = new Bills();//查询配料人员
+								 illbs.setDispatchid(ats.getDispatchid());
+								 illbs.setTaskid(ats.getTaskid());
+								 Bills sbill = billsDao.findEntity(illbs);
+								 
+									FactoryReport acre = new FactoryReport();
+									acre.setItemcode(adlist.get(sq).getItemcode());
+									acre.setItemmode(adlist.get(sq).getItemname());
+									acre.setItemmode(adlist.get(sq).getItemmode());
+									acre.setSerial(adlist.get(sq).getSerial());
+									if(atas != null){
+										acre.setBillno(atas.getTaskcode());//JOBXXX
+									}
+									acre.setPdtype(2);//1：产品，2：部件
+									acre.setCreatedate(DateUtils.GetDateTime());
+									Long iid = factoryReportDao.save(acre, "factoryReport.insert.save.data.new"); 
+									
+									
+									PdKeyQuery pdquery = new PdKeyQuery();
+									//pdquery.setSeqid(adlist.get(sq).getSeqid());
+									pdquery.setSeqid(ats.getSeqid());
+									pdquery.setItemcode(adlist.get(sq).getItemcode());
+									List<PdKey> keylist = pdKeyDao.findMainKey(pdquery);
+									
+									
+									for(int tt=0;tt<keylist.size();tt++){
+										ValveParts vp = new ValveParts();
+										vp.setItemcode(keylist.get(tt).getKeycode());
+										vp.setItemname(keylist.get(tt).getKeyname());
+										vp.setItemmode(keylist.get(tt).getKeymode());
+										vp.setReportid(iid);
+										vp.setMaterial(keylist.get(tt).getF102());
+										vp.setBatchno(keylist.get(tt).getSerial());
+										
+										 if(sbill != null){
+											 vp.setStockemp(sbill.getAdminName());
+										 }
+										
+										valvePartsDao.saveOrUpdate(vp);
+										
+									}
+							}
+							
+						}
+						
+					}
+					
+				}
+				
+			}
+			
+			Long tid = factoryReportDao.save(fare, "factoryReport.insert.save.data.new");
+			
+			
+			//=============保存080产品主要部件清单====================
+	if(entity.getItemcode().substring(0,3).equals("080")){
+			AssTaskSeq fuatlknew = new AssTaskSeq();
+			fuatlknew.setSeqcode(entity.getSerial());
+			AssTaskSeq ats = assTaskSeqDao.finddata(fuatlknew);
+			
+			PdKeyQuery pdquerynew = new PdKeyQuery();
+			pdquerynew.setSeqid(entity.getSeqid());
+			pdquerynew.setItemcode(entity.getItemcode());
+			List<PdKey> keylistnew = pdKeyDao.findMainKey(pdquerynew);
+			 Bills illbsnew = new Bills();//查询配料人员
+			 illbsnew.setDispatchid(ats.getDispatchid());
+			 illbsnew.setTaskid(ats.getTaskid());
+			 Bills sbillnew = billsDao.findEntity(illbsnew);
+			
+			for(int sq=0;sq<keylistnew.size();sq++){
+				ValveParts vp = new ValveParts();
+				vp.setItemcode(keylistnew.get(sq).getKeycode());
+				vp.setItemname(keylistnew.get(sq).getKeyname());
+				vp.setItemmode(keylistnew.get(sq).getKeymode());
+				vp.setReportid(tid);
+				vp.setMaterial(keylistnew.get(sq).getF102());
+				vp.setBatchno(keylistnew.get(sq).getSerial());
+
+				 if(sbillnew != null){
+					 vp.setStockemp(sbillnew.getAdminName());
+				 }
+				valvePartsDao.saveOrUpdate(vp);
+				
+			}
+		}
+			//====================================================
+			
+			
+			
+			
+			
+			
+			ReportTec reportTec = null;
+//			reportTec.setReportid(tid);
+//			reportTec.setPlandetailid(tasta.getProductid());
+//			reportTecDao.update(reportTec);
+			if(null!=queryTemp.getPlandetailid()){
+				List<ReportTec> reportTecs = reportTecDao.findList(queryTemp);
+				if(null!=reportTecs&&reportTecs.size()>0){
+					reportTec = reportTecs.get(0);
+					reportTec.setReportid(tid);
+					reportTec.setId(null);
+					reportTec.setSerial(entity.getSerial());
+					reportTecDao.save(reportTec);
+				}
+			}
+		}
+		
+		//=====================================================================
+		
+		//===============================保存出厂报告的部件清单=================
+		if(entity.getItemcode().substring(0,3).equals("081")){		
+			BaseItem base = new BaseItem();
+			base.setItemcode(entity.getItemcode());
+			BaseItem nbase = baseItemDao.findbs(base);
+			
+			AssTaskSeq fuatlk = new AssTaskSeq();
+			fuatlk.setSeqcode(entity.getSerial());
+			AssTaskSeq ats = assTaskSeqDao.finddata(fuatlk);
+			
+			 Bills illbs = new Bills();//查询配料人员
+			 illbs.setDispatchid(ats.getDispatchid());
+			 illbs.setTaskid(ats.getTaskid());
+			 Bills sbill = billsDao.findEntity(illbs);
+			
+			FactoryReport fr = new FactoryReport();
+			fr.setItemcode(entity.getItemcode());
+			fr.setItemname(nbase.getItemname());
+			fr.setItemmode(nbase.getFormatno());
+			fr.setSerial(entity.getSerial());
+			fr.setBillno(entity.getIcbillno());
+			fr.setPdtype(2);//1：产品，2：部件
+			fr.setCreatedate(DateUtils.GetDateTime());
+			Long id = factoryReportDao.save(fr, "factoryReport.insert.save.data.new");
+			
+			PdKeyQuery pdquery = new PdKeyQuery();
+			pdquery.setSeqid(entity.getSeqid());
+			pdquery.setItemcode(entity.getItemcode());
+			List<PdKey> keylist = pdKeyDao.findMainKey(pdquery);
+			
+			
+			for(int sq=0;sq<keylist.size();sq++){
+				ValveParts vp = new ValveParts();
+				vp.setItemcode(keylist.get(sq).getKeycode());
+				vp.setItemname(keylist.get(sq).getKeyname());
+				vp.setItemmode(keylist.get(sq).getKeymode());
+				vp.setReportid(id);
+				vp.setMaterial(keylist.get(sq).getF102());
+				vp.setBatchno(keylist.get(sq).getSerial());
+
+				 if(sbill != null){
+					 vp.setStockemp(sbill.getAdminName());
+				 }
+				valvePartsDao.saveOrUpdate(vp);
+				
+			}
+		}
+		//=====================================================================
+		
+//		/**理新单据编号**/
+//		icbillno.setFcurno(icbillno.getFcurno()+1);
+//		icbillnoDao.update(icbillno);
+	}
+	@Override
+	public List<AssemblyDetail> findassemblyList(
+			AssemblyDetailQuery assemblyDetailQuery) throws ServiceException {
+		return assemblyDetailDao.findassemblyList(assemblyDetailQuery);
+	}
+	@Override
+	public void delDataFor(AssemblyDetail asdetail)
+			throws ServiceException {
+		
+		AssemblyDetail ad = new AssemblyDetail();
+		ad.setDetailnodatas(asdetail.getDetailnodatas());
+		ad.setSeqid(asdetail.getSeqid());
+		assemblyDetailDao.delDataFor(ad);
+		
+	}
+
+}

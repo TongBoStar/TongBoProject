@@ -1,0 +1,37 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ItemRuleDetail;
+import com.terrence.crm.dol.dao.IItemRuleDetailDao;
+
+
+@Repository
+public class ItemRuleDetailDao extends BaseIbatisDao<ItemRuleDetail,java.lang.Long> implements IItemRuleDetailDao{
+
+		
+	public void saveOrUpdate(ItemRuleDetail entity) {
+		if(entity.getDetailid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemRuleDetail";
+	}
+	public ItemRuleDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ItemRuleDetail)this.getSqlMapClientTemplate().queryForObject("ItemRuleDetail.getByProperty", map);		
+	}
+
+}

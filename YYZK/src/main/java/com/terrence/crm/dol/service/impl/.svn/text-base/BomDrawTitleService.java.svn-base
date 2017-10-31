@@ -1,0 +1,735 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.UserContextHolder;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.BomDrawListTemp;
+import com.terrence.crm.dol.bean.BomDrawTitle;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.ManualBomdif;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.query.BomDrawListTempQuery;
+import com.terrence.crm.dol.query.BomDrawTitleQuery;
+import com.terrence.crm.dol.query.FileInfo;
+import com.terrence.crm.dol.query.FileType;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IBomDrawListTempDao;
+import com.terrence.crm.dol.dao.IBomDrawTitleDao;
+import com.terrence.crm.dol.dao.IDesignAssistDao;
+import com.terrence.crm.dol.dao.IManualBomdifDao;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.service.IBomDrawTitleService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.PropertiesUtil;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class BomDrawTitleService extends BaseService implements IBomDrawTitleService {
+	protected static Logger logger = LoggerFactory.getLogger(BomDrawTitleService.class);
+	private SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private String basePath = ""; 
+	@Autowired
+	@Qualifier("bomDrawTitleDao")
+	private IBomDrawTitleDao bomDrawTitleDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("bomDrawListTempDao")
+	private IBomDrawListTempDao bomDrawListTempDao;
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	@Autowired
+	@Qualifier("designAssistDao")
+	private IDesignAssistDao designAssistDao;
+	@Autowired
+	@Qualifier("manualBomdifDao")
+	private IManualBomdifDao manualBomdifDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "BomDrawTitle";
+	}
+	@Transactional(readOnly=true)
+	public BomDrawTitle getById(java.lang.Long id) throws ServiceException
+	{
+		return bomDrawTitleDao.getById(id);
+	}
+	
+	public void saveOrUpdate(BomDrawTitle entity) throws ServiceException
+	{
+		bomDrawTitleDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(BomDrawTitle entity) throws ServiceException
+	{
+		Long adId = bomDrawTitleDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(BomDrawTitle entity) throws ServiceException
+	{
+		Integer returnValue =  bomDrawTitleDao.update(entity);
+		return returnValue;
+	}
+	public void updateall(String path,Long designassistId,String modelMark,Admin admin,String fileName) throws Exception{
+		DesignAssist designAssist = designAssistDao.getById(designassistId);
+		List<BomDrawTitle> bomDrawTitleList = bomDrawTitleDao.findList("BomDrawTitle.temp.data",new BomDrawTitleQuery());
+		String datetime = formt.format(new Date());
+		String noexists = "";
+		if(null!=bomDrawTitleList&&bomDrawTitleList.size()>0){
+			//BaseItem baseItem = null;
+			for(BomDrawTitle bdt:bomDrawTitleList){
+				if(!designAssist.getProductCode().equals(bdt.getItemcode())){
+					throw new ServiceException("图纸中的编码与任务的编码不一致!");
+				}
+				bdt.setFilepath(path);//文件路径
+				bdt.setFileName(fileName);
+				bdt.setCreatedate(datetime);
+				/*baseItem = new BaseItem();
+				baseItem.setItemcode(bdt.getItemcode());
+				baseItem = baseItemDao.finditemBase(baseItem);
+				if(null==baseItem){//图纸标题中的物料代码可以没有
+					noexists += bdt.getItemcode()+",";
+				}else{
+					
+				}*/
+				noexists = exeupdate(designassistId,bdt,modelMark,admin,noexists);
+				if(noexists.length()>0){
+					noexists = noexists.substring(0,noexists.length()-1);
+					throw new ServiceException(noexists+"没有此物料,请添加!");
+				}
+			}
+		}
+	}
+	public String exeupdate(Long designassistId,BomDrawTitle bdt,String modelMark,Admin admin,String noexists) throws Exception{
+		List<BomDrawListTemp> bomDrawListTemps = null;
+		BomDrawListTempQuery query = new BomDrawListTempQuery();
+		query.setParentcode(bdt.getItemcode());
+		bomDrawListTemps = bomDrawListTempDao.findList(query);
+		if(null!=bomDrawListTemps&&bomDrawListTemps.size()>0){
+			//首先检查是否存在该bom物料
+			//BaseItem baseItem = null;
+			for(BomDrawListTemp bdlt:bomDrawListTemps){
+				if("".equals(bdlt.getFileitemcode()) || null==bdlt.getFileitemcode()){
+					throw new ServiceException("图纸中存在物料编码为空的记录，请查看!");
+				}
+				if(null==bdlt.getItemid()){//在物料表中不存在此物料
+					noexists += bdlt.getFileitemcode()+",";
+				}
+				/*baseItem = new BaseItem();
+				baseItem.setItemcode(bdlt.getItemcode());
+				System.out.println(bdlt.getItemcode());
+				baseItem = baseItemDao.finditemBase(baseItem);
+				if(null==baseItem){
+					noexists += bdlt.getItemcode()+",";
+				}*/
+			}
+			//如果都存在则进行添加
+			if(noexists.length()==0){
+				//检查之前是否保存过此物料的bom
+				ModelListQuery modelListQuery = new ModelListQuery();
+				modelListQuery.setDesignassistId(designassistId);
+				modelListQuery.setModelMark(modelMark);
+				List<ModelList> modelLists = modelListDao.findList(modelListQuery);
+				if(null!=modelLists&&modelLists.size()>0){//说明之前保存过此物料的bom
+					ModelListQuery ml = new ModelListQuery();
+					ml.setDesignassistId(designassistId);
+					ml.setModelMark(modelMark);
+					modelListDao.deleteByBomDrawTitleId(ml);//首先删除此bom
+				}
+				BomDrawTitleQuery bomDrawTitleQuery = new BomDrawTitleQuery();
+				bomDrawTitleQuery.setItemcode(bdt.getItemcode());
+				bomDrawTitleQuery.setTabType(modelMark);
+				bomDrawTitleQuery.setSortColumns("bomversion");
+				List<BomDrawTitle> bomDrawTitles = bomDrawTitleDao.findList(bomDrawTitleQuery);
+				if(null!=bomDrawTitles&&bomDrawTitles.size()>0){
+					bdt.setBomversion((bomDrawTitles.get(0).getBomversion()*10+1)/10);//版本号
+				}else{
+					bdt.setBomversion(1.1);
+				}
+				bdt.setDesignassistId(designassistId);
+				bdt.setTabType(modelMark);
+				bomDrawTitleDao.save(bdt);//保存新版本的标题信息
+				ModelList modelList = null;
+				for(BomDrawListTemp bdlt:bomDrawListTemps){
+					modelList = new ModelList();
+					modelList.setModelMark(modelMark);
+					modelList.setItemcode(bdlt.getItemcode());
+					modelList.setCreaterId(admin.getAdminId());
+					modelList.setCreaterName(admin.getAdminName());
+					modelList.setCreateTime(formt.format(new Date()));
+					modelList.setFmodel(bdlt.getFmodel());
+					modelList.setFmatrial(bdlt.getFmaterial());
+					modelList.setFmark(bdlt.getFnote());
+					modelList.setFcount(bdlt.getFnumber()==null?0:bdlt.getFnumber());
+					modelList.setSlen(bdlt.getFweight()==null?0:Double.valueOf(bdlt.getFweight()));
+					modelList.setAlen(bdlt.getFweight()==null?0:Double.valueOf(modelList.getSlen())*modelList.getFcount());
+					modelList.setDesignassistId(designassistId);
+					modelListDao.save(modelList);
+				}
+			}else{
+				System.out.println(noexists);
+			}
+		}
+		return noexists;
+	}
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = bomDrawTitleDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		ModelListQuery mQuery = new ModelListQuery();
+		for(Long ml:idList){
+			mQuery.setBdtId(ml);
+			mQuery.setModelMark("t_bracket_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+			mQuery.setModelMark("t_bait_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+			mQuery.setModelMark("t_assweld_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+			mQuery.setModelMark("t_assemble_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+			mQuery.setModelMark("t_delivery_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+			mQuery.setModelMark("t_model_list");
+			modelListDao.deleteByBomDrawTitleId(mQuery);
+		}
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = bomDrawTitleDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BomDrawTitleQuery query = new BomDrawTitleQuery();
+		try {
+			return bomDrawTitleDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<BomDrawTitle> findPage(Page<BomDrawTitle> page, BomDrawTitleQuery query) throws ServiceException
+	{
+		return bomDrawTitleDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<BomDrawTitle> findPage(Page<BomDrawTitle> page,String statement, BomDrawTitleQuery query) throws ServiceException
+	{
+		return bomDrawTitleDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawTitle> findList(BomDrawTitleQuery query) throws ServiceException
+	{
+		return bomDrawTitleDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawTitle> findList(BomDrawTitleQuery query,Integer pageSize) throws ServiceException
+	{
+		return bomDrawTitleDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<BomDrawTitle> findList(BomDrawTitleQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return bomDrawTitleDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BomDrawTitle> findAllList() throws ServiceException
+	{
+		return bomDrawTitleDao.findAllList();
+	}
+	@Override
+	public FileInfo upload(InputStream srcFile, String srcFileName,
+			FileType fileType) throws IOException {
+		String distFileName = getRandomFileName(srcFileName);
+		String AllPath =PropertiesUtil.getPropertyValue("upload.bomPath");
+		String fileUrl = AllPath+"/" + distFileName;
+		this.createPath(AllPath);
+		/*BomDrawTitle entity = new BomDrawTitle();
+		entity.setFilepath(fileUrl);
+		bomDrawTitleDao.save(entity, "BomDrawTitle.insert.path");*/
+		FileOutputStream fos = new FileOutputStream(new File(basePath+fileUrl));
+		IOUtils.copy(srcFile, fos);
+		fos.close();
+		srcFile.close();
+		return new FileInfo(distFileName,"");
+	}
+	/**
+	 * 新建目录
+	 * @param path
+	 * @return
+	 */
+	private boolean createPath(String path){
+		File dir = new File(path);
+		if(!dir.exists()){
+			dir.mkdirs();
+		}
+		return true;
+	}
+	public String getRandomFileName(String fileName) {
+		StringBuffer rnt = new StringBuffer();
+		String fileSuffix = fileName.substring(fileName.lastIndexOf("."),fileName.length());
+		rnt.append(UserContextHolder.get().getId());
+		rnt.append("_");
+		rnt.append(System.currentTimeMillis());
+		rnt.append(fileSuffix);
+		return rnt.toString();
+	}
+	/**
+	 * @param basePath the basePath to set
+	 */
+	public void setBasePath(String basePath) {
+		if(basePath!=null&&basePath.charAt(basePath.length()-1)=='/'){
+			basePath=basePath.substring(0,basePath.length()-1);
+		}
+		this.basePath = basePath;
+	}
+	public List<BomDrawTitle> findList(String sql,BomDrawTitleQuery query){
+		return bomDrawTitleDao.findList(sql, query);
+	}
+	@Override
+	public Map<String,Object> findUseStatus(BomDrawTitleQuery bomDrawTitleQuery,String isrelative) {
+		Map<String,Object> map = new HashMap<String, Object>();
+		if(null!=isrelative&&!isrelative.equals("1")){//为检出操作
+			BaseItem baseItem = new BaseItem();
+			baseItem.setItemcode(bomDrawTitleQuery.getItemcode());
+			baseItem.setBomStatus(3);//将bom状态改为检出
+			baseItemDao.update("BaseItem.update.ByItemcode",baseItem);
+		}
+		return map;
+	}
+	@Override
+	public void deleteByMultipleId(String statment, BomDrawTitleQuery query) {
+		bomDrawTitleDao.deleteByMultipleId(statment, null);
+	}
+	@Override
+	public void downLoadFiles(HttpServletResponse response, String filePath) {
+		String path = PropertiesUtil.getPropertyValue("upload.bomPath")+"\\"+filePath;
+		File file = new File(path);
+		if(file.exists()){
+			InputStream is = null;
+			try {
+				is = new BufferedInputStream(new FileInputStream(file));
+				byte[] buff = new byte[is.available()];
+				is.read(buff);
+				is.close();
+	            BufferedOutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+	            toClient.write(buff);
+	            toClient.flush();
+	            toClient.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	@Override
+	public void handleall(String path, String srcfilename,BomDrawTitle bomDrawTitle) throws Exception{
+		List<BomDrawTitle> bomDrawTitleList = bomDrawTitleDao.findList("BomDrawTitle.temp.data",new BomDrawTitleQuery());
+		String datetime = formt.format(new Date());
+		String noexists = "";
+		if(null!=bomDrawTitleList&&bomDrawTitleList.size()>0){
+			for(BomDrawTitle bdt:bomDrawTitleList){
+				if(null==bdt.getItemcode()||bdt.getItemcode().trim().equals("")){
+					throw new ServiceException("标题栏中没有填写物料编码,请处理！");
+				}
+				BomDrawTitleQuery bdtquQuery = new BomDrawTitleQuery();
+				bdtquQuery.setDesignassistId(bomDrawTitle.getDesignassistId());
+				bdtquQuery.setItemcode(bdt.getItemcode());
+				List<BomDrawTitle> bdlist = bomDrawTitleDao.findList("BomDrawTitle.findByDesignAssistId.maxversion", bdtquQuery);//此项目中已经存在的最高版本的图纸
+				List<BomDrawTitle> listDids = bomDrawTitleDao.findList("BomDrawTitle.findByDesignAssistId.maxversion.bomdraw", bdtquQuery);//此项目中已经存在的最高版本的图纸
+				if(null!=bdlist&&bdlist.size()>0){
+					//throw new ServiceException("此图纸已经上传过，请清空之前的关联再上传!");
+					Double bomversion = bdlist.get(0).getBomversion();
+					bdt.setBomversion((bomversion*10+1)/10);
+					ModelListQuery ml = new ModelListQuery();
+					ml.setDesignassistId(bomDrawTitle.getDesignassistId());
+					ml.setBdtId(bdlist.get(0).getId());
+					ml.setModelMark("t_model_list");
+					List<ModelList> mlist = modelListDao.findList(ml);
+					for(ModelList mo:mlist){
+						if(null!=mo.getIsdispatch()){
+							throw new ServiceException("该图纸中的bom已经被分配，请先清除！");
+						}
+					}
+					modelListDao.deleteByBomDrawTitleId(ml);
+				}
+				bdt.setFilepath(path);//文件路径
+				bdt.setFileName(srcfilename);
+				bdt.setCreatedate(datetime);
+				bdt.setFname(bomDrawTitle.getFname());
+				bdt.setFmodel(bomDrawTitle.getFmodel());
+				bdt.setBomDrawType(bomDrawTitle.getBomDrawType());
+				bdt.setCreatebomor(SpringSecurityUtils.getCurrentRealName());
+				bdt.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+				noexists = exehandle(bomDrawTitle.getDesignassistId(),bdt,listDids,noexists);
+				if(noexists.length()>1){
+					noexists = noexists.substring(0,noexists.length()-1);
+					throw new ServiceException(noexists+"没有此物料,请添加!");
+				}
+			}
+		}
+	}
+	public String exehandle(Long designassistId,BomDrawTitle bdt,List<BomDrawTitle> listDids,String noexists) throws Exception{
+		String countexception = "";
+		List<BomDrawListTemp> bomDrawListTemps = null;
+		BomDrawListTempQuery query = new BomDrawListTempQuery();
+		query.setParentcode(bdt.getItemcode());
+		bomDrawListTemps = bomDrawListTempDao.findList(query);
+		if(null!=bomDrawListTemps&&bomDrawListTemps.size()>0){
+			//首先检查是否存在该bom物料
+			for(BomDrawListTemp bdlt:bomDrawListTemps){
+				if("".equals(bdlt.getFileitemcode()) || null==bdlt.getFileitemcode()){
+					throw new ServiceException("图纸中存在物料编码为空的记录，请查看!");
+				}
+				if(null==bdlt.getItemid()){//在物料表中不存在此物料
+					noexists += bdlt.getFileitemcode()+",";
+				}
+			}
+			//如果都存在则进行添加
+			if(noexists.length()==0){
+				//检查之前是否保存过此物料的bom
+				bdt.setDesignassistId(designassistId);
+				bdt.setTabType("t_model_list");
+				if(null==bdt.getBomversion()){
+					bdt.setBomversion(1.1);
+				}
+				Long bdtId = bomDrawTitleDao.save(bdt);//保存新版本的标题信息
+				operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_UPLOAD, "上传图纸(技术支持ID:"+designassistId+",图纸ID:"+bdtId+")");
+				ModelList modelList = null;
+				String fname = "";
+				String slen = "";
+				Map<String, BomDrawTitle> existtitlemap = new HashMap<String, BomDrawTitle>();//用于存放图纸中与手动录入的记录相同的物料
+				Map<String, Double> parentchildmap = new HashMap<String, Double>();//用于存放父级图纸所需子级图纸的数量
+				Double ccount = 0D;
+				BomDrawTitleQuery bdtquQuery = new BomDrawTitleQuery();
+				bdtquQuery.setDesignassistId(designassistId);
+				
+				List<ModelList> bjdList = null;
+				int bomtype = 0;
+				if(bdt.getBomDrawType().intValue()==1){//上传的是总图
+					bomtype = 1;
+					//要把总图中的数量与各个部件图的数量相乘，首先记录总图中包含了哪些bom清单
+					for(BomDrawTitle bdBomDrawTitle:listDids){
+						if(bdBomDrawTitle.getBomDrawType().intValue()==2){//之前上传的部件图则先记录下来
+							existtitlemap.put(bdBomDrawTitle.getItemcode(), bdBomDrawTitle);
+						}
+					}
+				}else{//上传的是部件图
+					bomtype = 2;
+					for(BomDrawTitle bdBomDrawTitle:listDids){
+						if(bdBomDrawTitle.getBomDrawType().intValue()==1){//之前上传的总图bom列表先记录下来
+							ModelListQuery bjdQuery = new ModelListQuery();
+							bjdQuery.setModelMark("t_model_list");
+							bjdQuery.setDesignassistId(designassistId);
+							bjdQuery.setBdtId(bdBomDrawTitle.getId());
+							bjdList = modelListDao.findList(bjdQuery);
+							for(ModelList mo:bjdList){
+								if(bdt.getItemcode().equals(mo.getItemcode())){
+									ccount += null==mo.getFcount()?0D:mo.getFcount();
+								}
+							}
+							BomDrawTitle bdtitletemp = new BomDrawTitle();
+							bdtitletemp.setId(bdtId);
+							bdtitletemp.setMfcount(ccount);
+							bomDrawTitleDao.update(bdtitletemp);//更新此部件图在总图中的数量
+						}
+					}
+				}
+				if(ccount.doubleValue()==0){
+					ccount = 1D;
+				}
+				for(BomDrawListTemp bdlt:bomDrawListTemps){
+					modelList = saveToTable(modelList,designassistId,bdtId,bdt,bdlt,fname,slen,bomtype, existtitlemap,parentchildmap);//保存BOM清单
+					saveToHisTable(modelList);//BOM清单保存到历史记录表中一份
+				}
+				//countDif(designassistId,ccount,parentchildmap,existtitlemap);//计算手动和图纸中bom的差异
+			}else{
+				System.out.println(noexists);
+			}
+		}else{
+			throw new ServiceException("此图纸中没有bom记录,请查看!");
+		}
+		return noexists+";"+countexception;
+	}
+	/**
+	 * 保存清单
+	 * @param modelList 只是传了一个对象，不用在方法中新建
+	 * @param designassistId 项目ID
+	 * @param bdtId 图纸的ID
+	 * @param bdt 图纸对象
+	 * @param bdlt 每个原始图纸清单对象
+	 * @param fname 名称 主要用来解析名称中有L=字符的 用来算长度
+	 * @param slen 单长
+	 * @param bomtype 图纸类型 总图:部件图
+	 * @param bjdList 
+	 * @param existtitlemap 
+	 */
+	public ModelList saveToTable(ModelList modelList,Long designassistId,Long bdtId,BomDrawTitle bdt,BomDrawListTemp bdlt,
+			String fname,String slen,int bomtype,Map<String, BomDrawTitle> existtitlemap,Map<String, Double> parentchildmap){
+		modelList = new ModelList();
+		modelList.setModelMark("t_model_list");
+		modelList.setItemcode(bdlt.getItemcode());
+		modelList.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+		modelList.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+		modelList.setCreateTime(formt.format(new Date()));
+		modelList.setItemname(bdlt.getFname());
+		modelList.setFmodel(bdlt.getFmodel());
+		modelList.setFmatrial(bdlt.getFmaterial());
+		modelList.setFmark(bdlt.getFnote());
+		modelList.setSourceType(2);
+		if(bomtype==1){//上传的是总图
+			if(existtitlemap.containsKey(bdlt.getItemcode())){//上传的是总图，且存在编码为此物料的部件图图纸
+				if(parentchildmap.containsKey(bdlt.getItemcode())){//已经记录过
+					parentchildmap.put(bdlt.getItemcode(), parentchildmap.get(bdlt.getItemcode())+(null==bdlt.getFnumber()?0:bdlt.getFnumber()));
+				}else{
+					parentchildmap.put(bdlt.getItemcode(), null==bdlt.getFnumber()?0:bdlt.getFnumber());
+				}
+			}
+			modelList.setFcount(bdlt.getFnumber()==null?0:bdlt.getFnumber());
+		}
+		if(bomtype==2){//上传的是部件图，(需要乘以总图中该bom的数量,在这里先不做计算)
+			//modelList.setFcount(ccount*(bdlt.getFnumber()==null?0:bdlt.getFnumber()));
+			modelList.setFcount(bdlt.getFnumber()==null?0:bdlt.getFnumber());
+		}
+		fname = null==bdlt.getFname()?"":bdlt.getFname();
+		if(fname.trim().toUpperCase().indexOf("L=")>=0){
+			slen = fname.substring(fname.trim().toUpperCase().indexOf("L=")+2, fname.trim().length());
+			modelList.setSlen(Double.valueOf(slen));
+		}else{
+			modelList.setSlen(null);
+		}
+		modelList.setAlen(modelList.getSlen()==null?null:modelList.getSlen()*(null==modelList.getFcount()?0:modelList.getFcount()));
+		modelList.setSweight(bdlt.getFweight()==null?0:Double.valueOf(bdlt.getFweight()));
+		modelList.setAweight(bdlt.getFweight()==null?0:Double.valueOf(modelList.getSweight())*(null==modelList.getFcount()?0:modelList.getFcount()));
+		modelList.setDesignassistId(designassistId);
+		modelList.setBdtId(bdtId);
+		modelList.setBomversion(bdt.getBomversion().floatValue());
+		modelListDao.save(modelList);
+		return modelList;
+	}
+	/**
+	 * BOM清单保存到历史记录表中一份
+	 * @param modelList 保存的对象
+	 */
+	public void saveToHisTable(ModelList modelList){
+		modelList.setModelMark("t_model_listhis");
+		modelListDao.save(modelList);
+	}
+	/**
+	 * 计算手动和图纸中bom的差异
+	 * @param tmap 手动添加的记录
+	 * @param bommap bom中的记录
+	 * @param designassistId 项目ID
+	 */
+	public void countDif(Long designassistId,Double ccount,Map<String, Double> parentchildmap,Map<String, BomDrawTitle> existtitlemap){
+		for(Entry<String, Double> entry:parentchildmap.entrySet()){
+			if(null==existtitlemap.get(entry.getKey()).getMfcount()){//之前就没有填入数量
+				BomDrawTitle bdtitletemp = new BomDrawTitle();
+				bdtitletemp.setId(existtitlemap.get(entry.getKey()).getId());
+				bdtitletemp.setMfcount(entry.getValue());
+				bomDrawTitleDao.update(bdtitletemp);
+			}else if(existtitlemap.get(entry.getKey()).getMfcount().doubleValue()!=entry.getValue().doubleValue()){//之前有填入的数量，且与现在的数量不符
+				ManualBomdif manualBomdif = new ManualBomdif();
+				manualBomdif.setBomdrawcount(entry.getValue());
+				manualBomdif.setManualcount(existtitlemap.get(entry.getKey()).getMfcount());
+				manualBomdif.setDesignassistId(designassistId);
+				manualBomdif.setOpertype(3);//图纸中总图要求的子图纸对应的物料的数量和自己填写的数量有差异
+				manualBomdif.setItemcode(entry.getKey());
+				manualBomdifDao.save(manualBomdif);
+			}else{
+				System.out.println("-----------------------");
+			}
+		}
+	}
+	public void countDif(Long designassistId){
+		Map<String, Double> parentchildmap = new HashMap<String, Double>();
+		Map<String, BomDrawTitle> existtitlemap = new HashMap<String, BomDrawTitle>();
+		BomDrawTitleQuery bdtquQuery = new BomDrawTitleQuery();
+		bdtquQuery.setDesignassistId(designassistId);
+		List<BomDrawTitle> listDids = bomDrawTitleDao.findList("BomDrawTitle.findByDesignAssistId.maxversion.bomdraw", bdtquQuery);//此项目中已经存在的最高版本的图纸
+		List<ModelList> modelLists = null;
+		for(BomDrawTitle bdt:listDids){
+			if(bdt.getBomDrawType().intValue()==1){//总图
+				ModelListQuery query = new ModelListQuery();
+				query.setDesignassistId(designassistId);
+				query.setBdtId(bdt.getId());
+				query.setModelMark("t_model_list");
+				modelLists = modelListDao.findList(query);
+			}else{
+				existtitlemap.put(bdt.getItemcode(), bdt);
+			}
+		}
+		if(null!=existtitlemap&&existtitlemap.size()>0){
+			for(ModelList mo:modelLists){//遍历总图的BOM清单
+				if(existtitlemap.containsKey(mo.getItemcode())){//总图的清单中是单独的图纸
+					if(parentchildmap.containsKey(mo.getItemcode())){
+						parentchildmap.put(mo.getItemcode(), parentchildmap.get(mo.getItemcode())+(null==mo.getFcount()?0:mo.getFcount()));
+					}else{
+						parentchildmap.put(mo.getItemcode(), null==mo.getFcount()?0:mo.getFcount());
+					}
+				}
+			}
+			for(Entry<String, BomDrawTitle> entry:existtitlemap.entrySet()){
+				if(null==entry.getValue().getMfcount()){
+					BomDrawTitle bdtitletemp = new BomDrawTitle();
+					bdtitletemp.setId(existtitlemap.get(entry.getKey()).getId());
+					bdtitletemp.setMfcount(parentchildmap.get(entry.getKey()));
+					bomDrawTitleDao.update(bdtitletemp);
+				}else if(entry.getValue().getMfcount().doubleValue()!=parentchildmap.get(entry.getKey()).doubleValue()){
+					ManualBomdif manualBomdif = new ManualBomdif();
+					manualBomdif.setBomdrawcount(parentchildmap.get(entry.getKey()));
+					manualBomdif.setManualcount(existtitlemap.get(entry.getKey()).getMfcount());
+					manualBomdif.setDesignassistId(designassistId);
+					manualBomdif.setItemname(existtitlemap.get(entry.getKey()).getFname());
+					manualBomdif.setOpertype(3);//图纸中总图要求的子图纸对应的物料的数量和自己填写的数量有差异
+					manualBomdif.setItemcode(entry.getKey());
+					manualBomdifDao.save(manualBomdif);
+				}
+			}
+		}
+	}
+	@Override
+	public void countDifAfter(Long designassistId) throws Exception{
+		manualBomdifDao.deleteByDid(designassistId);
+		countDif(designassistId);
+		Map<String, List<ModelList>> tmap = new HashMap<String, List<ModelList>>();
+		Map<String, List<ModelList>> bommap = new HashMap<String, List<ModelList>>();
+		ModelListQuery modelListQuery = new ModelListQuery();
+		modelListQuery.setModelMark("t_model_list");//在总清单中查找
+		modelListQuery.setDesignassistId(designassistId);//此项目ID
+		List<ModelList> existlist = modelListDao.findList(modelListQuery);
+		for(ModelList mo:existlist){
+			if(mo.getSourceType().intValue()==1){//手动
+				if(tmap.containsKey(mo.getItemcode())){
+					tmap.get(mo.getItemcode()).add(mo);
+				}else{
+					List<ModelList> list = new ArrayList<ModelList>();
+					list.add(mo);
+					tmap.put(mo.getItemcode(), list);
+				}
+			}else{
+				if(bommap.containsKey(mo.getItemcode())){
+					bommap.get(mo.getItemcode()).add(mo);
+				}else{
+					List<ModelList> list = new ArrayList<ModelList>();
+					list.add(mo);
+					bommap.put(mo.getItemcode(), list);
+				}
+			}
+		}
+		/**-------------开始计算差异-----------------------------------------------------------------*/
+		ManualBomdif manualBomdif = null;
+		for(Entry<String, List<ModelList>> entry:tmap.entrySet()){
+			double d1 = 0;//手动录入的总数
+			double d2 = 0;//图纸中的总数
+			for(ModelList ml:entry.getValue()){
+				d1 += (null==ml.getManualfcount()?0:ml.getManualfcount().doubleValue());
+			}
+			if(null!=bommap.get(entry.getKey())){
+				for(ModelList bt:bommap.get(entry.getKey())){
+					d2 += (null==bt.getFcount()?0:bt.getFcount()*(null==bt.getMfcount()?1:bt.getMfcount()));
+				}
+			}else{
+				break;
+			}
+			if(d1!=d2){//记录冲突的数量
+				manualBomdif = new ManualBomdif();
+				manualBomdif.setBomdrawcount(d2);
+				manualBomdif.setManualcount(d1);
+				manualBomdif.setDesignassistId(designassistId);
+				manualBomdif.setOpertype(0);
+				manualBomdif.setItemcode(entry.getKey());
+				manualBomdifDao.save(manualBomdif);
+				for(ModelList ml:entry.getValue()){
+					manualBomdif = new ManualBomdif();
+					manualBomdif.setDesignassistId(designassistId);
+					manualBomdif.setOpertype(1);//手动
+					manualBomdif.setItemcode(entry.getKey());
+					manualBomdif.setItemname(ml.getItemname());
+					manualBomdif.setItemmode(ml.getFmodel());
+					manualBomdif.setManualcount(ml.getManualfcount());
+					manualBomdifDao.save(manualBomdif);
+				}
+				for(ModelList bt:bommap.get(entry.getKey())){
+					manualBomdif = new ManualBomdif();
+					manualBomdif.setBomdrawcount(bt.getFcount()*(null==bt.getMfcount()?1:bt.getMfcount()));
+					manualBomdif.setDesignassistId(designassistId);
+					manualBomdif.setOpertype(2);//图纸
+					manualBomdif.setItemcode(entry.getKey());
+					manualBomdif.setItemname(bt.getItemname());
+					manualBomdif.setItemmode(bt.getFmodel());
+					manualBomdifDao.save(manualBomdif);
+				}
+			}
+		}
+		/**-------------计算差异结束-----------------------------------------------------------------*/
+	}
+	@Override
+	public List<BomDrawTitle> loadFileList(BomDrawTitleQuery bomDrawTitleQuery) {
+		return bomDrawTitleDao.findList("BomDrawTitle.find.bdtid", bomDrawTitleQuery);
+	}
+	@Override
+	public void saveToPath(String filename) throws Exception{
+		BomDrawTitleQuery query = new BomDrawTitleQuery();
+		List<BomDrawTitle> list = bomDrawTitleDao.findList("BomDrawTitle.find.filePath",query);
+		while(null!=list&&list.size()>0){
+			Thread.sleep(5000);
+			list = bomDrawTitleDao.findList("BomDrawTitle.find.filePath",query);
+		}
+		BomDrawTitle entity = new BomDrawTitle();
+		entity.setFilepath(PropertiesUtil.getPropertyValue("upload.bomPath")+"\\"+filename);
+		bomDrawTitleDao.save(entity, "BomDrawTitle.insert.path");
+	}
+}

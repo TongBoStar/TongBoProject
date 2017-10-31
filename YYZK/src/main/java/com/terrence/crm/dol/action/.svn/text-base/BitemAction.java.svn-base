@@ -1,0 +1,736 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IBitemService;
+import com.terrence.crm.dol.utils.CacheService;
+import com.terrence.crm.dol.bean.Bitem;
+import com.terrence.crm.dol.query.BitemQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/bitem")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "bitem." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class BitemAction extends CrudActionSupport<Bitem>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("bitemService")
+	private IBitemService bitemService;
+	
+	
+	private Bitem entity;
+
+	private BitemQuery bitemQuery;
+	
+	
+	private java.lang.Long bitemId;
+	
+	/** 分页器 */
+	private Page<Bitem> page = new Page<Bitem>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Bitem> bitemList;
+	
+	private String tree="";
+
+	private String showtree="";
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (bitemId != null ) {
+			entity = bitemService.getById(bitemId);
+		} else {
+			entity = new Bitem();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			bitemService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(bitemQuery == null) {
+			bitemQuery = new BitemQuery();
+		}
+		
+		try {
+			bitemList = bitemService.findList(bitemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String findRoot()throws Exception
+	{
+		if(bitemQuery == null) {
+			bitemQuery = new BitemQuery();
+		}
+		
+		try {
+			Bitem bitem = this.bitemService.getById(bitemQuery.getFitemid());
+			if(bitem!=null&&bitem.getFparentid()!=null&&bitem.getFparentid()==0){
+				this.entity = bitem;
+			}else if(bitem!=null&&bitem.getFparentid()!=null&&bitem.getFparentid()!=0){
+				Bitem bitem1 = this.bitemService.getById(bitem.getFparentid());
+				if(bitem1!=null&&bitem1.getFparentid()!=null&&bitem1.getFparentid()==0){
+					this.entity = bitem1;
+				}else if(bitem1!=null&&bitem1.getFparentid()!=null&&bitem1.getFparentid()!=0){
+					Bitem bitem2 = this.bitemService.getById(bitem1.getFparentid());
+					if(bitem2!=null&&bitem2.getFparentid()!=null&&bitem2.getFparentid()==0){
+						this.entity = bitem2;
+					}
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String findParents()throws Exception
+	{
+		if(bitemQuery == null) {
+			bitemQuery = new BitemQuery();
+		}
+		bitemList = new ArrayList<Bitem>();
+		try {
+			Bitem bitem = this.bitemService.getById(bitemQuery.getFitemid());
+			this.bitemList.add(bitem);
+			if(bitem!=null&&bitem.getFparentid()!=null&&bitem.getFparentid()!=0){
+				Bitem bitem1 = this.bitemService.getById(bitem.getFparentid());
+				if(bitem1!=null&&bitem1.getFparentid()!=null&&bitem1.getFparentid()==0){
+					this.bitemList.add(bitem1);
+				}else if(bitem1!=null&&bitem1.getFparentid()!=null&&bitem1.getFparentid()!=0){
+					Bitem bitem2 = this.bitemService.getById(bitem1.getFparentid());
+					if(bitem2!=null&&bitem2.getFparentid()!=null&&bitem2.getFparentid()==0){
+						this.bitemList.add(bitem2);
+					}
+					this.bitemList.add(bitem1);
+				}
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("bitemId");
+			page.setOrder(Page.DESC);
+		}
+		if(bitemQuery == null) {
+			bitemQuery = new BitemQuery();
+		}
+		
+		try {
+			page = bitemService.findPage(page, bitemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	//树结构用于物料规则添加
+	private String CATEGORYKEY="bitemTree";
+	@Action("/bitem/listToTree")
+	//方法1将拼好的语句放在meched缓存中
+	public String listToTree()throws Exception
+	{
+		try
+		{
+			if(CacheService.getInstance().get(CATEGORYKEY)==null){
+				tree = createTree();
+				CacheService.getInstance().add(CATEGORYKEY, tree);
+			}else{
+				tree=(String)CacheService.getInstance().get(CATEGORYKEY);
+			}
+			System.out.println(tree.length());
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询树成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	}
+	
+	public String createTree(){
+		if(bitemQuery == null) {
+			bitemQuery = new BitemQuery();
+		}
+		StringBuffer sbuf = new StringBuffer();
+		//查找root节点
+		bitemQuery.setFdeleted(0);
+		bitemQuery.setFitemid((long)0);
+		List<Bitem> listRoot=new ArrayList<Bitem>();
+		listRoot  = bitemService.findList(bitemQuery);
+		//查找一级目录
+		List<Bitem> list=new ArrayList<Bitem>();
+		bitemQuery = new BitemQuery();
+		bitemQuery.setFdeleted(0);
+		bitemQuery.setFitemclassid((long)4);
+		bitemQuery.setFdetail(0);
+		bitemQuery.setFparentid((long)0);
+		bitemQuery.setSortColumns("fshortnumber");
+		list  = bitemService.findList(bitemQuery);
+		sbuf.append("<li>");
+		if(listRoot!=null&&listRoot.size()>0){
+			Bitem item0 = listRoot.get(0);
+			sbuf.append("<b ref=\""+item0.getFitemid()+"\" id=li"+item0.getFitemid()+" pid="+item0.getFparentid()+" ><a href=\"javascript:\"\";\">"+"ROOT(物料规则)"+"</a></b>");
+		}
+		if(list!=null&&list.size()>0){
+			sbuf.append("<ul>");
+			for(Bitem item:list){
+				sbuf.append("<li><span ref=\""+item.getFitemid()+"\" spanname="+item.getFname()+" spancode=\""+item.getFshortnumber()+"\"   id=li"+item.getFitemid()+" pid="+item.getFparentid()+" ><a href=\"javascript:searchrule("
+							+item.getFparentid()+","+item.getFitemid()+",'"+item.getFshortnumber()+"','"
+							+item.getFname()+"');\">"+item.getFshortnumber()+"("+item.getFname()+")</a></span>"+loop(item.getFitemid())+"</li>");
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	public String loop(long itemid)
+	{
+		BitemQuery iQuery = new BitemQuery();
+		iQuery.setFdeleted(0);
+		iQuery.setFitemclassid((long)4);
+		iQuery.setFdetail(0);
+		iQuery.setFparentid(itemid);
+		iQuery.setSortColumns("fshortnumber");
+		List<Bitem> list=bitemService.findList(iQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list!=null&&list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+itemid+"\">");
+			for(Bitem item:list)
+			{
+				sbuf.append("<li><div ref=\""+item.getFitemid()+"\" spanname="+item.getFname()+" spancode=\""+item.getFshortnumber()+"\"   id=li"+item.getFitemid()+" pid="+item.getFparentid()+" ><a href=\"javascript:searchrule("
+							+item.getFparentid()+","+item.getFitemid()+",'"+item.getFshortnumber()+"','"
+							+item.getFname()+"');\">"+item.getFshortnumber()+"("+item.getFname()+")</a></div>"+loop(item.getFitemid())+"</li>");
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	
+	
+	//更新缓存树方法（有参数），只更新某个节点的名称
+	public String updateTreeCacheCategory(Bitem oldItem)throws Exception
+	{
+		try
+		{
+			if(CacheService.getInstance().get(CATEGORYKEY)==null){
+				tree = createTree();
+				CacheService.getInstance().add(CATEGORYKEY, tree);
+			}else{
+				Bitem entity = this.bitemService.getById(oldItem.getFitemid());
+				tree=(String)CacheService.getInstance().get(CATEGORYKEY);
+				int i = tree.indexOf("<span ref=\""+oldItem.getFitemid()+"\"");
+				int i2 = tree.indexOf("<div ref=\""+oldItem.getFitemid()+"\"");
+				if(i!=-1){
+					//将更改后的名称替换原来的字符串
+					String str = "<span ref=\""+oldItem.getFitemid()+"\" spanname="+oldItem.getFname()+" spancode=\""+oldItem.getFshortnumber()+"\"   id=li"+oldItem.getFitemid()+" pid="+oldItem.getFparentid()+" ><a href=\"javascript:searchrule("
+							+oldItem.getFparentid()+","+oldItem.getFitemid()+",'"+oldItem.getFshortnumber()+"','"
+							+oldItem.getFname()+"');\">"+oldItem.getFshortnumber()+"("+oldItem.getFname()+")</a></span>";
+					String strnew = "<span ref=\""+entity.getFitemid()+"\" spanname="+entity.getFname()+" spancode=\""+entity.getFshortnumber()+"\"   id=li"+entity.getFitemid()+" pid="+entity.getFparentid()+" ><a href=\"javascript:searchrule("
+							+entity.getFparentid()+","+entity.getFitemid()+",'"+entity.getFshortnumber()+"','"
+							+entity.getFname()+"');\">"+entity.getFshortnumber()+"("+entity.getFname()+")</a></span>";
+					tree = tree.substring(0, i)+strnew+tree.substring(i+str.length(), tree.length());
+				}
+				if(i2!=-1){
+					String str1 = "<div ref=\""+oldItem.getFitemid()+"\" spanname="+oldItem.getFname()+" spancode=\""+oldItem.getFshortnumber()+"\"   id=li"+oldItem.getFitemid()+" pid="+oldItem.getFparentid()+" ><a href=\"javascript:searchrule("
+							+oldItem.getFparentid()+","+oldItem.getFitemid()+",'"+oldItem.getFshortnumber()+"','"
+							+oldItem.getFname()+"');\">"+oldItem.getFshortnumber()+"("+oldItem.getFname()+")</a></div>";
+					
+					
+					String str1new = "<div ref=\""+entity.getFitemid()+"\" spanname="+entity.getFname()+" spancode=\""+entity.getFshortnumber()+"\"   id=li"+entity.getFitemid()+" pid="+entity.getFparentid()+" ><a href=\"javascript:searchrule("
+							+entity.getFparentid()+","+entity.getFitemid()+",'"+entity.getFshortnumber()+"','"
+							+entity.getFname()+"');\">"+entity.getFshortnumber()+"("+entity.getFname()+")</a></div>";
+					tree = tree.substring(0, i2)+str1new+tree.substring(i2+str1.length(), tree.length());
+				}
+				CacheService.getInstance().replace(CATEGORYKEY, tree);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询树成功";
+			}
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	
+	}
+	//更新缓存树方法（无参数）
+	public String updateTreeCacheCategory()throws Exception{
+		try
+		{
+			tree = "";
+			tree = createTree();
+			CacheService.getInstance().replace(CATEGORYKEY, tree);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询树成功";
+		}catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+		
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			bitemService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = bitemService.getById(bitemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	public void prepareSaveAlone() throws Exception {
+		prepareModel();
+	}
+	// -------------------自定义方法
+	/**
+	 * 保存或更新物料规则
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAlone()throws Exception {
+		try {
+			/*Bitem pitem = bitemService.getById(entity.getFparentid());//获取当前节点的父节点信息
+			if(null==pitem.getFnumber()){//ROOT
+				entity.setFparentid((long)0);
+				entity.setFlevel(1);
+				
+			}else{
+				entity.setFlevel(pitem.getFlevel()+1);
+			}
+			if(entity.getFitemid()==null){
+				entity.setFdeleted(0);
+			}
+			List<Bitem> itemList=new ArrayList<Bitem>();
+			itemList=bitemService.getListByProperty("fnumber",entity.getFnumber());//通过全编码判断是否唯一
+			if(null!=itemList&&0<itemList.size()){
+				throw new ServiceException(" 原因：代码已经存在,请更换!");
+			}*/
+			Bitem oldItem = bitemService.getById(entity.getFitemid());
+			bitemService.saveOrUpdate(entity);
+			updateTreeCacheCategory(oldItem);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败  "+e.getMessage();
+		}
+		return JSON;
+	}
+	
+	
+	public String deleteAlone() throws Exception {
+		try 
+		{
+			Bitem item = bitemService.getById(this.bitemId);//获取当前节点的父节点信息
+			if(bitemService.deleteInfoById(bitemId,item.getFnumber())==1)
+			{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				//updateTreeCacheCategory();
+				//updateShowTreeCacheCategory();
+			}
+			else
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "不能删除包含子数据的节点";
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败"+"系统错误!";
+		
+		}
+		return JSON;
+	} 
+	public String listAll() throws Exception {
+		try{
+			bitemList = bitemService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	@Action("/bitem/bitemTongERP")
+	public String findBitemErp() throws Exception {
+		try{
+			bitemService.findBitemErp();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同步失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Bitem getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public BitemQuery getBitemQuery() {
+		return bitemQuery;
+	}
+
+	
+	public void setBitemQuery(BitemQuery bitemQuery) {
+		this.bitemQuery = bitemQuery;
+	}
+
+	public void setBitemId(java.lang.Long bitemId) {
+		this.bitemId = bitemId;
+	}
+	
+	
+	public java.lang.Long getBitemId() {
+		return this.bitemId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Bitem> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Bitem> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Bitem> getBitemList() {
+		return bitemList;
+	}
+
+	public String getTree() {
+		return tree;
+	}
+
+	public void setTree(String tree) {
+		this.tree = tree;
+	}
+
+	public String getShowtree() {
+		return showtree;
+	}
+
+	public void setShowtree(String showtree) {
+		this.showtree = showtree;
+	}
+
+	
+}

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Competitor;
+import com.terrence.crm.dol.dao.ICompetitorDao;
+
+@Repository
+public class CompetitorDao extends BaseIbatisDao<Competitor,java.lang.Long> implements ICompetitorDao{
+
+		
+	public void saveOrUpdate(Competitor entity) {
+		if(entity.getCompetitorid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Competitor";
+	}
+	public Competitor getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Competitor)this.getSqlMapClientTemplate().queryForObject("Competitor.getByProperty", map);		
+	}
+
+}

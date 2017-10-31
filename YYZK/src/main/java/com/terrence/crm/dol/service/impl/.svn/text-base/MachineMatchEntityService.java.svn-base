@@ -1,0 +1,599 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Circulation;
+import com.terrence.crm.dol.bean.CirculationEntity;
+import com.terrence.crm.dol.bean.CirculationRaw;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.MachineMatch;
+import com.terrence.crm.dol.bean.MachineMatchEntity;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.CirculationQuery;
+import com.terrence.crm.dol.query.CirculationRawQuery;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.MachineMatchEntityQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICirculationDao;
+import com.terrence.crm.dol.dao.ICirculationEntityDao;
+import com.terrence.crm.dol.dao.ICirculationRawDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchEntityDao;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+import com.terrence.crm.dol.service.IMachineMatchEntityService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class MachineMatchEntityService extends BaseService implements IMachineMatchEntityService {
+	protected static Logger logger = LoggerFactory.getLogger(MachineMatchEntityService.class);
+	@Autowired
+	@Qualifier("machineMatchEntityDao")
+	private IMachineMatchEntityDao machineMatchEntityDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("machineMatchDao")
+	private IMachineMatchDao machineMatchDao;
+	@Autowired
+	@Qualifier("circulationDao")
+	private ICirculationDao circulationDao;
+	@Autowired
+	@Qualifier("circulationRawDao")
+	private ICirculationRawDao circulationRawDao;
+	@Autowired
+	@Qualifier("circulationEntityDao")
+	private ICirculationEntityDao circulationEntityDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("workPlanDao")
+	private IWorkPlanDao workPlanDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "MachineMatchEntity";
+	}
+	@Transactional(readOnly=true)
+	public MachineMatchEntity getById(java.lang.Long id) throws ServiceException
+	{
+		return machineMatchEntityDao.getById(id);
+	}
+	
+	public void saveOrUpdate(MachineMatchEntity entity) throws ServiceException
+	{
+		machineMatchEntityDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(MachineMatchEntity entity) throws ServiceException
+	{
+		Long adId = machineMatchEntityDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(MachineMatchEntity entity) throws ServiceException
+	{
+		Integer returnValue =  machineMatchEntityDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = machineMatchEntityDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = machineMatchEntityDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		MachineMatchEntityQuery query = new MachineMatchEntityQuery();
+		try {
+			return machineMatchEntityDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<MachineMatchEntity> findPage(Page<MachineMatchEntity> page, MachineMatchEntityQuery query) throws ServiceException
+	{
+		return machineMatchEntityDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<MachineMatchEntity> findPage(Page<MachineMatchEntity> page,String statement, MachineMatchEntityQuery query) throws ServiceException
+	{
+		return machineMatchEntityDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<MachineMatchEntity> findList(MachineMatchEntityQuery query) throws ServiceException
+	{
+		return machineMatchEntityDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<MachineMatchEntity> findList(MachineMatchEntityQuery query,Integer pageSize) throws ServiceException
+	{
+		return machineMatchEntityDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<MachineMatchEntity> findList(MachineMatchEntityQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return machineMatchEntityDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<MachineMatchEntity> findAllList() throws ServiceException
+	{
+		return machineMatchEntityDao.findAllList();
+	}
+	@Transactional(readOnly=true)
+	public List<MachineMatchEntity> findList(MachineMatchEntityQuery query,String statement) throws ServiceException
+	{
+		return machineMatchEntityDao.findList(statement, query);
+	}
+	
+	@Override
+	public void saveToDetail(MachineMatchEntity entity) throws ServiceException {
+		//System.out.println("====="+entity.toString());
+		 Double[] oncefqtylist=entity.getOncefqtylist();
+		String[] codelist=entity.getCodelist();
+		Long[] finneridlist=entity.getFinneridlist();
+		Integer[] dbnolist=entity.getDbnolist();
+		Integer[] isaddlist=entity.getIsaddlist();
+		String[] batchlist=entity.getBatchlist();
+		 Double[] planuseagelist=entity.getPlanuseagelist();
+		 Double[] useagelist=entity.getUseagelist();
+		 int ll=isaddlist.length;
+		 //更新配料单详细---
+		 MachineMatchEntity machineMatchEntity=null;
+		 for(int i=0;i<ll;i++){
+			 machineMatchEntity=new MachineMatchEntity();
+			 machineMatchEntity.setFinnerid(finneridlist[i]);
+			 machineMatchEntity.setDbno(dbnolist[i]);
+			 machineMatchEntity.setBatchno(batchlist[i]);
+			 machineMatchEntity.setPlanuseage(planuseagelist[i]);
+			 machineMatchEntity.setUseage(useagelist[i]);
+			 machineMatchEntity.setOncefqty(oncefqtylist[i]);
+			 machineMatchEntityDao.update(machineMatchEntity);
+
+			 //	减库存 
+			 InventoryBatchQuery inventoryBatchQuery=new InventoryBatchQuery();  
+			 inventoryBatchQuery.setItemcode(codelist[i]);
+			 inventoryBatchQuery.setBatchno(batchlist[i]);
+			 inventoryBatchQuery.setDbno(dbnolist[i]);
+			 
+			 List<InventoryBatch> inventoryBatchlist = inventoryBatchDao.findList(inventoryBatchQuery);				 
+			 InventoryBatch inventoryBatch=inventoryBatchlist.get(0);
+			 if(dbnolist[i].intValue()==3){//帐套
+				 inventoryBatch.setFqty(inventoryBatch.getFqty().doubleValue()-useagelist[i].doubleValue());	 
+			 }else if(dbnolist[i].intValue()==4){
+				 inventoryBatch.setFqty2(inventoryBatch.getFqty2().doubleValue()-useagelist[i].doubleValue());
+			 }
+			 //减锁库数量
+			if(isaddlist[i]==0){//计划的库存和批次--解除锁库数量
+				inventoryBatch.setFqtylock(inventoryBatch.getFqtylock().doubleValue()-planuseagelist[i].doubleValue());
+			 }	
+			inventoryBatchDao.update(inventoryBatch);	
+			 	
+		 }
+		//-添加发/收料人---修改领料状态---machineMatchDao-----------------------------
+		 MachineMatch machineMatch=new MachineMatch();
+		 machineMatch.setFmatchid(entity.getFmatchid());
+		 machineMatch.setFatfeed(entity.getFatfeed());
+		 machineMatch.setPicking(entity.getPicking());
+		 machineMatch.setUsestatus(1);//领料状态1已领,2未领
+		 machineMatchDao.update(machineMatch);
+		 
+		 //---添加工序流转卡批次--及原材料--icmoDao---circulationDao--circulationRawDao-circulationEntityDao-
+		 MachineMatch machineMatchCard=machineMatchDao.getById(entity.getFmatchid());
+		 Icmo icmo = icmoDao.getById(machineMatchCard.getIcmoid());
+		 	
+		 Circulation circulation=new Circulation();
+		 
+		 circulation.setWorkno(icmo.getFbillno());//车间单号
+		 circulation.setItemcode(icmo.getItemcode());
+		 circulation.setItemname(icmo.getItemname());
+		 circulation.setItemmode(baseItemDao.getByProperty("itemcode",icmo.getItemcode()).getFormatno());
+		 circulation.setPlanstartdate(DateConvertUtils.format(icmo.getPlancommitdate(),"yyyy-MM-dd HH:mm:ss"));
+		 circulation.setPlanenddate(DateConvertUtils.format(icmo.getPlanfinishdate(),"yyyy-MM-dd HH:mm:ss"));
+		 circulation.setCreatedate(DateUtils.GetDate().substring(0, 7));//取日期2013-09
+		 circulation.setCirculationcode(Circulation.CARD+icmo.getIcmoid());
+		 circulation.setBatchno(creatBatchno(icmo.getItemcode()));//获取产品批次
+		 
+		 Long cardid = circulationDao.save(circulation);
+		 //CARD添加end
+		 CirculationRaw circulationRaw=new CirculationRaw();
+		 circulationRaw.setCirculationid(cardid);
+		 for(int i=0;i<ll;i++){
+			 circulationRaw.setItemcode(codelist[i]);
+			 circulationRaw.setBatchno(batchlist[i]);
+			 circulationRaw.setDbno(dbnolist[i]);
+			 circulationRawDao.save(circulationRaw);
+		 }
+		//card_raw添加end
+	}
+	
+	/**
+	 * 创建产品批次:
+	 * 根据产品代码和当月月份,查询工序卡表,
+	 * 批次结果取 年份后两位+月份两位+当月流水号  --例:2013年09月,则批次为1309+流水号(流水号2位,例:01,02,03,10,11,13)
+	 * 返回批次号
+	 * @param itemcode
+	 * @return
+	 */
+	private String creatBatchno(String itemcode) {
+		
+		CirculationQuery query=new CirculationQuery();
+		query.setItemcode(itemcode);
+		query.setCreatedate(DateUtils.GetDate().substring(0, 7));
+		query.setSortColumns(" batchno desc ");
+		
+		List<Circulation> list=new ArrayList<Circulation>();
+		 list = circulationDao.findList(query);//
+		 
+		 int sizes=0;
+		 sizes=list.size();
+		 if(sizes>0){
+			
+			 String batch = list.get(0).getBatchno();
+			 //String number = batch.substring(4, 6);
+			 Integer number = Integer.valueOf(batch.substring(4, 6));
+			 if((number+1)<10){//
+				 return DateUtils.GetDate().substring(2, 4)+DateUtils.GetDate().substring(5, 7)+"0"+(number+1);
+			 }else{
+				 return DateUtils.GetDate().substring(2, 4)+DateUtils.GetDate().substring(5, 7)+(number+1);
+			 }
+			 
+			 /* if(sizes<10){
+				 
+				 return DateUtils.GetDate().substring(2, 4)+DateUtils.GetDate().substring(5, 7)+"0"+(list.size()+1); 
+			 }else{
+				 return DateUtils.GetDate().substring(2, 4)+DateUtils.GetDate().substring(5, 7)+(list.size()+1); 
+			 }
+			*/ 
+		 }else{
+			 return DateUtils.GetDate().substring(2, 4)+DateUtils.GetDate().substring(5, 7)+"01";
+		 }
+	}
+	@Override
+	public void saveToNewDetail(MachineMatchEntity entity)
+			throws ServiceException {
+
+		 Long[] finneridlist=entity.getFinneridlist();
+		 String[] codelist=entity.getCodelist();
+		 String[] namelist=entity.getNamelist();
+		 String[] modelist=entity.getModelist();
+		 Integer[] dbnolist=entity.getDbnolist();
+		 String[] batchlist=entity.getBatchlist();
+		 Double[] planuseagelist=entity.getPlanuseagelist();
+		 Double[] useagelist=entity.getUseagelist();
+		 Long[] batchidlist=entity.getBatchidlist();//库存idlist
+		 Double[] oncefqtylist=entity.getOncefqtylist();
+		 Integer matchstatus = entity.getMatchstatus();//配料状态1:已完成  0:未完成
+		 Long fmatchid = entity.getFmatchid();
+		 //--添加车间任务单3/4帐套标记-----------------------------------------------------------------
+		 MachineMatch mMatch = machineMatchDao.getById(fmatchid);
+		 WorkPlan workPlan = workPlanDao.getById(mMatch.getWorkplanid());
+		 Icmo iicmo=new Icmo();
+		 iicmo=icmoDao.getByProperty("fbillno", workPlan.getFbillno());		 
+		 if(iicmo!=null){
+			 iicmo.setFxmark((dbnolist[0]==null?3:dbnolist[0].intValue()));
+			 
+			 icmoDao.update(iicmo);	 
+		 }
+		//-------------------------------------------------------------------------
+		 
+		 System.out.println("=====================");
+		 //更新或添加配料单详细--------
+		 MachineMatchEntity machineMatchEntity=null;
+		 int entitylength = finneridlist.length;
+		 for(int i=0;i<entitylength;i++){
+			 if(null==finneridlist[i]){//添加的物料
+				 machineMatchEntity=new MachineMatchEntity();
+				 machineMatchEntity.setFmatchid(fmatchid);
+				 machineMatchEntity.setItemcode(codelist[i]);
+				 machineMatchEntity.setItemname(namelist[i]);
+				 machineMatchEntity.setItemmode(modelist[i]);
+				 machineMatchEntity.setDbno(dbnolist[i]);
+				 machineMatchEntity.setBatchno(batchlist[i]);
+				 machineMatchEntity.setPlanuseage(planuseagelist[i]);
+				 machineMatchEntity.setUseage(useagelist[i]);
+				 machineMatchEntity.setOncefqty(oncefqtylist[i]);
+				 machineMatchEntity.setBatchid(batchidlist[i]);
+				 
+				 MachineMatch machineMatch = machineMatchDao.getById(fmatchid);
+				 if(matchstatus==1&&(null==machineMatch.getMatchstatus()||machineMatch.getMatchstatus()!=1)){//配料完成状态下锁库
+					 if(null!=batchidlist[i]){//有库存id--则锁库
+						 InventoryBatch inventoryBatch = inventoryBatchDao.getById(batchidlist[i]);
+						 inventoryBatch.setFqtylock((null==inventoryBatch.getFqtylock()?0:inventoryBatch.getFqtylock().doubleValue())+useagelist[i].doubleValue());
+						 
+						 inventoryBatchDao.update(inventoryBatch);
+					 }
+				 }else if(matchstatus.intValue()==0&&machineMatch.getMatchstatus()!=null&&machineMatch.getMatchstatus().intValue()==1){//由配料完成切换为未完成--减去锁库数量
+					 if(null!=batchidlist[i]){//有库存id--则减去锁库数量
+						 InventoryBatch inventoryBatch = inventoryBatchDao.getById(batchidlist[i]);
+						 inventoryBatch.setFqtylock((null==inventoryBatch.getFqtylock()?0:inventoryBatch.getFqtylock().doubleValue())-useagelist[i].doubleValue());
+						 
+						 inventoryBatchDao.update(inventoryBatch);
+					 }
+				 }
+				 machineMatchEntityDao.save(machineMatchEntity);
+			 }else{//修改
+				 machineMatchEntity=new MachineMatchEntity();
+				 machineMatchEntity.setFinnerid(finneridlist[i]);
+				 machineMatchEntity.setItemcode(codelist[i]);
+				 machineMatchEntity.setItemname(namelist[i]);
+				 machineMatchEntity.setItemmode(modelist[i]);
+				 machineMatchEntity.setDbno(dbnolist[i]);
+				 machineMatchEntity.setBatchno(batchlist[i]);
+				 machineMatchEntity.setPlanuseage(planuseagelist[i]);
+				 machineMatchEntity.setUseage(useagelist[i]);
+				 machineMatchEntity.setOncefqty(oncefqtylist[i]);
+				 machineMatchEntity.setBatchid(batchidlist[i]);
+
+				 MachineMatch machineMatch = machineMatchDao.getById(fmatchid);
+				 if(matchstatus==1&&(null==machineMatch.getMatchstatus()||machineMatch.getMatchstatus()!=1)){//由配料未完成切换为完成-------配料完成状态下锁库
+					 if(null!=batchidlist[i]){//有库存id--则锁库
+						 InventoryBatch inventoryBatch = inventoryBatchDao.getById(batchidlist[i]);
+						 inventoryBatch.setFqtylock((null==inventoryBatch.getFqtylock()?0:inventoryBatch.getFqtylock().doubleValue())+useagelist[i].doubleValue());
+						 
+						 inventoryBatchDao.update(inventoryBatch);
+					 }
+				 }else if(matchstatus.intValue()==0&&machineMatch.getMatchstatus()!=null&&machineMatch.getMatchstatus().intValue()==1){//由配料完成切换为未完成--减去锁库数量
+					 if(null!=batchidlist[i]){//有库存id--则减去锁库数量
+						 InventoryBatch inventoryBatch = inventoryBatchDao.getById(batchidlist[i]);
+						 inventoryBatch.setFqtylock((null==inventoryBatch.getFqtylock()?0:inventoryBatch.getFqtylock().doubleValue())-useagelist[i].doubleValue());
+						 
+						 inventoryBatchDao.update(inventoryBatch);
+					 }
+				 }
+				 machineMatchEntityDao.update(machineMatchEntity);
+			 }
+		 }
+		 MachineMatch pmachineMatch = machineMatchDao.getById(fmatchid);
+		 if(matchstatus==1&&(null==pmachineMatch.getMatchstatus()||pmachineMatch.getMatchstatus()!=1)){//
+			//由配料未完成切换为完成--同时更新未排产列表状态
+			 updateWorkPlanMatchstatus(pmachineMatch.getWorkplanid(),1);
+			//配料完成时,生成批次号-------------
+			 addCirculation(pmachineMatch.getWorkplanid(),codelist,batchlist,dbnolist);
+			 
+		 }else if(matchstatus.intValue()==0&&pmachineMatch.getMatchstatus()!=null&&pmachineMatch.getMatchstatus().intValue()==1){
+				//由配料完成切换为未完成--同时更新未排产列表状态
+			 updateWorkPlanMatchstatus(pmachineMatch.getWorkplanid(),0);
+		 }
+		
+		 updateBaseData(pmachineMatch,matchstatus,entity);
+		
+		 
+		 
+		 //更新
+		 MachineMatch machineMatch=new MachineMatch();
+		 machineMatch.setFmatchid(fmatchid); 
+		 machineMatch.setMatchstatus(matchstatus);
+		 machineMatch.setMakefqty(entity.getMakefqty());
+	 
+		 
+		 machineMatchDao.update(machineMatch);
+		 //-----------------------------------------------------------------------------------------------
+		 //---添加工序流转卡批次--及原材料--icmoDao---circulationDao--circulationRawDao-circulationEntityDao-
+		
+		 /*
+		 MachineMatchEntity machineMatchEntity=null;
+		 for(int i=0;i<ll;i++){
+			 machineMatchEntity=new MachineMatchEntity();
+			 machineMatchEntity.setFinnerid(finneridlist[i]);
+			 machineMatchEntity.setDbno(dbnolist[i]);
+			 machineMatchEntity.setBatchno(batchlist[i]);
+			 machineMatchEntity.setPlanuseage(planuseagelist[i]);
+			 machineMatchEntity.setUseage(useagelist[i]);
+			 machineMatchEntity.setOncefqty(oncefqtylist[i]);
+			 machineMatchEntityDao.update(machineMatchEntity);
+
+			 //	减库存 
+			 InventoryBatchQuery inventoryBatchQuery=new InventoryBatchQuery();  
+			 inventoryBatchQuery.setItemcode(codelist[i]);
+			 inventoryBatchQuery.setBatchno(batchlist[i]);
+			 inventoryBatchQuery.setDbno(dbnolist[i]);
+			 
+			 List<InventoryBatch> inventoryBatchlist = inventoryBatchDao.findList(inventoryBatchQuery);				 
+			 InventoryBatch inventoryBatch=inventoryBatchlist.get(0);
+			 if(dbnolist[i].intValue()==3){//帐套
+				 inventoryBatch.setFqty(inventoryBatch.getFqty().doubleValue()-useagelist[i].doubleValue());	 
+			 }else if(dbnolist[i].intValue()==4){
+				 inventoryBatch.setFqty2(inventoryBatch.getFqty2().doubleValue()-useagelist[i].doubleValue());
+			 }
+			 //减锁库数量
+			if(isaddlist[i]==0){//计划的库存和批次--解除锁库数量
+				inventoryBatch.setFqtylock(inventoryBatch.getFqtylock().doubleValue()-planuseagelist[i].doubleValue());
+			 }	
+			inventoryBatchDao.update(inventoryBatch);	
+			 	
+		 }
+		//-添加发/收料人---修改领料状态---machineMatchDao-----------------------------
+		 MachineMatch machineMatch=new MachineMatch();
+		 machineMatch.setFmatchid(entity.getFmatchid());
+		 machineMatch.setFatfeed(entity.getFatfeed());
+		 machineMatch.setPicking(entity.getPicking());
+		 machineMatch.setUsestatus(1);//领料状态1已领,2未领
+		 machineMatchDao.update(machineMatch);
+		 
+		 //---添加工序流转卡批次--及原材料--icmoDao---circulationDao--circulationRawDao-circulationEntityDao-
+		 MachineMatch machineMatchCard=machineMatchDao.getById(entity.getFmatchid());
+		 Icmo icmo = icmoDao.getById(machineMatchCard.getIcmoid());
+		 	
+		 Circulation circulation=new Circulation();
+		 
+		 circulation.setWorkno(icmo.getFbillno());//车间单号
+		 circulation.setItemcode(icmo.getItemcode());
+		 circulation.setItemname(icmo.getItemname());
+		 circulation.setItemmode(baseItemDao.getByProperty("itemcode",icmo.getItemcode()).getFormatno());
+		 circulation.setPlanstartdate(DateConvertUtils.format(icmo.getPlancommitdate(),"yyyy-MM-dd HH:mm:ss"));
+		 circulation.setPlanenddate(DateConvertUtils.format(icmo.getPlanfinishdate(),"yyyy-MM-dd HH:mm:ss"));
+		 circulation.setCreatedate(DateUtils.GetDate().substring(0, 7));//取日期2013-09
+		 circulation.setCirculationcode(Circulation.CARD+icmo.getIcmoid());
+		 circulation.setBatchno(creatBatchno(icmo.getItemcode()));//获取产品批次
+		 
+		 Long cardid = circulationDao.save(circulation);
+		 //CARD添加end
+		 CirculationRaw circulationRaw=new CirculationRaw();
+		 circulationRaw.setCirculationid(cardid);
+		 for(int i=0;i<ll;i++){
+			 circulationRaw.setItemcode(codelist[i]);
+			 circulationRaw.setBatchno(batchlist[i]);
+			 circulationRaw.setDbno(dbnolist[i]);
+			 circulationRawDao.save(circulationRaw);
+		 }
+		//card_raw添加end
+	*/
+		
+	}
+	/**
+	 * 更新物料表中的在制品量
+	 * @param pmachineMatch
+	 * @param matchstatus
+	 * @param entity
+	 */
+	private void updateBaseData(MachineMatch pmachineMatch, Integer matchstatus, MachineMatchEntity entity) {
+		 if(matchstatus==1){//配料完成增加在制品量
+			 List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+			 BaseItemQuery bQuery=new BaseItemQuery();
+			 bQuery.setItemcode(pmachineMatch.getItemcode());
+			 baseitemList = baseItemDao.findEntityBase(bQuery);
+			 if(baseitemList.size()>0){
+				 if(entity.getFxmark()==3){
+					BaseItem bitem = new BaseItem();
+					bitem.setItemcode(pmachineMatch.getItemcode());
+					bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+					bitem.setMakingnums((baseitemList.get(0).getMakingnums()==null?0:baseitemList.get(0).getMakingnums())+entity.getMakefqty());
+					baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				 }else{
+					BaseItem bitem = new BaseItem();
+					bitem.setItemcode(pmachineMatch.getItemcode());
+					bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+					bitem.setMakingnums4((baseitemList.get(0).getMakingnums4()==null?0:baseitemList.get(0).getMakingnums4())+entity.getMakefqty());
+					baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				 }
+			 }else{
+				 throw new ServiceException("物料表不存在物料"+pmachineMatch.getItemcode());
+			 }
+		 }else if(matchstatus==0){//完成状态改为未完成：减少在制品量
+			 List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+			 BaseItemQuery bQuery=new BaseItemQuery();
+			 bQuery.setItemcode(pmachineMatch.getItemcode());
+			 baseitemList = baseItemDao.findEntityBase(bQuery);
+			 if(baseitemList.size()>0){
+				 if(entity.getFxmark()==3){
+					Double sumfqty = (baseitemList.get(0).getMakingnums()==null?0:baseitemList.get(0).getMakingnums()) - entity.getMakefqty();
+					BaseItem bitem = new BaseItem();
+					bitem.setItemcode(pmachineMatch.getItemcode());
+					bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+					bitem.setMakingnums(sumfqty<0?0:sumfqty);
+					baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				 }else{
+					Double sumfqty = (baseitemList.get(0).getMakingnums4()==null?0:baseitemList.get(0).getMakingnums4()) - entity.getMakefqty();
+					BaseItem bitem = new BaseItem();
+					bitem.setItemcode(pmachineMatch.getItemcode());
+					bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+					bitem.setMakingnums4(sumfqty<0?0:sumfqty);
+					baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				 }
+			 }else{
+				 throw new ServiceException("物料表不存在物料"+pmachineMatch.getItemcode());
+			 }
+		 }
+	}
+	
+	public void updateWorkPlanMatchstatus(long workplanid, int matchstatus){//更新未排产计划的配料状态
+		WorkPlan wplan=new WorkPlan();
+		wplan.setWorkplanid(workplanid);
+		wplan.setMatchstatus(matchstatus);
+		workPlanDao.update(wplan);
+	}
+	public void addCirculation(Long workplanid,String[] codelist,String[] batchlist,Integer[] dbnolist){
+		WorkPlan workPlan = workPlanDao.getById(workplanid);
+		
+		 Circulation circulation=new Circulation();
+		 BaseItem baseite = baseItemDao.getByProperty("itemcode",workPlan.getItemcode());
+		 CirculationQuery circulationQuery=new CirculationQuery();
+		 circulationQuery.setWorkno(workPlan.getFbillno());
+		 List<Circulation> circulationList=null; 
+		 circulationList= circulationDao.findList(circulationQuery);
+		 
+		 Long cardid=0L;
+		 if(circulationList.size()>0){//已存在
+			 cardid=circulationList.get(0).getCirculationid();
+		 }else{
+			 circulation.setWorkno(workPlan.getFbillno());//车间单号
+			 circulation.setItemcode(workPlan.getItemcode());
+			 circulation.setItemname(baseite.getItemname());
+			 circulation.setItemmode(baseite.getFormatno());
+			 //circulation.setPlanstartdate(DateConvertUtils.format(icmo.getPlancommitdate(),"yyyy-MM-dd HH:mm:ss"));
+			 circulation.setPlanenddate(workPlan.getPlanenddate());
+			 circulation.setCreatedate(DateUtils.GetDate().substring(0, 7));//取日期2013-09
+			 circulation.setCirculationcode(Circulation.CARD+workPlan.getFbillno().substring(5));
+			 circulation.setBatchno(creatBatchno(workPlan.getItemcode()));//获取产品批次
+			 
+			  cardid = circulationDao.save(circulation);
+			  
+			  workPlan.setBatchno(circulation.getBatchno());
+			  workPlanDao.update(workPlan);
+		 }
+		 
+		 
+		 circulationRawDao.deleteByCirculationid(cardid);//删除详细;
+		 //CARD添加end
+		 CirculationRaw circulationRaw=new CirculationRaw();
+		 circulationRaw.setCirculationid(cardid);
+		 int ll = codelist.length;
+		 for(int i=0;i<ll;i++){
+			 circulationRaw.setItemcode(codelist[i]);
+			 circulationRaw.setBatchno(batchlist[i]);
+			 circulationRaw.setDbno(dbnolist[i]);
+			 circulationRawDao.save(circulationRaw);
+		 }
+		//card_raw添加end
+		
+	}
+
+}

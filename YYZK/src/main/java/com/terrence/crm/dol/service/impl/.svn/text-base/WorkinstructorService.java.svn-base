@@ -1,0 +1,128 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Workinstructor;
+import com.terrence.crm.dol.dao.IWorkinstructorDao;
+import com.terrence.crm.dol.query.WorkinstructorQuery;
+import com.terrence.crm.dol.service.IWorkinstructorService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class WorkinstructorService extends BaseService implements IWorkinstructorService {
+	protected static Logger logger = LoggerFactory.getLogger(WorkinstructorService.class);
+	@Autowired
+	@Qualifier("workinstructorDao")
+	private IWorkinstructorDao workinstructorDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Workinstructor";
+	}
+	@Transactional(readOnly=true)
+	public Workinstructor getById(java.lang.Long id) throws ServiceException
+	{
+		return workinstructorDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Workinstructor entity) throws ServiceException
+	{
+		entity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),"yyyy-MM-dd HH:mm:ss"));
+		entity.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		workinstructorDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Workinstructor entity) throws ServiceException
+	{
+		Long adId = workinstructorDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Workinstructor entity) throws ServiceException
+	{
+		Integer returnValue =  workinstructorDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = workinstructorDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = workinstructorDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WorkinstructorQuery query = new WorkinstructorQuery();
+		try {
+			return workinstructorDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Workinstructor> findPage(Page<Workinstructor> page, WorkinstructorQuery query) throws ServiceException
+	{
+		return workinstructorDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Workinstructor> findPage(Page<Workinstructor> page,String statement, WorkinstructorQuery query) throws ServiceException
+	{
+		return workinstructorDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Workinstructor> findList(WorkinstructorQuery query) throws ServiceException
+	{
+		return workinstructorDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Workinstructor> findList(WorkinstructorQuery query,Integer pageSize) throws ServiceException
+	{
+		return workinstructorDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Workinstructor> findList(WorkinstructorQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return workinstructorDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Workinstructor> findAllList() throws ServiceException
+	{
+		return workinstructorDao.findAllList();
+	}
+
+}

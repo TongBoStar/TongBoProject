@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Department">
+
+        
+	<resultMap id="RM.Department" class="com.terrence.crm.dol.bean.Department">
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+     	<result property="superiorname" column="superiorname"/>
+     	
+     	<result property="fitemid" column="fitemid"/>
+     	<result property="fnumber" column="fnumber"/>
+     	<result property="fname" column="fname"/>
+     	<result property="iserp" column="iserp"/>
+     	<result property="isused" column="isused"/>
+    </resultMap>
+	
+	 <resultMap id="RM.Admin.name" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+	  
+	  <resultMap id="RM.Department.list" class="com.terrence.crm.dol.bean.Department">
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+        <result property="admin" resultMap="RM.Admin.name"/>
+        <result property="superiorname" column="superiorname"/>
+        
+        	<result property="fitemid" column="fitemid"/>
+     	<result property="fnumber" column="fnumber"/>
+     	<result property="fname" column="fname"/>
+     	<result property="iserp" column="iserp"/>
+     	<result property="isused" column="isused"/>
+    </resultMap>
+    
+     <resultMap id="RM.Department.listName" class="com.terrence.crm.dol.bean.Department">
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="superiorname" column="superiorname"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+        <result property="admin" resultMap="RM.Admin.name"/>
+    </resultMap>
+    
+    <resultMap id="RM.Department.find.data" class="com.terrence.crm.dol.bean.Department">
+        <result property="teamid" column="teamid"/>
+        <result property="adminId" column="adminId"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+     	<result property="superiorname" column="superiorname"/>
+     	<result property="isused" column="isused"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Department.columns">
+	    <![CDATA[
+        	t_department.teamid ,
+        	t_department.adminId ,
+        	t_department.teamname ,
+        	t_department.teamsuperior ,
+        	t_department.superiorname,
+        	t_department.teamlevel ,
+        	t_department.teamorder ,
+        	t_department.fitemid,
+        	t_department.fnumber,
+        	t_department.fname,
+        	t_department.iserp,
+        	t_department.isused
+	    ]]>
+	</sql>
+	
+   <insert id="Department.insert" >
+   
+        INSERT INTO
+        t_department (
+        	
+        	teamname ,
+        	teamsuperior ,
+        	teamlevel 
+        	
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="adminId">
+        			adminId
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="teamorder">
+        			teamorder
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="superiorname">
+        			superiorname
+        		</isNotEmpty>
+        		
+        		<isNotEmpty prepend="," property="fitemid">
+        			fitemid
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">
+        			fnumber
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fname">
+        			fname
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="iserp">
+        			iserp
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="isused">
+        			isused
+        		</isNotEmpty>
+        	</dynamic>
+        	 
+        ) VALUES (
+        	
+        	#teamname# ,
+        	#teamsuperior# ,
+        	#teamlevel# 
+        	
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="adminId">
+        			#adminId#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="teamorder">
+        			#teamorder# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="superiorname">
+        			#superiorname#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fitemid">
+        			#fitemid#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fnumber">
+        			#fnumber#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fname">
+        			#fname#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="iserp">
+        			#iserp#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="isused">
+        			#isused#
+        		</isNotEmpty>
+        	</dynamic>
+        	
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="teamid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Department.update" parameterClass="com.terrence.crm.dol.bean.Department">         
+        UPDATE t_department 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="adminId">
+	        	adminId = #adminId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamname">
+	        	teamname = #teamname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamsuperior">
+	        	teamsuperior = #teamsuperior# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamlevel">
+	        	teamlevel = #teamlevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamorder">
+	        	teamorder = #teamorder# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="superiorname">
+        		superiorname=#superiorname#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fitemid">
+       			fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="fnumber">
+       			fnumber=#fnumber#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="fname">
+       			fname=#fname#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="iserp">
+       			iserp=#iserp#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="," property="isused">
+        		isused=	#isused#
+        	</isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        teamid = #teamid# 
+    </update>
+    
+	<delete id="Department.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_department where
+       teamid = #teamid# 
+    ]]>
+    </delete>
+    
+    <delete id="Department.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_department 
+        WHERE
+       teamid in ($teamid$) 
+    ]]>
+    </delete>
+    
+    <select id="Department.getById" resultMap="RM.Department.list">
+	    select <include refid="Department.columns"/>,t_admin.adminName
+	    
+	        from t_department left join t_admin on t_admin.adminId=t_department.adminId
+	        where 
+		        t_department.teamid = #teamid# 
+	    
+    </select>
+    
+    <!-- 查询部门信息 -->
+    <select id="Department.findDepartList" resultMap="RM.Department">
+    	SELECT top 10 <include refid="Department.columns"/> FROM  t_department
+    	<dynamic prepend="WHERE">
+    			<isNotEmpty prepend="AND" property="teamname">
+    				t_department.teamname like ('%$teamname$%')
+    			</isNotEmpty>
+    			<isNotEmpty prepend="AND" property="isused">
+    				t_department.isused = #isused# 
+    			</isNotEmpty>
+    	</dynamic>
+    </select>
+    
+	<select id="Department.getByProperty" resultMap="RM.Department">
+		select <include refid="Department.columns"/> from t_department where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Department.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_department.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_department.adminId = #adminId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_department.teamname like ('%$teamname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamsuperior">
+	             t_department.teamsuperior = #teamsuperior#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamlevel">
+	             t_department.teamlevel = #teamlevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamorder">
+	             t_department.teamorder = #teamorder#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="superiorname">
+	             t_department.superiorname like ('%$superiorname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="parentids">
+	       		t_department.teamsuperior in (#parentids#)
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="fitemid">
+       			t_department.fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fnumber">
+       			t_department.fnumber=#fnumber#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fname">
+       			t_department.fname=#fname#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="iserp">
+       			t_department.iserp=#iserp#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="isused">
+       			t_department.isused=#isused#
+       		</isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Department.findPage.and">
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_department.teamid = #teamid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminId">
+	             t_department.adminId = #adminId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_department.teamname like ('%$teamname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamsuperior">
+	             t_department.teamsuperior = #teamsuperior#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamlevel">
+	             t_department.teamlevel = #teamlevel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamorder">
+	             t_department.teamorder = #teamorder#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="superiorname">
+	             t_department.superiorname like ('%$superiorname$%')
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="parentids">
+	       		t_department.teamsuperior in (#parentids#)
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fitemid">
+       			t_department.fitemid=#fitemid#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fnumber">
+       			t_department.fnumber=#fnumber#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="fname">
+       			t_department.fname=#fname#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="iserp">
+       			t_department.iserp=#iserp#
+       		</isNotEmpty>
+       		<isNotEmpty prepend="AND" property="isused">
+       			t_department.isused=#isused#
+       		</isNotEmpty>
+	</sql>
+    
+    <!-- 2013-8-26 -->
+    <select id="Department.findNameList" resultMap="RM.Department">
+    	SELECT 
+    		<include refid="Department.columns"/>
+    	FROM
+    		t_department
+    		<dynamic prepend="WHERE">
+    			<isNotEmpty prepend="AND" property="teamname">
+    				t_department.teamname like ('%$teamname$%')
+    			</isNotEmpty>
+    		</dynamic>
+    </select>
+    <select id="Department.findTeamsuperior" resultMap="RM.Department">
+    	SELECT 
+    		<include refid="Department.columns"/>
+    	FROM
+    		t_department
+    		<dynamic prepend="WHERE">
+    			<isNotEmpty prepend="AND" property="teamname">
+    				t_department.teamname like ('%$teamname$%')
+    			</isNotEmpty>
+    		</dynamic>
+    </select>
+    
+    
+    
+    
+    <select id="Department.findList" resultMap="RM.Department">
+    	SELECT 
+    		<include refid="Department.columns"/> 
+    	FROM 
+    		t_department
+		<include refid="Department.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Department.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_department
+    ]]>
+		<include refid="Department.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Department.findPage" resultMap="RM.Department">
+    	select <include refid="Department.columns"/>	    
+	        from t_department 	   
+		<include refid="Department.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Department.findPage" resultMap="RM.Department.list">
+    	select <include refid="Department.columns"/>,t_admin.adminName
+	        from t_department left join t_admin on t_admin.adminId=t_department.adminId
+	         where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_department.teamid 
+	   not in(select $notTop$ 
+       t_department.teamid 
+	   from t_department <include refid="Department.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Department.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="Department.getDepartmentById" resultMap="RM.Department.find.data">
+	    select d.teamname teamname,d.teamid teamid,d.superiorname superiorname, a.adminId adminId,d.teamsuperior teamsuperior,d.teamlevel teamlevel,d.teamorder teamorder,d.isused isused
+	        from t_department d left join t_admin a on a.teamid=d.teamid
+	        where 
+		        a.adminId = #id# 
+    </select>
+    
+    
+    <procedure id="Department.getData.for.ERP">
+		{call pro_syncInventory() }
+	</procedure>
+	
+	 <select id="Department.find.alldata.depart" resultMap="RM.Department">
+    	SELECT  top 10
+    		<include refid="Department.columns"/> 
+    	FROM 
+    		t_department
+		<include refid="Department.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Department.find.depart.parentid" resultMap ="RM.Department">
+    	select <include refid="Department.columns"/>
+	        from t_department
+	       where  t_department.teamid = #teamid#
+    </select>
+    
+     <select id="Department.find.teamName.list" resultMap="RM.Department">
+    	SELECT  top  15
+    		<include refid="Department.columns"/> 
+    	FROM 
+    		t_department
+		<include refid="Department.findPage.where"/>
+    </select>
+    
+</sqlMap>

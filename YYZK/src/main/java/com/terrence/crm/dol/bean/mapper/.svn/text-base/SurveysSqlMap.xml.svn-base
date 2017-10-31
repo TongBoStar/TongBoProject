@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Surveys">
+
+        
+	<resultMap id="RM.Surveys" class="com.terrence.crm.dol.bean.Surveys">
+        <result property="surveysid" column="surveysid"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="fyear" column="fyear"/>
+        <result property="fscore" column="fscore"/>
+        <result property="fdate" column="fdate"/>
+        <result property="femp" column="femp"/>
+        <result property="fempname" column="fempname"/>
+        <result property="fdescribe" column="fdescribe"/>
+        <result property="ftimes" column="ftimes"/>
+        <result property="flevel" column="flevel"/>
+        <result property="organization" resultMap="RM.Surveys.Organization"/>
+        <result property="surveysEntries" column="{finnerid=finnerid,fyear=fyear}" select="CustomerScore.SurEntry.list"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.Organization" id="RM.Surveys.Organization">
+		<result property="fname" column="fname"/>
+	</resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Surveys.columns">
+	    <![CDATA[
+        	t_surveys.surveysid ,
+        	t_surveys.finnerid ,
+        	t_surveys.fyear ,
+        	t_surveys.fscore ,
+        	t_surveys.fdate ,
+        	t_surveys.femp ,
+        	t_surveys.fdescribe ,
+        	t_surveys.ftimes,
+        	t_surveys.flevel 
+	    ]]>
+	</sql>
+	
+   <insert id="Surveys.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_surveys (
+        	finnerid ,
+        	fyear  ,
+        	fscore ,
+        	fdate ,
+        	femp ,
+        	fdescribe ,
+        	ftimes,
+        	flevel 
+        ) VALUES (
+        	#finnerid# ,
+        	#fyear# ,
+        	#fscore# ,
+        	#fdate# ,
+        	#femp# ,
+        	#fdescribe# ,
+        	#ftimes#,
+        	#flevel# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="surveysid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Surveys.update" parameterClass="com.terrence.crm.dol.bean.Surveys">         
+        UPDATE t_surveys 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="finnerid">
+	        	finnerid = #finnerid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fscore">
+	        	fscore = #fscore# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="femp">
+	        	femp = #femp# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdescribe">
+	        	fdescribe = #fdescribe# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftimes">
+	        	ftimes = #ftimes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        surveysid = #surveysid# 
+    </update>
+    
+	<delete id="Surveys.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_surveys where
+       surveysid = #surveysid# 
+    ]]>
+    </delete>
+    
+    <delete id="Surveys.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_surveys 
+        WHERE
+       surveysid in ($surveysid$) 
+    ]]>
+    </delete>
+    
+    <select id="Surveys.getById" resultMap="RM.Surveys">
+	    select <include refid="Surveys.columns"/>,t_organization.fname,t_admin.adminname fempname	    
+	        from t_surveys 
+	        left join t_organization on t_surveys.finnerid=t_surveys.finnerid 
+	        left join t_admin on t_surveys.femp=t_admin.adminId 
+	        where t_surveys.finnerid=t_organization.finnerid  and
+		        surveysid = #surveysid# 
+	    
+    </select>
+    
+	<select id="Surveys.getByProperty" resultMap="RM.Surveys">
+		select <include refid="Surveys.columns"/>,t_organization.fname,t_admin.adminname fempname	    
+	        from t_surveys 
+	        left join t_organization on t_surveys.finnerid=t_surveys.finnerid 
+	        left join t_admin on t_surveys.femp=t_admin.adminId  
+		where t_surveys.finnerid=t_organization.finnerid  and $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Surveys.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="surveysid">
+	             t_surveys.surveysid = #surveysid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_surveys.finnerid = #finnerid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_surveys.fyear = #fyear#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="organization.fname">
+	             t_organization.fname like ('%$organization.fname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fscore">
+	             t_surveys.fscore = #fscore#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdateBegin">
+	             t_surveys.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_surveys.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="femp">
+	             t_surveys.femp = #femp#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdescribe">
+	             t_surveys.fdescribe = #fdescribe#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flevel">
+	             t_surveys.flevel = #flevel#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Surveys.findPage.and">
+			<isNotEmpty prepend="AND" property="surveysid">
+	             t_surveys.surveysid = #surveysid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_surveys.finnerid = #finnerid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_surveys.fyear = #fyear#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="organization.fname">
+	             t_organization.fname like ('%$organization.fname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fscore">
+	             t_surveys.fscore = #fscore#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdateBegin">
+	             t_surveys.fdate &gt;= #fdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fdateEnd">
+	             t_surveys.fdate &lt;= #fdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="femp">
+	             t_surveys.femp = #femp#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdescribe">
+	             t_surveys.fdescribe = #fdescribe#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flevel">
+	             t_surveys.flevel = #flevel#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Surveys.findList" resultMap="RM.Surveys">
+    	SELECT 
+    		<include refid="Surveys.columns"/> ,t_organization.fname,t_admin.adminname fempname	    
+	        from t_surveys 
+	        left join t_organization on t_surveys.finnerid=t_surveys.finnerid 
+	        left join t_admin on t_surveys.femp=t_admin.adminId 
+	         where t_surveys.finnerid=t_organization.finnerid
+		<include refid="Surveys.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Surveys.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_surveys,t_organization where t_surveys.finnerid=t_organization.finnerid 
+        and t_surveys.finnerid in(
+		select finnerid from t_org_orggorup where groupid in (select groupid from t_admin_orggroup where adminId=#queryAdminId#))
+    ]]>
+		<include refid="Surveys.findPage.and"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Surveys.findPage" resultMap="RM.Surveys">
+    	select <include refid="Surveys.columns"/>	    
+	        from t_surveys 	   
+		<include refid="Surveys.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Surveys.findPage" resultMap="RM.Surveys">
+    	select <include refid="Surveys.columns"/>,t_organization.fname,t_admin.adminname fempname	    
+	        from t_surveys 
+	        left join t_organization on t_surveys.finnerid=t_surveys.finnerid 
+	        left join t_admin on t_surveys.femp=t_admin.adminId 
+	        where t_surveys.finnerid=t_organization.finnerid 
+	        and t_surveys.finnerid in(
+		select finnerid from t_org_orggorup where groupid in (select groupid from t_admin_orggroup where adminId=#queryAdminId#))
+	   <isNotEmpty property="notTop">  and 
+       surveysid 
+	   not in(select $notTop$ 
+       surveysid 
+	   from t_surveys <include refid="Surveys.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Surveys.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="Surveys.findFinnerIdByYear" parameterClass="java.lang.Integer" resultClass="java.lang.Long">
+    	SELECT t_surveys.finnerid FROM t_surveys where fyear=$fyear$
+    </select>
+    <select id="Surveys.findByFinnerIdAndYear" resultClass="java.lang.Long">
+    	SELECT t_surveys.surveysid FROM t_surveys where fyear=$fyear$ and finnerid in ($finnerid$) 
+    </select>
+</sqlMap>

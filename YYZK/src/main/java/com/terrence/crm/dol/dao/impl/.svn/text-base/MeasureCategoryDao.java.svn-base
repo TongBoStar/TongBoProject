@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.MeasureCategory;
+import com.terrence.crm.dol.dao.IMeasureCategoryDao;
+import com.terrence.crm.dol.query.MeasureCategoryQuery;
+
+@Repository
+public class MeasureCategoryDao extends BaseIbatisDao<MeasureCategory,java.lang.Long> implements IMeasureCategoryDao{
+
+		
+	public void saveOrUpdate(MeasureCategory entity) {
+		if(entity.getCategoryid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "MeasureCategory";
+	}
+	public MeasureCategory getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (MeasureCategory)this.getSqlMapClientTemplate().queryForObject("MeasureCategory.getByProperty", map);		
+	}
+
+	@Override
+	public List<MeasureCategory> listToCategoryQuery(
+			MeasureCategoryQuery measureCategoryQuery) {
+		return this.getSqlMapClientTemplate().queryForList("MeasureCategory.find.Category.list", measureCategoryQuery);
+	}
+
+}

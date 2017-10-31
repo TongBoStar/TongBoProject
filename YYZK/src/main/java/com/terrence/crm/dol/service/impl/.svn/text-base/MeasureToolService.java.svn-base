@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.MeasureTool;
+import com.terrence.crm.dol.query.MeasureToolQuery;
+import com.terrence.crm.dol.dao.IMeasureToolDao;
+import com.terrence.crm.dol.service.IMeasureToolService;
+
+@Service
+@Transactional
+public class MeasureToolService extends BaseService implements IMeasureToolService {
+	protected static Logger logger = LoggerFactory.getLogger(MeasureToolService.class);
+	@Autowired
+	@Qualifier("measureToolDao")
+	private IMeasureToolDao measureToolDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "MeasureTool";
+	}
+	@Transactional(readOnly=true)
+	public MeasureTool getById(java.lang.Long id) throws ServiceException
+	{
+		return measureToolDao.getById(id);
+	}
+	
+	public void saveOrUpdate(MeasureTool entity) throws ServiceException
+	{
+		if(entity.getId()==null){
+			if(entity.getGrantdate()==null){
+					measureToolDao.save(entity, "MeasureTool.insertUnIncludeGrantdate");
+			}else{
+				measureToolDao.saveOrUpdate(entity);	
+			}
+		}else{
+			measureToolDao.saveOrUpdate(entity);	
+		}
+		
+	}
+	
+	public java.lang.Long save(MeasureTool entity) throws ServiceException
+	{
+		Long adId = measureToolDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(MeasureTool entity) throws ServiceException
+	{
+		Integer returnValue =  measureToolDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = measureToolDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = measureToolDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		MeasureToolQuery query = new MeasureToolQuery();
+		try {
+			return measureToolDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<MeasureTool> findPage(Page<MeasureTool> page, MeasureToolQuery query) throws ServiceException
+	{
+		return measureToolDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<MeasureTool> findPage(Page<MeasureTool> page,String statement, MeasureToolQuery query) throws ServiceException
+	{
+		return measureToolDao.findPage(page,statement, query);//121221212121
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureTool> findList(MeasureToolQuery query) throws ServiceException
+	{
+		return measureToolDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureTool> findList(MeasureToolQuery query,Integer pageSize) throws ServiceException
+	{
+		return measureToolDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<MeasureTool> findList(MeasureToolQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return measureToolDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureTool> findAllList() throws ServiceException
+	{
+		return measureToolDao.findAllList();
+	}
+
+}

@@ -1,0 +1,41 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Currency;
+import com.terrence.crm.dol.dao.ICurrencyDao;
+
+
+@Repository
+public class CurrencyDao extends BaseIbatisDao<Currency,java.lang.Long> implements ICurrencyDao{
+
+		
+	public void saveOrUpdate(Currency entity) {
+		if(entity.getFcurrencyid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Currency";
+	}
+	public Currency getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Currency)this.getSqlMapClientTemplate().queryForObject("Currency.getByProperty", map);		
+	}
+
+	@Override
+	public List<Currency> findlistAll() {
+		return this.getSqlMapClientTemplate().queryForList("Currency.find.listAll");
+	}
+
+}

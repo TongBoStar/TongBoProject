@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+
+@Repository
+public class OrderBomDao extends BaseIbatisDao<OrderBom,java.lang.Long> implements IOrderBomDao{
+
+		
+	public void saveOrUpdate(OrderBom entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "OrderBom";
+	}
+	public OrderBom getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (OrderBom)this.getSqlMapClientTemplate().queryForObject("OrderBom.getByProperty", map);		
+	}
+
+	@Override
+	public void checkOrderBom() {
+		this.getSqlMapClientTemplate().insert("OrderBom.checkOrderBom");
+	}
+
+	@Override
+	public void saveToERP(String sqlstatement, String itemcode) {
+		Map map=new HashMap();		
+		map.put("itemcode", itemcode);
+		this.getSqlMapClientTemplate().queryForObject(sqlstatement, map);
+	}
+
+}

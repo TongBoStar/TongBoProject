@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.SalesBratio;
+import com.terrence.crm.dol.dao.ISalesBratioDao;
+@Repository
+public class SalesBratioDao extends BaseIbatisDao<SalesBratio,java.lang.Long> implements ISalesBratioDao{
+	public String getIbatisSqlMapNamespace() {
+		return "SalesBratio"; 
+	}
+	public void saveOrUpdate(SalesBratio entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public SalesBratio getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SalesBratio)this.getSqlMapClientTemplate().queryForObject("SalesBratio.getByProperty", map);
+	}
+}

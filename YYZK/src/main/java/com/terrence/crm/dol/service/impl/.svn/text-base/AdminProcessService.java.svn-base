@@ -1,0 +1,154 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AdminProcess;
+import com.terrence.crm.dol.query.AdminProcessQuery;
+import com.terrence.crm.dol.dao.IAdminProcessDao;
+import com.terrence.crm.dol.service.IAdminProcessService;
+
+@Service
+@Transactional
+public class AdminProcessService extends BaseService implements IAdminProcessService {
+	protected static Logger logger = LoggerFactory.getLogger(AdminProcessService.class);
+	@Autowired
+	@Qualifier("adminProcessDao")
+	private IAdminProcessDao adminProcessDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AdminProcess";
+	}
+	@Transactional(readOnly=true)
+	public AdminProcess getById(java.lang.Long id) throws ServiceException
+	{
+		return adminProcessDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AdminProcess entity) throws ServiceException
+	{
+		adminProcessDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AdminProcess entity) throws ServiceException
+	{
+		Long adId = adminProcessDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AdminProcess entity) throws ServiceException
+	{
+		Integer returnValue =  adminProcessDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = adminProcessDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = adminProcessDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AdminProcessQuery query = new AdminProcessQuery();
+		try {
+			return adminProcessDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminProcess> findPage(Page<AdminProcess> page, AdminProcessQuery query) throws ServiceException
+	{
+		return adminProcessDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminProcess> findPage(Page<AdminProcess> page,String statement, AdminProcessQuery query) throws ServiceException
+	{
+		return adminProcessDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProcess> findList(AdminProcessQuery query) throws ServiceException
+	{
+		return adminProcessDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProcess> findList(AdminProcessQuery query,Integer pageSize) throws ServiceException
+	{
+		return adminProcessDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AdminProcess> findList(AdminProcessQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return adminProcessDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProcess> findAllList() throws ServiceException
+	{
+		return adminProcessDao.findAllList();
+	}
+	@Override
+	public void saveAdminProcess(AdminProcessQuery adminProcessQuery)
+			throws ServiceException {
+			
+		adminProcessDao.deleteByWhere("AdminProcess.deleteByProcessid", adminProcessQuery);
+		String idlist="";
+		idlist =adminProcessQuery.getAdminidlist();
+		String[] adminidlist = null;
+		adminidlist = idlist.split(",");
+		if(adminidlist==null){
+			return;
+		}
+		for(String id:adminidlist){
+			AdminProcess adminProcess=new AdminProcess();
+			adminProcess.setProcessid(adminProcessQuery.getProcessid());
+			adminProcess.setAdminId(Long.valueOf(id));
+			adminProcessDao.save(adminProcess);
+		}
+		
+	}
+	@Override
+	public List<AdminProcess> findList(AdminProcessQuery adminProcessQuery,
+			String string) throws ServiceException {
+		
+		return adminProcessDao.findList(string, adminProcessQuery);
+		
+	}
+
+	
+	
+	
+}

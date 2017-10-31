@@ -1,0 +1,155 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.MeasureCategory;
+import com.terrence.crm.dol.bean.ToolClass;
+import com.terrence.crm.dol.query.MeasureCategoryQuery;
+import com.terrence.crm.dol.query.ToolClassQuery;
+import com.terrence.crm.dol.query.ToolsQuery;
+import com.terrence.crm.dol.dao.IMeasureCategoryDao;
+import com.terrence.crm.dol.service.IMeasureCategoryService;
+
+@Service
+@Transactional
+public class MeasureCategoryService extends BaseService implements IMeasureCategoryService {
+	protected static Logger logger = LoggerFactory.getLogger(MeasureCategoryService.class);
+	@Autowired
+	@Qualifier("measureCategoryDao")
+	private IMeasureCategoryDao measureCategoryDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "MeasureCategory";
+	}
+	@Transactional(readOnly=true)
+	public MeasureCategory getById(java.lang.Long id) throws ServiceException
+	{
+		return measureCategoryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(MeasureCategory entity) throws ServiceException
+	{
+		measureCategoryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(MeasureCategory entity) throws ServiceException
+	{
+		Long adId = measureCategoryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(MeasureCategory entity) throws ServiceException
+	{
+		Integer returnValue =  measureCategoryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = measureCategoryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		MeasureCategoryQuery query=new MeasureCategoryQuery();
+		query.setParentcode( measureCategoryDao.getById(Long.valueOf(delIds)).getCategorycode() );
+		
+		Integer returnValue=0;
+		if(measureCategoryDao.findList(query).size()>0)
+		{
+			return 0;
+		}
+		else
+		{
+			returnValue = measureCategoryDao.deleteByMultipleId(delIds);
+			return returnValue;
+		}
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		MeasureCategoryQuery query = new MeasureCategoryQuery();
+		try {
+			return measureCategoryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<MeasureCategory> findPage(Page<MeasureCategory> page, MeasureCategoryQuery query) throws ServiceException
+	{
+		return measureCategoryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<MeasureCategory> findPage(Page<MeasureCategory> page,String statement, MeasureCategoryQuery query) throws ServiceException
+	{
+		return measureCategoryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureCategory> findList(MeasureCategoryQuery query) throws ServiceException
+	{
+		return measureCategoryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureCategory> findList(MeasureCategoryQuery query,Integer pageSize) throws ServiceException
+	{
+		return measureCategoryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<MeasureCategory> findList(MeasureCategoryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return measureCategoryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<MeasureCategory> findAllList() throws ServiceException
+	{
+		return measureCategoryDao.findAllList();
+	}
+	
+	@Override
+	public String findSubNode(String tooCode) throws ServiceException {
+		MeasureCategoryQuery query=new MeasureCategoryQuery();
+		query.setParentcode(tooCode);
+		List<MeasureCategory> list=measureCategoryDao.findList(query);
+		String toolids="";
+		for(MeasureCategory measureCategory:list)
+		{
+			toolids+=","+measureCategory.getCategoryid()+findSubNode(measureCategory.getCategorycode());
+		}
+		return toolids;
+	}
+	@Override
+	public List<MeasureCategory> listToCategoryQuery(
+			MeasureCategoryQuery measureCategoryQuery) throws ServiceException {
+		return measureCategoryDao.listToCategoryQuery(measureCategoryQuery);
+	}
+
+}

@@ -1,0 +1,55 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.SalesDetail;
+import com.terrence.crm.dol.dao.ISalesDetailDao;
+
+@Repository
+public class SalesDetailDao extends BaseIbatisDao<SalesDetail,java.lang.Long> implements ISalesDetailDao{
+
+		
+	public void saveOrUpdate(SalesDetail entity) {
+		if(entity.getDetailid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "SalesDetail";
+	}
+	public SalesDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SalesDetail)this.getSqlMapClientTemplate().queryForObject("SalesDetail.getByProperty", map);		
+	}
+
+	@Override
+	public List<SalesDetail> findSaleList(SalesDetail salesDetail) {
+		return this.getSqlMapClientTemplate().queryForList("SalesDetail.find.listSales", salesDetail);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<SalesDetail> getSalesDetail(String string, Long saleid) {
+		// TODO Auto-generated method stub
+		return this.getSqlMapClientTemplate().queryForList(string, saleid);
+	}
+
+	@Override
+	public Long findPickId(Long sdetailid) {
+		return (Long) this.getSqlMapClientTemplate().queryForObject("SalesDetail.find.pickingId", sdetailid);
+	}
+
+}

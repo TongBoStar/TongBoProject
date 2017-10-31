@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdCheckItem">
+
+        
+	<resultMap id="RM.PdCheckItem" class="com.terrence.crm.dol.bean.PdCheckItem">
+        <result property="pcitemid" column="pcitemid"/>
+        <result property="seqno" column="seqno"/>
+        <result property="checkitem" column="checkitem"/>
+        <result property="checknote" column="checknote"/>
+        <result property="linkaddr" column="linkaddr"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdCheckItem.columns">
+	    <![CDATA[
+        	t_pd_check_item.pcitemid ,
+        	t_pd_check_item.seqno ,
+        	t_pd_check_item.checkitem ,
+        	t_pd_check_item.checknote ,
+        	t_pd_check_item.linkaddr 
+	    ]]>
+	</sql>
+	
+   <insert id="PdCheckItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_check_item (
+        	seqno ,
+        	checkitem ,
+        	checknote ,
+        	linkaddr 
+        ) VALUES (
+        	#seqno# ,
+        	#checkitem# ,
+        	#checknote# ,
+        	#linkaddr# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="pcitemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdCheckItem.update" parameterClass="com.terrence.crm.dol.bean.PdCheckItem">         
+        UPDATE t_pd_check_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkitem">
+	        	checkitem = #checkitem# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checknote">
+	        	checknote = #checknote# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="linkaddr">
+	        	linkaddr = #linkaddr# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        pcitemid = #pcitemid# 
+    </update>
+    
+	<delete id="PdCheckItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_check_item where
+       pcitemid = #pcitemid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdCheckItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_check_item 
+        WHERE
+       pcitemid in ($pcitemid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdCheckItem.getById" resultMap="RM.PdCheckItem">
+	    select <include refid="PdCheckItem.columns"/>
+	    
+	        from t_pd_check_item 
+	        where 
+		        pcitemid = #pcitemid# 
+	    
+    </select>
+    
+	<select id="PdCheckItem.getByProperty" resultMap="RM.PdCheckItem">
+		select <include refid="PdCheckItem.columns"/> from t_pd_check_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdCheckItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="pcitemid">
+	             t_pd_check_item.pcitemid = #pcitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_pd_check_item.seqno = #seqno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checkitem">
+	             t_pd_check_item.checkitem like ('%$checkitem$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checknote">
+	             t_pd_check_item.checknote = #checknote#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="linkaddr">
+	             t_pd_check_item.linkaddr = #linkaddr#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdCheckItem.findPage.and">
+			<isNotEmpty prepend="AND" property="pcitemid">
+	             t_pd_check_item.pcitemid = #pcitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_pd_check_item.seqno = #seqno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checkitem">
+	             t_pd_check_item.checkitem  like ('%$checkitem$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checknote">
+	             t_pd_check_item.checknote = #checknote#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="linkaddr">
+	             t_pd_check_item.linkaddr = #linkaddr#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdCheckItem.Entity" resultMap="RM.PdCheckItem">
+    	SELECT 	<include refid="PdCheckItem.columns"/> FROM t_pd_check_item <include refid="PdCheckItem.findPage.where"/>
+    </select>
+    
+    <select id="PdCheckItem.findList" resultMap="RM.PdCheckItem">
+    	SELECT 
+    		<include refid="PdCheckItem.columns"/> 
+    	FROM 
+    		t_pd_check_item
+		<include refid="PdCheckItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdCheckItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_check_item
+    ]]>
+		<include refid="PdCheckItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdCheckItem.findPage" resultMap="RM.PdCheckItem">
+    	select <include refid="PdCheckItem.columns"/>	    
+	        from t_pd_check_item 	   
+		<include refid="PdCheckItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdCheckItem.findPage" resultMap="RM.PdCheckItem">
+    	select <include refid="PdCheckItem.columns"/>	    
+	        from t_pd_check_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       pcitemid 
+	   not in(select $notTop$ 
+       pcitemid 
+	   from t_pd_check_item <include refid="PdCheckItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdCheckItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+    <select id="PdCeckItem.find.pagefor.data.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_check_item
+    ]]>
+		<include refid="PdCheckItem.findPage.where"/>    
+    </select>
+    <select id="PdCeckItem.find.pagefor.data" resultMap="RM.PdCheckItem">
+    	select <include refid="PdCheckItem.columns"/>	    
+	        from t_pd_check_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       pcitemid 
+	   not in(select $notTop$ 
+       pcitemid 
+	   from t_pd_check_item <include refid="PdCheckItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdCheckItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

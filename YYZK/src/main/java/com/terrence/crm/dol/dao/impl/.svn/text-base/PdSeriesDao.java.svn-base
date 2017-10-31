@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdSeries;
+import com.terrence.crm.dol.dao.IPdSeriesDao;
+
+@Repository
+public class PdSeriesDao extends BaseIbatisDao<PdSeries,java.lang.Long> implements IPdSeriesDao{
+
+		
+	public void saveOrUpdate(PdSeries entity) {
+		if(entity.getSeriesid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdSeries";
+	}
+	public PdSeries getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdSeries)this.getSqlMapClientTemplate().queryForObject("PdSeries.getByProperty", map);		
+	}
+
+}

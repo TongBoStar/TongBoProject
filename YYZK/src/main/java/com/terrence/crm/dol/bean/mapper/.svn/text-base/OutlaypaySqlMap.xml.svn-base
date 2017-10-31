@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Outlaypay">
+
+        
+	<resultMap id="RM.Outlaypay" class="com.terrence.crm.dol.bean.Outlaypay">
+        <result property="payid" column="payid"/>
+        <result property="paydate" column="paydate"/>
+        <result property="famount" column="famount"/>
+        <result property="signin" column="signin"/>
+        <result property="lister" column="lister"/>
+        <result property="fyear" column="fyear"/>
+        <result property="fquarter" column="fquarter"/>
+        <result property="mmanager" column="mmanager"/>
+        <result property="fmanager" column="fmanager"/>
+        <result property="gmanager" column="gmanager"/>
+    </resultMap>
+	
+	  <resultMap id="Outlaypay.for.table" class="com.terrence.crm.dol.bean.Outlaypay">
+        <result property="payid" column="payid"/>
+        <result property="paydate" column="paydate"/>
+        <result property="famount" column="famount"/>
+        <result property="signin" column="signin"/>
+        <result property="lister" column="lister"/>
+        <result property="fyear" column="fyear"/>
+        <result property="fquarter" column="fquarter"/>
+        <result property="mmanager" column="mmanager"/>
+        <result property="fmanager" column="fmanager"/>
+        <result property="gmanager" column="gmanager"/>
+        <result property="signinName" column="signinName"/>
+    </resultMap>
+	
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Outlaypay.columns">
+	    <![CDATA[
+        	t_outlaypay.payid ,
+        	t_outlaypay.paydate ,
+        	t_outlaypay.famount ,
+        	t_outlaypay.signin ,
+        	t_outlaypay.lister ,
+        	t_outlaypay.fyear ,
+        	t_outlaypay.fquarter ,
+        	t_outlaypay.mmanager ,
+        	t_outlaypay.fmanager ,
+        	t_outlaypay.gmanager 
+	    ]]>
+	</sql>
+	
+   <insert id="Outlaypay.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_outlaypay (
+        	paydate ,
+        	famount ,
+        	signin ,
+        	lister ,
+        	fyear ,
+        	fquarter ,
+        	mmanager ,
+        	fmanager ,
+        	gmanager 
+        ) VALUES (
+        	#paydate# ,
+        	#famount# ,
+        	#signin# ,
+        	#lister# ,
+        	#fyear# ,
+        	#fquarter# ,
+        	#mmanager# ,
+        	#fmanager# ,
+        	#gmanager# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="payid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Outlaypay.update" parameterClass="com.terrence.crm.dol.bean.Outlaypay">         
+        UPDATE t_outlaypay 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="paydate">
+	        	paydate = #paydate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="famount">
+	        	famount = #famount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="signin">
+	        	signin = #signin# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lister">
+	        	lister = #lister# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fyear">
+	        	fyear = #fyear# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fquarter">
+	        	fquarter = #fquarter# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="mmanager">
+	        	mmanager = #mmanager# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmanager">
+	        	fmanager = #fmanager# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gmanager">
+	        	gmanager = #gmanager# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        payid = #payid# 
+    </update>
+    
+	<delete id="Outlaypay.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_outlaypay where
+       payid = #payid# 
+    ]]>
+    </delete>
+    
+    <delete id="Outlaypay.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_outlaypay 
+        WHERE
+       payid in ($payid$) 
+    ]]>
+    </delete>
+    
+    <select id="Outlaypay.getById" resultMap="RM.Outlaypay">
+	    select <include refid="Outlaypay.columns"/>
+	    
+	        from t_outlaypay 
+	        where 
+		        payid = #payid# 
+	    
+    </select>
+    
+	<select id="Outlaypay.getByProperty" resultMap="RM.Outlaypay">
+		select <include refid="Outlaypay.columns"/> from t_outlaypay where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Outlaypay.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="payid">
+	             t_outlaypay.payid = #payid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="paydateBegin">
+	             t_outlaypay.paydate &gt;= #paydateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="paydateEnd">
+	             t_outlaypay.paydate &lt;= #paydateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="famount">
+	             t_outlaypay.famount = #famount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="signin">
+	             t_outlaypay.signin = #signin#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lister">
+	             t_outlaypay.lister = #lister#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_outlaypay.fyear = #fyear#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fquarter">
+	             t_outlaypay.fquarter = #fquarter#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="mmanager">
+	             t_outlaypay.mmanager = #mmanager#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fmanager">
+	             t_outlaypay.fmanager = #fmanager#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gmanager">
+	             t_outlaypay.gmanager = #gmanager#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Outlaypay.findPage.and">
+			<isNotEmpty prepend="AND" property="payid">
+	             t_outlaypay.payid = #payid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="paydateBegin">
+	             t_outlaypay.paydate &gt;= #paydateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="paydateEnd">
+	             t_outlaypay.paydate &lt;= #paydateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="famount">
+	             t_outlaypay.famount = #famount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="signin">
+	             t_outlaypay.signin = #signin#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lister">
+	             t_outlaypay.lister = #lister#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fyear">
+	             t_outlaypay.fyear = #fyear#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fquarter">
+	             t_outlaypay.fquarter = #fquarter#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="mmanager">
+	             t_outlaypay.mmanager = #mmanager#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmanager">
+	             t_outlaypay.fmanager = #fmanager#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gmanager">
+	             t_outlaypay.gmanager = #gmanager#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Outlaypay.Entity" resultMap="RM.Outlaypay">
+    	SELECT 	<include refid="Outlaypay.columns"/> FROM t_outlaypay <include refid="Outlaypay.findPage.where"/>
+    </select>
+    
+    <select id="Outlaypay.findList" resultMap="RM.Outlaypay">
+    	SELECT 
+    		<include refid="Outlaypay.columns"/> 
+    	FROM 
+    		t_outlaypay
+		<include refid="Outlaypay.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Outlaypay.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_outlaypay
+    ]]>
+		<include refid="Outlaypay.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Outlaypay.findPage" resultMap="RM.Outlaypay">
+    	select <include refid="Outlaypay.columns"/>	    
+	        from t_outlaypay 	   
+		<include refid="Outlaypay.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Outlaypay.findPage" resultMap="RM.Outlaypay">
+    	select <include refid="Outlaypay.columns"/>	    
+	        from t_outlaypay where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       payid 
+	   not in(select $notTop$ 
+       payid 
+	   from t_outlaypay <include refid="Outlaypay.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Outlaypay.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	<select id="Outlaypay.select.table.data" resultMap="Outlaypay.for.table">
+    	SELECT 
+    		<include refid="Outlaypay.columns"/> ,adminsign.adminName signinName
+    	FROM 
+    		t_outlaypay
+    		left join t_admin adminsign on t_outlaypay.signin = adminsign.adminId 
+    		where 1=1
+		<include refid="Outlaypay.findPage.and"/>
+    </select>
+</sqlMap>

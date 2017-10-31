@@ -1,0 +1,202 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyGuide;
+import com.terrence.crm.dol.bean.AssemblyGuideItem;
+import com.terrence.crm.dol.query.AssemblyGuideQuery;
+import com.terrence.crm.dol.dao.IAssemblyGuideDao;
+import com.terrence.crm.dol.dao.IAssemblyGuideItemDao;
+import com.terrence.crm.dol.service.IAssemblyGuideService;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class AssemblyGuideService extends BaseService implements IAssemblyGuideService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyGuideService.class);
+	@Autowired
+	@Qualifier("assemblyGuideDao")
+	private IAssemblyGuideDao assemblyGuideDao;
+	@Autowired
+	@Qualifier("assemblyGuideItemDao")
+	private IAssemblyGuideItemDao assemblyGuideItemDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyGuide";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyGuide getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyGuideDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyGuide entity) throws ServiceException
+	{
+		assemblyGuideDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyGuide entity) throws ServiceException
+	{
+		Long adId = assemblyGuideDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyGuide entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyGuideDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyGuideDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyGuideDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyGuideQuery query = new AssemblyGuideQuery();
+		try {
+			return assemblyGuideDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyGuide> findPage(Page<AssemblyGuide> page, AssemblyGuideQuery query) throws ServiceException
+	{
+		return assemblyGuideDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyGuide> findPage(Page<AssemblyGuide> page,String statement, AssemblyGuideQuery query) throws ServiceException
+	{
+		return assemblyGuideDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuide> findList(AssemblyGuideQuery query) throws ServiceException
+	{
+		return assemblyGuideDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuide> findList(AssemblyGuideQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyGuideDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyGuide> findList(AssemblyGuideQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyGuideDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyGuide> findAllList() throws ServiceException
+	{
+		return assemblyGuideDao.findAllList();
+	}
+	@Override
+	public AssemblyGuide findData(Long assemblyGuideId) throws ServiceException {
+		AssemblyGuide guide = new AssemblyGuide();
+		guide.setGuideid(assemblyGuideId);
+		return assemblyGuideDao.findData(guide);
+	}
+	@Override
+	public void saveNewData(AssemblyGuide entity) throws ServiceException {
+		AssemblyGuide  aguide = new AssemblyGuide();
+		Long agid = 0l;
+		if(entity.getFexplain() != null){
+			aguide.setFexplain(entity.getFexplain());
+		}
+		if(entity.getGuidename() != null){
+			aguide.setGuidename(entity.getGuidename());
+		}
+		
+		aguide.setFversion(entity.getFversion());
+		aguide.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		if(entity.getGuideid() != null){
+			aguide.setGuideid(entity.getGuideid());
+			assemblyGuideDao.update("AssemblyGuide.update.data.to.new", aguide);
+		}else{
+			agid = assemblyGuideDao.save(aguide, "AssemblyGuide.insert.new.data");
+		}
+		
+		
+		List<Long> itemids = entity.getItemids();
+		List<String> itemnames = entity.getItemnames();
+		List<String> fexplains = entity.getFexplains();
+		
+		for(int sq=0;sq<itemnames.size();sq++){
+			AssemblyGuideItem agi = new AssemblyGuideItem();
+			if(entity.getGuideid() != null){
+				agi.setGuideid(entity.getGuideid());
+			}else{
+				agi.setGuideid(agid);
+			}
+			
+			if(itemnames.get(sq) != null && !itemnames.get(sq).equals("")){
+				System.out.println("=============="+itemnames.get(sq));
+				agi.setItemname(itemnames.get(sq));
+			}else{
+				break;
+			}
+			if(fexplains.get(sq)!=null){
+				agi.setFexplain(fexplains.get(sq));
+			}
+			if(itemids.get(sq)!=null){
+				agi.setItemid(itemids.get(sq));
+				assemblyGuideItemDao.update("AssemblyGuideItem.update.new.to.data", agi);
+			}else{
+				assemblyGuideItemDao.save(agi, "AssemblyGuideItem.insert.data.new");
+			}
+			
+		}
+		
+	}
+	@Override
+	public List<AssemblyGuide> findGuide(AssemblyGuideQuery assemblyGuideQuery)
+			throws ServiceException {
+		return assemblyGuideDao.findGuide(assemblyGuideQuery);
+	}
+	@Override
+	public void updateDel(List<Long> checkedIdList) throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		AssemblyGuide ag = new AssemblyGuide();
+		ag.setIsdel(1);//删除，改变状态
+		ag.setGuideids(delIds);
+		assemblyGuideDao.update("AssemblyGuide.delete.for.del.zhuangtai", ag);
+	}
+
+}

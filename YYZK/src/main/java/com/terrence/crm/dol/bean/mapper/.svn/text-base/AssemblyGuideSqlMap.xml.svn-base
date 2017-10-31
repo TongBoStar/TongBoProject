@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblyGuide">
+
+        
+	<resultMap id="RM.AssemblyGuide" class="com.terrence.crm.dol.bean.AssemblyGuide">
+        <result property="guideid" column="guideid"/>
+        <result property="guidename" column="guidename"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fexplain" column="fexplain"/>
+        <result property="fversion" column="fversion"/>
+        
+        <result property="isdel" column="isdel"/>
+    </resultMap>
+	
+	  
+	  
+	  <resultMap id="RM.AssemblyGuide.and.AssemblyGuideItem.data" class="com.terrence.crm.dol.bean.AssemblyGuide">
+        <result property="guideid" column="guideid"/>
+        <result property="guidename" column="guidename"/>
+        <result property="createdate" column="createdate"/>
+        <result property="fexplain" column="fexplain"/>
+        <result property="fversion" column="fversion"/>
+        
+         <result property="isdel" column="isdel"/>
+         
+        <result property="agitemList" column="guideid" select="AssemblyGuideItem.in.AssemblyGuide"/>
+    </resultMap>
+    
+    <resultMap id="AssemblyGuideItem.find.data.in.AssemblyGuide" class="com.terrence.crm.dol.bean.AssemblyGuideItem">
+        <result property="itemid" column="itemid"/>
+        <result property="guideid" column="guideid"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fexplain" column="fexplain"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblyGuide.columns">
+	    <![CDATA[
+        	t_assembly_guide.guideid ,
+        	t_assembly_guide.guidename ,
+        	t_assembly_guide.createdate ,
+        	t_assembly_guide.fexplain ,
+        	t_assembly_guide.fversion ,
+        	t_assembly_guide.isdel
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblyGuide.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_assembly_guide (
+        	guidename ,
+        	createdate ,
+        	fexplain ,
+        	fversion
+        ) VALUES (
+        	#guidename# ,
+        	#createdate# ,
+        	#fexplain# ,
+        	#fversion#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="guideid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    
+    <insert id="AssemblyGuide.insert.new.data" ><!-- 保存新数据 -->
+    
+        INSERT INTO
+        t_assembly_guide (createdate
+        	  <isNotEmpty prepend="," property="guidename">
+	        	guidename
+	        </isNotEmpty>
+	       
+	        <isNotEmpty prepend="," property="fexplain">
+	        	fexplain
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fversion">
+	        	fversion
+	        </isNotEmpty>
+        ) VALUES (#createdate# 
+        	<isNotEmpty prepend="," property="guidename">
+	        	#guidename# 
+	        </isNotEmpty>
+	      
+	        <isNotEmpty prepend="," property="fexplain">
+	        	#fexplain# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fversion">
+	        	#fversion# 
+	        </isNotEmpty>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="guideid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+
+	<update id="AssemblyGuide.update.data.to.new" parameterClass="com.terrence.crm.dol.bean.AssemblyGuide"> <!-- 更新数据 -->        
+        UPDATE t_assembly_guide 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="guidename">
+	        	guidename = #guidename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexplain">
+	        	fexplain = #fexplain# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fversion">
+	        	fversion = #fversion# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        guideid = #guideid# 
+    </update>
+
+
+	
+
+
+
+	<update id="AssemblyGuide.update" parameterClass="com.terrence.crm.dol.bean.AssemblyGuide">         
+        UPDATE t_assembly_guide 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="guidename">
+	        	guidename = #guidename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexplain">
+	        	fexplain = #fexplain# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="fversion">
+	        	fversion = #fversion# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        guideid = #guideid# 
+    </update>
+    
+    <update id="AssemblyGuide.delete.for.del.zhuangtai" parameterClass="com.terrence.crm.dol.bean.AssemblyGuide">  <!-- 删除数据时只改变状态，不删除数据 -->       
+        UPDATE t_assembly_guide 
+       	set isdel = #isdel#
+        WHERE 
+	        guideid in ($guideids$) 
+    </update>
+    
+	<delete id="AssemblyGuide.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_guide where
+       guideid = #guideid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblyGuide.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_guide 
+        WHERE
+       guideid in ($guideid$) 
+    ]]>
+    </delete>
+    
+    <select id="AssemblyGuide.getById" resultMap="RM.AssemblyGuide">
+	    select <include refid="AssemblyGuide.columns"/>
+	    
+	        from t_assembly_guide 
+	        where 
+		        guideid = #guideid# 
+	    
+    </select>
+    
+	<select id="AssemblyGuide.getByProperty" resultMap="RM.AssemblyGuide">
+		select <include refid="AssemblyGuide.columns"/> from t_assembly_guide where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblyGuide.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="guideid">
+	             t_assembly_guide.guideid = #guideid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="guidename">
+	             t_assembly_guide.guidename like ('%$guidename$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_assembly_guide.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_assembly_guide.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fexplain">
+	             t_assembly_guide.fexplain = #fexplain#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fversion">
+	             t_assembly_guide.fversion = #fversion#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblyGuide.findPage.and">
+			<isNotEmpty prepend="AND" property="guideid">
+	             t_assembly_guide.guideid = #guideid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="guidename">
+	             t_assembly_guide.guidename like ('%$guidename$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_assembly_guide.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_assembly_guide.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexplain">
+	             t_assembly_guide.fexplain = #fexplain#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fversion">
+	             t_assembly_guide.fversion = #fversion#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssemblyGuide.Entity" resultMap="RM.AssemblyGuide">
+    	SELECT 	<include refid="AssemblyGuide.columns"/> FROM t_assembly_guide <include refid="AssemblyGuide.findPage.where"/>
+    </select>
+    
+    <select id="AssemblyGuide.findList" resultMap="RM.AssemblyGuide">
+    	SELECT 
+    		<include refid="AssemblyGuide.columns"/> 
+    	FROM 
+    		t_assembly_guide
+		<include refid="AssemblyGuide.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssemblyGuide.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_guide
+    ]]>
+		<include refid="AssemblyGuide.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblyGuide.findPage" resultMap="RM.AssemblyGuide">
+    	select <include refid="AssemblyGuide.columns"/>	    
+	        from t_assembly_guide 	   
+		<include refid="AssemblyGuide.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblyGuide.findPage" resultMap="RM.AssemblyGuide">
+    	select <include refid="AssemblyGuide.columns"/>	    
+	        from t_assembly_guide where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       guideid 
+	   not in(select $notTop$ 
+       guideid 
+	   from t_assembly_guide <include refid="AssemblyGuide.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyGuide.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select> 
+    
+    <select id="AssemblyGuide.find.page.list.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_guide
+    ]]>
+    where 1=1 and isdel != 1
+		<include refid="AssemblyGuide.findPage.and"/>    
+    </select>
+    <select id="AssemblyGuide.find.page.list" resultMap="RM.AssemblyGuide">
+    	select <include refid="AssemblyGuide.columns"/>	    
+	        from t_assembly_guide where 1=1 and isdel != 1
+	   <isNotEmpty property="notTop">  and 
+       guideid 
+	   not in(select $notTop$ 
+       guideid 
+	   from t_assembly_guide where 1=1 and isdel != 1 <include refid="AssemblyGuide.findPage.and"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyGuide.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+	<select id="AssemblyGuide.find.detail.data" resultMap="RM.AssemblyGuide.and.AssemblyGuideItem.data"><!-- 编辑的查询 -->
+    	SELECT 
+    		<include refid="AssemblyGuide.columns"/> 
+    	FROM 
+    		t_assembly_guide
+		where guideid = #guideid#
+    </select>
+    
+    <select id="AssemblyGuideItem.in.AssemblyGuide" resultMap="AssemblyGuideItem.find.data.in.AssemblyGuide">
+	    select t_assembly_guide_item.itemid ,
+        	t_assembly_guide_item.guideid ,
+        	t_assembly_guide_item.itemname ,
+        	t_assembly_guide_item.fexplain 
+	    
+	        from t_assembly_guide_item 
+	        where 
+		        guideid = #guideid# 
+	    
+    </select>
+    
+    
+    
+    <select id="AssemblyGuide.find.use.guide" resultMap="RM.AssemblyGuide"><!-- 查询 -->
+	    select top 15 <include refid="AssemblyGuide.columns"/>
+	    
+	        from t_assembly_guide 
+	       <include refid="AssemblyGuide.findPage.where"/>   
+	    
+    </select>
+</sqlMap>

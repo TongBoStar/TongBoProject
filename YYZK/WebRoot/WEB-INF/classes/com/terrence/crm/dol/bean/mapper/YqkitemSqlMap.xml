@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yqkitem">
+
+<resultMap id="RM.Yqkitem" class="com.terrence.crm.dol.bean.Yqkitem">
+	<result property="id" column="id"/>
+	<result property="itemclassName" column="itemclassName"/>
+	<result property="parentId" column="parentId"/>
+	<result property="itemicon" column="itemicon"/>
+	<result property="flevel" column="flevel"/>
+	<result property="fdesc" column="fdesc"/>
+	<result property="parentName" column="parentName"/>
+	<result property="createUserId" column="createUserId"/>
+	<result property="createTime" column="createTime"/>
+	<result property="itemType" column="itemType"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yqkitem.columns">
+	<![CDATA[
+		t_yqkitem.id ,
+		t_yqkitem.itemclassName ,
+		t_yqkitem.parentId ,
+		t_yqkitem.itemicon ,
+		t_yqkitem.flevel ,
+		t_yqkitem.fdesc ,
+		t_yqkitem.createUserId ,
+		t_yqkitem.createTime ,
+		t_yqkitem.itemType 
+	]]>
+</sql>
+
+<insert id="Yqkitem.insert" >
+	<![CDATA[
+	INSERT INTO t_yqkitem (
+		itemclassName,
+		parentId,
+		itemicon,
+		flevel,
+		fdesc,
+		createUserId,
+		createTime,
+		itemType
+	) VALUES (
+		#itemclassName#,
+		#parentId#,
+		#itemicon#,
+		#flevel#,
+		#fdesc#,
+		#createUserId#,
+		#createTime#,
+		#itemType#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yqkitem.update" parameterClass="com.terrence.crm.dol.bean.Yqkitem"> 
+	UPDATE t_yqkitem 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="itemclassName">
+			itemclassName = #itemclassName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="parentId">
+			parentId = #parentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemicon">
+			itemicon = #itemicon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="flevel">
+			flevel = #flevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fdesc">
+			fdesc = #fdesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createUserId">
+			createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemType">
+			itemType = #itemType# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yqkitem.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yqkitem.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemclassName">
+			t_yqkitem.itemclassName = #itemclassName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="parentId">
+			t_yqkitem.parentId = #parentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemicon">
+			t_yqkitem.itemicon = #itemicon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="flevel">
+			t_yqkitem.flevel = #flevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fdesc">
+			t_yqkitem.fdesc = #fdesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createUserId">
+			t_yqkitem.createUserId = #createUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_yqkitem.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemType">
+			t_yqkitem.itemType = #itemType# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yqkitem.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yqkitem.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemclassName">
+		t_yqkitem.itemclassName = #itemclassName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="parentId">
+		t_yqkitem.parentId = #parentId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemicon">
+		t_yqkitem.itemicon = #itemicon# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="flevel">
+		t_yqkitem.flevel = #flevel# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fdesc">
+		t_yqkitem.fdesc = #fdesc# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createUserId">
+		t_yqkitem.createUserId = #createUserId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_yqkitem.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemType">
+		t_yqkitem.itemType = #itemType# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yqkitem.getById" resultMap="RM.Yqkitem">
+	select <include refid="Yqkitem.columns"/>  ,tmp1.itemclassName parentName 
+		from t_yqkitem 
+		left join t_yqkitem tmp1 on t_yqkitem.parentId = tmp1.id  where t_yqkitem.id=#id#
+</select>
+
+<select id="Yqkitem.getByProperty" resultMap="RM.Yqkitem">
+	select <include refid="Yqkitem.columns"/> from t_yqkitem where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yqkitem.delete">
+	<![CDATA[
+		DELETE FROM t_yqkitem WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yqkitem.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yqkitem WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yqkitem.findPage.count" resultClass="long">
+	select count(*) from t_yqkitem <include refid="Yqkitem.findPage.where"/>
+</select>
+
+<select id="Yqkitem.findPage" resultMap="RM.Yqkitem">
+	select <include refid="Yqkitem.columns"/> ,tmp1.itemclassName parentName 
+		from t_yqkitem 
+		left join t_yqkitem tmp1 on t_yqkitem.parentId = tmp1.id 
+	<include refid="Yqkitem.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yqkitem.findList" resultMap="RM.Yqkitem">
+	SELECT <include refid="Yqkitem.columns"/> ,tmp1.itemclassName parentName 
+		from t_yqkitem 
+		left join t_yqkitem tmp1 on t_yqkitem.parentId = tmp1.id 
+	<include refid="Yqkitem.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="YqkItem.find.unsync.android" resultMap="RM.Yqkitem">
+	SELECT <include refid="Yqkitem.columns"/> ,tmp1.itemclassName parentName 
+		from t_yqkitem 
+		left join t_yqkitem tmp1 on t_yqkitem.parentId = tmp1.id where t_yqkitem.id>#id# 
+</select>
+<select id="Yqkitem.findList.ids" resultMap="RM.Yqkitem">
+	SELECT <include refid="Yqkitem.columns"/> ,tmp1.itemclassName parentName 
+		from t_yqkitem 
+		left join t_yqkitem tmp1 on t_yqkitem.parentId = tmp1.id  where t_yqkitem.id in ($itemclassName$)
+</select>
+</sqlMap>

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Cdepartment;
+import com.terrence.crm.dol.dao.ICdepartmentDao;
+
+@Repository
+public class CdepartmentDao extends BaseIbatisDao<Cdepartment,java.lang.Long> implements ICdepartmentDao{
+
+		
+	public void saveOrUpdate(Cdepartment entity) {
+		if(entity.getDepartid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Cdepartment";
+	}
+	public Cdepartment getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Cdepartment)this.getSqlMapClientTemplate().queryForObject("Cdepartment.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,48 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CustomerScore;
+import com.terrence.crm.dol.dao.ICustomerScoreDao;
+
+@Repository
+public class CustomerScoreDao extends BaseIbatisDao<CustomerScore,java.lang.Long> implements ICustomerScoreDao{
+
+		
+	public void saveOrUpdate(CustomerScore entity) {
+		if(entity.getYscoreid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CustomerScore";
+	}
+	public CustomerScore getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CustomerScore)this.getSqlMapClientTemplate().queryForObject("CustomerScore.getByProperty", map);		
+	}
+
+	@Override
+	public List<Long> findByFinnerIdAndYear(String ids, int year) {
+		Map map=new HashMap();		
+		map.put("finnerid", ids);
+		map.put("fyear", year);
+		return this.getSqlMapClientTemplate().queryForList("CustomerScore.findByFinnerIdAndYear", map);
+	}
+
+}

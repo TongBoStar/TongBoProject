@@ -1,0 +1,71 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Seoutstockentry;
+import com.terrence.crm.dol.dao.ISeoutstockentryDao;
+import com.terrence.crm.dol.query.SeoutstockentryQuery;
+import com.terrence.crm.dol.service.ISeoutstockentryService;
+@Service
+@Transactional
+public class SeoutstockentryService extends BaseService implements ISeoutstockentryService {
+	@Autowired
+	@Qualifier("seoutstockentryDao")
+	private ISeoutstockentryDao seoutstockentryDao;
+	@Override
+	public Seoutstockentry getById(Long id) throws ServiceException {
+		return seoutstockentryDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(Seoutstockentry entity) throws ServiceException {
+		seoutstockentryDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(Seoutstockentry entity) throws ServiceException {
+		return seoutstockentryDao.save(entity);
+	}
+	@Override
+	public Integer update(Seoutstockentry entity) throws ServiceException {
+		return seoutstockentryDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return seoutstockentryDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = seoutstockentryDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<Seoutstockentry> findPage(Page<Seoutstockentry> page, SeoutstockentryQuery query) throws ServiceException{
+		return seoutstockentryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Seoutstockentry> findPage(Page<Seoutstockentry> page,String statement, SeoutstockentryQuery query) throws ServiceException{
+		return seoutstockentryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seoutstockentry> findList(SeoutstockentryQuery query) throws ServiceException{
+		return seoutstockentryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seoutstockentry> findList(SeoutstockentryQuery query,Integer pageSize) throws ServiceException{
+		return seoutstockentryDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Seoutstockentry> findList(SeoutstockentryQuery query,String statement,Integer pageSize) throws ServiceException{
+		return seoutstockentryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Seoutstockentry> findAllList() throws ServiceException{
+		return seoutstockentryDao.findAllList();
+	}
+}

@@ -1,0 +1,212 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.service.IOrderBomService;
+import com.terrence.crm.dol.utils.ConnectionUtilBom;
+
+@Service
+@Transactional
+public class OrderBomService extends BaseService implements IOrderBomService {
+	protected static Logger logger = LoggerFactory.getLogger(OrderBomService.class);
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "OrderBom";
+	}
+	@Transactional(readOnly=true)
+	public OrderBom getById(java.lang.Long id) throws ServiceException
+	{
+		return orderBomDao.getById(id);
+	}
+	
+	public void saveOrUpdate(OrderBom entity) throws ServiceException
+	{
+		orderBomDao.saveOrUpdate(entity);
+	}
+	public void syncToErp(OrderBomQuery query){
+		Connection conn = ConnectionUtilBom.getConnection();
+		String sql = "insert into Icbom ([FBrNo],[FInterID],[FBOMNumber],[FImpMode],[FUseStatus],[FVersion],[FParentID]"+
+				",[FItemID],[FQty],[FYield],[FCheckID],[FCheckDate],[FOperatorID],[FEnterTime],[FStatus]"+
+				",[FCancellation],[FTranType],[FRoutingID],[FBomType],[FCustID],[FCustItemID],[FAccessories]"+
+				",[FNote],[FUnitID],[FAUXQTY],[FCheckerID],[FAudDate],[FEcnInterID],[FBeenChecked],[FForbid]"+
+				",[FAuxPropID],[FPDMImportDate],[FBOMSkip] ,[FClassTypeID],[FUserID],[FUseDate])"+
+				"select 0,(icmaxnum.fmaxnum+1) fmaxnum,stuff(icbillno.fpreletter+'000000',6,4,fcurno+'') fbomnumber,0,1072,'',1146,ti.fitemid,1,100,null,'2016-03-30 00:00:00',"+
+				"null,'2016-03-30 00:00:00',1,0,50,0,0,0,0,0,'',tm.fmeasureUnitid,1.0,null,'2016-03-30 00:00:00',"+
+				"0,1,0,0,null,1059,1002522,null,null "+
+				"from t_icitem ti,t_MeasureUnit tm ,icmaxnum icmaxnum,"+
+				"icbillno icbillno "+
+				"where ti.fnumber='"+query.getItemcode()+"' and icbillno.fpreletter='BOM' and (tm.fname='个') "+
+				"and icmaxnum.ftablename='icbom'  ";
+		String sqldel = "delete from Icbom where FItemID=(select FItemID from t_ICItem where fnumber='"+query.getItemcode()+"')";
+		String sql1 = "update icmaxnum set fmaxnum=fmaxnum+1  where ftablename='icbom'";
+		String sql2 = "update icbillno set fcurno=fcurno+1 where fpreletter='BOM'";
+		String sql3 = "";
+		PreparedStatement ps = null;
+		try {
+			//将自动提交设置为false
+			conn.setAutoCommit(false);
+			//设置事务隔离级别
+			conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+			ps = conn.prepareStatement(sqldel);
+			ps.execute();
+			ps = conn.prepareStatement(sql);
+			ps.execute();
+			ps = conn.prepareStatement(sql1);
+			ps.execute();
+			ps = conn.prepareStatement(sql2);
+			ps.execute();
+			List<OrderBom> list = orderBomDao.findList(query);
+			int count = 1;
+			for(OrderBom or:list){
+				sql3 = "insert into IcbomChild ([FBrNo],[FEntryID],[FInterID],[FItemID],[FAuxQty],[FQty],[FScrap],[FOperSN]"+
+				",[FOperID],[FMachinePos],[FNote],[FMaterielType],[FMarshalType],[FPercent],[FBeginDay] ,[FEndDay],[FOffSetDay]"+
+				",[FBackFlush] ,[FStockID],[FSPID],[FSupply],[FUnitID],[FAuxPropID],[FPDMImportDate],[FPositionNo],[FItemSize]"+
+				",[FItemSuite],[FNote1],[FNote2],[FNote3] ,[FHasChar],[FDetailID],[FCostPercentage],[FEntrySelfZ0142])"+
+				"select 0,"+count+",icmaxnum.fmaxnum,ti.fitemid,"+or.getParentqty()+","+or.getParentqty()+",0.0000000000,0,0,'','',371,385,100.00,'2016-03-30 00:00:00',"+
+				"'2016-03-30 00:00:00',0,1059,0,0,0,tm.fmeasureUnitid,0,null,'','','','','','',0,newid(),0,null "+
+				"from t_icitem ti,t_MeasureUnit tm ,icmaxnum icmaxnum "+
+				"where ti.fnumber='"+or.getParentcode()+"' and tm.fname='"+or.getParentunitname()+"' and icmaxnum.ftablename='icbom'";
+				ps = conn.prepareStatement(sql3);
+				ps.execute();
+				count++;
+			}
+			conn.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				ps.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		//orderBomDao.saveToERP("OrderBom.saveToERP",query.getItemcode());
+	}
+	public java.lang.Long save(OrderBom entity) throws ServiceException
+	{
+		Long adId = orderBomDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(OrderBom entity) throws ServiceException
+	{
+		Integer returnValue =  orderBomDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = orderBomDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = orderBomDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrderBomQuery query = new OrderBomQuery();
+		try {
+			return orderBomDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<OrderBom> findPage(Page<OrderBom> page, OrderBomQuery query) throws ServiceException
+	{
+		return orderBomDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<OrderBom> findPage(Page<OrderBom> page,String statement, OrderBomQuery query) throws ServiceException
+	{
+		return orderBomDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderBom> findList(OrderBomQuery query) throws ServiceException
+	{
+		return orderBomDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderBom> findList(OrderBomQuery query,Integer pageSize) throws ServiceException
+	{
+		return orderBomDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<OrderBom> findList(OrderBomQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return orderBomDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderBom> findAllList() throws ServiceException
+	{
+		return orderBomDao.findAllList();
+	}
+	@Override
+	public List<OrderBom> findList(OrderBomQuery query, String statement)
+			throws ServiceException {
+		return orderBomDao.findList(statement, query);
+	}
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void saveOrCheck() throws ServiceException {
+		orderBomDao.checkOrderBom();
+	}
+	@Override
+	public Integer update(String statement, OrderBom entity)
+			throws ServiceException {
+		return orderBomDao.update(statement, entity);
+	}
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public Integer updateParentqty(String statement, OrderBom entity)
+			throws ServiceException {
+		return orderBomDao.update(statement, entity);
+	}
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void delete(String statement) throws ServiceException {
+		orderBomDao.deleteByMultipleId(statement, "");
+	}
+	
+}

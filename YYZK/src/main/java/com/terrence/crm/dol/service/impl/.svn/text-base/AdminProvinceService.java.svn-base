@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AdminProvince;
+import com.terrence.crm.dol.dao.IAdminProvinceDao;
+import com.terrence.crm.dol.query.AdminProvinceQuery;
+import com.terrence.crm.dol.service.IAdminProvinceService;
+
+@Service
+@Transactional
+public class AdminProvinceService extends BaseService implements IAdminProvinceService {
+	protected static Logger logger = LoggerFactory.getLogger(AdminProvinceService.class);
+	@Autowired
+	@Qualifier("adminProvinceDao")
+	private IAdminProvinceDao adminProvinceDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AdminProvince";
+	}
+	@Transactional(readOnly=true)
+	public AdminProvince getById(java.lang.Long id) throws ServiceException
+	{
+		return adminProvinceDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AdminProvince entity) throws ServiceException
+	{
+		adminProvinceDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AdminProvince entity) throws ServiceException
+	{
+		Long adId = adminProvinceDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AdminProvince entity) throws ServiceException
+	{
+		Integer returnValue =  adminProvinceDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = adminProvinceDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = adminProvinceDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AdminProvinceQuery query = new AdminProvinceQuery();
+		try {
+			return adminProvinceDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminProvince> findPage(Page<AdminProvince> page, AdminProvinceQuery query) throws ServiceException
+	{
+		return adminProvinceDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AdminProvince> findPage(Page<AdminProvince> page,String statement, AdminProvinceQuery query) throws ServiceException
+	{
+		return adminProvinceDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProvince> findList(AdminProvinceQuery query) throws ServiceException
+	{
+		return adminProvinceDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProvince> findList(AdminProvinceQuery query,Integer pageSize) throws ServiceException
+	{
+		return adminProvinceDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AdminProvince> findList(AdminProvinceQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return adminProvinceDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AdminProvince> findAllList() throws ServiceException
+	{
+		return adminProvinceDao.findAllList();
+	}
+
+}

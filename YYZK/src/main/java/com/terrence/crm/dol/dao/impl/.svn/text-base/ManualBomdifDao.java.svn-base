@@ -1,0 +1,29 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ManualBomdif;
+import com.terrence.crm.dol.dao.IManualBomdifDao;
+@Repository
+public class ManualBomdifDao extends BaseIbatisDao<ManualBomdif,java.lang.Long> implements IManualBomdifDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ManualBomdif"; 
+	}
+	public void saveOrUpdate(ManualBomdif entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public ManualBomdif getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ManualBomdif)this.getSqlMapClientTemplate().queryForObject("ManualBomdif.getByProperty", map);
+	}
+	@Override
+	public void deleteByDid(Long designassistId) throws Exception {
+		this.getSqlMapClientTemplate().delete("ManualBomdif.delete.designassistId", designassistId);
+	}
+}

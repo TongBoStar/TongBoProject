@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Seorder;
+import com.terrence.crm.dol.query.SeorderQuery;
+import com.terrence.crm.dol.dao.ISeorderDao;
+import com.terrence.crm.dol.service.ISeorderService;
+
+@Service
+@Transactional
+public class SeorderService extends BaseService implements ISeorderService {
+	protected static Logger logger = LoggerFactory.getLogger(SeorderService.class);
+	@Autowired
+	@Qualifier("seorderDao")
+	private ISeorderDao seorderDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Seorder";
+	}
+	@Transactional(readOnly=true)
+	public Seorder getById(java.lang.Long id) throws ServiceException
+	{
+		return seorderDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Seorder entity) throws ServiceException
+	{
+		seorderDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Seorder entity) throws ServiceException
+	{
+		Long adId = seorderDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Seorder entity) throws ServiceException
+	{
+		Integer returnValue =  seorderDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = seorderDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = seorderDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SeorderQuery query = new SeorderQuery();
+		try {
+			return seorderDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Seorder> findPage(Page<Seorder> page, SeorderQuery query) throws ServiceException
+	{
+		return seorderDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Seorder> findPage(Page<Seorder> page,String statement, SeorderQuery query) throws ServiceException
+	{
+		return seorderDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorder> findList(SeorderQuery query) throws ServiceException
+	{
+		return seorderDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorder> findList(SeorderQuery query,Integer pageSize) throws ServiceException
+	{
+		return seorderDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Seorder> findList(SeorderQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return seorderDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorder> findAllList() throws ServiceException
+	{
+		return seorderDao.findAllList();
+	}
+
+}

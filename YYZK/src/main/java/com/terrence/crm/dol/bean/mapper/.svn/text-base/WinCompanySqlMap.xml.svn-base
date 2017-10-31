@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WinCompany">
+
+        
+	<resultMap id="RM.WinCompany" class="com.terrence.crm.dol.bean.WinCompany">
+        <result property="winid" column="winid"/>
+        <result property="pmid" column="pmid"/>
+        <result property="competitorid" column="competitorid"/>
+        <result property="sectionid" column="sectionid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="WinCompany.columns">
+	    <![CDATA[
+        	t_win_company.winid ,
+        	t_win_company.pmid ,
+        	t_win_company.competitorid, 
+        	t_win_company.sectionid 
+	    ]]>
+	</sql>
+	
+   <insert id="WinCompany.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_win_company (
+        	pmid ,
+        	competitorid ,
+        	sectionid
+        ) VALUES (
+        	#pmid# ,
+        	#competitorid# ,
+        	#sectionid#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="winid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="WinCompany.update" parameterClass="com.terrence.crm.dol.bean.WinCompany">         
+        UPDATE t_win_company 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="pmid">
+	        	pmid = #pmid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="competitorid">
+	        	competitorid = #competitorid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="sectionid">
+	        	sectionid = #sectionid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        winid = #winid# 
+    </update>
+    
+	<delete id="WinCompany.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_win_company where
+       winid = #winid# 
+    ]]>
+    </delete>
+    
+    <delete id="WinCompany.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_win_company 
+        WHERE
+       winid in ($winid$) 
+    ]]>
+    </delete>
+    <delete id="WinCompany.deleteByPmId">
+    <![CDATA[
+        DELETE FROM 
+        	t_win_company 
+        WHERE
+       pmid =#pmid# 
+    ]]>
+    </delete>
+    <delete id="WinCompany.deleteBySectionId">
+    <![CDATA[
+        DELETE FROM 
+        	t_win_company 
+        WHERE
+       pmid =#pmid# 
+    ]]>
+    </delete>
+    
+    
+    <select id="WinCompany.getById" resultMap="RM.WinCompany">
+	    select <include refid="WinCompany.columns"/>
+	    
+	        from t_win_company 
+	        where 
+		        winid = #winid# 
+	    
+    </select>
+    
+	<select id="WinCompany.getByProperty" resultMap="RM.WinCompany">
+		select <include refid="WinCompany.columns"/> from t_win_company where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="WinCompany.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="winid">
+	             t_win_company.winid = #winid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pmid">
+	             t_win_company.pmid = #pmid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_win_company.competitorid = #competitorid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sectionid">
+	             t_win_company.sectionid = #sectionid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="WinCompany.findPage.and">
+			<isNotEmpty prepend="AND" property="winid">
+	             t_win_company.winid = #winid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pmid">
+	             t_win_company.pmid = #pmid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_win_company.competitorid = #competitorid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sectionid">
+	             t_win_company.sectionid = #sectionid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="WinCompany.Entity" resultMap="RM.WinCompany">
+    	SELECT 	<include refid="WinCompany.columns"/> FROM t_win_company <include refid="WinCompany.findPage.where"/>
+    </select>
+    
+    <select id="WinCompany.findList" resultMap="RM.WinCompany">
+    	SELECT 
+    		<include refid="WinCompany.columns"/> 
+    	FROM 
+    		t_win_company
+		<include refid="WinCompany.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="WinCompany.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_win_company
+    ]]>
+		<include refid="WinCompany.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.WinCompany.findPage" resultMap="RM.WinCompany">
+    	select <include refid="WinCompany.columns"/>	    
+	        from t_win_company 	   
+		<include refid="WinCompany.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="WinCompany.findPage" resultMap="RM.WinCompany">
+    	select <include refid="WinCompany.columns"/>	    
+	        from t_win_company where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       winid 
+	   not in(select $notTop$ 
+       winid 
+	   from t_win_company <include refid="WinCompany.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="WinCompany.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

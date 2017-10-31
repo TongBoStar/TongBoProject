@@ -1,0 +1,253 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Pdbase;
+import com.terrence.crm.dol.query.PdbaseQuery;
+import com.terrence.crm.dol.dao.IPdbaseDao;
+import com.terrence.crm.dol.service.IPdbaseService;
+
+@Service
+@Transactional
+public class PdbaseService extends BaseService implements IPdbaseService {
+	protected static Logger logger = LoggerFactory.getLogger(PdbaseService.class);
+	@Autowired
+	@Qualifier("pdbaseDao")
+	private IPdbaseDao pdbaseDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Pdbase";
+	}
+	@Transactional(readOnly=true)
+	public Pdbase getById(java.lang.Long id) throws ServiceException
+	{
+		return pdbaseDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Pdbase entity) throws ServiceException
+	{
+		pdbaseDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Pdbase entity) throws ServiceException
+	{
+		Long adId = pdbaseDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Pdbase entity) throws ServiceException
+	{
+		Integer returnValue =  pdbaseDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdbaseDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdbaseDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdbaseQuery query = new PdbaseQuery();
+		try {
+			return pdbaseDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Pdbase> findPage(Page<Pdbase> page, PdbaseQuery query) throws ServiceException
+	{
+		return pdbaseDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Pdbase> findPage(Page<Pdbase> page,String statement, PdbaseQuery query) throws ServiceException
+	{
+		return pdbaseDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdbase> findList(PdbaseQuery query) throws ServiceException
+	{
+		return pdbaseDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdbase> findList(PdbaseQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdbaseDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Pdbase> findList(PdbaseQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdbaseDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Pdbase> findAllList() throws ServiceException
+	{
+		return pdbaseDao.findAllList();
+	}
+	@Override
+	public Pdbase findEntity(PdbaseQuery pdbaseQuery) throws ServiceException {
+		return pdbaseDao.findEntity(pdbaseQuery);
+	}
+	@Override
+	public List<Pdbase> findJieSuan(PdbaseQuery pdbaseQuery)
+			throws ServiceException {
+		return pdbaseDao.findJieSuan(pdbaseQuery);
+	}
+	@Override
+	public void saveNew(Pdbase entity) throws ServiceException {
+		/*String[] str = entity.getSalestypename().split(",");
+		if(entity.getPdbaseid() == null){ 
+			for(int sq=0;sq<str.length;sq++){
+				entity.setSalestypename(str[sq].trim());
+				save(entity);
+			}
+		}else{ 
+			update(entity);
+		}*/
+		if(entity!=null){
+			//更新方法
+			if(entity.getPdbaseid() != null&&entity.getPdbaseid()!=0){ 
+				update(entity);
+			}else{
+				
+				if(entity.getFyear()!=null&&!"".equals(entity.getFyear().trim())){
+					saveOne(entity);
+				}else{
+					//批量更新
+					List<java.lang.String> fyears = entity.getFyears();
+					List<java.lang.String> salestypenames = entity.getSalestypenames();
+					List<java.lang.Long> adminIds= entity.getAdminIds();
+					List<java.lang.Integer> flevels= entity.getFlevels();
+					List<Double> minamounts= entity.getMinamounts();
+					List<Double> maxamounts= entity.getMaxamounts();
+					List<Double> pocs= entity.getPocs();
+					List<Double> rewardss= entity.getRewardss();
+					List<Double> overratio1s= entity.getOverratio1s();
+					List<Double> backratios= entity.getBackratios();
+					List<Double> blanckratios= entity.getBlanckratios();
+					List<Double> remainratios= entity.getRemainratios();
+					List<Double> pratios= entity.getPratios();
+					List<Double> pmanagerratios= entity.getPmanagerratios();
+					List<Double> prebonuss= entity.getPrebonuss();
+					List<Double> fullbonuss= entity.getFullbonuss();
+					List<java.lang.Integer> frestricts= entity.getFrestricts();
+					List<Double> pmsalesratios= entity.getPmsalesratios();
+					List<Double> companyratios= entity.getCompanyratios();
+					List<Double> fbases = entity.getFbases();
+					List<Double> kpiss = entity.getKpiss();
+					
+					List<Double> pl3000s = entity.getPl3000s();
+					List<Double> pl4200s = entity.getPl4200s();
+					List<Double> ssv3500s = entity.getSsv3500s(); 
+					List<Double> pl2000s = entity.getPl2000s();
+					List<Double> bratios = entity.getBratios();
+					List<Double> allkpratios = entity.getAllkpratios();
+					//循环保存
+					for(int i=0;i<fyears.size();i++){
+						if(fyears.get(i)!=null&&!"".equals(fyears.get(i).trim())){
+							Pdbase psbase = new Pdbase();
+							//业绩年fyear 产品类别  salestypename(select)  销售员adminId(下拉div)  基数档flevel  下限基数金额minamount  上限基数金额maxamount  业务费比例poc
+							//超额奖基数fbase  销售签约指标kpis  业绩奖励比例 rewards 超额奖比例overratio1  单笔合同额回款比例backratio   单笔回款结算比例blanckratio
+							//全额回款剩余结算比例remainratio  个人比例pratio    销售经理比例pmsalesratio    公司比例 companyratio	区域经理比例pmanagerratio
+							//LNG收到预付款奖励prebonus 	LNG全额回款奖励fullbonus	 LNG奖励限定台数frestrict
+							psbase.setFyear(fyears.get(i));
+							psbase.setSalestypename(salestypenames.get(i));
+							psbase.setAdminId(adminIds.get(i));
+							psbase.setFlevel(flevels.get(i));
+							psbase.setMinamount(minamounts.get(i));
+							psbase.setMaxamount(maxamounts.get(i));
+							psbase.setPoc(pocs.get(i));
+							
+							psbase.setFbase(fbases.get(i));
+							psbase.setKpis(kpiss.get(i));
+							psbase.setRewards(rewardss.get(i));
+							psbase.setOverratio1(overratio1s.get(i));
+							psbase.setBackratio(backratios.get(i));
+							psbase.setBlanckratio(blanckratios.get(i));
+							psbase.setAllkpratio(allkpratios.get(i));
+							psbase.setRemainratio(remainratios.get(i));
+							psbase.setPratio(pratios.get(i));
+							psbase.setPmsalesratio(pmsalesratios.get(i));
+							psbase.setCompanyratio(companyratios.get(i));
+							psbase.setPmanagerratio(pmanagerratios.get(i));
+							
+							psbase.setPrebonus(prebonuss.get(i));
+							psbase.setFullbonus(fullbonuss.get(i));
+							psbase.setFrestrict(frestricts.get(i));
+							if(pl3000s!=null&&pl3000s.size()>0&&pl3000s.get(i)!=null){
+								psbase.setPl3000(pl3000s.get(i));
+							}
+							if(pl4200s!=null&&pl4200s.size()>0&&pl4200s.get(i)!=null){
+								psbase.setPl4200(pl4200s.get(i));
+							}
+							if(ssv3500s!=null&&ssv3500s.size()>0&&ssv3500s.get(i)!=null){
+								psbase.setSsv3500(ssv3500s.get(i));
+							}
+							if(pl2000s!=null&&pl2000s.size()>0&&pl2000s.get(i)!=null){
+								psbase.setPl2000(pl2000s.get(i));
+							}
+							if(bratios!=null&&bratios.size()>0&&bratios.get(i)!=null){
+								psbase.setBratio(bratios.get(i));
+							}
+							saveOne(psbase);
+						}
+					}
+				}
+			}
+		}
+	}
+	public void saveOne(Pdbase entity) throws ServiceException{
+		//单个新增
+		String[] str;
+		if(entity.getSalestypename()!=null&&!"".equals(entity.getSalestypename().trim())&&entity.getSalestypename().contains(",")){
+			str = entity.getSalestypename().split(",");
+		}else{
+			str =entity.getSalestypename()==null?new String[]{""}:new String[]{entity.getSalestypename()};
+		}
+		if(str.length!=0){
+			for(int sq=0;sq<str.length;sq++){
+				entity.setSalestypename(str[sq].trim());
+				save(entity);
+			}
+		}else{
+			entity.setSalestypename("");
+			save(entity);
+		}
+	}
+}

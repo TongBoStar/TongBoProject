@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WebItemCore">
+
+        
+	<resultMap id="RM.WebItemCore" class="com.terrence.crm.dol.bean.WebItemCore">
+        <result property="id" column="id"/>
+        <result property="helpCode" column="helpCode"/>
+        <result property="orderPrice" column="orderPrice"/>
+        <result property="aracctId" column="aracctId"/>
+        <result property="interId" column="interId"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="WebItemCore.columns">
+	    <![CDATA[
+        	t_web_itemCore.id ,
+        	t_web_itemCore.helpCode ,
+        	t_web_itemCore.orderPrice ,
+        	t_web_itemCore.aracctId ,
+        	t_web_itemCore.interId 
+	    ]]>
+	</sql>
+	
+   <insert id="WebItemCore.insert1" >
+   		<!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+        
+        INSERT INTO
+        t_web_itemCore (
+        	interId 
+        	<dynamic prepend="">
+	        	 <isNotEmpty prepend="," property="helpCode">
+		        	helpCode
+		        </isNotEmpty>	 
+		        <isNotEmpty prepend="," property="orderPrice">
+		        	orderPrice
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="aracctId">
+		        	aracctId
+		        </isNotEmpty>
+		   </dynamic>
+        	
+        ) VALUES (
+        	#interId#
+        	<dynamic prepend="">
+        	    <isNotEmpty prepend="," property="helpCode">
+		        	 #helpCode#
+		        </isNotEmpty>
+	        	 <isNotEmpty prepend="," property="orderPrice">
+		        	 #orderPrice#
+		        </isNotEmpty>
+		       
+		        <isNotEmpty prepend="," property="aracctId">
+		        	 #aracctId#
+		        </isNotEmpty>
+          </dynamic>
+        	 
+        )
+    
+    </insert>
+
+	<update id="WebItemCore.update" parameterClass="com.terrence.crm.dol.bean.WebItemCore">         
+        UPDATE t_web_itemCore 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="helpCode">
+	        	helpCode = #helpCode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="orderPrice">
+	        	orderPrice = #orderPrice# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="aracctId">
+	        	aracctId = #aracctId# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="interId">
+	        	interId = #interId# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="WebItemCore.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_web_itemCore where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="WebItemCore.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_web_itemCore 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="WebItemCore.getById" resultMap="RM.WebItemCore">
+	    select <include refid="WebItemCore.columns"/>
+	    
+	        from t_web_itemCore 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="WebItemCore.getByProperty" resultMap="RM.WebItemCore">
+		select <include refid="WebItemCore.columns"/> from t_web_itemCore where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="WebItemCore.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_web_itemCore.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="helpCode">
+	             t_web_itemCore.helpCode = #helpCode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="orderPrice">
+	             t_web_itemCore.orderPrice = #orderPrice#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="aracctId">
+	             t_web_itemCore.aracctId = #aracctId#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="interId">
+	             t_web_itemCore.interId = #interId#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="WebItemCore.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_web_itemCore.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="helpCode">
+	             t_web_itemCore.helpCode = #helpCode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="orderPrice">
+	             t_web_itemCore.orderPrice = #orderPrice#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="aracctId">
+	             t_web_itemCore.aracctId = #aracctId#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="interId">
+	             t_web_itemCore.interId = #interId#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="WebItemCore.Entity" resultMap="RM.WebItemCore">
+    	SELECT 	<include refid="WebItemCore.columns"/> FROM t_web_itemCore <include refid="WebItemCore.findPage.where"/>
+    </select>
+    
+    <select id="WebItemCore.findList" resultMap="RM.WebItemCore">
+    	SELECT 
+    		<include refid="WebItemCore.columns"/> 
+    	FROM 
+    		t_web_itemCore
+		<include refid="WebItemCore.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="WebItemCore.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_web_itemCore
+    ]]>
+		<include refid="WebItemCore.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.WebItemCore.findPage" resultMap="RM.WebItemCore">
+    	select <include refid="WebItemCore.columns"/>	    
+	        from t_web_itemCore 	   
+		<include refid="WebItemCore.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="WebItemCore.findPage" resultMap="RM.WebItemCore">
+    	select <include refid="WebItemCore.columns"/>	    
+	        from t_web_itemCore where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_web_itemCore <include refid="WebItemCore.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="WebItemCore.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

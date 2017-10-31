@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Salestype;
+import com.terrence.crm.dol.dao.ISalestypeDao;
+
+@Repository
+public class SalestypeDao extends BaseIbatisDao<Salestype,java.lang.Long> implements ISalestypeDao{
+
+		
+	public void saveOrUpdate(Salestype entity) {
+		if(entity.getSalestypeid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Salestype";
+	}
+	public Salestype getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Salestype)this.getSqlMapClientTemplate().queryForObject("Salestype.getByProperty", map);		
+	}
+
+	@Override
+	public void findSalestypeData() {
+		this.getSqlMapClientTemplate().queryForObject("Salestype.tongBu.ERP.data");
+	}
+
+}

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BollsSum;
+import com.terrence.crm.dol.query.BollsSumQuery;
+import com.terrence.crm.dol.dao.IBollsSumDao;
+import com.terrence.crm.dol.service.IBollsSumService;
+
+@Service
+@Transactional
+public class BollsSumService extends BaseService implements IBollsSumService {
+	protected static Logger logger = LoggerFactory.getLogger(BollsSumService.class);
+	@Autowired
+	@Qualifier("bollsSumDao")
+	private IBollsSumDao bollsSumDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "BollsSum";
+	}
+	@Transactional(readOnly=true)
+	public BollsSum getById(java.lang.Long id) throws ServiceException
+	{
+		return bollsSumDao.getById(id);
+	}
+	
+	public void saveOrUpdate(BollsSum entity) throws ServiceException
+	{
+		bollsSumDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(BollsSum entity) throws ServiceException
+	{
+		Long adId = bollsSumDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(BollsSum entity) throws ServiceException
+	{
+		Integer returnValue =  bollsSumDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = bollsSumDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = bollsSumDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BollsSumQuery query = new BollsSumQuery();
+		try {
+			return bollsSumDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<BollsSum> findPage(Page<BollsSum> page, BollsSumQuery query) throws ServiceException
+	{
+		return bollsSumDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<BollsSum> findPage(Page<BollsSum> page,String statement, BollsSumQuery query) throws ServiceException
+	{
+		return bollsSumDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BollsSum> findList(BollsSumQuery query) throws ServiceException
+	{
+		return bollsSumDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BollsSum> findList(BollsSumQuery query,Integer pageSize) throws ServiceException
+	{
+		return bollsSumDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<BollsSum> findList(BollsSumQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return bollsSumDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BollsSum> findAllList() throws ServiceException
+	{
+		return bollsSumDao.findAllList();
+	}
+
+}

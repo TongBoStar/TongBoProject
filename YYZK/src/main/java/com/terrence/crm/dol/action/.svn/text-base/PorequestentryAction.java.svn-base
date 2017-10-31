@@ -1,0 +1,888 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.query.DepartmentQuery;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+import com.terrence.crm.dol.service.IDepartmentService;
+import com.terrence.crm.dol.service.IPorequestentryService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/porequestentry")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "porequestentry." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PorequestentryAction extends CrudActionSupport<Porequestentry>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("porequestentryService")
+	private IPorequestentryService porequestentryService;
+	
+	@Autowired
+	@Qualifier("departmentService")
+	private IDepartmentService departmentService;
+	
+	private Porequestentry entity;
+
+	private PorequestentryQuery porequestentryQuery;
+	
+	
+	private java.lang.Long porequestentryId;
+	
+	/** 分页器 */
+	private Page<Porequestentry> page = new Page<Porequestentry>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+
+	private String teamidsList;
+
+	
+	private ApplicationContext ctx;
+	
+	private List<Porequestentry> porequestentryList;
+
+	private List<Integer> adminList;
+	private List<Long> listAdmin;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (porequestentryId != null ) {
+			entity = porequestentryService.getById(porequestentryId);
+		} else {
+			entity = new Porequestentry();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			porequestentryService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		try {
+			porequestentryList = porequestentryService.findList(porequestentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("porequestentryId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		try {
+			page = porequestentryService.findPage(page, porequestentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			porequestentryService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = porequestentryService.getById(porequestentryId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			porequestentryList = porequestentryService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public void prepareSaveNewPo() throws Exception{
+		prepareModel();
+	}
+	/**
+	 * 保存盘盈单据数据
+	 * @return
+	 * @throws Exception
+	 */
+	/*public String saveProfitInfo() throws Exception {
+		try {
+			entity= plsheetService.saveProfitInfo(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}*/
+	public String saveNewPo() throws Exception {//保存采购申请单明细
+		
+		try {
+//			if(null!=entity.getFlag()&&1==entity.getFlag()){
+//				entity.setFlag(1);
+//				entity= plsheetService.saveProfitInfo(entity);
+//			}
+//			else if(null!=entity.getFlag()&&2==entity.getFlag()){
+//				entity.setFlag(2);
+//				entity= plsheetService.saveProfitInfo(entity);
+//			}
+//			else if(null==entity.getFlag()){
+//				entity= porequestentryService.saveNewPo(entity);
+//			}
+			entity= porequestentryService.saveNewPo(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	public String listToPOAll()throws Exception//查看订单明细
+	{
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		try {
+			porequestentryList = porequestentryService.findlistToPOAll(porequestentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateforPQ() throws Exception{
+		prepareModel();
+	}
+	public String updateforPQ()throws Exception//行关闭操作
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+			porequestentryService.updateforPQ(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateforPoDetail() throws Exception{
+		prepareModel();
+	}
+	public String updateforPoDetail()throws Exception//下推操作
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+			Porequestentry porequestentry=new Porequestentry();
+			porequestentry.setIspush(1);//1、已下推 0、未下推
+			porequestentryService.updateforPoDetail(checkedIdList,porequestentry);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	public String listtable() throws Exception {//2013-11-20采购申请单列表
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		
+		try {
+			
+			
+			if(null!=porequestentryQuery.getDeptid()){
+				
+				teamidsList=porequestentryQuery.getDeptid()+",";
+				teamlist(porequestentryQuery.getDeptid().longValue());
+				teamidsList=teamidsList.substring(0,(teamidsList.length()-1));
+				porequestentryQuery.setTidlist(teamidsList);
+			}
+	
+			
+			page = porequestentryService.findPage(page, "Po.findPage.PQ.list", porequestentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public String listtablechecked() throws Exception {//待审采购申请单列表==========================================
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		try {
+			
+			/*排产根据等级查询信息，这边不按这个，权限做好，到时候加权限
+			if(SpringSecurityUtils.getCurrentType() != 1){//不是管理员的只看本部门的
+			int level = SpringSecurityUtils.getCurrentUserFlevel();//当前登录人等级
+			List<Long> list = new ArrayList<Long>();
+			
+			if(adminList != null){
+				if(adminList.size()>0){
+					for(int t = 0;t<adminList.size();t++){
+						if(adminList.get(t) != null){
+							if(adminList.get(t) < level || adminList.get(t) == level){
+								list.add(listAdmin.get(t).longValue());
+							
+							}
+						}
+						
+					}
+					String Ids = StringUtils.join(list, ",");
+					porequestentryQuery.setFbillerids(Ids);
+				}
+			}
+		
+			
+			
+			
+		}
+			*/
+			
+				if(null!=porequestentryQuery.getDeptid()){
+					
+					teamidsList=porequestentryQuery.getDeptid()+",";
+					teamlist(porequestentryQuery.getDeptid().longValue());
+					teamidsList=teamidsList.substring(0,(teamidsList.length()-1));
+					//porequestentryQuery.setTidlist(teamidsList);
+				}
+				porequestentryQuery.setDeptid(null);
+			
+		
+				 page = porequestentryService.findPage(page, "Po.findPage.PQ.list", porequestentryQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	private void teamlist(Long teamid) {
+
+		DepartmentQuery tQuery=new DepartmentQuery();
+		tQuery.setTeamsuperior(teamid);
+		
+		List<Department> list=new ArrayList<Department>();
+		list=departmentService.findList(tQuery);
+		if(list.size()>0)
+		{
+				for(Department t:list)
+				{
+					teamidsList+=t.getTeamid()+",";
+					teamlist(t.getTeamid());
+				}
+		}
+	}
+	
+	
+	public String listtablefbillerid() throws Exception {//未提交的申请单=========================
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("poId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestentryQuery == null) {
+			porequestentryQuery = new PorequestentryQuery();
+		}
+		
+		
+		try {
+			
+			porequestentryQuery.setFbillerid(SpringSecurityUtils.getCurrentUserId());//登陆人ID
+			page = porequestentryService.findPage(page, "Po.findPage.PQ.list", porequestentryQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String findListpush()throws Exception//查询是否已经下推
+	{
+		
+		try {
+			porequestentryList = porequestentryService.findListpush(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String deleteToDetail() throws Exception {//申请列表删除
+			
+			try {
+				porequestentryService.deleteToDetail(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				
+			
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+				
+				
+			}
+			return JSON;
+		}
+	
+	public String findListorder()throws Exception//下推时查询，订单明细
+	{
+		
+		try {
+			porequestentryList = porequestentryService.findListorder(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	
+	
+	
+	public void prepareUpdatestatus() throws Exception{
+		prepareModel();
+	}
+	public String updatestatus()throws Exception//订单删除数据时，修改状态
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+			porequestentryService.updatestatus(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	public String unauditCheck()throws Exception//反审时检查是否有下推项
+	{
+		
+		try {
+			porequestentryList = porequestentryService.findunauditCheck(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Porequestentry getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PorequestentryQuery getPorequestentryQuery() {
+		return porequestentryQuery;
+	}
+
+	
+	public void setPorequestentryQuery(PorequestentryQuery porequestentryQuery) {
+		this.porequestentryQuery = porequestentryQuery;
+	}
+
+	public void setPorequestentryId(java.lang.Long porequestentryId) {
+		this.porequestentryId = porequestentryId;
+	}
+	
+	
+	public java.lang.Long getPorequestentryId() {
+		return this.porequestentryId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Porequestentry> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Porequestentry> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Porequestentry> getPorequestentryList() {
+		return porequestentryList;
+	}
+
+	public List<Integer> getAdminList() {
+		return adminList;
+	}
+
+	public void setAdminList(List<Integer> adminList) {
+		this.adminList = adminList;
+	}
+
+	public List<Long> getListAdmin() {
+		return listAdmin;
+	}
+
+	public void setListAdmin(List<Long> listAdmin) {
+		this.listAdmin = listAdmin;
+	}
+
+	public String listItemcodeSum()throws Exception
+	{
+		try {
+			porequestentryList = porequestentryService.findItemcodeSum(porequestentryQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+		
+	
+}

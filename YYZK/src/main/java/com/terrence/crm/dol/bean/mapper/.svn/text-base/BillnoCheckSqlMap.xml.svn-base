@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="BillnoCheck">
+
+        
+	<resultMap id="RM.BillnoCheck" class="com.terrence.crm.dol.bean.BillnoCheck">
+        <result property="billid" column="billid"/>
+        <result property="templateid" column="templateid"/>
+        <result property="empid" column="empid"/>
+        <result property="amount" column="amount"/>
+        <result property="levels" column="levels"/>
+        <result property="pbillid" column="pbillid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="BillnoCheck.columns">
+	    <![CDATA[
+        	t_billno_check.billid ,
+        	t_billno_check.templateid ,
+        	t_billno_check.empid ,
+        	t_billno_check.amount ,
+        	t_billno_check.levels ,
+        	t_billno_check.pbillid 
+	    ]]>
+	</sql>
+	
+   <insert id="BillnoCheck.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_billno_check (
+        	templateid ,
+        	empid ,
+        	amount ,
+        	levels ,
+        	pbillid 
+        ) VALUES (
+        	#templateid# ,
+        	#empid# ,
+        	#amount# ,
+        	#levels# ,
+        	#pbillid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="billid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="BillnoCheck.update" parameterClass="com.terrence.crm.dol.bean.BillnoCheck">         
+        UPDATE t_billno_check 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="templateid">
+	        	templateid = #templateid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="levels">
+	        	levels = #levels# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="pbillid">
+	        	pbillid = #pbillid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        billid = #billid# 
+    </update>
+    
+	<delete id="BillnoCheck.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_billno_check where
+       billid = #billid# 
+    ]]>
+    </delete>
+    
+    <delete id="BillnoCheck.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_billno_check 
+        WHERE
+       billid in ($billid$) 
+    ]]>
+    </delete>
+    
+    <select id="BillnoCheck.getById" resultMap="RM.BillnoCheck">
+	    select <include refid="BillnoCheck.columns"/>
+	    
+	        from t_billno_check 
+	        where 
+		        billid = #billid# 
+	    
+    </select>
+    
+	<select id="BillnoCheck.getByProperty" resultMap="RM.BillnoCheck">
+		select <include refid="BillnoCheck.columns"/> from t_billno_check where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="BillnoCheck.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="billid">
+	             t_billno_check.billid = #billid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_billno_check.templateid = #templateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_billno_check.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_billno_check.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_billno_check.levels = #levels#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pbillid">
+	             t_billno_check.pbillid = #pbillid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="BillnoCheck.findPage.and">
+			<isNotEmpty prepend="AND" property="billid">
+	             t_billno_check.billid = #billid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_billno_check.templateid = #templateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_billno_check.empid = #empid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_billno_check.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="levels">
+	             t_billno_check.levels = #levels#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pbillid">
+	             t_billno_check.pbillid = #pbillid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="BillnoCheck.Entity" resultMap="RM.BillnoCheck">
+    	SELECT 	<include refid="BillnoCheck.columns"/> FROM t_billno_check <include refid="BillnoCheck.findPage.where"/>
+    </select>
+    
+    <select id="BillnoCheck.findList" resultMap="RM.BillnoCheck">
+    	SELECT 
+    		<include refid="BillnoCheck.columns"/> 
+    	FROM 
+    		t_billno_check
+		<include refid="BillnoCheck.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="BillnoCheck.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_billno_check
+    ]]>
+		<include refid="BillnoCheck.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.BillnoCheck.findPage" resultMap="RM.BillnoCheck">
+    	select <include refid="BillnoCheck.columns"/>	    
+	        from t_billno_check 	   
+		<include refid="BillnoCheck.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="BillnoCheck.findPage" resultMap="RM.BillnoCheck">
+    	select <include refid="BillnoCheck.columns"/>	    
+	        from t_billno_check where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       billid 
+	   not in(select $notTop$ 
+       billid 
+	   from t_billno_check <include refid="BillnoCheck.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="BillnoCheck.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+     <select id="BillnoCheck.find.billList" resultMap="RM.BillnoCheck"><!-- 查询 -->
+    	SELECT 
+    		<include refid="BillnoCheck.columns"/> 
+    	FROM 
+    		t_billno_check
+		<include refid="BillnoCheck.findPage.where"/>
+		
+    </select>
+	
+</sqlMap>

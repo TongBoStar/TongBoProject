@@ -1,0 +1,762 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Actions;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.core.dol.bean.MenuOperate;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckDetailView;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.interceptor.Token;
+import com.terrence.crm.dol.query.CheckQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.ICheckService;
+import com.terrence.crm.dol.service.IEmployeeTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/check")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "check." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class CheckAction extends CrudActionSupport<Check>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("checkService")
+	private ICheckService checkService;
+	@Autowired
+	@Qualifier("employeeTaskService")
+	private IEmployeeTaskService employeeTaskService;
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	
+	private Check entity;
+
+	private CheckQuery checkQuery;
+	
+	
+	private java.lang.Long checkId;
+	private java.lang.Long thistimeNum;
+	private java.lang.Long storageId;
+	
+	/** 分页器 */
+	private Page<Check> page = new Page<Check>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Check> checkList;
+
+	CheckDetailView detailview=new CheckDetailView();
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (checkId != null ) {
+			entity = checkService.getById(checkId);
+		} else {
+			entity = new Check();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			checkService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("checkId");
+			page.setOrder(Page.DESC);
+		}
+		if(checkQuery == null) {
+			checkQuery = new CheckQuery();
+		}
+		
+		try {
+			page = checkService.findPage(page, checkQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 查询最后一序所有合格数,和已提交的入库数
+	 * @return
+	 * @throws Exception
+	 */
+	public String showAcceptnum() throws Exception {
+		
+		try {
+			entity=checkService.findAcceptnum(checkId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String showlastcheck() throws Exception {
+		
+		try {
+			//checkQuery
+			entity=checkService.findLastcheck(checkQuery);
+				
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	/**
+	 * 向入库单和入库单详细添加入库数据
+	 * @return
+	 * @throws Exception
+	 */
+	
+	public String downk3sum() throws Exception {
+		
+		try {
+			checkService.saveDownk3sum(checkId,thistimeNum,storageId,checkQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	
+	public void prepareSaveToFirst() throws Exception {
+		prepareModel();
+	}
+	/***
+	 * 首检
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveToFirst()throws Exception
+	{
+		try
+		{
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());
+			checkService.saveFirst(detailview,entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "首检成功";
+		}
+		catch(Exception e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "首检失败（"+e.getMessage()+")";
+		}
+		return JSON;
+	}
+	public void prepareSaveToEndCheck() throws Exception {
+		prepareModel();
+	}
+	/****
+	 * 查当月月报
+	 * @return
+	 * @throws Exception
+	 */
+	@Actions({@Action("/report/curReport"),@Action("/usercenter/curReport")})
+	public String findMonthReport()throws Exception
+	{
+		try {
+			if(checkQuery == null) {
+				checkQuery = new CheckQuery();
+			}
+			AdminSession ad = SpringSecurityUtils.getCurrentUser();
+			List<MenuOperate> list = ad.getAdmin().getMenuOperateList();
+			boolean flag = true;
+			for(MenuOperate mo:list){
+				if("ROLE_MAIN_COUNTMOTHMONEY".equals(mo.getKeywords())){
+					flag = false;
+				}
+			}
+			System.out.println("-------------------------");
+			if(flag){
+				checkQuery.setReqemp(SpringSecurityUtils.getCurrentUserId());
+			}
+			checkList=checkService.findList("Current.Month.Report",checkQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	@Actions({@Action("/usercenter/monthDetail")})
+	public String monthDetail()throws Exception
+	{
+		try {
+			if(checkQuery == null) {
+				checkQuery = new CheckQuery();
+			}
+			checkList=checkService.findList("Current.Month.Report.Detail",checkQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/***
+	 * 
+	 * 终检
+	 * @return
+	 * @throws Exception
+	 */
+	@Token
+	public String saveToEndCheck()throws Exception
+	{
+		try
+		{
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());
+			if(checkService.saveEndCheck(entity)){
+				resultInfo[0] = "0";
+				resultInfo[1] = "终检成功";	
+			}else{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "本序总合格数已超出上序合格数!请修改合格数!";
+			}
+		}
+		catch(Exception e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "终检失败("+e.getMessage()+")";
+		}
+		return JSON;		
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			checkService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	/**
+	 * 反审
+	 * @return
+	 */
+	public String uncheck()
+	{
+		try {
+			checkService.deleteById(checkId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	@Action(value="/check/endcheck",results={@Result(name="endcheck",location="/WEB-INF/content/check/endcheck.jsp")})
+	public String showEndTask()throws Exception
+	{
+		try
+		{
+			entity = checkService.getById(checkId);
+			//查询是否为最后一序
+			boolean islast=false;
+			islast=checkService.getIsLast(checkId);
+			if(islast){
+				entity.setIslast(1);//最后一序	
+			}else{
+				entity.setIslast(0);
+			}
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return "endcheck";
+	}
+	@Action(value="/check/pollcheck",results={@Result(name="pollcheck",location="/WEB-INF/content/check/pollcheck.jsp")})
+	public String showPollTask()throws Exception
+	{
+		try
+		{
+			entity = checkService.getById(checkId);
+			//查询是否为最后一序
+			boolean islast=false;
+			EmployeeTask et = employeeTaskService.getById(entity.getEmployeetaskid());
+			Admin admin = adminService.getById(et.getEmpid());
+			entity.getAdmin().setAdminName(admin.getAdminName());
+			islast=checkService.getIsLast(checkId);
+			if(islast){
+				entity.setIslast(1);//最后一序	
+			}else{
+				entity.setIslast(0);
+			}
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return "endcheck";
+	}
+	@Action(value="/check/firstcheck",results={@Result(name="firstcheck",location="/WEB-INF/content/check/firstcheck.jsp")})
+	public String showTask()throws Exception
+	{
+		try
+		{
+			entity = checkService.getById(checkId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return "firstcheck";
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = checkService.getById(checkId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			checkList = checkService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//------------------------------------
+	public void prepareSaveChecks() throws Exception {
+		prepareModel();
+	}
+	public String saveChecks() throws Exception {
+			
+			try {
+				//entity.setChecknum(0L);
+				entity.setAcceptnum(0L);
+				entity.setOperationdiscardnum(0L);
+				entity.setItemdiscardnum(0L);
+				entity.setRepairnum(0L);
+				entity.setRepariacceptnum(0L);
+				entity.setCreatetime(DateConvertUtils.getCurrentDateTime());
+				entity.setCheckemp(-1L);
+				//entity.setFeesinnum(0L);
+				entity.setExplain("无");
+				
+				entity.setCheckstatus(1);
+				//--检测合格数是否大于上序---------------
+				if(entity.getChecktype().intValue()==1){
+					save();
+					resultInfo[0] = "0";
+					resultInfo[1] = "操作成功";
+				}else{
+					if(checkSubmitNum(entity)){
+						checkService.saveOrUpdate(entity);
+						resultInfo[0] = "0";
+						resultInfo[1] = "操作成功";		
+					}else{
+						resultInfo[0] = "-1";
+						resultInfo[1] = "本序提交数量大于上序,请重新输入";
+					}
+				}
+				
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败（"+e.getMessage()+")";
+			}
+			return JSON;
+	}
+
+	private boolean checkSubmitNum(Check entity2) {
+		//-------本次提交数+同dispatch下其他任务的合格数之和--
+		Integer isok=null;
+		isok=checkService.findLastnum(entity2);
+		if(isok.intValue()==-2){
+			return false;
+		}
+		return true;
+	}
+	//--查询个人任务某一天的记录------------------------------------------------------------------------
+	public void prepareListEmployeekLogs() throws Exception {
+		prepareModel();
+	}
+	public String listEmployeekLogs() throws Exception {
+		try{
+			checkList = checkService.findEmployeekLogs(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+
+		return JSON;
+	}
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Check getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public CheckQuery getCheckQuery() {
+		return checkQuery;
+	}
+
+	
+	public void setCheckQuery(CheckQuery checkQuery) {
+		this.checkQuery = checkQuery;
+	}
+
+	public void setCheckId(java.lang.Long checkId) {
+		this.checkId = checkId;
+	}
+	
+	
+	public java.lang.Long getCheckId() {
+		return this.checkId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Check> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Check> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Check> getCheckList() {
+		return checkList;
+	}
+
+	public CheckDetailView getDetailview() {
+		return detailview;
+	}
+
+	public void setDetailview(CheckDetailView detailview) {
+		this.detailview = detailview;
+	}
+
+	public java.lang.Long getThistimeNum() {
+		return thistimeNum;
+	}
+
+	public void setThistimeNum(java.lang.Long thistimeNum) {
+		this.thistimeNum = thistimeNum;
+	}
+
+	public java.lang.Long getStorageId() {
+		return storageId;
+	}
+
+	public void setStorageId(java.lang.Long storageId) {
+		this.storageId = storageId;
+	}
+	
+	
+}

@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Po;
+import com.terrence.crm.dol.dao.IPoDao;
+
+@Repository
+public class PoDao extends BaseIbatisDao<Po,java.lang.Long> implements IPoDao{
+
+		
+	public void saveOrUpdate(Po entity) {
+		if(entity.getPoid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Po";
+	}
+	public Po getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Po)this.getSqlMapClientTemplate().queryForObject("Po.getByProperty", map);		
+	}
+
+	@Override
+	public Integer updateByMultipleId(String idList, Po entity) {
+		entity.setPoids(idList);
+		this.getSqlMapClientTemplate().update("Po.updateByMulipleId", entity);
+		return null;
+	}
+
+}

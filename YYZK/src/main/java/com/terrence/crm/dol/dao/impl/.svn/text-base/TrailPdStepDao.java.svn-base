@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+
+@Repository
+public class TrailPdStepDao extends BaseIbatisDao<TrailPdStep,java.lang.Long> implements ITrailPdStepDao{
+
+		
+	public void saveOrUpdate(TrailPdStep entity) {
+		if(entity.getStepid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailPdStep";
+	}
+	public TrailPdStep getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailPdStep)this.getSqlMapClientTemplate().queryForObject("TrailPdStep.getByProperty", map);		
+	}
+
+	@Override
+	public List<TrailPdStep> findAllList(TrailPdStepQuery trailPdStepQuery) {
+		return findList("TrailPdStep.findAllList", trailPdStepQuery);
+	}
+
+}

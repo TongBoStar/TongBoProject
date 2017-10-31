@@ -1,0 +1,143 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.OrderItem;
+import com.terrence.crm.dol.query.OrderItemQuery;
+import com.terrence.crm.dol.dao.IOrderItemDao;
+import com.terrence.crm.dol.service.IOrderItemService;
+
+@Service
+@Transactional
+public class OrderItemService extends BaseService implements IOrderItemService {
+	protected static Logger logger = LoggerFactory.getLogger(OrderItemService.class);
+	@Autowired
+	@Qualifier("orderItemDao")
+	private IOrderItemDao orderItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "OrderItem";
+	}
+	@Transactional(readOnly=true)
+	public OrderItem getById(java.lang.Long id) throws ServiceException
+	{
+		return orderItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(OrderItem entity) throws ServiceException
+	{
+		orderItemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(OrderItem entity) throws ServiceException
+	{
+		Long adId = orderItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(OrderItem entity) throws ServiceException
+	{
+		Integer returnValue =  orderItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = orderItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = orderItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrderItemQuery query = new OrderItemQuery();
+		try {
+			return orderItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<OrderItem> findPage(Page<OrderItem> page, OrderItemQuery query) throws ServiceException
+	{
+		return orderItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<OrderItem> findPage(Page<OrderItem> page,String statement, OrderItemQuery query) throws ServiceException
+	{
+		return orderItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderItem> findList(OrderItemQuery query) throws ServiceException
+	{
+		return orderItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderItem> findList(OrderItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return orderItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<OrderItem> findList(OrderItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return orderItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<OrderItem> findAllList() throws ServiceException
+	{
+		return orderItemDao.findAllList();
+	}
+	@Override
+	public List<OrderItem> findAllListById(String orderIdList) {
+		List<OrderItem> orderItemList=new ArrayList<OrderItem>();
+			String [] list=orderIdList.split(";");
+			//System.out.println(list.length);
+			for(int i=0;i<list.length;i++){
+				orderItemList.add(orderItemDao.getById(Long.valueOf(list[i])));
+			}
+			
+		return orderItemList;
+	}
+	@Override
+	public Integer update(String statement, OrderItem entity)
+			throws ServiceException {
+		Integer returnValue =  orderItemDao.update(statement,entity);
+		
+		return returnValue;
+	}
+
+}

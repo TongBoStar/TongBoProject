@@ -1,0 +1,128 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Itemclass;
+import com.terrence.crm.dol.query.ItemclassQuery;
+import com.terrence.crm.dol.dao.IItemclassDao;
+import com.terrence.crm.dol.service.IItemclassService;
+
+@Service
+@Transactional
+public class ItemclassService extends BaseService implements IItemclassService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemclassService.class);
+	@Autowired
+	@Qualifier("itemclassDao")
+	private IItemclassDao itemclassDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Itemclass";
+	}
+	@Transactional(readOnly=true)
+	public Itemclass getById(java.lang.Long id) throws ServiceException
+	{
+		return itemclassDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Itemclass entity) throws ServiceException
+	{
+		itemclassDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Itemclass entity) throws ServiceException
+	{
+		Long adId = itemclassDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Itemclass entity) throws ServiceException
+	{
+		Integer returnValue =  itemclassDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemclassDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemclassDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemclassQuery query = new ItemclassQuery();
+		try {
+			return itemclassDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Itemclass> findPage(Page<Itemclass> page, ItemclassQuery query) throws ServiceException
+	{
+		return itemclassDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Itemclass> findPage(Page<Itemclass> page,String statement, ItemclassQuery query) throws ServiceException
+	{
+		return itemclassDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Itemclass> findList(ItemclassQuery query) throws ServiceException
+	{
+		return itemclassDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Itemclass> findList(ItemclassQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemclassDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Itemclass> findList(ItemclassQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemclassDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Itemclass> findAllList() throws ServiceException
+	{
+		return itemclassDao.findAllList();
+	}
+	@Override
+	public void finditemclassErp() throws ServiceException {
+		itemclassDao.finditemclassErp();
+	}
+
+}

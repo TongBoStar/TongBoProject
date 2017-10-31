@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PmCompetitor">
+
+        
+	<resultMap id="RM.PmCompetitor" class="com.terrence.crm.dol.bean.PmCompetitor">
+        <result property="pcid" column="pcid"/>
+        <result property="pmid" column="pmid"/>
+        <result property="sectionid" column="sectionid"/>
+        <result property="competitorid" column="competitorid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PmCompetitor.columns">
+	    <![CDATA[
+        	t_pm_competitor.pcid ,
+        	t_pm_competitor.pmid ,
+        	t_pm_competitor.competitorid, 
+        	t_pm_competitor.sectionid 
+	    ]]>
+	</sql>
+	
+   <insert id="PmCompetitor.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pm_competitor (
+        	pmid ,
+        	competitorid, 
+        	sectionid
+        ) VALUES (
+        	#pmid# ,
+        	#competitorid#, 
+        	#sectionid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="pcid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PmCompetitor.update" parameterClass="com.terrence.crm.dol.bean.PmCompetitor">         
+        UPDATE t_pm_competitor 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="pmid">
+	        	pmid = #pmid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="competitorid">
+	        	competitorid = #competitorid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="sectionid">
+	        	sectionid = #sectionid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        pcid = #pcid# 
+    </update>
+    
+	<delete id="PmCompetitor.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pm_competitor where
+       pcid = #pcid# 
+    ]]>
+    </delete>
+    
+    <delete id="PmCompetitor.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pm_competitor 
+        WHERE
+       pcid in ($pcid$) 
+    ]]>
+    </delete>
+    
+    <delete id="PmCompetitor.deleteByPmId">
+    <![CDATA[
+        DELETE FROM 
+        	t_pm_competitor 
+        WHERE
+       pmid = #pmid# 
+    ]]>
+    </delete>
+    <delete id="PmCompetitor.deleteBySectionId">
+    <![CDATA[
+        DELETE FROM 
+        	t_pm_competitor 
+        WHERE
+       sectionid = #sectionid# 
+    ]]>
+    </delete>
+    
+    <select id="PmCompetitor.getById" resultMap="RM.PmCompetitor">
+	    select <include refid="PmCompetitor.columns"/>
+	    
+	        from t_pm_competitor 
+	        where 
+		        pcid = #pcid# 
+	    
+    </select>
+    
+	<select id="PmCompetitor.getByProperty" resultMap="RM.PmCompetitor">
+		select <include refid="PmCompetitor.columns"/> from t_pm_competitor where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PmCompetitor.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="pcid">
+	             t_pm_competitor.pcid = #pcid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="pmid">
+	             t_pm_competitor.pmid = #pmid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_pm_competitor.competitorid = #competitorid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="sectionid">
+	             t_pm_competitor.sectionid = #sectionid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PmCompetitor.findPage.and">
+			<isNotEmpty prepend="AND" property="pcid">
+	             t_pm_competitor.pcid = #pcid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="pmid">
+	             t_pm_competitor.pmid = #pmid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="competitorid">
+	             t_pm_competitor.competitorid = #competitorid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="sectionid">
+	             t_pm_competitor.sectionid = #sectionid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PmCompetitor.Entity" resultMap="RM.PmCompetitor">
+    	SELECT 	<include refid="PmCompetitor.columns"/> FROM t_pm_competitor <include refid="PmCompetitor.findPage.where"/>
+    </select>
+    
+    <select id="PmCompetitor.findList" resultMap="RM.PmCompetitor">
+    	SELECT 
+    		<include refid="PmCompetitor.columns"/> 
+    	FROM 
+    		t_pm_competitor
+		<include refid="PmCompetitor.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PmCompetitor.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pm_competitor
+    ]]>
+		<include refid="PmCompetitor.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PmCompetitor.findPage" resultMap="RM.PmCompetitor">
+    	select <include refid="PmCompetitor.columns"/>	    
+	        from t_pm_competitor 	   
+		<include refid="PmCompetitor.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PmCompetitor.findPage" resultMap="RM.PmCompetitor">
+    	select <include refid="PmCompetitor.columns"/>	    
+	        from t_pm_competitor where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       pcid 
+	   not in(select $notTop$ 
+       pcid 
+	   from t_pm_competitor <include refid="PmCompetitor.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PmCompetitor.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

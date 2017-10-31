@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyExce;
+import com.terrence.crm.dol.query.AssemblyExceQuery;
+import com.terrence.crm.dol.dao.IAssemblyExceDao;
+import com.terrence.crm.dol.service.IAssemblyExceService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class AssemblyExceService extends BaseService implements IAssemblyExceService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyExceService.class);
+	@Autowired
+	@Qualifier("assemblyExceDao")
+	private IAssemblyExceDao assemblyExceDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyExce";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyExce getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyExceDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyExce entity) throws ServiceException
+	{
+		assemblyExceDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyExce entity) throws ServiceException
+	{
+		Long adId = assemblyExceDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyExce entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyExceDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyExceDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyExceDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyExceQuery query = new AssemblyExceQuery();
+		try {
+			return assemblyExceDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyExce> findPage(Page<AssemblyExce> page, AssemblyExceQuery query) throws ServiceException
+	{
+		return assemblyExceDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyExce> findPage(Page<AssemblyExce> page,String statement, AssemblyExceQuery query) throws ServiceException
+	{
+		return assemblyExceDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyExce> findList(AssemblyExceQuery query) throws ServiceException
+	{
+		return assemblyExceDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyExce> findList(AssemblyExceQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyExceDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyExce> findList(AssemblyExceQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyExceDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyExce> findAllList() throws ServiceException
+	{
+		return assemblyExceDao.findAllList();
+	}
+	@Override
+	public void updateChuLi(AssemblyExce entity) throws ServiceException {
+		entity.setProcemp(SpringSecurityUtils.getCurrentUserId());
+		entity.setProcdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		entity.setProcstatus(1);//已处理
+		assemblyExceDao.update("AssemblyExce.update.for.chuli.data", entity);
+	}
+
+}

@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdExamineSolution;
+import com.terrence.crm.dol.dao.IPdExamineSolutionDao;
+import com.terrence.crm.dol.query.PdExamineSolutionQuery;
+
+@Repository
+public class PdExamineSolutionDao extends BaseIbatisDao<PdExamineSolution,java.lang.Long> implements IPdExamineSolutionDao{
+
+		
+	public void saveOrUpdate(PdExamineSolution entity) {
+		if(entity.getSolutionid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdExamineSolution";
+	}
+	public PdExamineSolution getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdExamineSolution)this.getSqlMapClientTemplate().queryForObject("PdExamineSolution.getByProperty", map);		
+	}
+
+	@Override
+	public List<PdExamineSolution> findListSolution(
+			PdExamineSolutionQuery pdExamineSolutionQuery) {
+		return this.getSqlMapClientTemplate().queryForList("PdExamineSolution.findList.solution",pdExamineSolutionQuery);
+	}
+
+}

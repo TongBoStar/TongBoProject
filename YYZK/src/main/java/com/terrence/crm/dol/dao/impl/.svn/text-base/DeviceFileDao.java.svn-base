@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.DeviceFile;
+import com.terrence.crm.dol.dao.IDeviceFileDao;
+import com.terrence.crm.dol.query.DeviceFileQuery;
+
+@Repository
+public class DeviceFileDao extends BaseIbatisDao<DeviceFile,java.lang.Long> implements IDeviceFileDao{
+
+		
+	public void saveOrUpdate(DeviceFile entity) {
+		if(entity.getFileid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "DeviceFile";
+	}
+	public DeviceFile getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (DeviceFile)this.getSqlMapClientTemplate().queryForObject("DeviceFile.getByProperty", map);		
+	}
+
+	@Override
+	public List<DeviceFile> findListToType(DeviceFileQuery deviceFileQuery) {
+		return this.getSqlMapClientTemplate().queryForList("DeviceFile.find.toType", deviceFileQuery);
+	}
+
+}

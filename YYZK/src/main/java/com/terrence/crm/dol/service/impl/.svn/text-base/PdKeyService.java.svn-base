@@ -1,0 +1,244 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.PdKey;
+import com.terrence.crm.dol.query.PdKeyQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IPdKeyDao;
+import com.terrence.crm.dol.service.IPdKeyService;
+
+@Service
+@Transactional
+public class PdKeyService extends BaseService implements IPdKeyService {
+	protected static Logger logger = LoggerFactory.getLogger(PdKeyService.class);
+	@Autowired
+	@Qualifier("pdKeyDao")
+	private IPdKeyDao pdKeyDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	public String getIbatisSqlMapNamespace() {
+		return "PdKey";
+	}
+	@Transactional(readOnly=true)
+	public PdKey getById(java.lang.Long id) throws ServiceException
+	{
+		return pdKeyDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdKey entity) throws ServiceException
+	{
+		pdKeyDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdKey entity) throws ServiceException
+	{
+		Long adId = pdKeyDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdKey entity) throws ServiceException
+	{
+		Integer returnValue =  pdKeyDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdKeyDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdKeyDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdKeyQuery query = new PdKeyQuery();
+		try {
+			return pdKeyDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdKey> findPage(Page<PdKey> page, PdKeyQuery query) throws ServiceException
+	{
+		return pdKeyDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdKey> findPage(Page<PdKey> page,String statement, PdKeyQuery query) throws ServiceException
+	{
+		return pdKeyDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdKey> findList(PdKeyQuery query) throws ServiceException
+	{
+		return pdKeyDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdKey> findList(PdKeyQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdKeyDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdKey> findList(PdKeyQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdKeyDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdKey> findAllList() throws ServiceException
+	{
+		return pdKeyDao.findAllList();
+	}
+	@Override
+	public Integer saveDetail(List<Long> checkedIdList, PdKeyQuery pdKeyQuery)
+			throws ServiceException {
+			String code = pdKeyQuery.getItemcode();
+			String updatecode=null;
+			updatecode=pdKeyQuery.getUpdatecode();
+			if(updatecode!=null){//修改
+				if(!updatecode.equals(code)){//不是同一物料,查询是否绑定
+					PdKeyQuery query=new PdKeyQuery();
+					query.setItemcode(code);
+					List<PdKey> list=new ArrayList<PdKey>(); 
+					list= pdKeyDao.findList(query);
+					if(list.size()>0){//已存在
+						return -1;
+					}
+				}
+			}else{//添加
+				PdKeyQuery query=new PdKeyQuery();
+				query.setItemcode(code);
+				List<PdKey> list=new ArrayList<PdKey>(); 
+				list= pdKeyDao.findList(query);
+				if(list.size()>0){//已存在
+					return -1;
+				}
+			}
+			
+			
+			pdKeyDao.deleteBycode("PdKey.deleteBycode", code);
+			if(checkedIdList==null||checkedIdList.size()==0){
+				return 1;
+			}
+			System.out.println("=========");
+			for(long ids:checkedIdList){
+				BaseItem baseitem=new BaseItem();
+				PdKey pdkey=new PdKey();
+				
+				baseitem=baseItemDao.getById("BaseItem.pdkey.getByids", ids);
+				pdkey.setItemcode(code);
+				pdkey.setItemname(baseItemDao.getByProperty("itemcode", code).getItemname());
+				
+				pdkey.setKeycode(baseitem.getItemcode());
+				pdkey.setKeyname(baseitem.getItemname());
+				pdkey.setKeymode(baseitem.getFormatno());
+				pdkey.setF102(baseitem.getF102());
+
+				pdKeyDao.save(pdkey);
+			}
+			return 1;
+	}
+	@Override
+	public void deleteBycode(List<String> checkedCodeList)
+			throws ServiceException {
+		
+		//String delIds = StringUtils.join(checkedCodeList, ",'");
+		String delcodes = "\'";
+		for(String cc:checkedCodeList){
+			delcodes+=cc+"\',\'";
+		}
+		delcodes=delcodes.substring(0,delcodes.length()-2);
+		//System.out.println("===="+delcodes);
+	 pdKeyDao.deleteBycode("PdKey.deleteAllBycode", delcodes);
+		
+	}
+	@Override
+	public List<PdKey> findList(PdKeyQuery pdKeyQuery, String statement)
+			throws ServiceException {
+		
+		return pdKeyDao.findList(statement, pdKeyQuery); 
+	}
+	@Override
+	public List<PdKey> findItemKey(PdKeyQuery pdKeyQuery)
+			throws ServiceException {
+		return pdKeyDao.findItemKey(pdKeyQuery);
+	}
+	@Override
+	public Long savePdKey(List<Long> checkedIdList,
+			List<String> checkedCodeList,PdKeyQuery pdKeyQuery) throws ServiceException {
+		Long id = null;
+		if(checkedIdList.size()>0){
+			pdKeyDao.delData(pdKeyQuery);
+			
+//			for(int y=0;y<checkedCodeList.size();y++){
+//				pdKeyDao.deleteBycode("PdKey.deleteBycode",checkedCodeList.get(y));
+//			}
+			
+			for(int tt=0;tt<checkedIdList.size();tt++){
+				BaseItem  baseitem = new BaseItem();
+				PdKey pdkey=new PdKey();
+				
+				
+				baseitem=baseItemDao.getById("BaseItem.pdkey.getByids", checkedIdList.get(tt));
+				pdkey.setItemcode(checkedCodeList.get(tt));
+				pdkey.setItemname(baseItemDao.getByProperty("itemcode", checkedCodeList.get(tt)).getItemname());
+				
+				pdkey.setKeycode(baseitem.getItemcode());
+				pdkey.setKeyname(baseitem.getItemname());
+				pdkey.setKeymode(baseitem.getFormatno());
+				pdkey.setF102(baseitem.getF102());
+
+				id = pdKeyDao.save(pdkey);
+			}
+			
+		}
+		return id;
+	}
+	@Override
+	public List<PdKey> findMainKey(PdKeyQuery pdKeyQuery)
+			throws ServiceException {
+		return pdKeyDao.findMainKey(pdKeyQuery);
+	}
+
+}

@@ -1,0 +1,52 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ValveParts;
+import com.terrence.crm.dol.dao.IValvePartsDao;
+import com.terrence.crm.dol.query.ValvePartsQuery;
+@Repository
+public class ValvePartsDao extends BaseIbatisDao<ValveParts,java.lang.Long> implements IValvePartsDao {
+
+	public void saveOrUpdate(ValveParts entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ValveParts";
+	}
+	public ValveParts getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ValveParts)this.getSqlMapClientTemplate().queryForObject("ValveParts.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteUncheck(ValvePartsQuery valvePartsQuery) {
+		this.getSqlMapClientTemplate().delete("ValveParts.delete.uncheck.data", valvePartsQuery);
+		
+	}
+
+	@Override
+	public List<ValveParts> findData(ValvePartsQuery valvePartsQuery) {
+		return this.getSqlMapClientTemplate().queryForList("ValveParts.find.data.select", valvePartsQuery);
+	}
+
+	@Override
+	public void deldata(ValveParts vp) {
+		this.getSqlMapClientTemplate().delete("ValveParts.delete.uncheck.data", vp);
+	}
+	
+
+}

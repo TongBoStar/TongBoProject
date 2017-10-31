@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PerFee">
+
+        
+	<resultMap id="RM.PerFee" class="com.terrence.crm.dol.bean.PerFee">
+        <result property="perid" column="perid"/>
+        <result property="fbillid" column="fbillid"/>
+        <result property="fempid" column="fempid"/>
+        <result property="femployee" column="femployee"/>
+        <result property="famount" column="famount"/>
+        <result property="fratio" column="fratio"/>
+        <result property="ispay" column="ispay"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PerFee.columns">
+	    <![CDATA[
+        	t_per_fee.perid ,
+        	t_per_fee.fbillid ,
+        	t_per_fee.fempid ,
+        	t_per_fee.femployee ,
+        	t_per_fee.famount ,
+        	t_per_fee.fratio ,
+        	t_per_fee.ispay 
+	    ]]>
+	</sql>
+	
+   <insert id="PerFee.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_per_fee (
+        	fbillid ,
+        	fempid ,
+        	femployee ,
+        	famount ,
+        	fratio ,
+        	ispay 
+        ) VALUES (
+        	#fbillid# ,
+        	#fempid# ,
+        	#femployee# ,
+        	#famount# ,
+        	#fratio# ,
+        	#ispay# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+    <!--  
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="perid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    -->
+    </insert>
+
+	<update id="PerFee.update" parameterClass="com.terrence.crm.dol.bean.PerFee">         
+        UPDATE t_per_fee 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillid">
+	        	fbillid = #fbillid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fempid">
+	        	fempid = #fempid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="femployee">
+	        	femployee = #femployee# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="famount">
+	        	famount = #famount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fratio">
+	        	fratio = #fratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispay">
+	        	ispay = #ispay# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        perid = #perid# 
+    </update>
+    
+	<delete id="PerFee.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_per_fee where
+       perid = #perid# 
+    ]]>
+    </delete>
+    
+    <delete id="PerFee.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_per_fee 
+        WHERE
+       perid in ($perid$) 
+    ]]>
+    </delete>
+    <!-- 删除通过应收款ID -->
+    <delete id="PerFee.deleteMultipleByfbillid">
+    <![CDATA[
+        DELETE FROM 
+        	t_per_fee 
+        WHERE
+       fbillid in ($fbillid$) 
+    ]]>
+    </delete>
+    
+    <select id="PerFee.getById" resultMap="RM.PerFee">
+	    select <include refid="PerFee.columns"/>
+	    
+	        from t_per_fee 
+	        where 
+		        perid = #perid# 
+	    
+    </select>
+    
+	<select id="PerFee.getByProperty" resultMap="RM.PerFee">
+		select <include refid="PerFee.columns"/> from t_per_fee where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PerFee.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="perid">
+	             t_per_fee.perid = #perid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_per_fee.fbillid = #fbillid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_per_fee.fempid = #fempid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="femployee">
+	             t_per_fee.femployee = #femployee#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount = #famount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fratio">
+	             t_per_fee.fratio = #fratio#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ispay">
+	             t_per_fee.ispay = #ispay#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PerFee.findPage.and">
+			<isNotEmpty prepend="AND" property="perid">
+	             t_per_fee.perid = #perid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillid">
+	             t_per_fee.fbillid = #fbillid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fempid">
+	             t_per_fee.fempid = #fempid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="femployee">
+	             t_per_fee.femployee = #femployee#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="famount">
+	             t_per_fee.famount = #famount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fratio">
+	             t_per_fee.fratio = #fratio#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ispay">
+	             t_per_fee.ispay = #ispay#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PerFee.Entity" resultMap="RM.PerFee">
+    	SELECT 	<include refid="PerFee.columns"/> FROM t_per_fee <include refid="PerFee.findPage.where"/>
+    </select>
+    
+    <select id="PerFee.findList" resultMap="RM.PerFee">
+    	SELECT 
+    		<include refid="PerFee.columns"/> 
+    	FROM 
+    		t_per_fee
+		<include refid="PerFee.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PerFee.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_per_fee
+    ]]>
+		<include refid="PerFee.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PerFee.findPage" resultMap="RM.PerFee">
+    	select <include refid="PerFee.columns"/>	    
+	        from t_per_fee 	   
+		<include refid="PerFee.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PerFee.findPage" resultMap="RM.PerFee">
+    	select <include refid="PerFee.columns"/>	    
+	        from t_per_fee where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       perid 
+	   not in(select $notTop$ 
+       perid 
+	   from t_per_fee <include refid="PerFee.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PerFee.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

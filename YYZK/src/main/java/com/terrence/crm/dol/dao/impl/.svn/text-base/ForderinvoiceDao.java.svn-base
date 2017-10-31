@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Forderinvoice;
+import com.terrence.crm.dol.dao.IForderinvoiceDao;
+
+@Repository
+public class ForderinvoiceDao extends BaseIbatisDao<Forderinvoice,java.lang.Long> implements IForderinvoiceDao{
+
+		
+	public void saveOrUpdate(Forderinvoice entity) {
+		if(entity.getInvoiceid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Forderinvoice";
+	}
+	public Forderinvoice getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Forderinvoice)this.getSqlMapClientTemplate().queryForObject("Forderinvoice.getByProperty", map);		
+	}
+
+	@Override
+	public List<Forderinvoice> findByMakeNumberCode(
+			Map<String, String> map) {
+		return this.getSqlMapClientTemplate().queryForList("Forderinvoice.findByMakeNumberCode", map);
+	}
+
+}

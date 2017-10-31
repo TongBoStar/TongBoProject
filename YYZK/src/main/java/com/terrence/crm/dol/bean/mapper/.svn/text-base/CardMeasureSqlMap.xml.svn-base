@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CardMeasure">
+
+        
+	<resultMap id="RM.CardMeasure" class="com.terrence.crm.dol.bean.CardMeasure">
+        <result property="cardmeasureid" column="cardmeasureid"/>
+        <result property="categoryid" column="categoryid"/>
+        <result property="itemprocessid" column="itemprocessid"/>
+    </resultMap>
+	
+	<resultMap id="RM.CardMeasure.cate" class="com.terrence.crm.dol.bean.CardMeasure">
+        <result property="cardmeasureid" column="cardmeasureid"/>
+        <result property="categoryid" column="categoryid"/>
+        <result property="itemprocessid" column="itemprocessid"/>
+        <result property="category" resultMap="RM.CardMeasure.Category"/>
+    
+    </resultMap>
+	<resultMap id="RM.CardMeasure.Category" class="com.terrence.crm.dol.bean.MeasureCategory">
+        <result property="categoryname" column="categoryname"/>
+        <result property="categorycode" column="categorycode"/>
+    </resultMap>
+	  
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CardMeasure.columns">
+	    <![CDATA[
+        	t_card_measure.cardmeasureid ,
+        	t_card_measure.categoryid ,
+        	t_card_measure.itemprocessid 
+	    ]]>
+	</sql>
+	
+   <insert id="CardMeasure.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_card_measure (
+        	categoryid ,
+        	itemprocessid 
+        ) VALUES (
+        	#categoryid# ,
+        	#itemprocessid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="cardmeasureid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CardMeasure.update" parameterClass="com.terrence.crm.dol.bean.CardMeasure">         
+        UPDATE t_card_measure 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="categoryid">
+	        	categoryid = #categoryid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemprocessid">
+	        	itemprocessid = #itemprocessid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        cardmeasureid = #cardmeasureid# 
+    </update>
+    
+	<delete id="CardMeasure.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_card_measure where
+       cardmeasureid = #cardmeasureid# 
+    ]]>
+    </delete>
+    
+    <delete id="CardMeasure.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_card_measure 
+        WHERE
+       cardmeasureid in ($cardmeasureid$) 
+    ]]>
+    </delete>
+    
+    <select id="CardMeasure.getById" resultMap="RM.CardMeasure">
+	    select <include refid="CardMeasure.columns"/>
+	    
+	        from t_card_measure 
+	        where 
+		        cardmeasureid = #cardmeasureid# 
+	    
+    </select>
+    
+	<select id="CardMeasure.getByProperty" resultMap="RM.CardMeasure">
+		select <include refid="CardMeasure.columns"/> from t_card_measure where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CardMeasure.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="cardmeasureid">
+	             t_card_measure.cardmeasureid = #cardmeasureid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_card_measure.categoryid = #categoryid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_card_measure.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CardMeasure.findPage.and">
+			<isNotEmpty prepend="AND" property="cardmeasureid">
+	             t_card_measure.cardmeasureid = #cardmeasureid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_card_measure.categoryid = #categoryid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_card_measure.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="CardMeasure.findList" resultMap="RM.CardMeasure.cate">
+    	SELECT 
+    		<include refid="CardMeasure.columns"/> ,t_measure_category.categoryname,t_measure_category.categorycode
+    	FROM 
+    		t_card_measure
+    		left join t_measure_category on t_card_measure.categoryid=t_measure_category.categoryid
+    		
+		<include refid="CardMeasure.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CardMeasure.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_card_measure
+    ]]>
+		<include refid="CardMeasure.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="CardMeasure.findPage" resultMap="RM.CardMeasure">
+    	select <include refid="CardMeasure.columns"/>	    
+	        from t_card_measure 	   
+		<include refid="CardMeasure.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.CardMeasure.findPage" resultMap="RM.CardMeasure">
+    	select <include refid="CardMeasure.columns"/>	    
+	        from t_card_measure where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       cardmeasureid 
+	   not in(select $notTop$ 
+       cardmeasureid 
+	   from t_card_measure <include refid="CardMeasure.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CardMeasure.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

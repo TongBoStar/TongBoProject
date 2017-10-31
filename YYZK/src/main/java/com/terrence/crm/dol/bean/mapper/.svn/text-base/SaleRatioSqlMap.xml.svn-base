@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SaleRatio">
+
+        
+	<resultMap id="RM.SaleRatio" class="com.terrence.crm.dol.bean.SaleRatio">
+        <result property="saleid" column="saleid"/>
+        <result property="salename" column="salename"/>
+        <result property="saleratio" column="saleratio"/>
+        <result property="smratio" column="smratio"/>
+        <result property="szmpratio" column="szmpratio"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="SaleRatio.columns">
+	    <![CDATA[
+        	t_sale_ratio.saleid ,
+        	t_sale_ratio.salename ,
+        	t_sale_ratio.saleratio ,
+        	t_sale_ratio.smratio ,
+        	t_sale_ratio.szmpratio 
+	    ]]>
+	</sql>
+	
+   <insert id="SaleRatio.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_sale_ratio (
+        	saleid ,
+        	salename ,
+        	saleratio ,
+        	smratio ,
+        	szmpratio 
+        ) VALUES (
+        	#saleid# ,
+        	#salename# ,
+        	#saleratio# ,
+        	#smratio# ,
+        	#szmpratio# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <!--  
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="saleid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+        -->
+    </insert>
+
+	<update id="SaleRatio.update" parameterClass="com.terrence.crm.dol.bean.SaleRatio">         
+        UPDATE t_sale_ratio 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="salename">
+	        	salename = #salename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="saleratio">
+	        	saleratio = #saleratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="smratio">
+	        	smratio = #smratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="szmpratio">
+	        	szmpratio = #szmpratio# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        saleid = #saleid# 
+    </update>
+    
+	<delete id="SaleRatio.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_sale_ratio where
+       saleid = #saleid# 
+    ]]>
+    </delete>
+    
+    <delete id="SaleRatio.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_sale_ratio 
+        WHERE
+       saleid in ($saleid$) 
+    ]]>
+    </delete>
+    
+    <select id="SaleRatio.getById" resultMap="RM.SaleRatio">
+	    select <include refid="SaleRatio.columns"/>
+	    
+	        from t_sale_ratio 
+	        where 
+		        saleid = #saleid# 
+	    
+    </select>
+    
+	<select id="SaleRatio.getByProperty" resultMap="RM.SaleRatio">
+		select <include refid="SaleRatio.columns"/> from t_sale_ratio where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="SaleRatio.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="saleid">
+	             t_sale_ratio.saleid = #saleid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="salename">
+	             t_sale_ratio.salename = #salename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="saleratio">
+	             t_sale_ratio.saleratio = #saleratio#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="smratio">
+	             t_sale_ratio.smratio = #smratio#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="szmpratio">
+	             t_sale_ratio.szmpratio = #szmpratio#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="SaleRatio.findPage.and">
+			<isNotEmpty prepend="AND" property="saleid">
+	             t_sale_ratio.saleid = #saleid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="salename">
+	             t_sale_ratio.salename = #salename#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="saleratio">
+	             t_sale_ratio.saleratio = #saleratio#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="smratio">
+	             t_sale_ratio.smratio = #smratio#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="szmpratio">
+	             t_sale_ratio.szmpratio = #szmpratio#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="SaleRatio.Entity" resultMap="RM.SaleRatio">
+    	SELECT 	<include refid="SaleRatio.columns"/> FROM t_sale_ratio <include refid="SaleRatio.findPage.where"/>
+    </select>
+    
+    <select id="SaleRatio.findList" resultMap="RM.SaleRatio">
+    	SELECT 
+    		<include refid="SaleRatio.columns"/> 
+    	FROM 
+    		t_sale_ratio
+		<include refid="SaleRatio.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="SaleRatio.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_sale_ratio
+    ]]>
+		<include refid="SaleRatio.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.SaleRatio.findPage" resultMap="RM.SaleRatio">
+    	select <include refid="SaleRatio.columns"/>	    
+	        from t_sale_ratio 	   
+		<include refid="SaleRatio.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="SaleRatio.findPage" resultMap="RM.SaleRatio">
+    	select <include refid="SaleRatio.columns"/>	    
+	        from t_sale_ratio where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       saleid 
+	   not in(select $notTop$ 
+       saleid 
+	   from t_sale_ratio <include refid="SaleRatio.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="SaleRatio.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

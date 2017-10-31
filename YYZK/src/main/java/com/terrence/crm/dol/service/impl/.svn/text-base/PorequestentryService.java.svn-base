@@ -1,0 +1,964 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import sun.print.resources.serviceui;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.service.IPorequestentryService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+
+
+@Service
+@Transactional
+public class PorequestentryService extends BaseService implements IPorequestentryService {
+	protected static Logger logger = LoggerFactory.getLogger(PorequestentryService.class);
+	@Autowired
+	@Qualifier("porequestentryDao")
+	private IPorequestentryDao porequestentryDao;
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Porequestentry";
+	}
+	@Transactional(readOnly=true)
+	public Porequestentry getById(java.lang.Long id) throws ServiceException
+	{
+		return porequestentryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Porequestentry entity) throws ServiceException
+	{
+		porequestentryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Porequestentry entity) throws ServiceException
+	{
+		Long adId = porequestentryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Porequestentry entity) throws ServiceException
+	{
+		Integer returnValue =  porequestentryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = porequestentryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		//根据id查找entry对象
+		Porequestentry entry = porequestentryDao.getById(idList.get(0));
+		Integer returnValue = porequestentryDao.deleteByMultipleId(delIds);
+		//根据entry对象的finerid得到entry集合
+		PorequestentryQuery query = new PorequestentryQuery();
+		query.setFinterid(entry.getFinterid());
+		List<Porequestentry> list = porequestentryDao.findList(query);
+		//更新entry集合的序号
+		if(list!=null&&list.size()>0){
+			for(int i=0;i<list.size();i++){
+				Porequestentry pore = list.get(i);
+				pore.setFentryid(i+1);
+				porequestentryDao.update(pore);
+			}
+		}
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PorequestentryQuery query = new PorequestentryQuery();
+		try {
+			return porequestentryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Porequestentry> findPage(Page<Porequestentry> page, PorequestentryQuery query) throws ServiceException
+	{
+		return porequestentryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Porequestentry> findPage(Page<Porequestentry> page,String statement, PorequestentryQuery query) throws ServiceException
+	{
+		return porequestentryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequestentry> findList(PorequestentryQuery query) throws ServiceException
+	{
+		return porequestentryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequestentry> findList(PorequestentryQuery query,Integer pageSize) throws ServiceException
+	{
+		return porequestentryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Porequestentry> findList(PorequestentryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return porequestentryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequestentry> findAllList() throws ServiceException
+	{
+		return porequestentryDao.findAllList();
+	}
+	@Override
+	public Porequestentry saveNewPo(Porequestentry entity) throws ServiceException {
+		
+		//===================查询单据编号===================
+		 IcbillnoQuery icbillnoQuery= new IcbillnoQuery();
+		 icbillnoQuery.setFpreletter("POREQPC");
+		 Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);
+		 	 
+		 String sssy = "";
+			Integer ay = icbillno.getFcurno();
+			String sy = ay.toString();
+			String ssy = "";
+			if((icbillno.getFlength()-sy.length())>0){
+				for(int y = 0;y<(icbillno.getFlength()-sy.length());y++){
+					ssy+="0";
+				}
+				sssy=icbillno.getFpreletter()+ssy + sy;
+			}else{
+				sssy= icbillno.getFpreletter() + sy;
+			}
+		//======================================
+		Long id = null;
+		/*int t = 0;
+		List<Long> pid = entity.getPids();
+		for(int i = 0;i<pid.size();i++){
+			if(pid.get(i)!=null){
+				t++;
+			}
+		}*/
+		int t=0;
+		if(entity!=null&&entity.getFinterid()!=null){
+			t=1;
+		}
+		String fbillno = "";
+		if(t==0){
+			 Icbillno icq = new Icbillno();//查询完加1
+			icq.setFcurno(icbillno.getFcurno()+1);
+			icq.setFbillid(icbillno.getFbillid());
+			icq.setFpreletter(icbillno.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+			
+			Porequest porequest = new Porequest();
+		
+			porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());//获得当前制单人的id
+			porequest.setFrequesterid(SpringSecurityUtils.getCurrentUserId());
+			porequest.setFrequesterName(SpringSecurityUtils.getCurrentUserName());
+			fbillno = sssy;
+			porequest.setFbillno(sssy);
+			
+			//porequest.setFdeptid( Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门，默认当前登录人的部门
+			porequest.setFcomment(entity.getFcommentpq());
+			porequest.setFnote(entity.getFnote());
+			porequest.setFseltrantype(entity.getFseltrantype());
+			//porequest.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统时间
+			porequest.setFsource(1);//1:手动添加，2:下推
+			porequest.setFstatus(0);//审核标志，0：未审核
+			porequest.setFclosed(0);//关闭状态，0：未关闭
+			porequest.setFheadselfp0128(entity.getFheadselfp0128());//项目名称
+			porequest.setFbiztype(entity.getFbiztype());//业务类型：12510外购入库类型；12511订单委外类型
+			porequest.setFtrantype(70);//单据类型：70采购申请单
+			porequest.setFmrp(0);//MRP类型 0
+			porequest.setFmrpautoclosed(1);//MRP自动关闭标志 1
+			porequest.setFmrpclosed(0);//业务关闭状态:0未关闭；1关闭 0
+			porequest.setFchildren(0);//关联标识 0
+			porequest.setFgeneratepurbudqty(0.0);//关联下推采购预算数量0
+			porequest.setCreatedate(entity.getFcreatedate());
+			porequest.setFdeptid(entity.getUsedeptid());
+			
+			if(entity.getIcmofbillno()!=null){
+				porequest.setIcmofbillno(entity.getIcmofbillno());
+			}
+			porequest.setCreaterName(SpringSecurityUtils.getCurrentRealName());//制单人姓名
+			porequest.setAddStatus(0);
+			 id = porequestDao.save(porequest, "Porequest.insert.PQ");
+			
+			List<String> itemcodes = entity.getItemcodes();
+			List<String> itemnames = entity.getItemnames();
+			List<String> itemmodes = entity.getItemmodes();
+			List<String> unitnames = entity.getUnitnames();
+			List<Double> amounts = entity.getAmounts();
+			List<String> standards = entity.getStandards();
+			List<String> materials = entity.getMaterials();
+			//List<Long> empids = entity.getEmpids(); 
+			List<Long> supplyids = entity.getSupplyids();
+			//List<String> fcomments = entity.getFcomments();
+			List<String> rtas = entity.getRtas();
+			List<String> atas = entity.getAtas();
+			//List<Long>  inventoryids = entity.getInventoryids();
+			List<Double> fentryselfp0133s = new ArrayList<Double>();
+			List<Double> fentryselfp0135s = new ArrayList<Double>();
+			List<Double> fentryselfp0136s = new ArrayList<Double>();
+			List<Double> fentryselfp0137s = new ArrayList<Double>();
+			List<Double> fentryselfp0138s = new ArrayList<Double>();
+			List<Integer> fauxpropids = new ArrayList<Integer>();
+			List<Integer> fentryselfp0140s = new ArrayList<Integer>();
+			List<String> fentryselfp0129s = new ArrayList<String>();
+			List<String> fentryselfp0130s = new ArrayList<String>();
+			List<Double> fseccoefficients = new ArrayList<Double>();
+			List<Double> fsecqtys = new ArrayList<Double>();
+			List<Integer> fbominterids = new ArrayList<Integer>();
+			List<String> fuses = new ArrayList<String>();
+			List<Integer> fsupplyids = new ArrayList<Integer>();
+			List<String> fsourcebillnos = new ArrayList<String>();
+			List<Integer> fsourceentryids = new ArrayList<Integer>();//原分录号
+			List<Integer> fsourceinterids = new ArrayList<Integer>();//原单内码
+			fentryselfp0133s = entity.getFentryselfp0133s();
+			fentryselfp0135s = entity.getFentryselfp0135s();
+			fentryselfp0136s = entity.getFentryselfp0136s();
+			fentryselfp0137s = entity.getFentryselfp0137s();
+			fentryselfp0138s = entity.getFentryselfp0138s();
+			fauxpropids = entity.getFauxpropids();
+			fentryselfp0140s = entity.getFentryselfp0140s();
+			fentryselfp0129s = entity.getFentryselfp0129s();
+			fentryselfp0130s = entity.getFentryselfp0130s();
+			fseccoefficients = entity.getFseccoefficients();
+			fsecqtys = entity.getFsecqtys();
+			fbominterids = entity.getFbominterids();
+			fuses = entity.getFuses();
+			fsupplyids = entity.getFsupplyids();
+			fsourcebillnos = entity.getFsourcebillnos();
+			fsourceentryids= entity.getFsourceentryids();
+			fsourceinterids= entity.getFsourceinterids();
+			for(int i = 0;i<itemcodes.size();i++){
+				Porequestentry porequestentry = new Porequestentry();
+				if(itemcodes.get(i)!=null&&!itemcodes.get(i).equals("")){
+					porequestentry.setFinterid(id);
+					porequestentry.setItemcode(itemcodes.get(i));
+				}else{
+					continue;				
+				}
+				porequestentry.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统日期
+				porequestentry.setItemname(itemnames.get(i));
+				porequestentry.setItemmode(itemmodes.get(i));
+				porequestentry.setUnitname(unitnames.get(i));
+				porequestentry.setRta(DateUtils.GetDate2(rtas.get(i),"yyyy-MM-dd"));
+				porequestentry.setAta(DateUtils.GetDate2(atas.get(i),"yyyy-MM-dd"));
+				porequestentry.setF101(standards.get(i));
+				porequestentry.setF102(materials.get(i));
+				if(amounts.get(i)!=null){
+					porequestentry.setAmount(amounts.get(i));
+				}
+				/*if(empids!=null&&empids.get(i)!=null){
+					porequestentry.setEmpid(empids.get(i));
+				}*/
+				if(supplyids.get(i)!=null){
+					porequestentry.setSupplyid(supplyids.get(i));
+				}
+				
+				porequestentry.setDeptid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门，默认当前登录人所在部门
+				
+				//porequestentry.setFcomment(fcomments.get(i));
+				
+//				if(inventoryids.get(i) != null){
+//					porequestentry.setInventoryid(inventoryids.get(i));
+//				}
+				porequestentry.setPutstore(0);//未入库
+				
+				//辅助属性
+				if(fauxpropids!=null&&fauxpropids.get(i)!=null){
+					porequestentry.setFauxpropid(fauxpropids.get(i));
+				}else{
+					porequestentry.setFauxpropid(0);
+				}
+				//辅助审批数量
+				porequestentry.setFauxcommitqty(0.0);
+				//辅助单价
+				porequestentry.setFauxprice(0.0);
+				//fauxqty	Unchecked	辅助申请数量：同数量
+				if(amounts!=null&&amounts.get(i)!=null){
+					porequestentry.setFauxqty(amounts.get(i));
+				}else{
+					porequestentry.setFauxqty(0.0);
+				}
+				//fbominterid	Unchecked	客户bom：0
+				if(fbominterids!=null&&fbominterids.get(i)!=null){
+					porequestentry.setFbominterid(fbominterids.get(i));
+				}else{
+					porequestentry.setFbominterid(0);
+				}
+				//fbrno	Unchecked	公司机构内码：0	
+				porequestentry.setFbrno("0");
+				//fcommitqty	Unchecked	审批数量：0	
+				porequestentry.setFcommitqty(0.0);
+				//fentryid	Unchecked	分录号（排序）
+				porequestentry.setFentryid(i+1);
+				//fentryselfp0129	Checked	制令号
+				porequestentry.setFentryselfp0129(fentryselfp0129s.get(i));
+				//fentryselfp0130	Checked	备注制令号
+				if(fentryselfp0130s!=null&&fentryselfp0130s.get(i)!=null){
+					porequestentry.setFentryselfp0130(fentryselfp0130s.get(i));
+				}else{
+					porequestentry.setFentryselfp0130("");
+				}
+				//fentryselfp0133	Checked	技术部数量	
+				if(fentryselfp0133s!=null&&fentryselfp0133s.get(i)!=null){
+					porequestentry.setFentryselfp0133(fentryselfp0133s.get(i));
+				}else{
+					porequestentry.setFentryselfp0133(0.0);
+				}
+				//fentryselfp0135	Checked	单重
+				if(fentryselfp0135s!=null&&fentryselfp0135s.get(i)!=null){
+					porequestentry.setFentryselfp0135(fentryselfp0135s.get(i));
+				}else{
+					porequestentry.setFentryselfp0135(0.0);
+				}
+				//fentryselfp0136	Checked	计量量
+				if(fentryselfp0136s!=null&&fentryselfp0136s.get(i)!=null){
+					porequestentry.setFentryselfp0136(fentryselfp0136s.get(i));
+				}else{
+					porequestentry.setFentryselfp0136(0.0);
+				}
+				//fentryselfp0137	Checked	总计量量
+				if(fentryselfp0137s!=null&&fentryselfp0137s.get(i)!=null){
+					porequestentry.setFentryselfp0137(fentryselfp0137s.get(i));
+				}else{
+					porequestentry.setFentryselfp0137(0.0);
+				}
+				//fentryselfp0138	Checked	总重
+				if(fentryselfp0138s!=null&&fentryselfp0138s.get(i)!=null){
+					porequestentry.setFentryselfp0138(fentryselfp0138s.get(i));
+				}else{
+					porequestentry.setFentryselfp0138(0.0);
+				}
+				//fentryselfp0140	Checked	制令号NEY	
+				if(fentryselfp0140s!=null&&fentryselfp0140s.get(i)!=null){
+					porequestentry.setFentryselfp0140(fentryselfp0140s.get(i));
+				}else{
+					porequestentry.setFentryselfp0140(null);
+				}
+				//fmrpautoclosed	Checked	MRP自动关闭标志	1
+				porequestentry.setFmrpautoclosed(1);
+				//fmrplockflag	Unchecked	锁单标识	0
+				porequestentry.setFmrplockflag(0);
+				//fmtono	Unchecked	计划跟踪号	为空
+				porequestentry.setFmtono("");
+				//forderqty	Unchecked	基本单位业务执行数量	0
+				porequestentry.setForderqty(0.0);
+				//fplanmode	Unchecked	计划模式	14036
+				porequestentry.setFplanmode(14036);
+				//fplanorderinterid	Unchecked	计划订单号	0（暂时）
+				porequestentry.setFplanorderinterid(0);
+				//fprice	Unchecked	单价	0
+				porequestentry.setFprice(0.0);
+				//fseccoefficient	Unchecked	换算率	0
+				if(fseccoefficients!=null&&fseccoefficients.get(i)!=null){
+					porequestentry.setFseccoefficient(fseccoefficients.get(i));
+				}else{
+					porequestentry.setFseccoefficient(0.0);
+				}
+				//fseccommitqty	Unchecked	辅助执行数量	0
+				porequestentry.setFseccommitqty(0.0);
+				//fsecqty	Unchecked	辅助数量	0
+				if(fsecqtys!=null&&fsecqtys.get(i)!=null){
+					porequestentry.setFsecqty(fsecqtys.get(i));
+				}else{
+					porequestentry.setFsecqty(0.0);
+				}
+				//fsourcebillno	Unchecked	源单单号	外部推过来的
+				if(fsourcebillnos!=null&&fsourcebillnos.get(i)!=null){
+					porequestentry.setFsourcebillno(fsourcebillnos.get(i));
+				}else{
+					porequestentry.setFsourcebillno("");
+				}
+				//fsourceentryid	Unchecked	原分录号	外部推过来的
+				if(fsourceentryids!=null&&fsourceentryids.size()>0&&fsourceentryids.get(i)!=null){
+					porequestentry.setFsourceentryid(fsourceentryids.get(i));
+				}else{
+					porequestentry.setFsourceentryid(0);
+				}
+				//fsourceinterid	Unchecked	原单内码	外部推过来的
+				if(fsourceinterids!=null&&fsourceinterids.size()>0&&fsourceinterids.get(i)!=null){
+					porequestentry.setFsourceinterid(fsourceinterids.get(i));
+				}else{
+					porequestentry.setFsourceinterid(0);
+				}
+				//fsourcetrantype	Unchecked	原单类型	外部推过来的（销售订单推过来的为81）
+				if(fsourcebillnos!=null&&fsourcebillnos.get(i)!=null&&fsourcebillnos.get(i)!=""){
+					porequestentry.setFsourcetrantype(81);
+				}else{
+					porequestentry.setFsourcetrantype(0);
+				}
+				//fsupplyid	Checked	供应商内码
+				if(fsupplyids!=null&&fsupplyids.get(i)!=null){
+					porequestentry.setFsupplyid(fsupplyids.get(i));
+				}else{
+					porequestentry.setFsupplyid(0);
+				}
+				//fuse	Checked	用途	
+				if(fuses!=null&&fuses.get(i)!=null){
+					porequestentry.setFuse(fuses.get(i));
+				}else{
+					porequestentry.setFuse("");
+				}
+				porequestentryDao.save(porequestentry, "Po.insert.PorequestPo");
+				
+			}
+		}else{
+			ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_POREQUEST_PUSH_TASK");
+			ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+			processDetailQuery.setProcessId(processTask.getProcessIds());
+			List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+			String handlers = "";
+			List<Long> handlids = new ArrayList<Long>();
+			ProcessDetail processDetail = processDetails.get(0);
+			for(ProcessHandle ph:processDetail.getProcessHandleList()){
+				handlers += ph.getHandlerName()+" ";
+				handlids.add(ph.getHandler());
+			}
+			//更新采购申请单
+			Porequest porequest = new Porequest();
+			porequest = porequestDao.getById(entity.getFinterid());
+			fbillno = porequest.getFbillno();
+			porequest.setFcomment(entity.getFcommentpq());
+			porequest.setFnote(entity.getFnote());
+			porequest.setFseltrantype(entity.getFseltrantype());
+			porequest.setFheadselfp0128(entity.getFheadselfp0128());//项目名称
+			porequest.setFbiztype(entity.getFbiztype());//业务类型：12510外购入库类型；12511订单委外类型
+			porequest.setCreatedate(entity.getFcreatedate());
+			porequest.setFdeptid(entity.getUsedeptid());
+			
+			porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());//获得当前制单人的id
+			porequest.setCreaterName(SpringSecurityUtils.getCurrentRealName());//制单人姓名
+			porequest.setAddStatus(0);
+			if(null!=entity.getStatus()&&entity.getStatus()==2){
+				porequest.setFstatus(2);
+				porequest.setCheckstatus(processDetail.getNodeSeq());
+				porequest.setCheckdesc(processDetail.getNodeName()+",执行人:"+handlers);
+			}else{
+				porequest.setFstatus(1);
+			}
+			porequestDao.update(porequest);
+			if(null!=entity.getStatus()&&entity.getStatus()==2){
+				ProcessHistask processHistask = new ProcessHistask();
+				processHistask.setSourceCode(fbillno);
+				processHistask.setSourceId(porequest.getFinterid());
+				processHistask.setTaskCode("TO_POREQUEST_PUSH_TASK");
+				processHistask.setExamineStatus(null);
+				processHistask.setFmark("");
+				processHistask.setNodeSeq(0);
+				processHistask.setNodeName("提交单据!");
+				processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+				processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+				processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+				processHistaskDao.save(processHistask);
+				
+				ProcessExetask processExetask = new ProcessExetask();
+				processExetask.setTaskCode("TO_POREQUEST_PUSH_TASK");
+				processExetask.setSourceCode(fbillno);
+				processExetask.setSourceId(porequest.getFinterid());
+				processExetask.setNodeName(processDetail.getNodeName());
+				processExetask.setNodeSeq(processDetail.getNodeSeq());
+				processExetask.setHandlers(handlers);
+				processExetaskDao.save(processExetask);
+				//写入信息提醒
+				Integer messageres = messageDao.changeMessage(porequest.getFinterid(), fbillno, 
+						"procure/purchase/new_porequest_table.htm", "TO_POREQUEST_PUSH_TASK", handlids);
+				if(messageres!=1){
+					throw new ServiceException("系统错误,插入处理人信息失败，请联系管理员!");
+				}
+			}
+			//更新采购申请单分录
+			List<Long> pids = entity.getPids();
+			List<String> itemcodes = entity.getItemcodes();
+			List<String> itemnames = entity.getItemnames();
+			List<String> itemmodes = entity.getItemmodes();
+			List<String> unitnames = entity.getUnitnames();
+			List<Double> amounts = entity.getAmounts();
+			List<String> standards = entity.getStandards();
+			List<String> materials = entity.getMaterials();
+			//List<Long> empids = entity.getEmpids(); 
+			List<Long> supplyids = entity.getSupplyids();
+			//List<String> fcomments = entity.getFcomments();
+			List<String> rtas = entity.getRtas();
+			//List<Long>  inventoryids = entity.getInventoryids();
+			List<String> atas = entity.getAtas();
+			List<Double> fentryselfp0133s = new ArrayList<Double>();
+			List<Double> fentryselfp0135s = new ArrayList<Double>();
+			List<Double> fentryselfp0136s = new ArrayList<Double>();
+			List<Double> fentryselfp0137s = new ArrayList<Double>();
+			List<Double> fentryselfp0138s = new ArrayList<Double>();
+			List<Integer> fauxpropids = new ArrayList<Integer>();
+			List<Integer> fentryselfp0140s = new ArrayList<Integer>();
+			List<String> fentryselfp0129s = new ArrayList<String>();
+			List<String> fentryselfp0130s = new ArrayList<String>();
+			List<Double> fseccoefficients = new ArrayList<Double>();
+			List<Double> fsecqtys = new ArrayList<Double>();
+			List<Integer> fbominterids = new ArrayList<Integer>();
+			List<String> fuses = new ArrayList<String>();
+			List<Integer> fsupplyids = new ArrayList<Integer>();
+			List<String> fsourcebillnos = new ArrayList<String>();
+			List<Integer> fsourceentryids = new ArrayList<Integer>();//原分录号
+			List<Integer> fsourceinterids = new ArrayList<Integer>();//原单内码
+			fentryselfp0133s = entity.getFentryselfp0133s();
+			fentryselfp0135s = entity.getFentryselfp0135s();
+			fentryselfp0136s = entity.getFentryselfp0136s();
+			fentryselfp0137s = entity.getFentryselfp0137s();
+			fentryselfp0138s = entity.getFentryselfp0138s();
+			fauxpropids = entity.getFauxpropids();
+			fentryselfp0140s = entity.getFentryselfp0140s();
+			fentryselfp0129s = entity.getFentryselfp0129s();
+			fentryselfp0130s = entity.getFentryselfp0130s();
+			fseccoefficients = entity.getFseccoefficients();
+			fsecqtys = entity.getFsecqtys();
+			fbominterids = entity.getFbominterids();
+			fuses = entity.getFuses();
+			fsupplyids = entity.getFsupplyids();
+			fsourcebillnos = entity.getFsourcebillnos();
+			fsourceentryids= entity.getFsourceentryids();
+			fsourceinterids= entity.getFsourceinterids();
+			
+			for(int i = 0;i<itemcodes.size();i++){
+				Porequestentry porequestentry = new Porequestentry();
+				if(itemcodes.get(i)!=null&&!itemcodes.get(i).equals("")){
+					porequestentry.setItemcode(itemcodes.get(i));
+				}else{
+					continue;				
+				}
+				if(porequestentry.getCreatedate()==null){
+					porequestentry.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统日期
+				}
+				porequestentry.setRta(DateUtils.GetDate2(rtas.get(i),"yyyy-MM-dd"));
+				porequestentry.setAta(DateUtils.GetDate2(atas.get(i),"yyyy-MM-dd"));
+				porequestentry.setItemname(itemnames.get(i));
+				porequestentry.setItemmode(itemmodes.get(i));
+				porequestentry.setUnitname(unitnames.get(i));
+				if(amounts.get(i)!=null){
+					porequestentry.setAmount(amounts.get(i));
+				}
+				/*if(empids.get(i)!=null){
+					porequestentry.setEmpid(empids.get(i));
+				}*/
+				if(supplyids.get(i)!=null){
+					porequestentry.setSupplyid(supplyids.get(i));
+				}
+//				porequestentry.setFcomment(fcomments.get(i));
+				porequestentry.setFinterid(entity.getFinterid());
+				porequestentry.setF101(standards.get(i));
+				porequestentry.setF102(materials.get(i));
+				if(entity.getFdeptid()!=null){
+					porequestentry.setDeptid(entity.getFdeptid());
+					
+				}
+				
+				/*if(inventoryids.get(i) != null){
+					porequestentry.setInventoryid(inventoryids.get(i));
+				}*/
+				porequestentry.setDeptid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//使用部门，默认当前登录人所在部门
+				
+				porequestentry.setPutstore(0);//未入库
+				
+				//辅助属性
+				if(fauxpropids!=null&&fauxpropids.get(i)!=null){
+					porequestentry.setFauxpropid(fauxpropids.get(i));
+				}else{
+					porequestentry.setFauxpropid(0);
+				}
+				//辅助审批数量
+				porequestentry.setFauxcommitqty(0.0);
+				//辅助单价
+				porequestentry.setFauxprice(0.0);
+				//fauxqty	Unchecked	辅助申请数量：同数量
+				if(amounts!=null&&amounts.get(i)!=null){
+					porequestentry.setFauxqty(amounts.get(i));
+				}else{
+					porequestentry.setFauxqty(0.0);
+				}
+				//fbominterid	Unchecked	客户bom：0
+				if(fbominterids!=null&&fbominterids.get(i)!=null){
+					porequestentry.setFbominterid(fbominterids.get(i));
+				}else{
+					porequestentry.setFbominterid(0);
+				}
+				//fbrno	Unchecked	公司机构内码：0	
+				porequestentry.setFbrno("0");
+				//fcommitqty	Unchecked	审批数量：0	
+				porequestentry.setFcommitqty(0.0);
+				//fentryid	Unchecked	分录号（排序）
+				porequestentry.setFentryid(i+1);
+				//fentryselfp0129	Checked	制令号
+				porequestentry.setFentryselfp0129(fentryselfp0129s.get(i));
+				//fentryselfp0130	Checked	备注制令号
+				if(fentryselfp0130s!=null&&fentryselfp0130s.get(i)!=null){
+					porequestentry.setFentryselfp0130(fentryselfp0130s.get(i));
+				}else{
+					porequestentry.setFentryselfp0130("");
+				}
+				//fentryselfp0133	Checked	技术部数量	
+				if(fentryselfp0133s!=null&&fentryselfp0133s.get(i)!=null){
+					porequestentry.setFentryselfp0133(fentryselfp0133s.get(i));
+				}else{
+					porequestentry.setFentryselfp0133(0.0);
+				}
+				//fentryselfp0135	Checked	单重
+				if(fentryselfp0135s!=null&&fentryselfp0135s.get(i)!=null){
+					porequestentry.setFentryselfp0135(fentryselfp0135s.get(i));
+				}else{
+					porequestentry.setFentryselfp0135(0.0);
+				}
+				//fentryselfp0136	Checked	计量量
+				if(fentryselfp0136s!=null&&fentryselfp0136s.get(i)!=null){
+					porequestentry.setFentryselfp0136(fentryselfp0136s.get(i));
+				}else{
+					porequestentry.setFentryselfp0136(0.0);
+				}
+				//fentryselfp0137	Checked	总计量量
+				if(fentryselfp0137s!=null&&fentryselfp0137s.get(i)!=null){
+					porequestentry.setFentryselfp0137(fentryselfp0137s.get(i));
+				}else{
+					porequestentry.setFentryselfp0137(0.0);
+				}
+				//fentryselfp0138	Checked	总重
+				if(fentryselfp0138s!=null&&fentryselfp0138s.get(i)!=null){
+					porequestentry.setFentryselfp0138(fentryselfp0138s.get(i));
+				}else{
+					porequestentry.setFentryselfp0138(0.0);
+				}
+				//fentryselfp0140	Checked	制令号NEY	
+				if(fentryselfp0140s!=null&&fentryselfp0140s.get(i)!=null){
+					porequestentry.setFentryselfp0140(fentryselfp0140s.get(i));
+				}else{
+					porequestentry.setFentryselfp0140(null);
+				}
+				//fmrpautoclosed	Checked	MRP自动关闭标志	1
+				porequestentry.setFmrpautoclosed(1);
+				//fmrplockflag	Unchecked	锁单标识	0
+				porequestentry.setFmrplockflag(0);
+				//fmtono	Unchecked	计划跟踪号	为空
+				porequestentry.setFmtono("");
+				//forderqty	Unchecked	基本单位业务执行数量	0
+				porequestentry.setForderqty(0.0);
+				//fplanmode	Unchecked	计划模式	14036
+				porequestentry.setFplanmode(14036);
+				//fplanorderinterid	Unchecked	计划订单号	0（暂时）
+				porequestentry.setFplanorderinterid(0);
+				//fprice	Unchecked	单价	0
+				porequestentry.setFprice(0.0);
+				//fseccoefficient	Unchecked	换算率	0
+				if(fseccoefficients!=null&&fseccoefficients.get(i)!=null){
+					porequestentry.setFseccoefficient(fseccoefficients.get(i));
+				}else{
+					porequestentry.setFseccoefficient(0.0);
+				}
+				//fseccommitqty	Unchecked	辅助执行数量	0
+				porequestentry.setFseccommitqty(0.0);
+				//fsecqty	Unchecked	辅助数量	0
+				if(fsecqtys!=null&&fsecqtys.get(i)!=null){
+					porequestentry.setFsecqty(fsecqtys.get(i));
+				}else{
+					porequestentry.setFsecqty(0.0);
+				}
+				//fsourcebillno	Unchecked	源单单号	外部推过来的
+				if(fsourcebillnos!=null&&fsourcebillnos.get(i)!=null){
+					porequestentry.setFsourcebillno(fsourcebillnos.get(i));
+				}else{
+					porequestentry.setFsourcebillno("");
+				}
+				//fsourceentryid	Unchecked	原分录号	外部推过来的
+				if(fsourceentryids!=null&&fsourceentryids.size()>0&&fsourceentryids.get(i)!=null){
+					porequestentry.setFsourceentryid(fsourceentryids.get(i));
+				}else{
+					porequestentry.setFsourceentryid(0);
+				}
+				//fsourceinterid	Unchecked	原单内码	外部推过来的
+				if(fsourceinterids!=null&&fsourceinterids.size()>0&&fsourceinterids.get(i)!=null){
+					porequestentry.setFsourceinterid(fsourceinterids.get(i));
+				}else{
+					porequestentry.setFsourceinterid(0);
+				}
+				//fsourcetrantype	Unchecked	原单类型	外部推过来的（销售订单推过来的为81）
+				if(fsourcebillnos!=null&&fsourcebillnos.get(i)!=null&&fsourcebillnos.get(i)!=""){
+					porequestentry.setFsourcetrantype(81);
+				}else{
+					porequestentry.setFsourcetrantype(0);
+				}
+				//fsupplyid	Checked	供应商内码
+				if(fsupplyids!=null&&fsupplyids.get(i)!=null){
+					porequestentry.setFsupplyid(fsupplyids.get(i));
+				}else{
+					porequestentry.setFsupplyid(0);
+				}
+				//fuse	Checked	用途	
+				if(fuses!=null&&fuses.get(i)!=null){
+					porequestentry.setFuse(fuses.get(i));
+				}else{
+					porequestentry.setFuse("");
+				}
+				
+				if(pids.get(i)!=null){
+					porequestentry.setPoid(pids.get(i));
+					porequestentryDao.update(porequestentry);
+				}else{
+					porequestentryDao.save(porequestentry, "Po.insert.PorequestPo");
+				}
+				
+			}
+			
+		}
+		Porequestentry porequestentry = new Porequestentry();
+		porequestentry.setFhid(id);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(t==0&&fbillno!=""){
+			operationLogDao.save(ConfigTerrence.MODEL_PURCHASEAPPLY, ConfigTerrence.OPT_ADD, "单据编号为："+fbillno+"的采购申请单添加成功，添加人为："+admin.getAdmin().getAdminName());
+		}else if(t!=0&&fbillno!=""){
+			operationLogDao.save(ConfigTerrence.MODEL_PURCHASEAPPLY, ConfigTerrence.OPT_EDIT, "单据编号为："+fbillno+"的采购申请单修改成功，修改人为："+admin.getAdmin().getAdminName());
+		}
+		return porequestentry;
+		
+	
+		
+	}
+	@Override
+	public List<Porequestentry> findlistToPOAll(
+			PorequestentryQuery porequestentryQuery) throws ServiceException {
+		return porequestentryDao.findlistToPOAll(porequestentryQuery);
+	}
+	@Override
+	public void updateforPQ(Porequestentry entity) throws ServiceException {
+		
+		porequestentryDao.updateforPQ(entity);
+		
+		Porequestentry por = porequestentryDao.getById(entity.getPoid());
+		PorequestentryQuery poQuery = new PorequestentryQuery();
+		poQuery.setFinterid(por.getFinterid());
+		poQuery.setFmrpclosed(1);
+		
+		List<Porequestentry> lplist = porequestentryDao.findList(poQuery);
+		PorequestentryQuery poQuery2 = new PorequestentryQuery();
+		poQuery2.setFinterid(por.getFinterid());
+		
+		List<Porequestentry> lplist2 = porequestentryDao.findList(poQuery2);
+		
+		if(lplist.size() == lplist2.size()){
+			Porequest porequest = new Porequest();
+			porequest.setFinterid(por.getFinterid());
+			porequest.setFclosed(1);
+			porequestDao.update(porequest);
+		}
+		
+		
+	}
+	@Override
+	public Integer updateforPoDetail(List<Long> checkedIdList,
+			Porequestentry porequestentry) throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		Integer val = porequestentryDao.updateforPoDetail(delIds,porequestentry);
+		
+		
+		Porequestentry por = new Porequestentry();//判断是否都下推了
+		List<Porequestentry> polist = porequestentryDao.findDxt(delIds,por);
+		
+		if(polist.size()>0){
+			for(int i = 0;i<polist.size();i++){
+				
+				Porequestentry poreq = new Porequestentry();
+				poreq.setFinterid(polist.get(i).getFinterid());
+				List<Porequestentry> p1 = porequestentryDao.findWxt(poreq);
+				List<Porequestentry> p2 = porequestentryDao.findYxt(poreq);
+				if(p1.size() == p2.size()){//相等则全部下推，将申请单关闭
+					Porequest porequest = new Porequest();
+					porequest.setFinterid(polist.get(i).getFinterid());
+					porequest.setFclosed(1);
+					porequestDao.updateClosed(porequest);
+				}
+			}
+		}
+	
+		
+		//=======================================================================
+		/*Porequestentry pp = new Porequestentry();
+		pp.setPoids(delIds);
+		List<Porequestentry> pooList = porequestentryDao.findpoorderandpoorderentry(pp);
+		if(pooList.size()>0){
+			for(int i = 0;i<pooList.size();i++){
+			
+			}
+			
+		}*/
+		
+		//=======================================================================
+		
+//			Porequestentry porequestentry2 = new Porequestentry();//下推后行业务关闭
+//		porequestentry2.setFmrpclosed(1);
+//		Integer val2 = porequestentryDao.updateforPoDetail(delIds,porequestentry2);
+		
+	/*	Porequestentry porequestent = new Porequestentry();
+		porequestent.setPoids(delIds);
+	//	List<Porequestentry> poreList = porequestentryDao.findListaudit(porequestent);//查询poid在delIds中的数据
+		List<Porequestentry> poreList = porequestentryDao.findpoorderandpoorderentry(porequestent);
+		for(int i=0; i<poreList.size();i++){
+			Poorderentry poorderentry = new Poorderentry();
+			poorderentry.setFinterid(poreList.get(i).getFinterid());
+			poorderentry.setItemcode(poreList.get(i).getItemcode());
+			poorderentry.setItemname(poreList.get(i).getItemname());
+			poorderentry.setItemmode(poreList.get(i).getItemname());
+			poorderentry.setUnitname(poreList.get(i).getUnitname());
+			poorderentry.setFqty(poreList.get(i).getAmount());
+			poorderentry.setFdate(poreList.get(i).getRta());
+			poorderentry.setF101(poreList.get(i).getF101());
+			poorderentry.setF102(poreList.get(i).getF102());
+			poorderentry.setReqcomment(poreList.get(i).getFcomment());
+			poorderentry.setCreatetime(poreList.get(i).getCreatedate());
+			if(poreList.get(i).getDeptid()!=null){
+				poorderentry.setDeptid(poreList.get(i).getDeptid());
+			}
+			if(poreList.get(i).getEmpid()!=null){
+				poorderentry.setEmpid(poreList.get(i).getEmpid());
+			}
+			
+			poorderentryDao.savePoorder(poorderentry);//点击下推，将申请明细保存到订单明细表
+			
+		}
+		*/
+		
+		
+		return val;
+	}
+	@Override
+	public List<Porequestentry> findListpush(List<Long> checkedIdList)
+			throws ServiceException {
+			String auditIds = StringUtils.join(checkedIdList, ",");
+			Porequestentry porequestentry = new Porequestentry();
+			porequestentry.setPoids(auditIds);
+			return porequestentryDao.findListaudit(porequestentry);
+	}
+	@Override
+	public void deleteToDetail(List<Long> checkedIdList)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Porequestentry porequestentry = new Porequestentry();
+		porequestentry.setFinids(auditIds);
+		porequestentryDao.deleteToDetail(porequestentry);
+		
+		Porequest porequest = new Porequest();
+		porequest.setFinterids(auditIds);
+		List<Porequest> porequestlist = porequestDao.findListall(porequest);//查询id为auditIds的单据编码
+		if(porequestlist.size()>0){
+		
+		}
+		
+		porequestDao.deletePFid(porequest);
+		
+		operationLogDao.save(ConfigTerrence.MODEL_PURCHASEAPPLY, ConfigTerrence.OPT_DEL, "主键为："+auditIds+"的采购申请单删除成功");
+		
+		
+	}
+	@Override
+	public List<Porequestentry> findListorder(List<Long> checkedIdList)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Porequestentry porequestentry = new Porequestentry();
+		porequestentry.setPoids(auditIds);
+		return porequestentryDao.findListorder(porequestentry);
+	}
+	@Override
+	public void updatestatus(Porequestentry entity)
+			throws ServiceException {
+		entity.setIspush(0);
+		entity.setFmrpclosed(0);
+		porequestentryDao.updatestatus(entity);
+		
+		Porequest porequest = new Porequest();
+		porequest.setFinterid(entity.getFinterid());
+		porequest.setFclosed(0);
+		porequestDao.updateIclose(porequest);
+	}
+	@Override
+	public List<Porequestentry> findunauditCheck(List<Long> checkedIdList)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Porequestentry porequestentry = new Porequestentry();
+		porequestentry.setFinids(auditIds);
+		return porequestentryDao.findAllunauditCheck(porequestentry);
+	}
+	@Override
+	public List<Porequestentry> findItemcodeSum(PorequestentryQuery porequestentryQuery) throws ServiceException {
+		// TODO Auto-generated method stub
+		return porequestentryDao.findItemcodeSum(porequestentryQuery);
+	}
+	
+}

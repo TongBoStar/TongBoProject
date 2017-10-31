@@ -1,0 +1,264 @@
+<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@ include file="/common/childrenHeader.jsp" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>任务管理</title>
+
+<link rel="stylesheet" type="text/css" href="/css/common.css">
+
+</head>
+<script type="text/javascript"><!--
+$(document).ready(function() {
+	window.simpleTable =$(document).SimpleTable({
+		id:'itempage',
+		formId: 'queryform',
+		pageNo: '1',
+		pageSize : '10',
+		order: 'desc',
+		orderBy: 'jobId',
+		submitForm : submitForm//分页回调函数
+		});	
+		
+	window.employeesimpleTable =$(document).SimpleTable({
+		id:'employeepage',
+		formId: 'employeequeryform',
+		pageNo: '1',
+		pageSize : '10',
+		order: 'desc',
+		orderBy: 'employeeTaskId',
+		submitForm : employeesubmitForm//分页回调函数
+		});	
+	//loadjob();
+	//loadadmin();
+	laodAlladmin();
+});
+//--------------
+function submitForm(simpleTable, param){
+		loadjob();
+}
+function employeesubmitForm(employeesimpleTable, param){
+		loademplovee();
+}
+//-------------------------------------------------------------------
+var emplist=new Array();
+function laodAlladmin(){
+	var url = ctx + '/admin/admin!adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data :'adminQuery.teamid='+"",
+		success : function(data) {
+				$.each(data, function(i, o){
+					if(o.type!=1){//管理员排除
+					emplist.push(o);
+					}
+				});
+		getTeamlist();		
+		}
+	});
+}
+
+//=============================================================================================================
+//=====loademplovee任务========================================================================================================
+var teamlist=new Array();
+function getTeamlist(){
+	var formParam = $('#employeequeryform').serialize();
+	var url = "${ctx}/team/team!listToteam.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		data:formParam,
+		success : function(data) {
+			data = $.parseJSON(data);
+				$.each(data.teamList,function(i,o){
+					teamlist.push(o);
+				});
+				loademplovee();
+				loadTeamselect();
+		}
+	});	
+		
+}
+
+function loademplovee(){
+var employeeitemname="";
+	employeeitemname=document.getElementById("employeeitemname").value;
+	var html='';
+	var pageParam = employeesimpleTable.bindPageParam();
+	var formParam = $('#employeequeryform').serialize();
+	var url = "${ctx}/employeeTask/employee-task!listEmployee.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		data:pageParam +'&'+formParam+'&employeeTaskQuery.itemname='+employeeitemname,
+		success : function(data) {
+			data = $.parseJSON(data);
+			var page = data.page;
+			$.refreshPageToolbar(page,"employeepage",employeesimpleTable); 
+
+				if(data.resultInfo[0]=='0')
+				{
+					$.each(page.result,function(i,o){
+					html+='<tr>';
+					html+='<td>'+(page.pageNo*page.pageSize+i-page.pageSize)+'</td>';
+					html+='<td>'+o.itemcode+'</td>';
+					html+='<td>'+o.itemname+'</td>';
+						var k=0;
+						for(var k=0;k<teamlist.length;k++){
+							if(o.teamid==teamlist[k].teamid){
+							html+='<td>'+teamlist[k].teamname+'</td>';
+							k=1;
+							break;}
+						}
+						if(k!=1){//班组判空
+						html+='<td></td>';
+						}
+						var m=0;
+						for(var k=0;k<emplist.length;k++){
+							if(o.empid==emplist[k].adminId){
+							html+='<td>'+emplist[k].adminName+'</td>';
+							m=1;
+							break;}
+						}
+						if(m!=1){//操作员判空
+						html+='<td></td>';
+						}
+					html+='<td>'+o.planstartdateString+'</td>';
+					html+='<td>'+o.planenddateString+'</td>';
+					html+='<td>'+o.fqty+'</td>';
+					if(o.status=="0"){
+					html+='<td><font color="red">未开工&nbsp</font></td>';
+					}					
+					if(o.status=="1"){
+					html+='<td><font color="red">已开工&nbsp</font></td>';
+					}
+					if(o.status=="2"){
+					html+='<td><font color="green">已完成&nbsp</font></td>';
+					}
+					html+='</tr>';
+					});
+					
+					$('#employeepagecontent').html(html);
+				}else{
+				alert(data.resultInfo[1]);
+				}
+		}
+	});
+
+}
+
+//-----------------
+function loadTeamselect(){
+	var selects=document.getElementById("employeeTaskQuery.teamid");
+	$.each(teamlist,function(i,o){
+			selects.options[i+1]=new Option(o.teamname,o.teamid);
+	});
+	loadadmin();
+}
+//----------------
+function loadadmin(){
+	var teamid="";
+	var selecteam=document.getElementById("employeeTaskQuery.teamid");
+	var selects=document.getElementById("employeeTaskQuery.empid");
+		selects.options.length = 0;
+		selects.options[0]=new Option("全部","");
+		for(var i=0;i<selecteam.options.length;i++){
+			if(selecteam.options[i].selected){
+				teamid=selecteam.options[i].value;
+			}
+		}
+
+	var url = ctx + '/admin/admin!adminList.htm';
+	var Queryteamid=teamid;	
+	var list=new Array();
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data :'adminQuery.teamid='+teamid,
+		success : function(data) {
+				$.each(data, function(i, o){
+					if(o.type!=1){//管理员排除
+							list.push(o);
+					}
+				});
+				for(var i=0;i<list.length;i++){
+				selects.options[i+1]=new Option(list[i].adminName,list[i].adminId);
+				}
+		}
+	});
+	
+}
+--></script>
+
+<!--========================================================================================================== -->
+<!--======人员表任务列表================================================================================== -->
+<div style="text-align:center;font-size: 16px;font-weight: bold;background-color: #CCCCCC;"><span>个人任务管理</span></div>		
+<form name="employeequeryform" id="employeequeryform" action="" method="post">  
+<!--  -->
+<div class="mr-control" >  
+	<div class="mrc-left">
+		物料名称：<input name="itemname" id="employeeitemname" onkeyup="javascript:loademplovee();"/>
+		<input type="button" value="搜索" onclick="javascript:loademplovee();" class="btnall" style="margin-left:1em;"/>
+	    
+	    班组名称：
+	    <select name="employeeTaskQuery.teamid" id="employeeTaskQuery.teamid" class="selectall" onchange="loadadmin();">
+	    <option value="" selected="true">全部</option>
+	    </select>
+	  	
+	   <input type="button" value="搜索" onclick="javascript:loademplovee();" class="btnall" style="margin-left:1em;"/>
+	   
+	   人员名称： 
+	   <select name="employeeTaskQuery.empid" id="employeeTaskQuery.empid" class="selectall" >
+	    
+	    </select>
+	  	
+	   <input type="button" value="搜索" onclick="javascript:loademplovee();" class="btnall" style="margin-left:1em;"/>
+	
+	</div>
+</div>
+<div>
+<table width="100%" class="datalist">
+
+  <tr>
+    <!-- <th width="6%" scope="col">
+    <input type="checkbox" id="allcheckbox" name="allcheckbox" onclick="javascript:checkAll();"/>全选
+     </th> -->
+    <th width="5%" scope="col">序号</th>
+    <th width="10%" scope="col">物料编码</th>
+    <th width="10%" scope="col">物料名称</th>
+    
+    <th width="10%" scope="col">班组名称</th>
+    <th width="10%" scope="col">操作员</th>
+    
+    <th width="10%" scope="col">计划开工时间</th>
+    <th width="10%" scope="col">计划完工时间</th>
+    <th width="5%" scope="col">数量</th>
+    <th width="7%" scope="col">任务状态</th>
+   <!--  <th width="8%" scope="col">操作</th> -->
+    
+  </tr>
+  <tbody id="employeepagecontent">
+ </tbody>
+ 
+</table>
+    <div style="position:absolute; text-align:center; margin:1em;">
+    <!--   <input type="button" class="btnall" value="添加" onclick="javascript:showAdddiv()"/>
+   <input type="button" class="btnall" value="删除" onclick="javascript:showDeldiv()"> --> 
+    </div>
+</div>
+</form>
+
+
+<!-- =========================================================================================================== -->
+</div>
+ <div class="pages" style="margin-top: 10px;margin-left: 10px">            		
+   <div class="ps-right">            	
+   	<simpletable:pageToolbar page="${page}" id="employeepage">
+   	</simpletable:pageToolbar>            
+   </div>
+ </div>
+
+
+</html>

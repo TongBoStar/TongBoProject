@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Supplier;
+import com.terrence.crm.dol.dao.ISupplierDao;
+import com.terrence.crm.dol.query.SupplierQuery;
+
+
+@Repository
+public class SupplierDao extends BaseIbatisDao<Supplier,java.lang.Long> implements ISupplierDao{
+	
+public void saveOrUpdate(Supplier entity) {
+	if(entity.getSupplierid() == null) 
+		save(entity);
+	else 
+		update(entity);
+}
+
+public String getIbatisSqlMapNamespace() {
+	
+	return "Supplier";
+}
+public Supplier getByProperty(String propertyName, Object propertyValue) {
+	Map map=new HashMap();		
+	map.put("propertyName", propertyName);
+	map.put("propertyValue", (String)propertyValue);
+	return (Supplier)this.getSqlMapClientTemplate().queryForObject("Supplier.getByProperty", map);		
+}
+
+@Override
+public void syncSupplier() {
+	this.getSqlMapClientTemplate().queryForObject("Supplier.syncSupplier");
+	
+}
+
+@Override
+public List<Supplier> findlistToSupplierQuery(SupplierQuery supplierQuery) {
+	return this.getSqlMapClientTemplate().queryForList("Supplier.list.supplier.query", supplierQuery);
+}
+}

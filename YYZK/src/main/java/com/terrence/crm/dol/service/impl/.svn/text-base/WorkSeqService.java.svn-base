@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.WorkSeq;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.query.WorkSeqQuery;
+import com.terrence.crm.dol.service.IWorkSeqService;
+
+@Service
+@Transactional
+public class WorkSeqService extends BaseService implements IWorkSeqService {
+	protected static Logger logger = LoggerFactory.getLogger(WorkSeqService.class);
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "WorkSeq";
+	}
+	@Transactional(readOnly=true)
+	public WorkSeq getById(java.lang.Long id) throws ServiceException
+	{
+		return workSeqDao.getById(id);
+	}
+	
+	public void saveOrUpdate(WorkSeq entity) throws ServiceException
+	{
+		workSeqDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(WorkSeq entity) throws ServiceException
+	{
+		Long adId = workSeqDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(WorkSeq entity) throws ServiceException
+	{
+		Integer returnValue =  workSeqDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = workSeqDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = workSeqDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WorkSeqQuery query = new WorkSeqQuery();
+		try {
+			return workSeqDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkSeq> findPage(Page<WorkSeq> page, WorkSeqQuery query) throws ServiceException
+	{
+		return workSeqDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkSeq> findPage(Page<WorkSeq> page,String statement, WorkSeqQuery query) throws ServiceException
+	{
+		return workSeqDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkSeq> findList(WorkSeqQuery query) throws ServiceException
+	{
+		return workSeqDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkSeq> findList(WorkSeqQuery query,Integer pageSize) throws ServiceException
+	{
+		return workSeqDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<WorkSeq> findList(WorkSeqQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return workSeqDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkSeq> findAllList() throws ServiceException
+	{
+		return workSeqDao.findAllList();
+	}
+
+}

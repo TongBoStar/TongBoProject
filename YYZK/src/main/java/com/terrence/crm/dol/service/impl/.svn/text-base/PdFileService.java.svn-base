@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.query.PdFileQuery;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.service.IPdFileService;
+
+@Service
+@Transactional
+public class PdFileService extends BaseService implements IPdFileService {
+	protected static Logger logger = LoggerFactory.getLogger(PdFileService.class);
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdFile";
+	}
+	@Transactional(readOnly=true)
+	public PdFile getById(java.lang.Long id) throws ServiceException
+	{
+		return pdFileDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdFile entity) throws ServiceException
+	{
+		pdFileDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdFile entity) throws ServiceException
+	{
+		Long adId = pdFileDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdFile entity) throws ServiceException
+	{
+		Integer returnValue =  pdFileDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdFileDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdFileDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdFileQuery query = new PdFileQuery();
+		try {
+			return pdFileDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdFile> findPage(Page<PdFile> page, PdFileQuery query) throws ServiceException
+	{
+		return pdFileDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdFile> findPage(Page<PdFile> page,String statement, PdFileQuery query) throws ServiceException
+	{
+		return pdFileDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdFile> findList(PdFileQuery query) throws ServiceException
+	{
+		return pdFileDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdFile> findList(PdFileQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdFileDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdFile> findList(PdFileQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdFileDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdFile> findAllList() throws ServiceException
+	{
+		return pdFileDao.findAllList();
+	}
+
+}

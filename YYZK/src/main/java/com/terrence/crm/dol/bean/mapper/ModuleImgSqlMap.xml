@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ModuleImg">
+
+<resultMap id="RM.ModuleImg" class="com.terrence.crm.dol.bean.ModuleImg">
+	<result property="id" column="id"/>
+	<result property="moduleId" column="moduleId"/>
+	<result property="moduleCode" column="moduleCode"/>
+	<result property="moduleImgName" column="moduleImgName"/>
+	<result property="imgPath" column="imgPath"/>
+	<result property="toUrl" column="toUrl"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="module" resultMap="ModuleImg.Module"/>
+</resultMap>
+<resultMap id="ModuleImg.Module" class="com.terrence.crm.dol.bean.Module">
+	<result property="moduleCode" column="module_code"/>
+	<result property="moduleName" column="moduleName"/>
+	<result property="moduleLevel" column="moduleLevel"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ModuleImg.columns">
+	<![CDATA[
+		t_module_img.id ,
+		t_module_img.moduleId ,
+		t_module_img.moduleCode ,
+		t_module_img.moduleImgName ,
+		t_module_img.imgPath ,
+		t_module_img.toUrl ,
+		t_module_img.createTime ,
+		t_module_img.modifyTime
+	]]>
+</sql>
+
+<insert id="ModuleImg.insert" >
+	<![CDATA[
+	INSERT INTO t_module_img (
+		moduleId,
+		moduleCode,
+		moduleImgName,
+		imgPath,
+		toUrl,
+		createTime,
+		modifyTime
+	) VALUES (
+		#moduleId#,
+		#moduleCode#,
+		#moduleImgName#,
+		#imgPath#,
+		#toUrl#,
+		#createTime#,
+		#modifyTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ModuleImg.update" parameterClass="com.terrence.crm.dol.bean.ModuleImg"> 
+	UPDATE t_module_img 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="moduleId">
+			moduleId = #moduleId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleCode">
+			moduleCode = #moduleCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleImgName">
+			moduleImgName = #moduleImgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="imgPath">
+			imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="toUrl">
+			toUrl = #toUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ModuleImg.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_module_img.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleId">
+			t_module_img.moduleId = #moduleId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleCode">
+			t_module_img.moduleCode = #moduleCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleImgName">
+			t_module_img.moduleImgName = #moduleImgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgPath">
+			t_module_img.imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="toUrl">
+			t_module_img.toUrl = #toUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_module_img.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_module_img.modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ModuleImg.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_module_img.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleId">
+		t_module_img.moduleId = #moduleId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleCode">
+		t_module_img.moduleCode = #moduleCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleImgName">
+		t_module_img.moduleImgName = #moduleImgName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgPath">
+		t_module_img.imgPath = #imgPath# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="toUrl">
+		t_module_img.toUrl = #toUrl# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_module_img.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_module_img.modifyTime = #modifyTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="ModuleImg.getById" resultMap="RM.ModuleImg">
+	select <include refid="ModuleImg.columns"/>,t_module.moduleCode module_code,t_module.moduleName,t_module.moduleLevel  
+	from t_module_img
+	left join t_module on t_module_img.moduleId = t_module.id 
+	 where t_module_img.id=#id#
+</select>
+
+<select id="ModuleImg.getByProperty" resultMap="RM.ModuleImg">
+	select <include refid="ModuleImg.columns"/> from t_module_img where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ModuleImg.delete">
+	<![CDATA[
+		DELETE FROM t_module_img WHERE id=#id#
+	]]>
+</delete>
+<delete id="ModuleImg.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_module_img WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ModuleImg.findPage.count" resultClass="long">
+	select count(*) from t_module_img <include refid="ModuleImg.findPage.where"/>
+</select>
+
+<select id="ModuleImg.findPage" resultMap="RM.ModuleImg">
+	select <include refid="ModuleImg.columns"/> ,t_module.moduleCode module_code,t_module.moduleName,t_module.moduleLevel  
+	from t_module_img
+	left join t_module on t_module_img.moduleId = t_module.id 
+	<include refid="ModuleImg.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ModuleImg.findList" resultMap="RM.ModuleImg">
+	SELECT <include refid="ModuleImg.columns"/>,t_module.moduleCode module_code,t_module.moduleName,t_module.moduleLevel  
+	from t_module_img
+	left join t_module on t_module_img.moduleId = t_module.id 
+	<include refid="ModuleImg.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

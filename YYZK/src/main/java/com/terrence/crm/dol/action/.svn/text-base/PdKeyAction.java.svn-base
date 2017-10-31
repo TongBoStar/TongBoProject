@@ -1,0 +1,695 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.List;
+
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.Region;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Bom;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.PdKey;
+import com.terrence.crm.dol.query.PdKeyQuery;
+import com.terrence.crm.dol.service.IPdKeyService;
+import com.terrence.crm.dol.utils.DateUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/pdKey")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "pdKey." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PdKeyAction extends CrudActionSupport<PdKey>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("pdKeyService")
+	private IPdKeyService pdKeyService;
+	
+	
+	private PdKey entity;
+
+	private PdKeyQuery pdKeyQuery;
+	
+	
+	private java.lang.Long pdKeyId;
+	
+	/** 分页器 */
+	private Page<PdKey> page = new Page<PdKey>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	private List<java.lang.String> checkedCodeList;
+	private List<java.lang.String> checkedAllCodeList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<PdKey> pdKeyList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (pdKeyId != null ) {
+			entity = pdKeyService.getById(pdKeyId);
+		} else {
+			entity = new PdKey();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			pdKeyService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	
+	
+public String deleteBycode() throws Exception {
+		
+		try {
+			pdKeyService.deleteBycode(checkedCodeList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+		try {
+			pdKeyList = pdKeyService.findList(pdKeyQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pdKeyId");
+			page.setOrder(Page.DESC);
+		}
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+		try {
+			page = pdKeyService.findPage(page, pdKeyQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+public String listDetail() throws Exception {
+			if (!page.isOrderBySetted()) {
+				page.setOrderBy("pdKeyId");
+				page.setOrder(Page.DESC);
+			}
+			if(pdKeyQuery == null) {
+				pdKeyQuery = new PdKeyQuery();
+			}
+			
+		try {
+			page = pdKeyService.findPage(page, "PdKey.findPage.detail", pdKeyQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public String listDetailNew() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pdKeyId");
+			page.setOrder(Page.DESC);
+		}
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+	try {
+		page = pdKeyService.findPage(page, "PdKey.findPage.detailNew", pdKeyQuery);
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询成功";
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+	}
+	return JSON;
+	}
+	
+	public String listpdkeyDetail() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pdKeyId");
+			page.setOrder(Page.DESC);
+		}
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+	try {
+		
+		pdKeyList = pdKeyService.findList(pdKeyQuery, "PdKey.findList.PdKey.detail");
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询成功";
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+	}
+	return JSON;
+	}
+
+	
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			pdKeyService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+public String saveDetail() throws Exception {
+		
+		try {
+			Integer isok = pdKeyService.saveDetail(checkedIdList,pdKeyQuery);
+			if(isok.intValue()==1){
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";	
+			}else {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "物料已绑定关键件,请重新选择!";	
+			}
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = pdKeyService.getById(pdKeyId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	private void makeSheet(HSSFSheet sheet, HSSFWorkbook wb ) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+		  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+		  font.setFontHeightInPoints((short) 12);//设置字体大小
+		  cellstyl.setFont(font);
+		  sheet.setDefaultColumnWidth((short) 20);//列宽
+		  HSSFRow firstrow = sheet.createRow(0);
+		  HSSFRow secondRow = sheet.createRow(1);
+		  firstrow.createCell((short) 0).setCellValue("物料代码");
+		  firstrow.createCell((short) 1).setCellValue("物料名称");
+		  firstrow.createCell((short) 2).setCellValue("材质");
+		  firstrow.createCell((short) 3).setCellValue("批号 ");
+		  firstrow.createCell((short) 4).setCellValue("用量 ");
+		  for(short i=0;i<firstrow.getLastCellNum();i++){
+			  firstrow.getCell(i).setCellStyle(cellstyl);  
+		  }
+		  /**合并单元格:物料代码   物料名称 工艺状态 上级代码  上级名称  用量*/
+		  Region[] regionHeadList=new Region[6];
+		  for(int i=0;i<6;i++){
+		  /**参数1：行号   2：起始列号  3：行号  4：终止列号*/  
+			  regionHeadList[i] = new Region(0, (short) i, 1, (short) i);  
+			  sheet.addMergedRegion(regionHeadList[i]);
+		  }
+		  /**序1到序12的单元格合并*/
+		  Region[] processRegionList=new Region[12];
+		  for(int i=0;i<12;i++){
+			  processRegionList[i]=new Region(0, (short) (6*(i+1)), 0, (short) ((i+2)*6-1));
+			  sheet.addMergedRegion(processRegionList[i]);
+		  }
+		
+	}
+	public String print()throws Exception
+	{
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		try {
+			//pdKeyQuery.setItemcode("080.PL3000.150-600/AP/W");
+			//pdKeyQuery.setSeqid(60l);
+			List<PdKey> list=pdKeyService.findList(pdKeyQuery, "PdKey.findPrint", 100);
+			HSSFWorkbook wb = new HSSFWorkbook();
+			  HSSFSheet sheet = wb.createSheet("new sheet");
+			  HSSFCellStyle cellstyle=wb.createCellStyle();
+			  cellstyle.setWrapText(true);//自动换行
+			  makeSheet(sheet,wb);//创建表头
+			  int i=2;
+			  for(PdKey pdKey:list){
+				  /**填充数据: 物料代码 	物料名称  	工艺状态 	上级代码 	上级名称 	用量*/
+				  HSSFRow rows = sheet.createRow(i);
+				  rows.createCell((short) 0).setCellValue(pdKey.getKeycode());
+				  rows.createCell((short) 1).setCellValue(pdKey.getKeyname());
+				  rows.createCell((short) 2).setCellValue(pdKey.getF102());
+				  rows.createCell((short) 3).setCellValue(pdKey.getSerial().equals("null")?"":pdKey.getSerial());
+				  rows.createCell((short) 4).setCellValue(pdKey.getFqty());
+				  i++;
+			  }
+			  String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"pdkey.xls";
+			  FileOutputStream outputStream=new FileOutputStream(new File(getRequest().getRealPath("/")+"pdkey/"+fileName));
+				wb.write(outputStream);
+				outputStream.flush();
+				outputStream.close();
+				resultInfo[0] = "0";
+				resultInfo[1] = "pdkey/"+fileName;
+		} catch (Exception  e) {
+			e.printStackTrace();
+		}
+		return JSON;
+		
+	}
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			pdKeyList = pdKeyService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 关键件查看
+	 * @return
+	 * @throws Exception
+	 */
+	public String findItemKey()throws Exception
+	{
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+		try {
+			pdKeyList = pdKeyService.findItemKey(pdKeyQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 批量绑定关键件
+	 * @return
+	 * @throws Exception
+	 */
+	public void prepareSavePdKey() throws Exception{
+		prepareModel();
+	}
+	@Action("/orderbom/savepdkey")
+	public String savePdKey() throws Exception {
+			
+		try {
+			
+			String delcodes = "\'";
+			
+			for(String cc:checkedAllCodeList){
+				delcodes+=cc+"\',\'";
+			}
+			delcodes=delcodes.substring(0,delcodes.length()-2);
+			PdKeyQuery pdKeyQuery = new PdKeyQuery();
+			pdKeyQuery.setItemcodes(delcodes);
+			long pdid = pdKeyService.savePdKey(checkedIdList,checkedCodeList,pdKeyQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 主要部件清单查询
+	 * @return
+	 * @throws Exception
+	 */
+	public String findMainKey()throws Exception
+	{
+		if(pdKeyQuery == null) {
+			pdKeyQuery = new PdKeyQuery();
+		}
+		
+		try {
+			pdKeyList = pdKeyService.findMainKey(pdKeyQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public PdKey getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PdKeyQuery getPdKeyQuery() {
+		return pdKeyQuery;
+	}
+
+	
+	public void setPdKeyQuery(PdKeyQuery pdKeyQuery) {
+		this.pdKeyQuery = pdKeyQuery;
+	}
+
+	public void setPdKeyId(java.lang.Long pdKeyId) {
+		this.pdKeyId = pdKeyId;
+	}
+	
+	
+	public java.lang.Long getPdKeyId() {
+		return this.pdKeyId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<PdKey> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<PdKey> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<PdKey> getPdKeyList() {
+		return pdKeyList;
+	}
+
+	public List<java.lang.String> getCheckedCodeList() {
+		return checkedCodeList;
+	}
+
+	public void setCheckedCodeList(List<java.lang.String> checkedCodeList) {
+		this.checkedCodeList = checkedCodeList;
+	}
+
+	public List<java.lang.String> getCheckedAllCodeList() {
+		return checkedAllCodeList;
+	}
+
+	public void setCheckedAllCodeList(List<java.lang.String> checkedAllCodeList) {
+		this.checkedAllCodeList = checkedAllCodeList;
+	}
+	
+	
+}

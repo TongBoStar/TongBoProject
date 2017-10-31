@@ -1,0 +1,54 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AdminOrggroup;
+import com.terrence.crm.dol.dao.IAdminOrggroupDao;
+
+@Repository
+public class AdminOrggroupDao extends BaseIbatisDao<AdminOrggroup,java.lang.Long> implements IAdminOrggroupDao{
+
+		
+	public void saveOrUpdate(AdminOrggroup entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AdminOrggroup";
+	}
+	public AdminOrggroup getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AdminOrggroup)this.getSqlMapClientTemplate().queryForObject("AdminOrggroup.getByProperty", map);		
+	}
+
+	@Override
+	public Integer deleteByGroupId(Long delIds) {
+	   return this.getSqlMapClientTemplate().delete("AdminOrggroup.deleteByGroupId",delIds);
+	}
+
+	@Override
+	public boolean isUnique(AdminOrggroup entity) {
+		Long count = (Long) this.getSqlMapClientTemplate().queryForObject("AdminOrggroup.isUnique", entity);
+		if (count==0) {
+			return false;
+		}
+		return true;
+		
+	}
+
+}

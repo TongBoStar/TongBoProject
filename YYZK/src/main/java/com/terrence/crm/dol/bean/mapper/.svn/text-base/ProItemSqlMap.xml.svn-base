@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProItem">
+
+        
+	<resultMap id="RM.ProItem" class="com.terrence.crm.dol.bean.ProItem">
+        <result property="aid" column="aid"/>
+        <result property="fitemid" column="fitemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="fmode" column="fmode"/>
+        <result property="fdescript" column="fdescript"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fmaker" column="fmaker"/>
+        <result property="fshortname" column="fshortname"/>
+        <result property="srcarea" column="srcarea"/>
+        <result property="buyamount" column="buyamount"/>
+        <result property="avgamount" column="avgamount"/>
+        <result property="rpamount" column="rpamount"/>
+        <result property="costamount" column="costamount"/>
+        <result property="listamount" column="listamount"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ProItem.columns">
+	    <![CDATA[
+        	t_pro_item.aid ,
+        	t_pro_item.fitemid ,
+        	t_pro_item.itemcode ,
+        	t_pro_item.itemname ,
+        	t_pro_item.fmode ,
+        	t_pro_item.fdescript ,
+        	t_pro_item.flevel ,
+        	t_pro_item.fmaker ,
+        	t_pro_item.fshortname ,
+        	t_pro_item.srcarea ,
+        	t_pro_item.buyamount ,
+        	t_pro_item.avgamount ,
+        	t_pro_item.rpamount ,
+        	t_pro_item.costamount ,
+        	t_pro_item.listamount 
+	    ]]>
+	</sql>
+	
+   <insert id="ProItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pro_item (
+        	fitemid ,
+        	itemcode ,
+        	itemname ,
+        	fmode ,
+        	fdescript ,
+        	flevel ,
+        	fmaker ,
+        	fshortname ,
+        	srcarea ,
+        	buyamount ,
+        	avgamount ,
+        	rpamount ,
+        	costamount ,
+        	listamount 
+        ) VALUES (
+        	#fitemid# ,
+        	#itemcode# ,
+        	#itemname# ,
+        	#fmode# ,
+        	#fdescript# ,
+        	#flevel# ,
+        	#fmaker# ,
+        	#fshortname# ,
+        	#srcarea# ,
+        	#buyamount# ,
+        	#avgamount# ,
+        	#rpamount# ,
+        	#costamount# ,
+        	#listamount# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="aid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ProItem.update" parameterClass="com.terrence.crm.dol.bean.ProItem">         
+        UPDATE t_pro_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fitemid">
+	        	fitemid = #fitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmode">
+	        	fmode = #fmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdescript">
+	        	fdescript = #fdescript# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmaker">
+	        	fmaker = #fmaker# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fshortname">
+	        	fshortname = #fshortname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="srcarea">
+	        	srcarea = #srcarea# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="buyamount">
+	        	buyamount = #buyamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="avgamount">
+	        	avgamount = #avgamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="rpamount">
+	        	rpamount = #rpamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="costamount">
+	        	costamount = #costamount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="listamount">
+	        	listamount = #listamount# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        aid = #aid# 
+    </update>
+    
+	<delete id="ProItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pro_item where
+       aid = #aid# 
+    ]]>
+    </delete>
+    
+    <delete id="ProItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pro_item 
+        WHERE
+       aid in ($aid$) 
+    ]]>
+    </delete>
+    
+    <select id="ProItem.getById" resultMap="RM.ProItem">
+	    select <include refid="ProItem.columns"/>
+	    
+	        from t_pro_item 
+	        where 
+		        aid = #aid# 
+	    
+    </select>
+    
+	<select id="ProItem.getByProperty" resultMap="RM.ProItem">
+		select <include refid="ProItem.columns"/> from t_pro_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ProItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="aid">
+	             t_pro_item.aid = #aid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_pro_item.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pro_item.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_pro_item.itemname like ('%$itemname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmode">
+	             t_pro_item.fmode like ('%$fmode$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdescript">
+	             t_pro_item.fdescript = #fdescript#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_pro_item.flevel like ('%$flevel$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmaker">
+	             t_pro_item.fmaker  like ('%$fmaker$%') 
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fshortname">
+	             t_pro_item.fshortname = #fshortname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="srcarea">
+	             t_pro_item.srcarea like ('%$srcarea$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="buyamount">
+	             t_pro_item.buyamount = #buyamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="avgamount">
+	             t_pro_item.avgamount = #avgamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="rpamount">
+	             t_pro_item.rpamount = #rpamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="costamount">
+	             t_pro_item.costamount = #costamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="listamount">
+	             t_pro_item.listamount = #listamount#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ProItem.findPage.and">
+			<isNotEmpty prepend="AND" property="aid">
+	             t_pro_item.aid = #aid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_pro_item.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pro_item.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_pro_item.itemname like ('%$itemname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmode">
+	             t_pro_item.fmode like ('%$fmode$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdescript">
+	             t_pro_item.fdescript = #fdescript#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_pro_item.flevel like ('%$flevel$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmaker">
+	             t_pro_item.fmaker  like ('%$fmaker$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fshortname">
+	             t_pro_item.fshortname = #fshortname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="srcarea">
+	             t_pro_item.srcarea like ('%$srcarea$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="buyamount">
+	             t_pro_item.buyamount = #buyamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="avgamount">
+	             t_pro_item.avgamount = #avgamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="rpamount">
+	             t_pro_item.rpamount = #rpamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="costamount">
+	             t_pro_item.costamount = #costamount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="listamount">
+	             t_pro_item.listamount = #listamount#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ProItem.Entity" resultMap="RM.ProItem">
+    	SELECT 	<include refid="ProItem.columns"/> FROM t_pro_item <include refid="ProItem.findPage.where"/>
+    </select>
+    
+    <select id="ProItem.findList" resultMap="RM.ProItem">
+    	SELECT 
+    		<include refid="ProItem.columns"/> 
+    	FROM 
+    		t_pro_item
+		<include refid="ProItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ProItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pro_item
+    ]]>
+		<include refid="ProItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ProItem.findPage" resultMap="RM.ProItem">
+    	select <include refid="ProItem.columns"/>	    
+	        from t_pro_item 	   
+		<include refid="ProItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ProItem.findPage" resultMap="RM.ProItem">
+    	select <include refid="ProItem.columns"/>	    
+	        from t_pro_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       aid 
+	   not in(select $notTop$ 
+       aid 
+	   from t_pro_item <include refid="ProItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ProItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    <!-- 抽取数据并插入到t_pro_item中 -->
+    <insert id="ProItem.saveProItem" >
+    	<!-- 
+		insert into  t_pro_item
+		(fitemid,itemcode,itemname,fmode,fmaker,fshortname,buyamount,avgamount,rpamount,costamount,listamount)
+		select 
+		  k3item.FItemID as fitemid, 
+		  k3item.FNumber as itemcode,
+		  k3item.FName as itemname,
+		  k3item.FModel as fmode,
+		 (CASE k3item.ferpclsid WHEN 1 THEN k3sup.fname WHEN 2 THEN k3dep.fname  ELSE '' END) AS fmaker,
+		 (CASE k3item.ferpclsid WHEN 1 THEN k3sup.fshortname WHEN 2 THEN k3dep.fname  ELSE '' END) AS fshortname,
+		  isnull(t1.ftaxprice,0) as buyamount,
+		  isnull(POOrderEntry.fprice,0) as avgamount,
+		  isnull(t1.ftaxprice,0) as rpamount,
+		  isnull(t1.ftaxprice,0) as costamount,
+		  ((isnull(t1.ftaxprice,0))*2.5) as listamount
+		 from K33.AIS20120813194456.dbo.t_icitem  as k3item
+		 LEFT join K33.AIS20120813194456.dbo.t_department as k3dep on k3dep.fitemid=k3item.FSource
+		 left join K33.AIS20120813194456.dbo.t_supplier as k3sup on k3sup.fitemid=k3item.FSource
+		 left join (select AVG(poe.ftaxprice) as fprice, poe.fitemid from  K33.AIS20120813194456.dbo.POOrderEntry  as poe where  datename(yyyy,poe.fdate)&gt;=(datename(yyyy,GETDATE())-2) and datename(yyyy,poe.fdate)&lt;=(datename(yyyy,GETDATE())) group by  poe.fitemid ) as POOrderEntry
+		 on POOrderEntry.fitemid = k3item.fitemid
+		 left join (select distinct(tt1.fitemid),tt1.ftaxprice from K33.AIS20120813194456.dbo.POOrderEntry tt1 where tt1.fdate =(select MAX(fdate) from K33.AIS20120813194456.dbo.POOrderEntry where tt1.fitemid=fitemid)) as t1 on t1.fitemid = k3item.fitemid
+		where  not exists(select itemcode from t_pro_item where k3item.fnumber=t_pro_item.itemcode) -->
+		insert into  t_pro_item
+		(fitemid,itemcode,itemname,fmode,fmaker,fshortname,buyamount,avgamount,rpamount,costamount,listamount)
+		select 
+		  k3item.FItemID as fitemid, 
+		  k3item.FNumber as itemcode,
+		  k3item.FName as itemname,
+		  k3item.FModel as fmode,
+		 (CASE k3item.ferpclsid WHEN 1 THEN k3sup.fname WHEN 2 THEN k3dep.fname  ELSE '' END) AS fmaker,
+		 (CASE k3item.ferpclsid WHEN 1 THEN k3sup.fshortname WHEN 2 THEN k3dep.fname  ELSE '' END) AS fshortname,
+		  isnull(t1.fauxpricediscount,0) as buyamount,
+		  isnull(POOrderEntry.fprice,0) as avgamount,
+		  isnull(t1.fauxpricediscount,0) as rpamount,
+		  isnull(t1.fauxpricediscount,0) as costamount,
+		  ((isnull(t1.fauxpricediscount,0))*2.5) as listamount
+		 from AIS20120813194456.dbo.t_icitem  as k3item
+		 LEFT join AIS20120813194456.dbo.t_department as k3dep on k3dep.fitemid=k3item.FSource
+		 left join AIS20120813194456.dbo.t_supplier as k3sup on k3sup.fitemid=k3item.FSource
+		 left join (select AVG(poe.fauxpricediscount) as fprice, poe.fitemid from  AIS20120813194456.dbo.POOrderEntry  as poe where  datename(yyyy,poe.fdate)&gt;=(datename(yyyy,GETDATE())-2) and datename(yyyy,poe.fdate)&lt;=(datename(yyyy,GETDATE())) group by  poe.fitemid ) as POOrderEntry
+		 on POOrderEntry.fitemid = k3item.fitemid
+		 left join (select tt1.fitemid,max(tt1.fauxpricediscount) as fauxpricediscount from AIS20120813194456.dbo.POOrderEntry tt1 where tt1.fdate =(select MAX(fdate) from AIS20120813194456.dbo.POOrderEntry where tt1.fitemid=fitemid) group by tt1.fitemid ) as t1 on t1.fitemid = k3item.fitemid
+		where  not exists(select itemcode from t_pro_item where k3item.fnumber=t_pro_item.itemcode)
+    </insert>
+    <!--更新项目系统物料表中的最近采购价格和平均价格-->
+    <update id="ProItem.updateProItem">
+    	<!-- update t_pro_item  
+			set buyamount=B.ftaxprice,avgamount=B.avgprice
+			from 
+			(
+				select distinct(t1.fitemid),isnull(t2.ftaxprice,0) as ftaxprice,isnull(t3.avgprice,0) as avgprice  
+				from t_pro_item as t1 
+				left join 
+				(select distinct(a1.fitemid),a1.ftaxprice from K33.AIS20120813194456.dbo.POOrderEntry a1 where a1.fdate =(select MAX(fdate) from K33.AIS20120813194456.dbo.POOrderEntry where a1.fitemid=fitemid)) 
+				as t2 on t1.fitemid=t2.fitemid 
+				left join (select  distinct(poe.fitemid),AVG(poe.ftaxprice) as avgprice from  K33.AIS20120813194456.dbo.POOrderEntry  as poe where  datename(yyyy,poe.fdate)&gt;=(datename(yyyy,GETDATE())-2) and datename(yyyy,poe.fdate)&lt;=(datename(yyyy,GETDATE())) group by  poe.fitemid ) 
+				as t3 on t1.fitemid=t3.fitemid) B
+		 where t_pro_item.fitemid in ( B.fitemid)  -->
+		 
+		 update t_pro_item  
+			set buyamount=B.fauxpricediscount,avgamount=B.avgprice
+			from 
+			(
+				select distinct(t1.fitemid),isnull(t2.fauxpricediscount,0) as fauxpricediscount,isnull(t3.avgprice,0) as avgprice  
+				from t_pro_item as t1 
+				left join 
+				(select a1.fitemid,max(a1.fauxpricediscount) as fauxpricediscount  from AIS20120813194456.dbo.POOrderEntry a1 where a1.fdate =(select MAX(fdate) from AIS20120813194456.dbo.POOrderEntry where a1.fitemid=fitemid) group by a1.fitemid ) 
+				as t2 on t1.fitemid=t2.fitemid 
+				left join (select poe.fitemid,AVG(poe.fauxpricediscount) as avgprice from  AIS20120813194456.dbo.POOrderEntry  as poe where  datename(yyyy,poe.fdate)&gt;=(datename(yyyy,GETDATE())-2) and datename(yyyy,poe.fdate)&lt;=(datename(yyyy,GETDATE())) group by  poe.fitemid ) 
+				as t3 on t1.fitemid=t3.fitemid) B
+		 where t_pro_item.fitemid in ( B.fitemid)  
+    </update>
+    <!-- 根据条件查询前20条记录 -->
+	<select id="ProItem.findListtop20" resultMap="RM.ProItem">
+    	SELECT top 20
+    		<include refid="ProItem.columns"/> 
+    	FROM 
+    		t_pro_item
+		<include refid="ProItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+</sqlMap>

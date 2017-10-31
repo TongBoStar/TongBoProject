@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="StWx">
+
+<resultMap id="RM.StWx" class="com.terrence.crm.dol.bean.StWx">
+	<result property="id" column="id"/>
+	<result property="wxcode" column="wxcode"/>
+	<result property="stCode" column="stCode"/>
+	<result property="serialNumber" column="serialNumber"/>
+	<result property="createDate" column="createDate"/>
+	<result property="username" column="username"/>
+	<result property="faddress" column="faddress"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="StWx.columns">
+	<![CDATA[
+		t_st_wx.id ,
+		t_st_wx.wxcode ,
+		t_st_wx.stCode ,
+		t_st_wx.serialNumber ,
+		t_st_wx.createDate
+	]]>
+</sql>
+
+<insert id="StWx.insert" >
+	<![CDATA[
+	INSERT INTO t_st_wx (
+		wxcode,
+		stCode,
+		serialNumber,
+		createDate
+	) VALUES (
+		#wxcode#,
+		#stCode#,
+		#serialNumber#,
+		#createDate#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="StWx.update" parameterClass="com.terrence.crm.dol.bean.StWx"> 
+	UPDATE t_st_wx 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="wxcode">
+			wxcode = #wxcode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="stCode">
+			stCode = #stCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serialNumber">
+			serialNumber = #serialNumber# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createDate">
+			createDate = #createDate# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="StWx.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_st_wx.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="wxcode">
+			t_st_wx.wxcode = #wxcode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="stCode">
+			t_st_wx.stCode = #stCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serialNumber">
+			t_st_wx.serialNumber = #serialNumber# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createDate">
+			t_st_wx.createDate = #createDate# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="StWx.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_st_wx.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="wxcode">
+		t_st_wx.wxcode = #wxcode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="stCode">
+		t_st_wx.stCode = #stCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serialNumber">
+		t_st_wx.serialNumber = #serialNumber# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createDate">
+		t_st_wx.createDate = #createDate# 
+	</isNotEmpty>
+</sql>
+
+<select id="StWx.getById" resultMap="RM.StWx">
+	select <include refid="StWx.columns"/> ,t_stcode.username,t_stcode.faddress from t_st_wx 
+	left join t_stcode on t_st_wx.serialNumber = t_stcode.serialNumber 
+	where id=#id#
+</select>
+
+<select id="StWx.getByProperty" resultMap="RM.StWx">
+	select <include refid="StWx.columns"/>  ,t_stcode.username,t_stcode.faddress from t_st_wx 
+	left join t_stcode on t_st_wx.serialNumber = t_stcode.serialNumber  where $propertyName$=#propertyValue#
+</select>
+
+<delete id="StWx.delete">
+	<![CDATA[
+		DELETE FROM t_st_wx WHERE id=#id#
+	]]>
+</delete>
+<delete id="StWx.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_st_wx WHERE id in ($id$)
+	]]>
+</delete>
+<delete id="StWx.deleteMultiple.wxcode">
+	<![CDATA[
+		DELETE FROM t_st_wx WHERE wxCode=#wxcode# and stCode=#stCode#
+	]]>
+</delete>
+<select id="StWx.findPage.count" resultClass="long">
+	select count(*) from t_st_wx <include refid="StWx.findPage.where"/>
+</select>
+
+<select id="StWx.findPage" resultMap="RM.StWx">
+	select <include refid="StWx.columns"/>  ,t_stcode.username,t_stcode.faddress from t_st_wx 
+	left join t_stcode on t_st_wx.serialNumber = t_stcode.serialNumber 
+	<include refid="StWx.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="StWx.findList" resultMap="RM.StWx">
+	SELECT <include refid="StWx.columns"/>  ,t_stcode.username,t_stcode.faddress from t_st_wx 
+	left join t_stcode on t_st_wx.serialNumber = t_stcode.serialNumber 
+	<include refid="StWx.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

@@ -1,0 +1,113 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.bean.ContractChange;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IContractChangeDao;
+import com.terrence.crm.dol.dao.ISysOrderDao;
+import com.terrence.crm.dol.query.ContractChangeQuery;
+import com.terrence.crm.dol.service.IContractChangeService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtil;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 合同变更单业务处理类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-6-27 上午9:34:19
+ */
+@Service
+@Transactional
+public class ContractChangeService extends BaseService implements IContractChangeService{
+	@Autowired
+	private IContractChangeDao contractChangeDao;
+	@Autowired
+	private ISysOrderDao sysOrderDao;
+	@Override
+	public Long save(ContractChange contractChange) {
+		contractChange.setContractChangeStatus(0);
+		Long addid = null;
+		if((null!=contractChange.getChangeFile()&&!contractChange.getChangeFile().equals(""))
+				||(null!=contractChange.getAssitFile()&&!contractChange.getAssitFile().equals(""))){
+			contractChange.setUploaderId(SpringSecurityUtils.getCurrentUserId());
+			contractChange.setUploaderTime(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		}
+		if(null!=contractChange.getRelativestatus()&&1==contractChange.getRelativestatus().intValue()){
+			contractChange.setRelativerId(SpringSecurityUtils.getCurrentUserId());
+			contractChange.setRelativeTime(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			addid =  Long.valueOf(contractChangeDao.update("ContractChange.update.relativestatus",contractChange));
+		}else{
+			if(null!=contractChange.getContractChangeId()){
+				addid =  Long.valueOf(contractChangeDao.update(contractChange));
+			}else{
+				addid =  contractChangeDao.save(contractChange);
+			}
+		}
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_CONTRACTCHANGE, ConfigTerrence.OPT_ADD, "id为："+addid+"的合同变更单添加成功,添加人为："+admin.getAdmin().getAdminName());
+		return addid;
+	}
+
+	@Override
+	public void update(ContractChange contractChange) throws Exception {
+		if((null!=contractChange.getChangeFile()&&!contractChange.getChangeFile().equals(""))
+				||(null!=contractChange.getAssitFile()&&!contractChange.getAssitFile().equals(""))){
+			contractChange.setUploaderId(SpringSecurityUtils.getCurrentUserId());
+			contractChange.setUploaderTime(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		}
+		contractChangeDao.update(contractChange);
+		if(null!=contractChange.getContractChangeStatus()&&contractChange.getContractChangeStatus().intValue()==2){
+			SysOrder sysOrder = new SysOrder();
+			sysOrder.setOrderCode(contractChange.getOrderCode());
+			sysOrder.setChangeAreaType(0);
+			sysOrderDao.update(sysOrder);
+		}
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_CONTRACTCHANGE, ConfigTerrence.OPT_EDIT, "id为："+contractChange.getContractChangeId()+"的合同变更单修改成功,修改人为："+admin.getAdmin().getAdminName());
+	}
+
+	@Override
+	public Page<ContractChange> findPage(Page<ContractChange> page,
+			ContractChangeQuery contractChangeQuery) {
+		Page<ContractChange> returnPage = contractChangeDao.findPage(page, contractChangeQuery);
+		returnPage.setResult(returnPage.getResult());
+		return returnPage;
+	}
+
+	@Override
+	public void deleteContractChange(Long id) {
+		contractChangeDao.deleteById(id);
+	}
+
+	@Override
+	public void deleteByMultipleId(List<Long> checkedIdList) {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		contractChangeDao.deleteByMultipleId(delIds);
+		operationLogDao.save(ConfigTerrence.MODEL_CONTRACTCHANGE, ConfigTerrence.OPT_DEL, "id为："+delIds+"的合同变更单删除成功");
+	}
+
+	@Override
+	public ContractChange getById(Long id) {
+		return contractChangeDao.getById(id);
+	}
+
+	@Override
+	public Long saveContractChange(ContractChange contractChangeEntity) {
+		return null;
+	}
+
+}

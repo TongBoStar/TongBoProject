@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DeviceWork">
+
+        
+	<resultMap id="RM.DeviceWork" class="com.terrence.crm.dol.bean.DeviceWork">
+        <result property="workid" column="workid"/>
+        <result property="deviceid" column="deviceid"/>
+        <result property="employeetaskid" column="employeetaskid"/>
+        <result property="workdate" column="workdate"/>
+        <result property="runtime" column="runtime"/>
+    </resultMap>
+    
+    <resultMap id="RM.DeviceWork.getbyfbill.Itemprocedureid" class="com.terrence.crm.dol.bean.DeviceWork">
+        <result property="runtime" column="runtime"/>
+    </resultMap>
+    
+    
+    
+	                                  
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="DeviceWork.columns">
+	    <![CDATA[
+        	t_device_work.workid ,
+        	t_device_work.deviceid ,
+        	t_device_work.employeetaskid ,
+        	t_device_work.workdate ,
+        	t_device_work.runtime 
+	    ]]>
+	</sql>
+	
+   <insert id="DeviceWork.insert" >
+    
+        INSERT INTO
+        t_device_work (
+        	deviceid ,
+        	employeetaskid ,
+        	workdate ,
+        	runtime
+        	<isNotEmpty prepend="," property="icmoid">
+        	icmoid
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="classtypeid">
+        	classtypeid
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="procedurerid">
+        	procedurerid
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fbillno">
+        	fbillno
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="itemprocedureid">
+        	itemprocedureid
+        	</isNotEmpty>
+        	 
+        ) VALUES (
+        	#deviceid# ,
+        	#employeetaskid# ,
+        	#workdate# ,
+        	#runtime#
+        	<isNotEmpty prepend="," property="icmoid">
+        	#icmoid#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="classtypeid">
+        	#classtypeid#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="procedurerid">
+        	#procedurerid#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="fbillno">
+        	#fbillno#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="itemprocedureid">
+        	#itemprocedureid#
+        	</isNotEmpty>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="workid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="DeviceWork.update" parameterClass="com.terrence.crm.dol.bean.DeviceWork">         
+        UPDATE t_device_work 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="deviceid">
+	        	deviceid = #deviceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="employeetaskid">
+	        	employeetaskid = #employeetaskid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="workdate">
+	        	workdate = #workdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="runtime">
+	        	runtime = #runtime# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        workid = #workid# 
+    </update>
+    
+	<delete id="DeviceWork.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_device_work where
+       workid = #workid# 
+    ]]>
+    </delete>
+    <delete id="DeviceWork.deleteByemptaskid" >
+    <![CDATA[
+        delete from t_device_work where
+       employeetaskid = #employeetaskid# 
+    ]]>
+    </delete>
+    
+    <delete id="DeviceWork.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_device_work 
+        WHERE
+       workid in ($workid$) 
+    ]]>
+    </delete>
+    
+    <select id="DeviceWork.getById" resultMap="RM.DeviceWork">
+	    select <include refid="DeviceWork.columns"/>
+	    
+	        from t_device_work 
+	        where 
+		        workid = #workid# 
+	    
+    </select>
+    
+	<select id="DeviceWork.getByProperty" resultMap="RM.DeviceWork">
+		select <include refid="DeviceWork.columns"/> from t_device_work where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="DeviceWork.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="workid">
+	             t_device_work.workid = #workid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="deviceid">
+	             t_device_work.deviceid = #deviceid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="employeetaskid">
+	             t_device_work.employeetaskid = #employeetaskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="workdate">
+	             t_device_work.workdate = #workdate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="runtime">
+	             t_device_work.runtime = #runtime#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="DeviceWork.findPage.and">
+			<isNotEmpty prepend="AND" property="workid">
+	             t_device_work.workid = #workid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="deviceid">
+	             t_device_work.deviceid = #deviceid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="employeetaskid">
+	             t_device_work.employeetaskid = #employeetaskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="workdate">
+	             t_device_work.workdate = #workdate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="runtime">
+	             t_device_work.runtime = #runtime#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="DeviceWork.findList" resultMap="RM.DeviceWork">
+    	SELECT 
+    		<include refid="DeviceWork.columns"/> 
+    	FROM 
+    		t_device_work
+		<include refid="DeviceWork.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="DeviceWork.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_device_work
+    ]]>
+		<include refid="DeviceWork.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.DeviceWork.findPage" resultMap="RM.DeviceWork">
+    	select <include refid="DeviceWork.columns"/>	    
+	        from t_device_work 	   
+		<include refid="DeviceWork.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="DeviceWork.findPage" resultMap="RM.DeviceWork">
+    	select <include refid="DeviceWork.columns"/>	    
+	        from t_device_work where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       workid 
+	   not in(select $notTop$ 
+       workid 
+	   from t_device_work <include refid="DeviceWork.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="DeviceWork.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+
+
+ <delete id="DeviceWork.DeleteByquery" >
+    
+        delete from    
+           t_device_work 
+        where
+        	workdate=#workdate#
+        <isNotEmpty property="deviceid">
+        	and deviceid=#deviceid#
+        </isNotEmpty>
+        <isNotEmpty property="fbillno">
+	        and fbillno=#fbillno#
+        </isNotEmpty>
+        <isNotEmpty property="classtypeid">
+    	    and classtypeid=#classtypeid#
+        </isNotEmpty>
+        <isNotEmpty property="procedurerid">
+        	and procedurerid=#procedurerid#
+        </isNotEmpty>
+        <isNotEmpty property="icmoid">
+        	and icmoid=#icmoid#
+        </isNotEmpty>
+        <isNotEmpty property="itemprocedureid">
+        	and itemprocedureid=#itemprocedureid#
+        </isNotEmpty>
+        
+ </delete>
+
+
+
+<select id="DeviceWork.getbyfbill.Itemprocedureid" resultMap="RM.DeviceWork.getbyfbill.Itemprocedureid">
+    	SELECT 
+    		sum(runtime) runtime 
+    	FROM 
+    		t_device_work
+		where 
+			fbillno in(
+						select fbillno from t_work_plan where fbillgroup in(
+								select isnull(fbillgroup,fbillno) fbillgroup from t_work_plan where  fbillno=#fbillno# 
+							) or fbillno=#fbillno# 
+					)
+			and itemprocedureid=#itemprocedureid#
+		
+    </select>
+
+
+<update id="DeviceWork.update.runtime" parameterClass="com.terrence.crm.dol.bean.DeviceWork">         
+        UPDATE t_device_work 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="runtime">
+	        	runtime = runtime+#runtime# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 1=1
+        <isNotEmpty property="workdate">
+        	and workdate=#workdate#
+        </isNotEmpty> 
+	    <isNotEmpty property="deviceid">
+        	and deviceid=#deviceid#
+        </isNotEmpty>
+        <isNotEmpty property="fbillno">
+	        and fbillno=#fbillno#
+        </isNotEmpty>
+        <isNotEmpty property="classtypeid">
+    	    and classtypeid=#classtypeid#
+        </isNotEmpty>
+        <isNotEmpty property="procedurerid">
+        	and procedurerid=#procedurerid#
+        </isNotEmpty>
+        <isNotEmpty property="icmoid">
+        	and icmoid=#icmoid#
+        </isNotEmpty>
+        <isNotEmpty property="itemprocedureid">
+        	and itemprocedureid=#itemprocedureid#
+        </isNotEmpty>
+	         
+    </update>
+
+
+	
+</sqlMap>

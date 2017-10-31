@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProjectMakertree;
+import com.terrence.crm.dol.dao.IProjectMakertreeDao;
+import com.terrence.crm.dol.query.ProjectMakertreeQuery;
+
+@Repository
+public class ProjectMakertreeDao extends BaseIbatisDao<ProjectMakertree,java.lang.Long> implements IProjectMakertreeDao{
+
+		
+	public void saveOrUpdate(ProjectMakertree entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ProjectMakertree";
+	}
+	public ProjectMakertree getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProjectMakertree)this.getSqlMapClientTemplate().queryForObject("ProjectMakertree.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByInfoId(ProjectMakertreeQuery query) {
+		this.getSqlMapClientTemplate().delete("ProjectMakertree.deleteByInfoId",query);
+	}
+
+}

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Unityobj">
+
+<resultMap id="RM.Unityobj" class="com.terrence.crm.dol.bean.Unityobj">
+	<result property="id" column="id"/>
+	<result property="sceneCode" column="sceneCode"/>
+	<result property="objName" column="objName"/>
+	<result property="fmark" column="fmark"/>
+	<result property="enName" column="enName"/>
+	<result property="createTime" column="createTime"/>
+	<result property="createrUserId" column="createrUserId"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Unityobj.columns">
+	<![CDATA[
+		t_unityobj.id ,
+		t_unityobj.sceneCode ,
+		t_unityobj.objName ,
+		t_unityobj.fmark ,
+		t_unityobj.enName ,
+		t_unityobj.createTime ,
+		t_unityobj.createrUserId
+	]]>
+</sql>
+
+<insert id="Unityobj.insert" >
+	<![CDATA[
+	INSERT INTO t_unityobj (
+		sceneCode,
+		objName,
+		fmark,
+		enName,
+		createTime,
+		createrUserId
+	) VALUES (
+		#sceneCode#,
+		#objName#,
+		#fmark#,
+		#enName#,
+		#createTime#,
+		#createrUserId#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Unityobj.update" parameterClass="com.terrence.crm.dol.bean.Unityobj"> 
+	UPDATE t_unityobj 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="sceneCode">
+			sceneCode = #sceneCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="objName">
+			objName = #objName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="enName">
+			enName = #enName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrUserId">
+			createrUserId = #createrUserId# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Unityobj.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_unityobj.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sceneCode">
+			t_unityobj.sceneCode = #sceneCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="objName">
+			t_unityobj.objName = #objName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_unityobj.fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="enName">
+			t_unityobj.enName = #enName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_unityobj.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrUserId">
+			t_unityobj.createrUserId = #createrUserId# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Unityobj.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_unityobj.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sceneCode">
+		t_unityobj.sceneCode = #sceneCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="objName">
+		t_unityobj.objName = #objName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_unityobj.fmark = #fmark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="enName">
+		t_unityobj.enName = #enName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_unityobj.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrUserId">
+		t_unityobj.createrUserId = #createrUserId# 
+	</isNotEmpty>
+</sql>
+
+<select id="Unityobj.getById" resultMap="RM.Unityobj">
+	select <include refid="Unityobj.columns"/> from t_unityobj where id=#id#
+</select>
+
+<select id="Unityobj.getByProperty" resultMap="RM.Unityobj">
+	select <include refid="Unityobj.columns"/> from t_unityobj where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Unityobj.delete">
+	<![CDATA[
+		DELETE FROM t_unityobj WHERE id=#id#
+	]]>
+</delete>
+<delete id="Unityobj.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_unityobj WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Unityobj.findPage.count" resultClass="long">
+	select count(*) from t_unityobj <include refid="Unityobj.findPage.where"/>
+</select>
+
+<select id="Unityobj.findPage" resultMap="RM.Unityobj">
+	select <include refid="Unityobj.columns"/> 
+		from t_unityobj 
+	<include refid="Unityobj.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Unityobj.findList" resultMap="RM.Unityobj">
+	SELECT <include refid="Unityobj.columns"/> FROM t_unityobj
+	<include refid="Unityobj.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

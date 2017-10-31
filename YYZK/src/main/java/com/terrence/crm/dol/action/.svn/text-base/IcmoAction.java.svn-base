@@ -1,0 +1,847 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.Date;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.IcmoQuery;
+import com.terrence.crm.dol.service.IIcmoService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.bean.Icmo;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/icmo")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "icmo." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class IcmoAction extends CrudActionSupport<Icmo>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("icmoService")
+	private IIcmoService icmoService;
+	
+	
+	private Icmo entity;
+
+	private IcmoQuery icmoQuery;
+	
+	
+	private java.lang.Long icmoId;
+	
+	/** 分页器 */
+	private Page<Icmo> page = new Page<Icmo>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Icmo> icmoList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (icmoId != null ) {
+			entity = icmoService.getById(icmoId);
+		} else {
+			entity = new Icmo();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			icmoService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("icmoId");
+			page.setOrder(Page.DESC);
+		}
+		if(icmoQuery == null) {
+			icmoQuery = new IcmoQuery();
+		}
+		
+		try {
+			page = icmoService.findPage(page, icmoQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	@Action("/process/listToIcmo")
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	@Action("/process/updateOverstatus")
+	public String updateOverstatus() throws Exception {//修改任务单结案状态
+		
+		if(icmoQuery == null) {
+			icmoQuery = new IcmoQuery();
+		}
+		
+		try {
+			icmoService.updateOverstatus(icmoQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功!";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败!("+e.getMessage()+")";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败!("+e.getMessage()+")";
+		}
+		
+		return JSON;
+	}
+	
+	
+	
+	
+	public void prepareUpdatePriority() throws Exception {
+		prepareModel();
+	}
+	public void prepareUpdateicmo() throws Exception {
+		prepareModel();
+	}
+	public String updateicmo()throws Exception
+	{
+		try {
+			entity.setPerformdate(DateConvertUtils.getCurrentDateTime());
+			icmoService.update(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/*
+	 * 设置优先级
+	 */
+	public String updatePriority()throws Exception
+	{
+		try {
+			icmoService.updatePriority(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			icmoService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = icmoService.getById(icmoId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	@Action("/process/showIcmo")
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	@Action("/process/listToIcmoItemProcess")
+	public String listToBaseItemProcess()throws Exception
+	{
+		try 
+		{
+			if(icmoQuery == null) {
+				icmoQuery = new IcmoQuery();
+			}
+			icmoQuery.setPageSize(15);
+			icmoList=icmoService.findList("Icmo.Process.findList",icmoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			icmoList = icmoService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+//--------------------------------------------------	
+	public String countAll() throws Exception {
+		try{
+			int counts = icmoService.findCounts();//counts为当前最后一条记录唯一的icmoid，并非所有记录
+			counts=counts+1;
+			resultInfo[0] = "0";
+			resultInfo[1] = Icmo.THEHEAD+counts;
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}		
+//-------------------------------------
+	public void prepareSaveIcmo() throws Exception {
+		prepareModel();
+	}
+	
+	public String saveIcmo() throws Exception {
+		try{
+			entity.setPriority(4);
+			icmoService.save(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}		
+//---------------------------------------------------------
+	public void prepareSaveWorkplan() throws Exception {
+		prepareModel();
+	}
+	public String saveWorkplan() throws Exception {
+		try{
+			
+			icmoService.saveWorkplan(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}		
+	
+	
+	//------------------------
+	public void prepareUpdateIcmo() throws Exception {
+		prepareModel();
+	}
+	
+	public String updateIcmo() throws Exception {
+		try{
+			//Date data=new Date();
+			//entity.setCreatedate(data);
+			save();	
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}		
+//-------------------------------------------------------------
+	public String deleteAlone() throws Exception {
+		
+		try {
+				Integer returnValue = icmoService.deleteAlone(icmoId);
+				if(returnValue.intValue()==1){
+					resultInfo[0] = "0";
+					resultInfo[1] = "删除成功";
+				}else{
+					resultInfo[0] = "-1";
+					resultInfo[1] = "此任务单分配的任务已开工，禁止删除！！";		
+				}
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败("+e.getMessage()+")";
+		}
+		return JSON;
+	}
+	//---------------------------------
+	//-------------------------------------
+	public void prepareSaveMakeIcmo() throws Exception {
+		prepareModel();
+	}
+	
+	@Action("/system/saveMakeIcmo")
+	public String saveMakeIcmo() throws Exception {
+		try{
+			entity.setPriority(4);
+			icmoService.saveMakeIcmo(entity);
+				
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//--------------------
+	public void prepareSaveWorkPlan() throws Exception {
+		prepareModel();
+	}
+	
+	@Action("/system/saveWorkPlan")
+	public String saveWorkPlan() throws Exception {
+		try{
+			
+			icmoService.saveWorkPlan(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public void prepareSavePlistDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/savePlanlistDetail")
+	public String savePlistDetail() throws Exception {
+		try{
+			
+			icmoService.savePlistDetail(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareSaveIcmoDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/saveIcmoDetail")
+	public String saveIcmoDetail() throws Exception {
+		try{
+			
+			icmoService.saveIcmoDetail(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	//-----------------------------------------------
+	public void prepareShowByIcmoId() throws Exception {
+		prepareModel();
+	}
+	
+	public String showByIcmoId() throws Exception {
+		try{
+//			select *from t_icmo left join t_base_item on t_icmo.itemcode=t_base_item.itemcode
+//		    left join t_inventory on t_icmo.itemcode=t_inventory.itemcode
+
+			entity=icmoService.getByIcmoId(icmoId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	@Action("/system/changeAllDevice")
+	public String listAllDevice() throws Exception {
+		try{
+			icmoService.updateAllDevice();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+	
+	//------------------
+	public void prepareSavenewPlistDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/newsavePlanlistDetail")
+	public String savenewPlistDetail() throws Exception {
+		try{
+			
+			String fqty="";
+			fqty = icmoService.savenewPlistDetail(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = fqty;
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	public String listTofbillno() throws Exception {
+			if(icmoQuery == null) {
+				icmoQuery = new IcmoQuery();
+			}
+		try{
+			
+			icmoList=icmoService.findListFbillno(icmoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败"+e.getMessage();
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	
+	public String findlistIcmo() throws Exception {
+		try{
+			icmoList=icmoService.findlistIcmo(icmoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		return JSON;
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	public void prepareUpdateispover() throws Exception {
+		prepareModel();
+	}
+	
+	public String updateispover() throws Exception {
+		try{
+			
+			
+			 icmoService.updateispover(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改状态成功！";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public void prepareUpdateIcmono() throws Exception {
+		prepareModel();
+	}
+	
+	public String updateIcmono() throws Exception {
+		try{
+			
+			
+			 icmoService.updateIcmono(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功！";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败("+e.getMessage()+")";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Icmo getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public IcmoQuery getIcmoQuery() {
+		return icmoQuery;
+	}
+
+	
+	public void setIcmoQuery(IcmoQuery icmoQuery) {
+		this.icmoQuery = icmoQuery;
+	}
+
+	public void setIcmoId(java.lang.Long icmoId) {
+		this.icmoId = icmoId;
+	}
+	
+	
+	public java.lang.Long getIcmoId() {
+		return this.icmoId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Icmo> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Icmo> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Icmo> getIcmoList() {
+		return icmoList;
+	}
+	
+	
+}

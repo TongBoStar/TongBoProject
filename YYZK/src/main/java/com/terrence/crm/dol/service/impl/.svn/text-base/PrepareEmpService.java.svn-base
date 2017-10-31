@@ -1,0 +1,151 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.bean.Procedure;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.query.PrepareEmpQuery;
+import com.terrence.crm.dol.query.ProcedureQuery;
+import com.terrence.crm.dol.service.IPrepareEmpService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class PrepareEmpService extends BaseService implements IPrepareEmpService {
+	protected static Logger logger = LoggerFactory.getLogger(PrepareEmpService.class);
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PrepareEmp";
+	}
+	@Transactional(readOnly=true)
+	public PrepareEmp getById(java.lang.Long id) throws ServiceException
+	{
+		return prepareEmpDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PrepareEmp entity) throws ServiceException
+	{
+		prepareEmpDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PrepareEmp entity) throws ServiceException
+	{
+		Long adId = prepareEmpDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PrepareEmp entity) throws ServiceException
+	{
+		Integer returnValue =  prepareEmpDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = prepareEmpDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = prepareEmpDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PrepareEmpQuery query = new PrepareEmpQuery();
+		try {
+			return prepareEmpDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PrepareEmp> findPage(Page<PrepareEmp> page, PrepareEmpQuery query) throws ServiceException
+	{
+		return prepareEmpDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PrepareEmp> findList(PrepareEmpQuery query) throws ServiceException
+	{
+		return prepareEmpDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PrepareEmp> findAllList() throws ServiceException
+	{
+		return prepareEmpDao.findAllList();
+	}
+	@Override
+	public List<PrepareEmp> findList(String statement, PrepareEmpQuery query)
+			throws ServiceException {
+		return prepareEmpDao.findList(statement, query);
+	}
+	@Override
+	public Page<PrepareEmp> findPageemp(Page<PrepareEmp> page,
+			PrepareEmpQuery prepareEmpQuery) throws ServiceException {
+
+		//t_procedure--工序表
+		if(null!=prepareEmpQuery.getProcessname()){
+			ProcedureQuery query=new ProcedureQuery();
+			query.setProcedurename(prepareEmpQuery.getProcessname()==null?null:prepareEmpQuery.getProcessname());
+			List<Procedure> procedurelist =new ArrayList<Procedure>();
+			
+			procedurelist = procedureDao.findList("Procedure.findids", query);
+			if(procedurelist.size()>0){
+				int plength=procedurelist.size();
+				String ids="";
+				for(int i=0;i<plength;i++){
+					if(plength==i+1){
+						ids+=procedurelist.get(i).getProcedurerid();
+					}else{
+						ids+=procedurelist.get(i).getProcedurerid()+",";	
+					}
+				}
+				prepareEmpQuery.setProcessname(ids);
+			}
+		}			
+		
+		prepareEmpQuery.setEmpid(SpringSecurityUtils.getCurrentUserId());
+		return prepareEmpDao.findPage(page, "PrepareEmp.findpage.emp", prepareEmpQuery);
+	//	return null;
+	}
+
+}

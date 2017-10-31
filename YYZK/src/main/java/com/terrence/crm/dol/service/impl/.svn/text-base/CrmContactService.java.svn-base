@@ -1,0 +1,137 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CrmContact;
+import com.terrence.crm.dol.query.CrmContactQuery;
+import com.terrence.crm.dol.dao.ICrmContactDao;
+import com.terrence.crm.dol.service.ICrmContactService;
+
+@Service
+@Transactional
+public class CrmContactService extends BaseService implements ICrmContactService {
+	protected static Logger logger = LoggerFactory.getLogger(CrmContactService.class);
+	@Autowired
+	@Qualifier("crmContactDao")
+	private ICrmContactDao crmContactDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CrmContact";
+	}
+	@Transactional(readOnly=true)
+	public CrmContact getById(java.lang.Long id) throws ServiceException
+	{
+		return crmContactDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CrmContact entity) throws ServiceException
+	{
+		 crmContactDao.saveOrUpdate(entity);
+	}
+		
+
+	
+	public java.lang.Long save(CrmContact entity) throws ServiceException
+	{
+		Long adId = crmContactDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CrmContact entity) throws ServiceException
+	{
+		Integer returnValue =  crmContactDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = crmContactDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = crmContactDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CrmContactQuery query = new CrmContactQuery();
+		try {
+			return crmContactDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	
+	
+	
+	public Integer deleteByFinnerid(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = crmContactDao.deleteByMultipleId("CrmContact.deleteByFinnerid", delIds);
+		
+		return returnValue;
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<CrmContact> findPage(Page<CrmContact> page, CrmContactQuery query) throws ServiceException
+	{
+		return crmContactDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CrmContact> findPage(Page<CrmContact> page,String statement, CrmContactQuery query) throws ServiceException
+	{
+		return crmContactDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CrmContact> findList(CrmContactQuery query) throws ServiceException
+	{
+		return crmContactDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CrmContact> findList(CrmContactQuery query,Integer pageSize) throws ServiceException
+	{
+		return crmContactDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CrmContact> findList(CrmContactQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return crmContactDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CrmContact> findAllList() throws ServiceException
+	{
+		return crmContactDao.findAllList();
+	}
+
+}

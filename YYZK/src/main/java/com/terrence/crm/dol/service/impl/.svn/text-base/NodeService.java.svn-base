@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Node;
+import com.terrence.crm.dol.query.NodeQuery;
+import com.terrence.crm.dol.dao.INodeDao;
+import com.terrence.crm.dol.service.INodeService;
+
+@Service
+@Transactional
+public class NodeService extends BaseService implements INodeService {
+	protected static Logger logger = LoggerFactory.getLogger(NodeService.class);
+	@Autowired
+	@Qualifier("nodeDao")
+	private INodeDao nodeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Node";
+	}
+	@Transactional(readOnly=true)
+	public Node getById(java.lang.Long id) throws ServiceException
+	{
+		return nodeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Node entity) throws ServiceException
+	{
+		nodeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Node entity) throws ServiceException
+	{
+		Long adId = nodeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Node entity) throws ServiceException
+	{
+		Integer returnValue =  nodeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = nodeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = nodeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		NodeQuery query = new NodeQuery();
+		try {
+			return nodeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Node> findPage(Page<Node> page, NodeQuery query) throws ServiceException
+	{
+		return nodeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Node> findPage(Page<Node> page,String statement, NodeQuery query) throws ServiceException
+	{
+		return nodeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Node> findList(NodeQuery query) throws ServiceException
+	{
+		return nodeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Node> findList(NodeQuery query,Integer pageSize) throws ServiceException
+	{
+		return nodeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Node> findList(NodeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return nodeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Node> findAllList() throws ServiceException
+	{
+		return nodeDao.findAllList();
+	}
+
+}

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdTrailTpl">
+
+        
+	<resultMap id="RM.PdTrailTpl" class="com.terrence.crm.dol.bean.PdTrailTpl">
+        <result property="rid" column="rid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="trialid" column="trialid"/>
+        <result property="isdefault" column="isdefault"/>
+    </resultMap>
+	
+	<resultMap id="RM.PdTrailTpl.findList.code" class="com.terrence.crm.dol.bean.PdTrailTpl">
+        <result property="rid" column="rid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="formatno" column="formatno"/>
+        <result property="baseitemid" column="baseitemid"/>
+        <result property="isdefault" column="isdefault"/>
+        
+    </resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdTrailTpl.columns">
+	    <![CDATA[
+        	t_pd_trail_tpl.rid ,
+        	t_pd_trail_tpl.tplid ,
+        	t_pd_trail_tpl.itemcode, 
+        	t_pd_trail_tpl.trialid, 
+        	t_pd_trail_tpl.isdefault 
+	    ]]>
+	</sql>
+	
+   <insert id="PdTrailTpl.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_trail_tpl (
+        	tplid ,
+
+        	itemcode ,
+        	trialid ,
+        	isdefault
+       
+        ) VALUES (
+        	#tplid# ,
+
+        	#itemcode# ,
+        	 #trialid# ,
+        	 #isdefault#
+
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="rid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdTrailTpl.update" parameterClass="com.terrence.crm.dol.bean.PdTrailTpl">         
+        UPDATE t_pd_trail_tpl 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="tplid">
+	        	tplid = #tplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="trialid">
+	        	trialid = #trialid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="isdefault">
+	        	isdefault = #isdefault# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        rid = #rid# 
+    </update>
+    
+	<delete id="PdTrailTpl.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_trail_tpl where
+       rid = #rid# 
+    ]]>
+    </delete>
+    
+    
+    <delete id="PdTrailTpl.deleteByTplid" >
+    
+        delete from t_pd_trail_tpl where t_pd_trail_tpl.tplid = #tplid# 
+    
+    </delete>
+    
+    
+    <delete id="PdTrailTpl.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_trail_tpl 
+        WHERE
+       rid in ($rid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdTrailTpl.getById" resultMap="RM.PdTrailTpl">
+	    select <include refid="PdTrailTpl.columns"/>
+	    
+	        from t_pd_trail_tpl 
+	        where 
+		        rid = #rid# 
+	    
+    </select>
+    
+	<select id="PdTrailTpl.getByProperty" resultMap="RM.PdTrailTpl">
+		select <include refid="PdTrailTpl.columns"/> from t_pd_trail_tpl where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdTrailTpl.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="rid">
+	             t_pd_trail_tpl.rid = #rid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_pd_trail_tpl.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pd_trail_tpl.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_pd_trail_tpl.trialid = #trialid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="isdefault">
+	             t_pd_trail_tpl.isdefault = #isdefault#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdTrailTpl.findPage.and">
+			<isNotEmpty prepend="AND" property="rid">
+	             t_pd_trail_tpl.rid = #rid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_pd_trail_tpl.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_pd_trail_tpl.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_pd_trail_tpl.trialid = #trialid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="isdefault">
+	             t_pd_trail_tpl.isdefault = #isdefault#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdTrailTpl.Entity" resultMap="RM.PdTrailTpl">
+    	SELECT 	<include refid="PdTrailTpl.columns"/> FROM t_pd_trail_tpl <include refid="PdTrailTpl.findPage.where"/>
+    </select>
+    
+    <select id="PdTrailTpl.findList" resultMap="RM.PdTrailTpl">
+    	SELECT 
+    		<include refid="PdTrailTpl.columns"/> 
+    	FROM 
+    		t_pd_trail_tpl
+		<include refid="PdTrailTpl.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdTrailTpl.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_trail_tpl
+    ]]>
+		<include refid="PdTrailTpl.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdTrailTpl.findPage" resultMap="RM.PdTrailTpl">
+    	select <include refid="PdTrailTpl.columns"/>	    
+	        from t_pd_trail_tpl 	   
+		<include refid="PdTrailTpl.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdTrailTpl.findPage" resultMap="RM.PdTrailTpl">
+    	select <include refid="PdTrailTpl.columns"/>	    
+	        from t_pd_trail_tpl where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       rid 
+	   not in(select $notTop$ 
+       rid 
+	   from t_pd_trail_tpl <include refid="PdTrailTpl.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdTrailTpl.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+<select id="PdTrailTpl.findList.code" resultMap="RM.PdTrailTpl.findList.code">
+    	SELECT 
+    		<include refid="PdTrailTpl.columns"/>,t_pd_trail_tpl.isdefault, 
+    		t_base_item.itemname,t_base_item.formatno,t_base_item.baseitemid
+    	FROM 
+    		t_pd_trail_tpl left join t_base_item on t_pd_trail_tpl.itemcode=t_base_item.itemcode
+		<include refid="PdTrailTpl.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+
+
+	<insert id="PdTrailTpl.update.copy">
+		insert into t_pd_Trail_Tpl(tplid,trialid,itemcode,isdefault)
+		select 
+		#newtplid#,
+		trialid,
+		itemcode,
+		isdefault
+		from t_pd_Trail_Tpl where tplid=#tplid#
+	
+	</insert>
+
+
+
+
+
+	
+</sqlMap>

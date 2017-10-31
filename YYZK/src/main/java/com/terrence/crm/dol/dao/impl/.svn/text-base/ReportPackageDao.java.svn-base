@@ -1,0 +1,41 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ReportPackage;
+import com.terrence.crm.dol.dao.IReportPackageDao;
+
+@Repository
+public class ReportPackageDao extends BaseIbatisDao<ReportPackage,java.lang.Long> implements IReportPackageDao{
+
+		
+	public void saveOrUpdate(ReportPackage entity) {
+		if(entity.getPid() == null){
+			entity.setCreatedate(new Date());
+			save(entity);
+		}else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ReportPackage";
+	}
+	public ReportPackage getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ReportPackage)this.getSqlMapClientTemplate().queryForObject("ReportPackage.getByProperty", map);		
+	}
+
+}

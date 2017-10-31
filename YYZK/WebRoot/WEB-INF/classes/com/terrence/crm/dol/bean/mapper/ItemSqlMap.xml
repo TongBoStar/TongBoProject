@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Item">
+
+<resultMap id="RM.Item" class="com.terrence.crm.dol.bean.Item">
+	<result property="id" column="id"/>
+	<result property="itemName" column="itemName"/>
+	<result property="itemUserId" column="itemUserId"/>
+	<result property="itemPriceAux" column="itemPriceAux"/>
+	<result property="itemPricePlan" column="itemPricePlan"/>
+	<result property="itemUnit" column="itemUnit"/>
+	<result property="consumTimes" column="consumTimes"/>
+	<result property="serviceType" column="serviceType"/>
+	<result property="moduleId" column="moduleId"/>
+	<result property="itemDesc" column="itemDesc"/>
+	<result property="feeType" column="feeType"/>
+	<result property="activityId" column="activityId"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="admin" resultMap="RM.Item.Admin"/>
+	<result property="module" resultMap="RM.Item.Module"/>
+	<result property="activityInfo" resultMap="RM.Item.ActivityInfo"/>
+	<result property="itemImgs" column="id" select="Item.SelectItemImgs"/>
+	<result property="itemSteps" column="id" select="Item.SelectItemSteps"/>
+	<result property="itemUserName" column="itemUserName"/>
+	<result property="loves" column="loves"/>
+	<result property="comments" column="comments"/>
+	<result property="orders" column="orders"/>
+	<result property="indexImg" column="indexImg"/>
+	<result property="keepTimes" column="keepTimes"/>
+	<result property="subjectCode" column="subjectCode"/>
+	<result property="wxProductId" column="wxProductId"/>
+</resultMap>
+<resultMap id="RM.Item.Admin" class="com.terrence.crm.dol.bean.Admin">
+	<result property="adminName" column="adminName"/>
+	<result property="stars" column="stars"/>
+	<result property="headerUrl" column="headerUrl"/>
+</resultMap>
+<resultMap id="RM.Item.Module" class="com.terrence.crm.dol.bean.Module">
+	<result property="moduleName" column="moduleName"/>
+</resultMap>
+<resultMap id="RM.Item.ActivityInfo" class="com.terrence.crm.dol.bean.ActivityInfo">
+	<result property="activityName" column="activityName"/>
+	<result property="activityType" column="activityType"/>
+	<result property="activityPrice" column="activityPrice"/>
+</resultMap>
+<resultMap id="RM.Item.ItemImgs" class="com.terrence.crm.dol.bean.ItemImgs">
+	<result property="id" column="id"/>
+	<result property="itemId" column="itemId"/>
+	<result property="imgName" column="imgName"/>
+	<result property="imgPath" column="imgPath"/>
+	<result property="showIndexStatus" column="showIndexStatus"/>
+	<result property="showStatus" column="showStatus"/>
+</resultMap>
+<resultMap id="RM.Item.ItemSteps" class="com.terrence.crm.dol.bean.ItemStep">
+	<result property="stepName" column="stepName"/>
+	<result property="stepNo" column="stepNo"/>
+	<result property="itemId" column="itemId"/>
+	<result property="stepNeeds" column="stepNeeds"/>
+	<result property="stepContent" column="stepContent"/>
+	<result property="stepTimes" column="stepTimes"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Item.columns">
+	<![CDATA[
+		t_item.id ,
+		t_item.itemName ,
+		t_item.itemUserId ,
+		t_item.itemPriceAux ,
+		t_item.itemPricePlan ,
+		t_item.itemUnit ,
+		t_item.consumTimes ,
+		t_item.serviceType ,
+		t_item.moduleId ,
+		t_item.itemDesc ,
+		t_item.feeType ,
+		t_item.activityId ,
+		t_item.createTime ,
+		t_item.modifyTime,
+		t_item.keepTimes,
+		t_item.subjectCode,
+		t_item.wxProductId
+	]]>
+</sql>
+
+<insert id="Item.insert" >
+	<![CDATA[
+	INSERT INTO t_item (
+		itemName,
+		itemUserId,
+		itemPriceAux,
+		itemPricePlan,
+		itemUnit,
+		consumTimes,
+		serviceType,
+		moduleId,
+		itemDesc,
+		feeType,
+		activityId,
+		createTime,
+		modifyTime,
+		subjectCode,
+		wxProductId
+	) VALUES (
+		#itemName#,
+		#itemUserId#,
+		#itemPriceAux#,
+		#itemPricePlan#,
+		#itemUnit#,
+		#consumTimes#,
+		#serviceType#,
+		#moduleId#,
+		#itemDesc#,
+		#feeType#,
+		#activityId#,
+		#createTime#,
+		#modifyTime#,
+		#subjectCode#,
+		#wxProductId#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Item.update" parameterClass="com.terrence.crm.dol.bean.Item"> 
+	UPDATE t_item 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="itemName">
+			itemName = #itemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemUserId">
+			itemUserId = #itemUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemPriceAux">
+			itemPriceAux = #itemPriceAux# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemPricePlan">
+			itemPricePlan = #itemPricePlan# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemUnit">
+			itemUnit = #itemUnit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="consumTimes">
+			consumTimes = #consumTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="serviceType">
+			serviceType = #serviceType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleId">
+			moduleId = #moduleId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemDesc">
+			itemDesc = #itemDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="feeType">
+			feeType = #feeType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="activityId">
+			activityId = #activityId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="keepTimes">
+			keepTimes = #keepTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="subjectCode">
+			subjectCode = #subjectCode# 
+		</isNotEmpty>
+		<isEmpty prepend="," property="activityId">
+			activityId = null 
+		</isEmpty>
+		<isEmpty prepend="," property="itemDesc">
+			itemDesc = null 
+		</isEmpty>
+		<isNotEmpty prepend="," property="wxProductId">
+			wxProductId = #wxProductId# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Item.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_item.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemName">
+			t_item.itemName = #itemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemUserId">
+			t_item.itemUserId = #itemUserId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemPriceAux">
+			t_item.itemPriceAux = #itemPriceAux# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemPricePlan">
+			t_item.itemPricePlan = #itemPricePlan# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemUnit">
+			t_item.itemUnit = #itemUnit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="consumTimes">
+			t_item.consumTimes = #consumTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="serviceType">
+			t_item.serviceType = #serviceType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleId">
+			t_item.moduleId = #moduleId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleCode">
+			(t_item.moduleId = (select id from t_module where moduleCode=#moduleCode#)) or 
+			(t_item.moduleId in (select id from t_module where moduleParentId = 
+				(select id from t_module where moduleCode=#moduleCode#))
+			)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemDesc">
+			t_item.itemDesc = #itemDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="feeType">
+			t_item.feeType = #feeType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityId">
+			t_item.activityId = #activityId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_item.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_item.modifyTime = #modifyTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="keepTimes">
+			t_item.keepTimes = #keepTimes# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="subjectCode">
+			t_item.subjectCode = #subjectCode# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Item.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_item.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemName">
+		t_item.itemName = #itemName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemUserId">
+		t_item.itemUserId = #itemUserId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemPriceAux">
+		t_item.itemPriceAux = #itemPriceAux# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemPricePlan">
+		t_item.itemPricePlan = #itemPricePlan# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemUnit">
+		t_item.itemUnit = #itemUnit# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="consumTimes">
+		t_item.consumTimes = #consumTimes# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="serviceType">
+		t_item.serviceType = #serviceType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleId">
+		t_item.moduleId = #moduleId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemDesc">
+		t_item.itemDesc = #itemDesc# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="feeType">
+		t_item.feeType = #feeType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityId">
+		t_item.activityId = #activityId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_item.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_item.modifyTime = #modifyTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_item.modifyTime = #modifyTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="keepTimes">
+		t_item.keepTimes = #keepTimes# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="subjectCode">
+		t_item.subjectCode = #subjectCode# 
+	</isNotEmpty>
+</sql>
+
+<select id="Item.getById" resultMap="RM.Item">
+	SELECT <include refid="Item.columns"/>,
+		t_admin.adminName adminName,t_module.moduleName moduleName,t_admin.adminName itemUserName ,
+		t_admin.stars stars,t_admin.headerUrl headerUrl,t_iimg.imgPath indexImg ,
+		t_col.loves ,t_com.comments ,t_ord.orders ,
+		t_activity_info.activityName activityName,
+		t_activity_info.activityType activityType,
+		t_activity_info.activityPrice activityPrice 
+		FROM t_item 
+		left join t_admin on t_item.itemUserId = t_admin.adminId 
+		left join t_module on t_item.moduleId = t_module.id
+		left join t_activity_info on t_item.activityId = t_activity_info.id 
+		left join (select count(itemId) loves,itemId from t_collection group by itemId) t_col on t_item.id = t_col.itemId 
+		left join (select count(itemId) comments,itemId from t_comment group by itemId) t_com on t_item.id = t_com.itemId 
+		left join (select count(itemId) orders,itemId from t_order group by itemId) t_ord on t_item.id = t_ord.itemId 
+		left join (select itemId,imgPath from t_item_imgs where showIndexStatus=1) t_iimg on t_item.id = t_iimg.itemId 
+		WHERE t_item.id = #id# 
+</select>
+
+<select id="Item.getByProperty" resultMap="RM.Item">
+	select <include refid="Item.columns"/> from t_item where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Item.delete">
+	<![CDATA[
+		DELETE FROM t_item WHERE id=#id#
+	]]>
+</delete>
+<delete id="Item.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_item WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Item.findPage.count" resultClass="long">
+	select count(*) from t_item <include refid="Item.findPage.where"/>
+</select>
+
+<select id="Item.findPage" resultMap="RM.Item">
+	SELECT <include refid="Item.columns"/> ,
+		t_admin.adminName adminName,t_module.moduleName moduleName,t_admin.adminName itemUserName ,
+		t_admin.stars stars,t_admin.headerUrl headerUrl,t_iimg.imgPath indexImg ,
+		t_col.loves ,t_com.comments ,t_ord.orders ,
+		t_activity_info.activityName activityName,
+		t_activity_info.activityType activityType,
+		t_activity_info.activityPrice activityPrice 
+		FROM t_item 
+		left join t_admin on t_item.itemUserId = t_admin.adminId 
+		left join t_module on t_item.moduleId = t_module.id
+		left join t_activity_info on t_item.activityId = t_activity_info.id 
+		left join (select count(itemId) loves,itemId from t_collection group by itemId) t_col on t_item.id = t_col.itemId 
+		left join (select count(itemId) comments,itemId from t_comment group by itemId) t_com on t_item.id = t_com.itemId 
+		left join (select count(itemId) orders,itemId from t_order group by itemId) t_ord on t_item.id = t_ord.itemId 
+		left join (select itemId,imgPath from t_item_imgs where showIndexStatus=1) t_iimg on t_item.id = t_iimg.itemId 
+		<include refid="Item.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+</select>
+
+<select id="Item.findList" resultMap="RM.Item">
+	SELECT <include refid="Item.columns"/> ,
+		t_admin.adminName adminName,t_module.moduleName moduleName,t_admin.adminName itemUserName ,
+		t_admin.stars stars,t_admin.headerUrl headerUrl,t_iimg.imgPath indexImg ,
+		t_col.loves ,t_com.comments ,t_ord.orders ,
+		t_activity_info.activityName activityName,
+		t_activity_info.activityType activityType,
+		t_activity_info.activityPrice activityPrice 
+		FROM t_item 
+		left join t_admin on t_item.itemUserId = t_admin.adminId 
+		left join t_module on t_item.moduleId = t_module.id
+		left join t_activity_info on t_item.activityId = t_activity_info.id 
+		left join (select count(itemId) loves,itemId from t_collection group by itemId) t_col on t_item.id = t_col.itemId 
+		left join (select count(itemId) comments,itemId from t_comment group by itemId) t_com on t_item.id = t_com.itemId 
+		left join (select count(itemId) orders,itemId from t_order group by itemId) t_ord on t_item.id = t_ord.itemId 
+		left join (select itemId,imgPath from t_item_imgs where showIndexStatus=1) t_iimg on t_item.id = t_iimg.itemId 
+		<include refid="Item.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+</select>
+<select id="Item.SelectItemImgs" resultMap="RM.Item.ItemImgs">
+	SELECT t_item_imgs.id,t_item_imgs.itemId,t_item_imgs.imgName,t_item_imgs.imgPath,t_item_imgs.showIndexStatus,t_item_imgs.showStatus   
+	FROM t_item_imgs where itemId = #id#
+</select>
+<select id="Item.SelectItemSteps" resultMap="RM.Item.ItemSteps">
+	SELECT t_item_step.stepName ,
+		t_item_step.stepNo ,
+		t_item_step.itemId ,
+		t_item_step.stepNeeds ,
+		t_item_step.stepContent ,
+		t_item_step.stepTimes 
+	FROM t_item_step where itemId = #id#
+</select>
+</sqlMap>

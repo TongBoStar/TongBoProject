@@ -1,0 +1,1408 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.UserContextHolder;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.DeviceWork;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmpTaskVo;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.bean.WorkSeq;
+import com.terrence.crm.dol.contasnt.TeamTaskStatus;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IDeviceWorkDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.event.AdminLogEvent;
+import com.terrence.crm.dol.query.CheckQuery;
+import com.terrence.crm.dol.query.CheckRecordQuery;
+import com.terrence.crm.dol.query.DispatchWorkQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.WorkSeqQuery;
+import com.terrence.crm.dol.service.IEmployeeTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class EmployeeTaskService extends BaseService implements IEmployeeTaskService {
+	protected static Logger logger = LoggerFactory.getLogger(EmployeeTaskService.class);
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+
+	@Autowired
+	@Qualifier("deviceWorkDao")
+	private IDeviceWorkDao deviceWorkDao;
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	@Autowired
+	@Qualifier("teamDao")
+	private ITeamDao teamDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "EmployeeTask";
+	}
+	@Transactional(readOnly=true)
+	public EmployeeTask getById(java.lang.Long id) throws ServiceException
+	{
+		return employeeTaskDao.getById(id);
+	}
+	
+	public void saveOrUpdate(EmployeeTask entity) throws ServiceException
+	{
+		employeeTaskDao.saveOrUpdate(entity);
+		
+	}
+	
+	public java.lang.Long save(EmployeeTask entity) throws ServiceException
+	{
+		Long adId = employeeTaskDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(EmployeeTask entity) throws ServiceException
+	{
+		Integer returnValue =  employeeTaskDao.update(entity);
+		
+		return returnValue;
+	}
+	public Integer updateStatus(EmployeeTask entity)throws ServiceException
+	{
+		Integer returnValue=null;
+		if(entity.getStatus().intValue()==TeamTaskStatus.UNWORK.getIndex()){//未开工状态0
+			entity.setStatus(TeamTaskStatus.WORKING.getIndex());//已开工1
+			 returnValue =  employeeTaskDao.update(entity);
+			 /**更新班组为已开工**/
+			 Long dispatchid=employeeTaskDao.getById(entity.getEmployeetaskid()).getDispatchid();
+			 DispatchWork dw=dispatchWorkDao.getById(dispatchid);
+			 dw.setStatus(entity.getStatus());
+			 dispatchWorkDao.update(dw);
+			 /**车间任务设为已开工**/
+			 Icmo icmo=new Icmo();
+			 icmo.setIcmoid(employeeTaskDao.getById(entity.getEmployeetaskid()).getWorkid());
+			 icmo.setPerformstatus(2);
+			 icmoDao.update(icmo);
+		}
+		else{//已开工状态1--employeeTaskList
+			CheckQuery chcekquery=new CheckQuery();
+			chcekquery.setEmployeetaskid(entity.getEmployeetaskid());
+			chcekquery.setChecktype(3);//有过提交数量终检才能切换完工
+			List<Check> clist =new ArrayList<Check>();
+			clist= checkDao.findList(chcekquery);
+			if(clist.size()==0){//未提交数量检查不能切换完工
+				returnValue=-2;
+				return returnValue;
+			}
+			
+			Date finishdate = new Date();
+			entity.setStatus(TeamTaskStatus.WORKED.getIndex());//已完成2
+			entity.setFinishdate(finishdate);//设置实际完成时间
+			if(null!=entity.getPlanenddate()){
+				Date planenddate=entity.getPlanenddate();//获得计划完成时间
+				 returnValue =  employeeTaskDao.update(entity);
+				 /*
+				 服务器造成死锁暂停使用-------(待查)----------- 
+				  
+				  */
+			//	changeDate(finishdate,planenddate,entity);//修改时间的方法参数1：实际完成时间，2：计划完成时间3,班别
+			}else{
+				 returnValue =  employeeTaskDao.update(entity);//计划完成时间为空，则不修改
+			}
+		}
+		
+//-------------------------------------------------------------------------		
+		/*Long dispatchid=employeeTaskDao.getById(entity.getEmployeetaskid()).getDispatchid();
+		//System.out.println("dispatchid="+dispatchid);
+		DispatchWork dw=dispatchWorkDao.getById(dispatchid);
+		//System.out.println(dw.getStatus().intValue());
+		//System.out.println(entity.getStatus().intValue());
+		
+		if(dw.getStatus().intValue()!=entity.getStatus().intValue())
+		{
+			if(entity.getStatus().intValue()==TeamTaskStatus.WORKED.getIndex())*//***完工***//*
+			{
+				EmployeeTaskQuery query=new EmployeeTaskQuery();
+				query.setDispatchid(dispatchid);
+				query.setNotemptaskid(entity.getEmployeetaskid());
+				List<EmployeeTask> list=employeeTaskDao.findList(query);
+				boolean finished=true;
+				for(EmployeeTask et:list)
+				{
+					if(et.getStatus().intValue()<TeamTaskStatus.WORKED.getIndex())
+					{
+						finished=false;
+						break;
+					}
+				}
+				if(finished)*//**如果班组内所有人都完工**//*
+				{
+					dw.setFinishdate(DateConvertUtils.getCurrentDateTime());
+					if(dw.getPlanendtime()!=null&&DateUtils.DateDiff(dw.getPlanendtimeString(),DateUtils.GetDateTime(),1)>0)
+					{
+						dw.setStatus(TeamTaskStatus.NOWORKONTIME.getIndex());
+					}
+					else
+					{
+						dw.setStatus(entity.getStatus());
+					}
+				}
+			}
+			else*//**开工**//*
+			{
+				dw.setStatus(entity.getStatus());
+			}
+			dispatchWorkDao.update(dw);
+		}*/
+		
+		return returnValue;
+	}
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		EmployeeTask employeetask=employeeTaskDao.getById(id);
+		prepareEmpDao.delteByEmptask(""+id);//删除对应的准备金--需先删除准备金(主外键)
+		
+		Integer returnValue = employeeTaskDao.deleteById(id);		
+		EmployeeTaskQuery query = new EmployeeTaskQuery();
+		query.setDispatchid(employeetask.getDispatchid());
+		//--判断班组任务状态是否修改为指派(当班组任务下的个人任务数量为0时则改为指派)
+		if(employeeTaskDao.findCount("EmployeeTask.findPage.count", query)==0)
+		{
+			DispatchWork dwork=new DispatchWork();
+			dwork.setId(employeetask.getDispatchid());
+			dwork.setEmpstatus(DispatchWork.UNALLOCATED);
+			dwork.setStatus(TeamTaskStatus.UNWORK.getIndex());
+			dispatchWorkDao.update(dwork);
+		}
+		
+		
+		AdminLogEvent event=new AdminLogEvent("");
+		event.setAdminId(UserContextHolder.get().getId());
+		event.setOperatingContent(UserContextHolder.get().getName()+"删除了下派到个人,任务编号是"+employeetask.getEmployeetaskid()+",物料编号是"+employeetask.getItemcode()+",物料名称是"+employeetask.getItemname()+"用户编号是"+employeetask.getEmpid()+",班组任务编号是"+employeetask.getDispatchid()+"的任务");
+		this.publishEvent(event);
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		
+		
+		String delIds = StringUtils.join(idList, ",");
+		/** 删除个人任务前先删除check中的任务--t_check和t_employeetask有主外键关系
+		 * 同时删除t_check_record和t_prepare_emp中的记录
+		 * 
+		 * */
+		checkDao.deleteByemployeeid(Long.valueOf(delIds.split("=")[0]));
+		checkRecordDao.deleteByemployeeTaskid(delIds.split("=")[0]);
+		prepareEmpDao.delteByEmptask(delIds.split("=")[0]);
+			
+		
+		EmployeeTask employeetask=new EmployeeTask();
+		employeetask=employeeTaskDao.getById(Long.valueOf(delIds.split("=")[0]));
+		
+		
+		Integer returnValue = employeeTaskDao.deleteByMultipleId(delIds);
+		//prepareEmpDao.delteByEmptask(delIds);
+		//-----
+		
+		EmployeeTaskQuery query = new EmployeeTaskQuery();
+		query.setDispatchid(employeetask.getDispatchid());
+		if(employeeTaskDao.findCount("EmployeeTask.findPage.count", query)==0)
+		{
+			DispatchWork dwork=new DispatchWork();
+			dwork.setId(employeetask.getDispatchid());
+			dwork.setEmpstatus(DispatchWork.UNALLOCATED);
+			dwork.setStatus(TeamTaskStatus.UNWORK.getIndex());
+			dispatchWorkDao.update(dwork);//更新为指派状体
+		}
+		//-----
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		EmployeeTaskQuery query = new EmployeeTaskQuery();
+		try {
+			return employeeTaskDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<EmployeeTask> findPage(Page<EmployeeTask> page, EmployeeTaskQuery query) throws ServiceException
+	{
+		return employeeTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<EmployeeTask> findList(EmployeeTaskQuery query) throws ServiceException
+	{
+		return employeeTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<EmployeeTask> findAllList() throws ServiceException
+	{
+		return employeeTaskDao.findAllList();
+	}
+	@Transactional(readOnly=true)
+	public EmployeeTask getMaxPlanEndDate(EmployeeTaskQuery query) throws ServiceException {
+		return employeeTaskDao.getMaxPlanEndDate(query);
+	}
+	@Override
+	public void saveTask(EmpTaskVo empTaskVo,EmployeeTask entity) throws ServiceException {
+		
+		Long []empid=empTaskVo.getEmpid();
+		Integer []classtype=empTaskVo.getClasstype();
+		Long []device=empTaskVo.getDeviceid();
+		Double[] preparemins=empTaskVo.getPreparemins();
+		Integer[]fqty=empTaskVo.getFqty();
+		//String planstartdate[]=empTaskVo.getPlanstartdate();
+		String planenddate[]=empTaskVo.getPlanenddate();
+		Double money[]=empTaskVo.getMoney();
+		Long prepareemp[]=empTaskVo.getPrepareemp();
+		Double processmins[]=empTaskVo.getProcessmins();
+		for(int i=0;i<empid.length;i++)
+		{
+			EmployeeTask employeeTask=new EmployeeTask();
+			employeeTask.setEmpid(empid[i]);
+			employeeTask.setClasstype(classtype[i]);
+			if(device[i]!=null)
+			{
+				employeeTask.setDeviceid(device[i]);
+			}
+			else
+			{
+				employeeTask.setDeviceid(0l);
+			}
+			employeeTask.setPrepare(preparemins[i]);
+			employeeTask.setProcessmins(processmins[i]);
+			employeeTask.setFqty(fqty[i]);
+			//employeeTask.setPlanstartdate(DateConvertUtils.parse(planstartdate[i], "yyyy-MM-dd HH:mm:ss"));
+			employeeTask.setPlanenddate(DateConvertUtils.parse(planenddate[i], "yyyy-MM-dd HH:mm:ss"));
+			employeeTask.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			employeeTask.setStatus(0);
+			employeeTask.setAcceptnum(0);
+			employeeTask.setWorkid(entity.getWorkid());
+			employeeTask.setTeamid(entity.getTeamid());
+			employeeTask.setProcessid(entity.getProcessid());
+			employeeTask.setCenterid(entity.getCenterid());
+			employeeTask.setItemcode(entity.getItemcode());
+			employeeTask.setItemname(entity.getItemname());
+			employeeTask.setDispatchid(entity.getDispatchid());
+			employeeTask.setItemprocessid(entity.getItemprocessid());
+			employeeTask.setWorkmode(2);/**操作**/
+			Long emptaskid=employeeTaskDao.save(employeeTask);		
+			if(preparemins[i]!=0&&null!=prepareemp[i])
+			{
+				PrepareEmp preapareemp=new PrepareEmp();
+				preapareemp.setEmployeetaskid(emptaskid);
+				preapareemp.setMoney(money[i]);
+				preapareemp.setPreparemins(preparemins[i]);
+				preapareemp.setEmpid(prepareemp[i]);
+				preapareemp.setProcessid(entity.getProcessid());
+				preapareemp.setItemcode(entity.getItemcode());
+				preapareemp.setItemname(entity.getItemname());
+				preapareemp.setTeamid(entity.getTeamid());
+				preapareemp.setItemprocessid(entity.getItemprocessid());
+				prepareEmpDao.save(preapareemp);
+			}
+			DispatchWork dispatchWrok=new DispatchWork();
+			dispatchWrok.setEmpstatus(1);
+			dispatchWrok.setId(entity.getDispatchid());
+			dispatchWorkDao.saveOrUpdate(dispatchWrok);
+		}
+	}
+	@Override
+	public List<EmployeeTask> findList(String statement, EmployeeTaskQuery query)
+			throws ServiceException {
+		return employeeTaskDao.findList(statement, query);
+	}
+	@Override
+	public void updateTask(EmpTaskVo empTaskVo, EmployeeTask entity)
+			throws ServiceException {
+		Long []empid=empTaskVo.getEmpid();
+		Integer []classtype=empTaskVo.getClasstype();
+		Long []device=empTaskVo.getDeviceid();
+		Double[] preparemins=empTaskVo.getPreparemins();
+		Integer[]fqty=empTaskVo.getFqty();
+		//String planstartdate[]=empTaskVo.getPlanstartdate();
+		String planenddate[]=empTaskVo.getPlanenddate();
+		Double money[]=empTaskVo.getMoney();
+		Long prepareemp[]=empTaskVo.getPrepareemp();
+		Double processmins[]=empTaskVo.getProcessmins();
+		Long employeetaskid[]=empTaskVo.getEmployeetaskid();
+		int tasklength=employeetaskid.length;
+		for(int i=0;i<classtype.length;i++)
+		{
+			EmployeeTask employeeTask=new EmployeeTask();
+			if(empid[i]!=0)
+			{
+			employeeTask.setEmpid(empid[i]);
+			}
+			employeeTask.setClasstype(classtype[i]);
+			if(device[i]!=null)
+			{
+				employeeTask.setDeviceid(device[i]);
+			}
+			else
+			{
+				employeeTask.setDeviceid(0l);
+			}
+			employeeTask.setPrepare(preparemins[i]);
+			employeeTask.setProcessmins(processmins[i]);
+			employeeTask.setFqty(fqty[i]);
+			//employeeTask.setPlanstartdate(DateConvertUtils.parse(planstartdate[i], "yyyy-MM-dd HH:mm:ss"));
+			employeeTask.setPlanenddate(DateConvertUtils.parse(planenddate[i], "yyyy-MM-dd HH:mm:ss"));
+			employeeTask.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			employeeTask.setStatus(0);
+			employeeTask.setAcceptnum(0);
+			employeeTask.setWorkid(entity.getWorkid());
+			employeeTask.setTeamid(entity.getTeamid());
+			employeeTask.setProcessid(entity.getProcessid());
+			employeeTask.setItemcode(entity.getItemcode());
+			employeeTask.setItemname(entity.getItemname());
+			employeeTask.setDispatchid(entity.getDispatchid());
+			employeeTask.setItemprocessid(entity.getItemprocessid());
+			employeeTask.setWorkmode(2);
+			if(i<tasklength)
+			{
+				employeeTask.setEmployeetaskid(employeetaskid[i]);
+			}
+			if(null==employeeTask.getEmployeetaskid())
+			{
+				employeeTask.setCenterid(itemProcessDao.getById(entity.getItemprocessid()).getProcessid());
+				Long emptaskid=employeeTaskDao.save(employeeTask);		
+				if(preparemins[i]!=0&&null!=prepareemp[i])
+				{
+					PrepareEmp preapareemp=new PrepareEmp();
+					preapareemp.setEmployeetaskid(emptaskid);
+					preapareemp.setMoney(money[i]);
+					preapareemp.setPreparemins(preparemins[i]);
+					preapareemp.setEmpid(prepareemp[i]);
+					preapareemp.setProcessid(entity.getProcessid());
+					preapareemp.setItemcode(entity.getItemcode());
+					preapareemp.setItemname(entity.getItemname());
+					preapareemp.setTeamid(entity.getTeamid());
+					preapareemp.setItemprocessid(entity.getItemprocessid());
+					prepareEmpDao.save(preapareemp);
+				}
+			}
+			else
+			{
+				EmployeeTask et=employeeTaskDao.getById(employeeTask.getEmployeetaskid());
+				if(et.getStatus().intValue()==0||et.getStatus().intValue()==5)/**初状态或反检状态**/
+				{
+					employeeTask.setStatus(0);
+					employeeTaskDao.saveOrUpdate(employeeTask);
+					
+					if(preparemins[i]!=0&&null!=prepareemp[i])
+					{
+						PrepareEmp preapareemp=new PrepareEmp();
+						preapareemp=prepareEmpDao.getByProperty("employeetaskid", employeeTask.getEmployeetaskid().toString());
+						
+						preapareemp.setMoney(money[i]);
+						preapareemp.setPreparemins(preparemins[i]);
+						preapareemp.setEmpid(prepareemp[i]);
+						preapareemp.setProcessid(entity.getProcessid());
+						prepareEmpDao.saveOrUpdate(preapareemp);
+					}
+				}
+			}
+		}
+		
+	}
+//------------------------------------------------
+	//--------------------------------------------------------
+	public void changeDate(Date finishdate,Date planenddate,EmployeeTask entity){
+		  
+		EmployeeTaskQuery myeq=new EmployeeTaskQuery();
+		myeq.setStatus(0);                                      //设置状态属性为未开工
+		myeq.setClasstype(entity.getClasstype());                                //设置查询班别
+		myeq.setDeviceid(entity.getDeviceid());								//绑定同一设备查询
+		//myeq.setWorkid(workid);									//绑定同一任务的工序
+		
+		List<EmployeeTask> list= employeeTaskDao.findList(myeq);//获取所有对应班别（白班/夜班）未开工的任务
+		Long time=0L;
+//实际完工时间在计划完工时间之后（超时完工）--时间加
+		if(finishdate.after(planenddate)){
+			time=timediff(planenddate, finishdate, entity.getClasstype());//获得工作时间差（分钟）
+			for(EmployeeTask ep:list){
+				if(null!=ep.getPlanstartdate()){//判空
+					ep.setPlanstartdate(timeAdd(ep.getPlanstartdate(),time,ep.getClasstype()));//设置修改后的计划开始时间	
+				}
+				if(null!=ep.getPlanenddate()){//判空
+					ep.setPlanenddate(timeAdd(ep.getPlanenddate(),time,ep.getClasstype()));//设置修改后的计划结束时间
+				}
+						employeeTaskDao.update(ep);//重新保存		
+			}
+		}
+//实际完工时间在计划完工时间之前（提前完工）----时间减
+		else if(finishdate.before(planenddate)){
+			time=timediff(finishdate, planenddate, entity.getClasstype());//获得工作时间差（分钟）
+			for(EmployeeTask ep:list){
+						if(null!=ep.getPlanstartdate()){//判空
+							ep.setPlanstartdate(timeReduce(ep.getPlanstartdate(),time,ep.getClasstype()));//设置修改后的计划开始时间	
+						}
+						if(null!=ep.getPlanenddate()){//判空
+							ep.setPlanenddate(timeReduce(ep.getPlanenddate(),time,ep.getClasstype()));//设置修改后的计划结束时间
+						}
+								employeeTaskDao.update(ep);//重新保存		
+			}
+		}//相等不做处理
+	}		 
+//=============================================================================================
+	/**
+	 * 时间加
+	 * Date plandate, 计划时间
+	 * Long time,		     工作时间差	
+	 * Integer classtype,  班别
+	 */
+	private Date timeAdd(Date plandate, Long time, Integer classtype) {
+		Calendar cal=Calendar.getInstance();
+		Calendar calStart=Calendar.getInstance();
+		cal.setTime(plandate);
+		Long day=(time/60)/8;
+		for(int k=0;k<day;k++){
+			cal.add(Calendar.DATE, 1);//超过8小时加一天
+			if(cal.get(Calendar.DAY_OF_WEEK)==1){//是周末加一天
+				cal.add(Calendar.DATE, 1);
+			}
+		}
+		//------------------------------------
+		long timeResidue=time-day*24*60;//不足8小时
+		cal.add(Calendar.MINUTE, (int)timeResidue);
+		calStart=cal;
+		while(true){
+				if(classtype.intValue()==1){//白班
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, 1);continue;//周日
+						}else
+						if(((cal.get(Calendar.HOUR_OF_DAY)==17)&&(cal.get(Calendar.MINUTE)>30))||(cal.get(Calendar.HOUR_OF_DAY)>17)){
+							cal.add(Calendar.SECOND, 15*3600);//下午17:30后
+							if(cal.get(Calendar.DATE)>calStart.get(Calendar.DATE)&&cal.get(Calendar.HOUR_OF_DAY)>=12){
+								cal.add(Calendar.SECOND, 3600);continue;//加一小时
+							}
+							continue;
+						}
+						if((cal.get(Calendar.HOUR_OF_DAY)<8)||(cal.get(Calendar.HOUR_OF_DAY)==8&&cal.get(Calendar.MINUTE)<=30)){
+							cal.add(Calendar.SECOND, 15*3600);continue;//早上08：30前
+						}else
+						if(cal.get(Calendar.HOUR_OF_DAY)==12&&cal.get(Calendar.MINUTE)>0){
+							cal.add(Calendar.SECOND, 3600);continue;//是处于12:00-13:00
+						}else
+						if(calStart.get(Calendar.HOUR_OF_DAY)<12&&cal.get(Calendar.HOUR_OF_DAY)>12){//开始小于12点，加后大于12点
+							cal.add(Calendar.SECOND, 3600);continue;
+						}else	
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, 1);continue;//周日
+						}else{
+							break;
+						}
+					}else if(classtype.intValue()==2){//夜班
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, 1);continue;//周日
+						}else
+						if(((cal.get(Calendar.HOUR_OF_DAY)==2)&&(cal.get(Calendar.MINUTE)>0))||(cal.get(Calendar.HOUR_OF_DAY)>2&&cal.get(Calendar.HOUR_OF_DAY)<18)){
+							cal.add(Calendar.SECOND,16*3600);continue;//2:00--18:00	
+						}else
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, 1);continue;//周日
+						}else{
+							break;
+						}
+					}
+		}				
+		return cal.getTime();
+	}
+	/**
+	 * 时间减
+	 * Date plandate, 计划时间
+	 * Long time,		     工作时间差	
+	 * Integer classtype,  班别
+	 */
+	private Date timeReduce(Date plandate, Long time, Integer classtype) {
+		Calendar cal=Calendar.getInstance();
+		Calendar calStart=Calendar.getInstance();
+		cal.setTime(plandate);
+		Long day=(time/60)/8;
+		for(int k=0;k<day;k++){
+			cal.add(Calendar.DATE, -1);//超过8小时加一天
+			if(cal.get(Calendar.DAY_OF_WEEK)==1){//是周末加一天
+				cal.add(Calendar.DATE, -1);
+			}
+		}
+		//------------------------------------
+		long timeResidue=time-day*24*60;//不足8小时
+		cal.add(Calendar.MINUTE, -(int)timeResidue);
+		calStart=cal;
+		while(true){
+				if(classtype.intValue()==1){//白班
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, -1);continue;//周日
+						}else
+						if(((cal.get(Calendar.HOUR_OF_DAY)==17)&&(cal.get(Calendar.MINUTE)>30))||(cal.get(Calendar.HOUR_OF_DAY)>17)){
+							cal.add(Calendar.SECOND, -15*3600);//下午17:30后
+							if(cal.get(Calendar.DATE)>calStart.get(Calendar.DATE)&&cal.get(Calendar.HOUR_OF_DAY)>=12){
+								cal.add(Calendar.SECOND, -3600);continue;//加一小时
+							}
+							continue;
+						}
+						if((cal.get(Calendar.HOUR_OF_DAY)<8)||(cal.get(Calendar.HOUR_OF_DAY)==8&&cal.get(Calendar.MINUTE)<=30)){
+							cal.add(Calendar.SECOND, -15*3600);continue;//早上08：30前
+						}else
+						if(cal.get(Calendar.HOUR_OF_DAY)==12&&cal.get(Calendar.MINUTE)>0){
+							cal.add(Calendar.SECOND, -3600);continue;//是处于12:00-13:00
+						}else
+						if(calStart.get(Calendar.HOUR_OF_DAY)<12&&cal.get(Calendar.HOUR_OF_DAY)>12){//开始小于12点，加后大于12点
+							cal.add(Calendar.SECOND, -3600);continue;
+						}else	
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, -1);continue;//周日
+						}else{
+							break;
+						}
+					}else if(classtype.intValue()==2){//夜班
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, -1);continue;//周日
+						}else
+						if(((cal.get(Calendar.HOUR_OF_DAY)==2)&&(cal.get(Calendar.MINUTE)>0))||(cal.get(Calendar.HOUR_OF_DAY)>2&&cal.get(Calendar.HOUR_OF_DAY)<18)){
+							cal.add(Calendar.SECOND,-16*3600);continue;//2:00--18:00	
+						}else
+						if(cal.get(Calendar.DAY_OF_WEEK)==1){
+							cal.add(Calendar.DATE, -1);continue;//周日
+						}else{
+							break;
+						}
+					}
+		}				
+		return cal.getTime();
+	
+	}
+	
+	
+	
+	
+//======================================================================================================	
+	/**
+	 * 返回工作时间差（分钟）,1早班 2晚班
+	 * @param start 开始时间(开始时间小于结束时间)
+	 * @param end	结束时间
+	 * @param type	班别
+	 * @return
+	 */
+ 	// @Test
+	public Long timediff(Date startTime,Date endTime,int classtype) {
+		//Date startTime=new Date();
+		//Date endTime=new Date();
+		//int classtype=1;
+		Long time=0L;
+		Long timeAll=0L;
+		int days=0;
+		days=endTime.getDay()-startTime.getDay();//相差的时间天数
+		timeAll=(endTime.getTime()-startTime.getTime())/60000;//时间差的分钟数
+					
+		if((startTime.getHours()<12||(startTime.getHours()==12&&startTime.getMinutes()<=0))&&
+				(endTime.getHours()<12||(endTime.getHours()==12&&endTime.getMinutes()<=0))){
+						//System.out.println("时间都为上午");//(15*n+n)
+						if(classtype==1){
+							time=15L*days+days*1;
+							time=timeAll-time*60;	
+						}else if(classtype==2){
+							time=16L*days;
+							time=timeAll-time*60;	
+						}
+			}else if((startTime.getHours()<12||(startTime.getHours()==12&&startTime.getMinutes()<=0))&&
+					!(endTime.getHours()<12||(endTime.getHours()==12&&endTime.getMinutes()<=0))){
+						//System.out.println("开始时间为上午，结束时间为下午");15*n+n+1
+						if(classtype==1){
+							time=15L*days+days*1+1;
+							time=timeAll-time*60;	
+						}else if(classtype==2){
+							time=16L*days+16;
+							time=timeAll-time*60;
+						}
+			}else if(!(startTime.getHours()<12||(startTime.getHours()==12&&startTime.getMinutes()<=0))&&
+					(endTime.getHours()<12||(endTime.getHours()==12&&endTime.getMinutes()<=0))){
+						//System.out.println("开始时间为下午，结束时间为上午");15*n+n-1
+						if(classtype==1){
+							time=15L*days+days*1-1;
+							time=timeAll-time*60;	
+						}else if(classtype==2){
+							time=16L*days-16;
+							time=timeAll-time*60;
+						}
+			}else if(!(startTime.getHours()<12||(startTime.getHours()==12&&startTime.getMinutes()<=0))&&
+					!(endTime.getHours()<12||(endTime.getHours()==12&&endTime.getMinutes()<=0))){
+						//System.out.println("////时间都为下午");15*n+n
+						if(classtype==1){//白班
+							time=15L*days+days*1;
+							time=timeAll-time*60;	
+						}else if(classtype==2){
+							time=16L*days;
+							time=timeAll-time*60;
+						}
+					}
+//		System.out.println("工作时间差time（分钟）："+time);
+					return time;
+	}
+	@Override
+	public Integer findLastnum(Long employeeTaskId) throws ServiceException {
+				
+		Long dispatchid=employeeTaskDao.getById(employeeTaskId).getDispatchid();//获得班组id
+		Long lastdispatchid=dispatchWorkDao.getById(dispatchid).getPreorder();//获得上序id
+		Integer lastAcceptednum=null;
+		if(lastdispatchid.intValue()==0){//第一序
+		 lastAcceptednum=-1;
+		}else{
+		 lastAcceptednum=dispatchWorkDao.getByAcceptNum(lastdispatchid);//获得上序合格数
+		 //--
+		 	DispatchWork dis=new DispatchWork();
+			Check c=new Check();
+			dis = dispatchWorkDao.getByProperty("workseqid",lastdispatchid+"");
+			if(dis.getId()!=null){
+				DispatchWorkQuery dquery=new DispatchWorkQuery();
+				dquery.setId(dis.getId());
+				CheckRecord checkrecord = checkRecordDao.getByEntity("CheckRecord.getall.receviernum", dquery);
+				c.setFrontdisacceptnum(checkrecord.getReceivernum());
+			}
+		 //--------
+			lastAcceptednum=lastAcceptednum+c.getFrontdisacceptnum().intValue();
+			
+		}
+		return lastAcceptednum;
+	}
+	
+	@Override
+	public Page<EmployeeTask> findPage(Page<EmployeeTask> page, String statement,
+			EmployeeTaskQuery employeeTaskQuery) throws ServiceException {
+		return  employeeTaskDao.findPage(page, statement, employeeTaskQuery);
+	}
+	@Override
+	public void updateEployStatus(EmployeeTask entity)throws ServiceException{
+		Long eployid = entity.getEmployeetaskid();
+		Integer status = entity.getStatus();
+		if(status.intValue()==2){
+			entity.setFinishdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		}
+		employeeTaskDao.update(entity);//更新个人任务状态
+		
+		//changDisIcmoStatus(eployid,status);//修改班组和车间任务状态
+		
+	}
+	/**
+	 * 修改班组和车间任务状态
+	 * @param eployid
+	 * @param status
+	 */
+	private void changDisIcmoStatus(Long eployid, Integer status) {
+		Long dispatchid=employeeTaskDao.getById(eployid).getDispatchid();
+		
+		DispatchWork dw=dispatchWorkDao.getById(dispatchid);//班组任务
+		Icmo icmo=icmoDao.getById(dw.getWorkid());//车间任务
+		
+		if(dw.getStatus().intValue()!=status.intValue()){
+			if(status.intValue()==TeamTaskStatus.WORKING.getIndex()){/**已开工**/
+				dw.setStatus(status);//班组状态已开工
+				icmo.setPerformstatus(2);//车间状态已开工
+			}else if(status.intValue()==TeamTaskStatus.UNWORK.getIndex()){/**未开工**/
+				EmployeeTaskQuery query=new EmployeeTaskQuery();
+				query.setDispatchid(dispatchid);
+				List<EmployeeTask> etlist=employeeTaskDao.findList(query);//此班组下所有个人任务
+				boolean finished=true;
+				
+				for(EmployeeTask et:etlist){
+					if(et.getStatus().intValue()>TeamTaskStatus.UNWORK.getIndex()){//非未开工
+						finished=false;
+						break;
+					}
+				}
+				if(finished){
+					dw.setStatus(TeamTaskStatus.UNWORK.getIndex());//班组下的个人任务全未开工
+					DispatchWorkQuery dwQuery=new DispatchWorkQuery();
+					dwQuery.setWorkid(icmo.getIcmoid());
+					long dwid=dw.getId();
+					boolean dwfinish=true;
+					List<DispatchWork> alldw = dispatchWorkDao.findList(dwQuery);//同一车间任务下的班组任务
+					for(DispatchWork dwicmo:alldw){
+							if(dwicmo.getId().longValue()!=dwid){
+								if(dwicmo.getStatus().intValue()>TeamTaskStatus.UNWORK.getIndex()){
+									dwfinish=false;
+									break;
+								}
+							}
+					}
+					if(dwfinish){
+						icmo.setPerformstatus(1);//车间未开工
+					}else{
+						icmo.setPerformstatus(2);//车间已开工
+					}
+					
+				}else{
+					dw.setStatus(TeamTaskStatus.WORKING.getIndex());
+					icmo.setPerformstatus(2);//车间状态已开工
+				}
+				
+			}else if(status.intValue()==TeamTaskStatus.WORKED.getIndex()){/**已完工**/
+				EmployeeTaskQuery query=new EmployeeTaskQuery();
+				query.setDispatchid(dispatchid);
+				List<EmployeeTask> etlist=employeeTaskDao.findList(query);//此班组下所有个人任务
+				boolean finished=true;
+				
+				for(EmployeeTask et:etlist){
+					if(et.getStatus().intValue()!=TeamTaskStatus.WORKED.getIndex()){//完工
+						finished=false;
+						break;
+					}
+				}
+				if(finished){//个人全完工
+					dw.setFinishdate(DateConvertUtils.getCurrentDateTime());
+					if(dw.getPlanendtime()!=null&&DateUtils.DateDiff(dw.getPlanendtimeString(),DateUtils.GetDateTime(),1)>0)
+					{
+						dw.setStatus(TeamTaskStatus.NOWORKONTIME.getIndex());
+					}
+					else
+					{
+						dw.setStatus(status);
+					}
+					DispatchWorkQuery dwQuery=new DispatchWorkQuery();
+					dwQuery.setWorkid(icmo.getIcmoid());
+					long dwid=dw.getId();
+					boolean dwfinish=true;
+					List<DispatchWork> alldw = dispatchWorkDao.findList(dwQuery);//同一车间任务下的班组任务
+					for(DispatchWork dwicmo:alldw){
+							if(dwicmo.getId().longValue()!=dwid){
+								if(dwicmo.getStatus().intValue()!=2&&dwicmo.getStatus().intValue()!=3){//完工,未按时完工
+									dwfinish=false;
+									break;
+								}
+							}
+					}
+					if(dwfinish){
+						icmo.setPerformstatus(3);//车间已完工
+					}else{
+						icmo.setPerformstatus(2);//车间已开工
+					}
+					
+				}else{
+					dw.setStatus(TeamTaskStatus.WORKING.getIndex());
+					icmo.setPerformstatus(2);//车间状态已开工
+				}
+				
+			}
+			
+			dispatchWorkDao.update(dw);
+			icmoDao.update(icmo);
+		}
+		
+		
+	}
+	/*
+	 * if(o.performstatus==1)
+			{
+				html+='<td><a href="javascript:changeperformstatus('+o.icmoid+')">未开工</a></td>';
+			}
+			else if(o.performstatus==2)
+			{
+				html+='<td><a href="javascript:changeperformstatus('+o.icmoid+')">已开工</a></td>';
+			}
+			else if(o.performstatus==3)
+			{
+				html+='<td><a href="javascript:changeperformstatus('+o.icmoid+')">已完工</a></td>';
+			}
+	 */
+	/*Long dispatchid=employeeTaskDao.getById(entity.getEmployeetaskid()).getDispatchid();
+	//System.out.println("dispatchid="+dispatchid);
+	DispatchWork dw=dispatchWorkDao.getById(dispatchid);
+	//System.out.println(dw.getStatus().intValue());
+	//System.out.println(entity.getStatus().intValue());
+	
+	if(dw.getStatus().intValue()!=entity.getStatus().intValue())
+	{
+		if(entity.getStatus().intValue()==TeamTaskStatus.WORKED.getIndex())*//***完工***//*
+		{
+			EmployeeTaskQuery query=new EmployeeTaskQuery();
+			query.setDispatchid(dispatchid);
+			query.setNotemptaskid(entity.getEmployeetaskid());
+			List<EmployeeTask> list=employeeTaskDao.findList(query);
+			boolean finished=true;
+			for(EmployeeTask et:list)
+			{
+				if(et.getStatus().intValue()<TeamTaskStatus.WORKED.getIndex())
+				{
+					finished=false;
+					break;
+				}
+			}
+			if(finished)*//**如果班组内所有人都完工**//*
+			{
+				dw.setFinishdate(DateConvertUtils.getCurrentDateTime());
+				if(dw.getPlanendtime()!=null&&DateUtils.DateDiff(dw.getPlanendtimeString(),DateUtils.GetDateTime(),1)>0)
+				{
+					dw.setStatus(TeamTaskStatus.NOWORKONTIME.getIndex());
+				}
+				else
+				{
+					dw.setStatus(entity.getStatus());
+				}
+			}
+		}
+		else*//**开工**//*
+		{
+			dw.setStatus(entity.getStatus());
+		}
+		dispatchWorkDao.update(dw);
+	}*/
+	@Override
+	public List<EmployeeTask> findEpList(EmployeeTask entity)
+			throws ServiceException {
+
+		
+		return employeeTaskDao.findEpList(entity.getWorkid());
+	}
+		@Override
+		public void saveOrUpdateDetail(EmployeeTask entity)
+				throws ServiceException {
+			
+			Icmo icmoUpdate = icmoDao.getById(entity.getWorkid());
+			icmoUpdate.setPlancommitdate(entity.getPlancommitdate());
+			icmoDao.update(icmoUpdate);
+			
+			int alllength=0;
+			//alllength=entity.getEmployids().length;
+			alllength=entity.getAddorupdate().length;
+			if(alllength==0){
+				return ;
+			}
+			//--删除应删除的工序任务--获取插入工序后的所有工序,并删除------------------------------------------------
+			long itempdureid=0;
+			if(null!=entity.getDelitemprocedureids()){
+				itempdureid=entity.getDelitemprocedureids();
+				//ItemProcedure itemPdure=itemProcedureDao.getById(itempdureid);
+				WorkSeqQuery wq=new WorkSeqQuery();
+				wq.setIcmoid(entity.getWorkid());
+				wq.setItemprocedureid(itempdureid);
+				//WorkSeq wSeq=workSeqDao.getByProperty("itemprocedureid", itempdureid+"");
+				WorkSeq wSeq=workSeqDao.findList(wq).get(0);
+				
+				WorkSeqQuery wseqquery=new WorkSeqQuery();
+				wseqquery.setIcmoid(wSeq.getIcmoid());
+				wseqquery.setSortColumns("preorder");
+				List<WorkSeq> wseqlist = workSeqDao.findList(wseqquery);
+				
+				List<Long> widslist=new ArrayList<Long>();
+				int isdele=0;
+				for(WorkSeq w:wseqlist){//获取要删除的所有工序
+					if(isdele==1){
+						widslist.add(w.getWorkseqid());
+					}
+					if(w.getItemprocedureid().longValue()==itempdureid){
+						isdele=1;
+					}
+				}
+
+				List<DispatchWork> dislist =new ArrayList<DispatchWork>();
+				
+				DispatchWorkQuery dispathQuery=new DispatchWorkQuery();
+				for(long ids:widslist){//获取要删除工序对应的车间任务,
+					dispathQuery.setWorkseqid(ids);
+					dislist.addAll(dispatchWorkDao.findList(dispathQuery));
+				}
+				//获取要删除的个人任务列表
+				List<EmployeeTask> empdislist =new ArrayList<EmployeeTask>();
+				EmployeeTaskQuery employeeTaskQ=new EmployeeTaskQuery();
+				for(DispatchWork dw:dislist){//获取要删除的个人任务
+					employeeTaskQ.setDispatchid(dw.getId());
+					empdislist.addAll(employeeTaskDao.findList(employeeTaskQ));
+				}
+				for(EmployeeTask ep:empdislist){//删除
+					checkRecordDao.deleteByemployeeTaskid(ep.getEmployeetaskid().longValue()+"");
+					checkDao.deleteByemployeeid(Long.valueOf(ep.getEmployeetaskid()));
+					prepareEmpDao.delteByEmptask(ep.getEmployeetaskid().longValue()+"");
+					employeeTaskDao.deleteByMultipleId(ep.getEmployeetaskid().longValue()+"");	
+				}
+				for(DispatchWork d:dislist){//删除班组
+					dispatchWorkDao.deleteById(d.getId());
+				}
+				for(long wid:widslist){//删除workseq
+					workSeqDao.deleteById(wid);
+				}
+				
+			}
+			/*	String[] eptaskids=null;
+				eptaskids= entity.getDelids().split(",");
+			if(!(entity.getDelids().equals(""))){
+				for(String epid:eptaskids){
+				}
+			}	
+			*/	
+				
+			//----------------------------------------------------
+			long lastdispatchid=0;
+			long lastworkSeqid=-1;
+			long isnext=-1;
+			for(int i=0;i<alllength;i++){
+				ItemProcess itemprocess = itemProcessDao.getByProperty("itemprocessid", entity.getItemprocessidlist()[i].longValue()+"");
+				if(entity.getAddorupdate()[i].intValue()==1){//修改
+						EmployeeTask employeeTask=new EmployeeTask();		
+						employeeTask.setEmployeetaskid(entity.getEmployids()[i]);//id
+						employeeTask.setFqty(entity.getEmpfqty()[i]);//数量
+						employeeTask.setDeviceid(entity.getDeviceidlist()[i]);//设备
+						employeeTask.setEmpid(entity.getEmpidlist()[i]);//操作员
+						employeeTask.setCenterid(entity.getProcessidlist()[i]);//工作中心
+						employeeTask.setItemprocessid(entity.getItemprocessidlist()[i]);//
+						employeeTask.setProcessmins(entity.getProcessminslist()[i]==null?0:entity.getProcessminslist()[i]);
+						employeeTask.setPlanstartdate(DateUtils.GetDate2(entity.getPlanstartdatelist()[i], "yyyy-MM-dd HH:mm:ss"));
+						employeeTask.setPlanenddate(DateUtils.GetDate2(entity.getPlanenddatelist()[i],"yyyy-MM-dd HH:mm:ss"));
+						employeeTask.setTeamid(itemprocess.getTeamid());
+						if(null==entity.getPeoples()[i]){//负责人为空删除准备金表
+							PrepareEmp prepare =null;
+							prepare=prepareEmpDao.getByProperty("employeetaskid", entity.getEmployids()[i]+"");
+							if(null!=prepare){
+								prepareEmpDao.deleteById(prepare.getId());	
+							}
+						}else{//更新准备金表
+							PrepareEmp prepareEmp=new PrepareEmp();
+							prepareEmp=prepareEmpDao.getByProperty("employeetaskid", entity.getEmployids()[i]+"");
+							prepareEmp.setPreparemins(itemprocess.getPreparemins());
+							prepareEmp.setMoney(itemprocess.getReservefund());
+							prepareEmp.setEmpid(entity.getEmpidlist()[i]);
+							prepareEmp.setTeamid(itemprocess.getTeamid());
+							prepareEmp.setItemprocessid(entity.getItemprocessidlist()[i]);
+							prepareEmpDao.update(prepareEmp);
+						}
+						employeeTaskDao.update(employeeTask);
+						saveDeviceWork(employeeTask.getEmployeetaskid(),employeeTask);
+						EmployeeTask eptasks = employeeTaskDao.getById(employeeTask.getEmployeetaskid());
+						lastdispatchid=eptasks.getDispatchid();
+						
+				}else if(entity.getAddorupdate()[i].intValue()==2){//添加
+					EmployeeTask epTask=employeeTaskDao.getById(entity.getEmployids()[i]);
+					EmployeeTask employeeTask=new EmployeeTask();
+					employeeTask.setWorkid(entity.getWorkid());// 
+					employeeTask.setItemcode(epTask.getItemcode());//
+					employeeTask.setItemname(epTask.getItemname());//
+					employeeTask.setTeamid(itemprocess.getTeamid());//
+					employeeTask.setCreatetime(new Date());// 
+					employeeTask.setProcessid(epTask.getProcessid());//工序//
+					employeeTask.setFqty(entity.getEmpfqty()[i]);//
+					employeeTask.setStatus(0);//
+					employeeTask.setAcceptnum(0);//
+					employeeTask.setPlanstartdate(DateUtils.GetDate2(entity.getPlanstartdatelist()[i], "yyy-MM-dd HH:mm:ss"));
+					employeeTask.setPlanenddate(DateUtils.GetDate2(entity.getPlanenddatelist()[i], "yyy-MM-dd HH:mm:ss"));
+					employeeTask.setEmpid(entity.getEmpidlist()[i]);
+					employeeTask.setDeviceid(entity.getDeviceidlist()[i]);
+					employeeTask.setProcessmins(itemprocess.getProcessmins()==null?0:itemprocess.getProcessmins());
+					employeeTask.setClasstype(0);//班别
+					employeeTask.setDispatchid(epTask.getDispatchid());
+					employeeTask.setItemprocessid(entity.getItemprocessidlist()[i]);
+					employeeTask.setCenterid(entity.getProcessidlist()[i]);
+					Long emptid = employeeTaskDao.save(employeeTask, "EmployeeTask.insertIncludeStartDate");
+					saveDeviceWork(emptid,employeeTask);
+					EmployeeTask eptasks = employeeTaskDao.getById(emptid);
+					lastdispatchid=eptasks.getDispatchid();
+					
+				}else if(entity.getAddorupdate()[i].intValue()==3){//添加工序
+
+					Long[] itemprocedureids = entity.getItemprocedureidlist();
+					ItemProcedure itemProcedure = itemProcedureDao.getById(itemprocedureids[i]);
+					if(isnext==itemProcedure.getProcedureid()){//工序相同
+					//==工序相同处理==========================================================================================						
+						DispatchWork dwork = dispatchWorkDao.getById(lastdispatchid);
+						ItemProcess itemProcess = itemProcessDao.getById(entity.getItemprocessidlist()[i]);
+						saveEmployeePrepare(lastdispatchid,dwork,itemProcess,entity,i);
+						
+					}else{//工序不相同
+					WorkSeq workSeq=new WorkSeq();
+					workSeq.setIcmoid(icmoUpdate.getIcmoid());
+					workSeq.setItemcode(icmoUpdate.getItemcode());
+					workSeq.setQualified(0D);
+					workSeq.setItemprocedureid(itemProcedure.getItemprocedureid());
+					workSeq.setProcedurerid(itemProcedure.getProcedureid());
+					isnext = itemProcedure.getProcedureid();
+
+					WorkSeqQuery workSeqQuery=new WorkSeqQuery();
+					workSeqQuery.setIcmoid(icmoUpdate.getIcmoid());
+					
+						if(lastworkSeqid==-1){
+							List<WorkSeq> workSeqlist = workSeqDao.findList(workSeqQuery);
+							changelist(0,workSeqlist);
+							workSeq.setPreorder(endlist.get(endlist.size()-1).getWorkseqid());
+							lastworkSeqid = workSeqDao.save(workSeq);
+						}else{
+							workSeq.setPreorder(lastworkSeqid);
+							lastworkSeqid = workSeqDao.save(workSeq);
+						}
+					//--workseq添加end-----------------------------------------
+					//----dispatchwork添加begin---------------------------------------
+						
+					DispatchWork dwork=new DispatchWork();
+					dwork.setWorkid(icmoUpdate.getIcmoid());//icmoid
+					dwork.setItemcode(icmoUpdate.getItemcode());//
+					dwork.setItemname(icmoUpdate.getItemname());//
+					dwork.setItemprocessid(entity.getItemprocessidlist()[i]);//
+					dwork.setStatus(0);//
+					dwork.setProcessid(workSeq.getProcedurerid());//原工序id--
+					
+					dwork.setProcessname(procedureDao.getById(workSeq.getProcedurerid()).getProcedurename());//??--原工序名称,新
+					//dwork.setProcessnum(entity.getEmpfqty()[i].doubleValue());//??原加工数量--
+					dwork.setProcessnum(entity.getEmpfqty()[i].doubleValue());//??取总数量!!!!!
+					ItemProcess itemProcess = itemProcessDao.getById(entity.getItemprocessidlist()[i]);
+					dwork.setTeamid(itemProcess.getTeamid());//
+					
+					dwork.setTeamname(teamDao.getById(itemProcess.getTeamid()).getTeamname());//
+					dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+					dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+					dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+					dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+					
+					dwork.setTools("");//???-----------------刀具名暂空
+					dwork.setBlades("");//???---------------刀片名暂空
+					dwork.setContent("");//现在无备注--
+					dwork.setAcceptednum(0);
+					dwork.setProgramname("");//程序名称?--空
+					dwork.setOrderid(-1);//??排序编号?--空
+					
+					dwork.setWsstatus(1);//1:已派工，其它:未派工
+					dwork.setEmpstatus(1);//0:未派,1:已派
+					
+					dwork.setPreorder(workSeq.getPreorder());
+					
+					dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+					dwork.setCenterid(entity.getProcessidlist()[i]);
+					dwork.setWorkseqid(workSeq.getWorkseqid());
+					dwork.setPlanstarttime(DateUtils.GetDate2(entity.getPlanstartdatelist()[i], "yyyy-MM-dd HH:mm:ss"));
+					dwork.setPlanendtime(DateUtils.GetDate2(entity.getPlanenddatelist()[i], "yyyy-MM-dd HH:mm:ss"));
+					
+					lastdispatchid=dispatchWorkDao.saveDispatchAuto(dwork);
+					
+					saveEmployeePrepare(lastdispatchid,dwork,itemProcess,entity,i);
+						
+						
+				}
+					
+					
+				}
+					
+			}
+			
+		}
+		
+		List<WorkSeq> endlist=new ArrayList<WorkSeq>();
+		private void changelist(int i, List<WorkSeq> workSeqlist) {
+				for(WorkSeq weq:workSeqlist){
+					if(weq.getPreorder()==i){
+						endlist.add(weq);
+						changelist(weq.getWorkseqid().intValue(),workSeqlist);
+					}
+				}
+		}
+		@Override
+		public Integer deleteByIdcheck(Long employeeTaskId)
+				throws ServiceException {
+				
+			EmployeeTask employ = employeeTaskDao.getById(employeeTaskId);
+			List<DispatchWork> dispatchworklist =null;
+			long workseqid=dispatchWorkDao.getById(employ.getDispatchid()).getWorkseqid().longValue();
+			//dispatchWorkDao.getById(employ.getDispatchid()).getWorkseqid();//本序id
+			
+			DispatchWorkQuery dpquery =new DispatchWorkQuery();
+			dpquery.setPreorder(workseqid);
+			dispatchworklist=dispatchWorkDao.findList(dpquery);
+		
+			/*	if(dispatchworklist.size()>0){//有下序则不准删除
+				return -1;
+			}
+			*/
+			//--获取已提交合格数-------------------------
+			CheckRecordQuery cquery=new CheckRecordQuery();
+			List<CheckRecord> acceptnumlist =new ArrayList<CheckRecord>();
+			cquery.setEmployeetaskid(employeeTaskId);
+			cquery.setChecktype(3);//终检
+			acceptnumlist = checkRecordDao.findList(cquery);
+			 
+			
+			/** 删除个人任务前先删除check中的任务--t_check和t_employeetask有主外键关系
+			 * 同时删除t_check_record和t_prepare_emp中的记录
+			 * 
+			 * */
+			checkDao.deleteByemployeeid(employeeTaskId);
+			checkRecordDao.deleteByemployeeTaskid(""+employeeTaskId);
+			prepareEmpDao.delteByEmptask(""+employeeTaskId);
+				
+			
+			EmployeeTask employeetask=new EmployeeTask();
+			employeetask=employeeTaskDao.getById(employeeTaskId);
+			
+			
+			Integer returnValue = employeeTaskDao.deleteByMultipleId(""+employeeTaskId);
+			//prepareEmpDao.delteByEmptask(delIds);
+			EmployeeTaskQuery query = new EmployeeTaskQuery();
+			query.setDispatchid(employeetask.getDispatchid());
+			if(employeeTaskDao.findCount("EmployeeTask.findPage.count", query)==0)
+			{
+				DispatchWork dwork=new DispatchWork();
+				dwork.setId(employeetask.getDispatchid());
+				dwork.setEmpstatus(DispatchWork.UNALLOCATED);
+				dwork.setStatus(TeamTaskStatus.UNWORK.getIndex());
+				dispatchWorkDao.update(dwork);//更新为指派状体
+			}
+			//减已交合格数
+			//acceptnumlist
+			long delenum=0;	
+			for(CheckRecord accept:acceptnumlist){
+				delenum+=(accept.getAcceptnum()==null?0:accept.getAcceptnum());
+			}
+			DispatchWork dis = dispatchWorkDao.getById(employeetask.getDispatchid());
+			dis.setAcceptednum((int)(dis.getAcceptednum()-delenum));
+			dispatchWorkDao.update(dis);
+			
+			
+			return 1;
+		}
+
+		private void saveDeviceWork(Long eid, EmployeeTask employeeTask) {
+			
+			deviceWorkDao.deleteByemptaskid(eid);
+			
+			Date starDdate = employeeTask.getPlanstartdate();
+			Date endDate=employeeTask.getPlanenddate();
+			DeviceWork deviceWork=new DeviceWork();
+			Long runtimes=0L;
+			if(eid.longValue()==5007){
+				runtimes=0L;
+			}
+			deviceWork.setDeviceid(employeeTask.getDeviceid());
+			deviceWork.setEmployeetaskid(eid);
+			
+			String starDdateString=DateConvertUtils.format(starDdate, "yyyy-MM-dd");
+			String endDdateString=DateConvertUtils.format(endDate, "yyyy-MM-dd");
+			if(starDdateString.equals(endDdateString)){//同一天
+				int hours=0;
+				int minutes=0;
+				if(starDdate.getHours()<=12&&endDate.getHours()>12){//开始上午,结束下午
+					hours=endDate.getHours()-starDdate.getHours()-1;//排除中午一小时
+					minutes=endDate.getMinutes()-starDdate.getMinutes();
+					runtimes=(long)(hours*60+minutes);
+				}else{//开始结束都是上午||都是下午
+					hours=endDate.getHours()-starDdate.getHours();
+					minutes=endDate.getMinutes()-starDdate.getMinutes();
+					runtimes=(long)(hours*60+minutes);
+				}
+				deviceWork.setWorkdate(starDdateString);
+				deviceWork.setRuntime(runtimes);
+				deviceWorkDao.save(deviceWork);
+			}else{//开始结束不是同一天------
+				
+				Date date=new Date();
+				Date datestart=new Date();
+				datestart=starDdate;
+				 Calendar   calendar   =   new   GregorianCalendar(); 
+			     
+				int i=0;
+				while(!(starDdateString.equals(endDdateString))){
+					calendar.setTime(datestart); 
+					if(i==0){
+						deviceWork.setRuntime(startRunTime(starDdate));
+					}else{
+						deviceWork.setRuntime(480L);//一整天的工作时间(分钟)	
+					}
+					deviceWork.setWorkdate(starDdateString);
+					deviceWorkDao.save(deviceWork);
+		             calendar.add(calendar.DATE,1);//把日期往后增加一天
+	     		    if((calendar.get(Calendar.DAY_OF_WEEK)-1)==0){//周末加一天----
+						calendar.add(calendar.DATE,1);	
+					}
+		     		   date=calendar.getTime();
+		   		     datestart=date;     		     
+				     starDdateString =DateConvertUtils.format(date, "yyyy-MM-dd");	
+					i++;
+				}
+				deviceWork.setRuntime(endRunTime(endDate));
+				deviceWork.setWorkdate(endDdateString);
+				deviceWorkDao.save(deviceWork);
+				
+			}
+			
+		}
+		
+
+		private Long endRunTime(Date endDate) {
+			Long runtimes=0L;
+			int hours=0;
+			int minutes=0;
+			
+			if(endDate.getHours()>12){//
+				hours=endDate.getHours()-8-1;//排除中午一小时
+				minutes=endDate.getMinutes();//
+				runtimes=(long)(hours*60+minutes)-30;
+			}else{//开始结束都是下午
+				hours=endDate.getHours()-8;
+				minutes=endDate.getMinutes();
+				runtimes=(long)(hours*60+minutes)-30;
+			}
+			
+			return runtimes;
+		}
+		private Long startRunTime(Date starDdate) {
+			Long runtimes=0L;
+			int hours=0;
+			int minutes=0;
+			
+			if(starDdate.getHours()<=12){//开始上午
+				hours=17-starDdate.getHours()-1;//排除中午一小时
+				minutes=starDdate.getMinutes();
+				runtimes=(long)(hours*60-minutes+30);
+			}else{//开始结束都是下午
+				hours=17-starDdate.getHours();
+				minutes=starDdate.getMinutes();
+				runtimes=(long)(hours*60-minutes+30);
+			}
+			
+			return runtimes;
+		}
+		@Override
+		public Integer deletedispatchById(Long employeeTaskId)
+				throws ServiceException {
+				
+			EmployeeTask eptask = employeeTaskDao.getById(employeeTaskId);
+			Long dispatchid = eptask.getDispatchid();//班组id
+			Long workid = eptask.getWorkid();//车间id
+			
+			checkRecordDao.deleteByemployeeTaskid(employeeTaskId+"");
+			checkDao.deleteByemployeeid(employeeTaskId);
+			prepareEmpDao.delteByEmptask(employeeTaskId+"");
+			employeeTaskDao.deleteById(employeeTaskId);
+			
+			//-----排产编辑删除日志-----
+			AdminLogEvent event=new AdminLogEvent("排产编辑");
+			event.setAdminId(UserContextHolder.get().getId());
+			event.setOperatingContent(UserContextHolder.get().getName()+"对物料编号:"+
+					eptask.getItemcode()+",物料名称："+
+					eptask.getItemname()+",employeeTaskId:"+employeeTaskId+",进行了任务删除");
+			
+			this.publishEvent(event);
+			
+			return null;
+		}
+		
+		/**
+		 * 排产时自动添加个人任务和准备金的表 的调用
+		 * @param did dispatchid
+		 * @param dwork DispatchWork
+		 * @param itemProcess ItemProcess
+		 */
+		private void saveEmployeePrepare(long did, DispatchWork dwork,
+				ItemProcess itemProcess,EmployeeTask entity,int numbers) {
+			
+			EmployeeTask employeeTask=new EmployeeTask();
+			
+				employeeTask.setWorkid(dwork.getWorkid()); 
+				employeeTask.setItemcode(dwork.getItemcode());
+				employeeTask.setItemname(dwork.getItemname());
+				employeeTask.setTeamid(dwork.getTeamid());
+				employeeTask.setCreatetime(new Date()); 
+				employeeTask.setProcessid(dwork.getProcessid());//工序
+				employeeTask.setFqty(entity.getEmpfqty()[numbers]);
+				employeeTask.setStatus(0);
+				employeeTask.setAcceptnum(0);
+				employeeTask.setPlanstartdate(DateUtils.GetDate2(entity.getPlanstartdatelist()[numbers], "yyy-MM-dd HH:mm:ss"));
+				employeeTask.setPlanenddate(DateUtils.GetDate2(entity.getPlanenddatelist()[numbers], "yyy-MM-dd HH:mm:ss"));
+				employeeTask.setEmpid(entity.getEmpidlist()[numbers]);
+				employeeTask.setDeviceid(entity.getDeviceidlist()[numbers]);
+				employeeTask.setProcessmins(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());
+				employeeTask.setClasstype(0);//班别
+				employeeTask.setDispatchid(did);
+				employeeTask.setItemprocessid(itemProcess.getItemprocessid());
+				employeeTask.setCenterid(dwork.getCenterid());
+				
+				Long eid = employeeTaskDao.save(employeeTask, "EmployeeTask.insertIncludeStartDate");
+				
+				saveDeviceWork(eid,employeeTask);
+				
+//				System.out.println("entity.getPeoples()"+entity.getPeoples().length);
+//				System.out.println("number"+numbers);
+				
+				if(null!=entity.getPeoples()[numbers]){//负责人--负责人为空则不添加首件金额
+					PrepareEmp preapareemp=new PrepareEmp();
+					preapareemp.setEmployeetaskid(eid);
+					preapareemp.setMoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//准备金
+					preapareemp.setPreparemins(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//首检准备时长
+					preapareemp.setEmpid(employeeTask.getEmpid());
+					preapareemp.setProcessid(employeeTask.getProcessid());//原来的工序id  !!!
+					preapareemp.setItemcode(employeeTask.getItemcode());
+					preapareemp.setItemname(employeeTask.getItemname());
+					preapareemp.setTeamid(employeeTask.getTeamid());
+					preapareemp.setItemprocessid(itemProcess.getItemprocessid());
+					prepareEmpDao.save(preapareemp);
+				}
+				
+		}
+		
+}

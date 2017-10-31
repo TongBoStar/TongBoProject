@@ -1,0 +1,3714 @@
+package com.terrence.crm.dol.service.impl;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icitem;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.bean.IcitemQuality;
+import com.terrence.crm.dol.bean.Icitems;
+import com.terrence.crm.dol.bean.WebIcitemPlan;
+import com.terrence.crm.dol.bean.WebIdentity;
+import com.terrence.crm.dol.bean.WebItemBase;
+import com.terrence.crm.dol.bean.WebItemCore;
+import com.terrence.crm.dol.bean.WebItemEntrance;
+import com.terrence.crm.dol.bean.WebItemMaterial;
+import com.terrence.crm.dol.bean.WebItemStandard;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcitemDesignDao;
+import com.terrence.crm.dol.dao.IIcitemQualityDao;
+import com.terrence.crm.dol.dao.IIdentityDao;
+import com.terrence.crm.dol.dao.IItemBasicDao;
+import com.terrence.crm.dol.dao.IItemDao;
+import com.terrence.crm.dol.dao.IWebIcitemPlanDao;
+import com.terrence.crm.dol.dao.IWebIdentityDao;
+import com.terrence.crm.dol.dao.IWebItemBaseDao;
+import com.terrence.crm.dol.dao.IWebItemCoreDao;
+import com.terrence.crm.dol.dao.IWebItemEntranceDao;
+import com.terrence.crm.dol.dao.IWebItemMaterialDao;
+import com.terrence.crm.dol.dao.IWebItemStandardDao;
+import com.terrence.crm.dol.query.IcitemDesignQuery;
+import com.terrence.crm.dol.query.IcitemQualityQuery;
+import com.terrence.crm.dol.query.WebIcitemPlanQuery;
+import com.terrence.crm.dol.query.WebItemEntranceQuery;
+import com.terrence.crm.dol.query.WebItemMaterialQuery;
+import com.terrence.crm.dol.query.WebItemStandardQuery;
+import com.terrence.crm.dol.service.IItemBasicService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.k3.dol.util.TREReturn;
+import com.terrence.k3.dol.service.IItemOptService;
+import com.terrence.k3.dol.service.impl.ItemOptService;
+import com.terrence.k3.dol.vo.ItemBaseVo;
+import com.terrence.k3.dol.vo.ItemCoreVo;
+import com.terrence.k3.dol.vo.ItemDesignVo;
+import com.terrence.k3.dol.vo.ItemEntranceVo;
+import com.terrence.k3.dol.vo.ItemMaterialVo;
+import com.terrence.k3.dol.vo.ItemPlanVo;
+import com.terrence.k3.dol.vo.ItemQualityVo;
+import com.terrence.k3.dol.vo.ItemStandardVo;
+import com.terrence.k3.dol.vo.ItemVo;
+
+@Service
+@Transactional
+public class ItemBasicService extends BaseService implements IItemBasicService {
+	protected static Logger logger = LoggerFactory
+			.getLogger(ItemBasicService.class);
+	private String rootPath;
+	@Autowired
+	@Qualifier("itemBasicDao")
+	private IItemBasicDao itemBasicDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("webItemCoreDao")
+	private IWebItemCoreDao webItemCoreDao;
+
+	@Autowired
+	@Qualifier("webItemEntranceDao")
+	private IWebItemEntranceDao webItemEntranceDao;
+
+	@Autowired
+	@Qualifier("webItemMaterialDao")
+	private IWebItemMaterialDao webItemMaterialDao;
+	@Autowired
+	@Qualifier("webIcitemPlanDao")
+	private IWebIcitemPlanDao webIcitemPlanDao;
+
+	@Autowired
+	@Qualifier("icitemDesignDao")
+	private IIcitemDesignDao icitemDesignDao;
+
+	@Autowired
+	@Qualifier("webItemStandardDao")
+	private IWebItemStandardDao webItemStandardDao;
+	//
+	@Autowired
+	@Qualifier("icitemQualityDao")
+	private IIcitemQualityDao icitemQualityDao;
+
+	@Autowired
+	@Qualifier("webItemBaseDao")
+	private IWebItemBaseDao webItemBaseDao;
+
+	@Autowired
+	@Qualifier("identityDao")
+	private IIdentityDao identityDao;
+
+	@Autowired
+	@Qualifier("webIdentityDao")
+	private IWebIdentityDao webIdentityDao;
+
+	@Autowired
+	@Qualifier("itemDao")
+	private IItemDao itemDao;
+
+	public String getIbatisSqlMapNamespace() {
+		return "ItemBasic";
+	}
+
+	@Transactional(readOnly = true)
+	public Icitems getById(java.lang.Long id) throws ServiceException {
+		return itemBasicDao.getById(id);
+	}
+	public void test() {
+		IItemOptService service = new ItemOptService();
+		service.test();
+	}
+
+	@Transactional(readOnly = true)
+	public WebItemCore getByItemCoreInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webItemCoreDao.getByProperty("interId", baseitemid);
+	}
+
+	@Transactional(readOnly = true)
+	public WebItemBase getByItemBaseInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webItemBaseDao.getByProperty("interId", baseitemid);
+	}
+
+	/**
+	 * 读取物流信息
+	 */
+	@Transactional(readOnly = true)
+	public WebItemMaterial getByItemMaterialInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webItemMaterialDao.getByProperty("interId", baseitemid);
+	}
+
+	/**
+	 * 读取物流信息
+	 */
+	@Transactional(readOnly = true)
+	public WebIcitemPlan getByItemPlanInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webIcitemPlanDao.getByProperty("interId", baseitemid);
+	}
+
+	/**
+	 * 读取Design信息
+	 */
+	@Transactional(readOnly = true)
+	public IcitemDesign getByItemDesignInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		// return icitemDesignDao. getByProperty("interId",baseitemid);
+		return icitemDesignDao.getByProperty("baseitemid", baseitemid);
+	}
+
+	/**
+	 * 读取Standard信息
+	 */
+	@Transactional(readOnly = true)
+	public WebItemStandard getByItemStandardInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webItemStandardDao.getByProperty("interId", baseitemid);
+	}
+
+	/**
+	 * 读取Standard信息
+	 */
+	@Transactional(readOnly = true)
+	public IcitemQuality getByItemQualityInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		// return icitemQualityDao. getByProperty("interId",baseitemid);
+		return icitemQualityDao.getByProperty("baseitemid", baseitemid);
+	}
+
+	/**
+	 * 读取Entrance信息
+	 */
+	@Transactional(readOnly = true)
+	public WebItemEntrance getByItemEntranceInfo(java.lang.String baseitemid)
+			throws ServiceException {
+		return webItemEntranceDao.getByProperty("interId", baseitemid);
+	}
+
+	/*
+	 * @Transactional(readOnly=true) public WebItemCore
+	 * getByItemWebInfo(java.lang.String baseitemid) throws ServiceException {
+	 * return webItemw. getByProperty("interId",baseitemid); }
+	 */
+
+	public void updatestatusAll(Icitems entity) throws ServiceException {
+
+		itemBasicDao.saveOrUpdate(entity);
+		// 同时保存带K3数据库一份
+		IItemOptService service = new ItemOptService();
+		// 物料基础表
+		ItemVo itemVo = new ItemVo();
+		/**
+		 * 必填
+		 */
+		itemVo.setNumber(entity.getItemcode());
+		itemVo.setName(entity.getItemname());
+		itemVo.setDetail(1);
+		itemVo.setDeleted(0);
+
+		itemVo.setParentNumber(entity.getItemparentcode());// 保存时可以填可以不填
+		// 基本资料1
+		ItemCoreVo itemCoreVo = new ItemCoreVo();
+		// 基本资料2
+		ItemBaseVo itemBaseVo = new ItemBaseVo();
+		// 进出口
+		ItemMaterialVo itemMaterialVo = new ItemMaterialVo();
+		// 计划资料
+		ItemPlanVo icitemPlanVo = new ItemPlanVo();
+		// 设计资料
+		ItemDesignVo itemDesignVo = new ItemDesignVo();
+		// 标准
+		ItemStandardVo itemStandardVo = new ItemStandardVo();
+		// 质量
+		ItemQualityVo itemQualityVo = new ItemQualityVo();
+		// 物流
+		ItemEntranceVo itemEntranceVo = new ItemEntranceVo();
+		if (0 == 0) {
+			throw new ServiceException("error");
+		}
+		TREReturn trereturn = service.saveitem(itemVo, itemCoreVo, itemBaseVo,
+				itemMaterialVo, icitemPlanVo, itemDesignVo, itemStandardVo,
+				itemQualityVo, itemEntranceVo);
+		if (trereturn.getnCode() == 0) {
+			throw new ServiceException(trereturn.getStrText());
+		}
+
+	}
+
+	public java.lang.Long save(Icitems entity) throws ServiceException {
+		Long adId = itemBasicDao.save(entity);
+
+		return adId;
+	}
+
+	public Integer update(Icitems entity) throws ServiceException {
+		Integer returnValue = itemBasicDao.update(entity);
+
+		return returnValue;
+	}
+
+	@Override
+	public void saveOrUpdate(Icitems entity) throws ServiceException {
+		Long id =null;
+		if(entity.getBaseitemid()!=null){
+			id = entity.getBaseitemid();
+		}
+		entity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),
+				"yyyy-MM-dd HH:mm:ss"));
+		entity.setItemproperty(entity.getFinterid());// 设置排产物料属性
+		// 先判断是否web 端物料已经存在
+		// 获取下一个物料内码
+		// TWebIdentity identity =identityDao.getByProperty("tname",
+		// "tbaseitem");
+
+		// TWebIdentity identity =itemDao.getByPropertyt("tname",
+		// "t_base_item");
+
+		// TWebIdentity identity =itemBasicDao.getByPropertyt("tname",
+		// "t_base_item");
+
+		WebIdentity identity = webIdentityDao.getByPropertyt("tname",
+				"t_base_item");
+
+		if (null == identity) {
+			Struts2Utils.renderJson("保存失败，原因：后台异常请重试!");
+		}
+
+		if (null == identity) {
+			throw new ServiceException("保存失败，原因：后台异常请重试!");
+		}
+		entity.setBaseitemid(identity.getTnextValue());
+		entity.setDeleted((short) 0);// 默认可用
+		entity.setDetail(true);// 默认是明细
+		entity.setOptType(1);
+		entity.setWfstatus(0);
+		entity.setFinishstatus(0);
+		// 增加了排产资料信息排产中有的K3中没的
+		// entity.setInterId(identity.getTnextValue());//关联内码
+
+		// 设置全名
+		if (null == entity.getFullname()) {
+			BaseItem basePItem = baseItemDao.getBaseByColumn("itemcode",
+					entity.getItemparentcode());
+			if (null != basePItem) {
+				entity.setFullname(basePItem.getFullname() + "_"
+						+ entity.getItemname());
+			}
+		}
+		if (341 != entity.getUsestatus()) {// 非使用
+			entity.setUsestatus(0);
+		} else {
+			entity.setUsestatus(1);
+		}
+		itemBasicDao.saveOrUpdate(entity);// 排产物料基本表
+		// 排产基本资料1 core 表
+		WebItemCore webItemCore = new WebItemCore();
+		boolean flag = false;
+		webCore(entity, identity, webItemCore, flag);
+		// 排产基本资料2 base 表
+		WebItemBase webItemBase = new WebItemBase();
+		boolean flagBase = false;
+		webBase(entity, identity, webItemBase, flagBase);
+		// 排产物料物流资料表
+		WebItemMaterial webItemMaterial = new WebItemMaterial();
+		boolean flagMaterial = false;
+		webMaterial(entity, identity, webItemMaterial, flagMaterial);
+		// 排产系统计划资料信息
+		WebIcitemPlan webItemPlan = new WebIcitemPlan();
+		boolean flagPlan = false;
+		webPlan(entity, identity, webItemPlan, flagPlan);
+		// 排产系统设计资料信息
+		IcitemDesign webItemDesign = new IcitemDesign();
+		boolean flagDesign = false;
+		webDesign(entity, identity, webItemDesign, flagDesign);
+		// 排产系统标准资料信息
+		WebItemStandard webItemStandard = new WebItemStandard();
+		boolean flagStandard = false;
+		webStandard(entity, identity, webItemStandard, flagStandard);
+		// 排产系统质量资料信息
+		IcitemQuality webItemQuality = new IcitemQuality();
+		boolean flagQuality = false;
+		webQuality(entity, identity, webItemQuality, flagQuality);
+
+		// 排产系统进出口信息
+		WebItemEntrance webItemEntrance = new WebItemEntrance();
+		boolean flagEntrance = false;
+		webEntrance(entity, identity, webItemEntrance, flagEntrance);
+
+		// 排产基本资料2 base 表
+		// 排产基本资料1 core 表
+
+		// 同时保存到K3数据库一份
+		IItemOptService service = new ItemOptService();
+		// 物料基础表
+		ItemVo itemVo = new ItemVo();
+		k3ItemVo(entity, itemVo);
+		// 基本资料1
+		ItemCoreVo itemCoreVo = new ItemCoreVo();
+		k3CoreVo(entity, itemCoreVo);
+
+		// 基本资料2
+
+		ItemBaseVo itemBaseVo = new ItemBaseVo();
+		k3BaseVo(entity, itemBaseVo);
+
+		// 物流
+		ItemMaterialVo itemMaterialVo = new ItemMaterialVo();
+		k3MaterialVo(entity, itemMaterialVo);
+		// 计划资料
+		ItemPlanVo icitemPlanVo = new ItemPlanVo();
+		k3PlanVo(entity, icitemPlanVo);
+
+		// 设计资料
+		ItemDesignVo itemDesignVo = new ItemDesignVo();
+		k3DesignVo(entity, itemDesignVo);
+
+		// 标准
+		ItemStandardVo itemStandardVo = new ItemStandardVo();
+		k3StandardVo(itemStandardVo);
+		// 质量
+		ItemQualityVo itemQualityVo = new ItemQualityVo();
+
+		k3QualityVo(itemQualityVo);
+
+		// 进出口
+		ItemEntranceVo itemEntranceVo = new ItemEntranceVo();
+
+		k3EntranceVo(itemEntranceVo);
+
+		/*
+		 * if( 0 == 0){ throw new ServiceException("error"); }
+		 */
+		TREReturn trereturn = service.saveitem(itemVo, itemCoreVo, itemBaseVo,
+				itemMaterialVo, icitemPlanVo, itemDesignVo, itemStandardVo,
+				itemQualityVo, itemEntranceVo);
+		if (trereturn.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+		}
+		if(id==null){
+			operationLogDao.save(ConfigTerrence.MODEL_ITEM, ConfigTerrence.OPT_ADD, "编码为："+entity.getItemcode()+"的物料添加成功");
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_ITEM, ConfigTerrence.OPT_EDIT, "编码为："+entity.getItemcode()+"的物料修改成功");
+		}
+		
+	}
+
+	private void webCore(Icitems entity, WebIdentity identity,
+			WebItemCore webItemCore, boolean flag) {
+		if (null != entity.getWebItemCoreQuery()) {
+			if (null != entity.getWebItemCoreQuery().getAracctId()
+					&& 0 < entity.getWebItemCoreQuery().getAracctId()) {// 设置科目
+				webItemCore.setAracctId(entity.getWebItemCoreQuery()
+						.getAracctId());
+				flag = true;
+			}
+			if (null != entity.getWebItemCoreQuery().getHelpCode()) {
+				webItemCore.setHelpCode(entity.getWebItemCoreQuery()
+						.getHelpCode());
+				flag = true;
+			}
+			if (null != entity.getWebItemCoreQuery().getOrderPrice()) {
+				webItemCore.setOrderPrice(Double.valueOf(entity
+						.getWebItemCoreQuery().getOrderPrice()));
+				flag = true;
+			} else {
+				webItemCore.setOrderPrice(0d);
+			}
+
+			if (flag) {
+				// webItemCore.setOptType(1);
+				webItemCore.setInterId(identity.getTnextValue());// 关联内码
+				webItemCoreDao.saveOrUpdate(webItemCore);// 保存 排产系统 物料基础表1
+															// 主键是自增的
+			}
+
+		}
+	}
+
+	private void webCoreUpdate(Icitems entity, WebItemCore webItemCore,
+			boolean flag) {
+		if (null != entity.getWebItemCoreQuery()) {
+			if (null != entity.getWebItemCoreQuery().getAracctId()
+					&& 0 < entity.getWebItemCoreQuery().getAracctId()) {// 设置科目
+				webItemCore.setAracctId(entity.getWebItemCoreQuery()
+						.getAracctId());
+				flag = true;
+			}
+			/*
+			 * if (null != entity.getFormatno()) {
+			 * webItemCore.setModel(entity.getFormatno()); flag = true; }
+			 */
+			if (null != entity.getWebItemCoreQuery().getHelpCode()) {
+				webItemCore.setHelpCode(entity.getWebItemCoreQuery()
+						.getHelpCode());
+				flag = true;
+			}
+			if (null != entity.getWebItemCoreQuery().getOrderPrice()) {
+				webItemCore.setOrderPrice(Double.valueOf(entity
+						.getWebItemCoreQuery().getOrderPrice()));
+				flag = true;
+			} else {
+				webItemCore.setOrderPrice(0d);
+			}
+
+			if (flag) {// 说明有更新的内容
+
+				if (null != entity.getWebItemCoreQuery().getId()) {
+					webItemCore.setId(entity.getWebItemCoreQuery().getId());
+				} else {// 为空
+					webItemCore.setInterId(entity.getBaseitemid());// 设置core 的关联
+																	// tbase_item
+				}
+				webItemCoreDao.saveOrUpdate(webItemCore);// InterId 判断 没有 保存
+															// 有就更新就 通过 保存 排产系统
+															// 物料基础表1
+															// 主键是自增的
+			}
+
+		}
+	}
+
+	private void webBase(Icitems entity, WebIdentity identity,
+			WebItemBase webItemBase, boolean flagBase) {
+		if (null != entity.getWebItemBaseQuery()) {
+
+			// 计量单位组unitGroupId measureunitId(排产表里面) orderUnitId saleUnitId
+			// productUnitId storeUnitId
+			if (null != entity.getWebItemBaseQuery().getUnitGroupId()) {
+				webItemBase.setUnitGroupId(entity.getWebItemBaseQuery()
+						.getUnitGroupId());
+				flagBase = true;
+			}
+			if (null != entity.getUnitid()) {
+				webItemBase
+						.setOrderUnitId(Long.valueOf(entity.getUnitid() + ""));
+				webItemBase
+						.setSaleUnitId(Long.valueOf(entity.getUnitid() + ""));
+				webItemBase.setProductUnitId(Long.valueOf(entity.getUnitid()
+						+ ""));
+				webItemBase
+						.setStoreUnitId(Long.valueOf(entity.getUnitid() + ""));// 取值一样
+				flagBase = true;
+			}
+			// 默认仓库 stockListId 排产表里面
+			// 默认仓位 positionid 排产表里面
+			// 来源 teamList supplierList
+			if (null != entity.getWebItemBaseQuery().getSource()) {
+				webItemBase.setSource(entity.getWebItemBaseQuery().getSource());
+				flagBase = true;
+			}
+			// 数量精度 qtyDecimal
+			if (null != entity.getWebItemBaseQuery().getQtyDecimal()) {
+				webItemBase.setQtyDecimal(entity.getWebItemBaseQuery()
+						.getQtyDecimal());
+				flagBase = true;
+			}
+			// qtyDecimal lowLimit
+			if (null != entity.getWebItemBaseQuery().getLowLimit()) {
+				webItemBase.setLowLimit(entity.getWebItemBaseQuery()
+						.getLowLimit());
+				flagBase = true;
+			}
+			// 最高存量 highLimit
+			if (null != entity.getWebItemBaseQuery().getHighLimit()) {
+				webItemBase.setHighLimit(entity.getWebItemBaseQuery()
+						.getHighLimit());
+				flagBase = true;
+			}
+			// 安全库存数量 secInv排产表里面
+			// 使用状态useStateList排产表里面
+			// 是否为设备isEquipment
+			if (null != entity.getWebItemBaseQuery().getIsEquipment()) {
+				webItemBase.setIsEquipment(entity.getWebItemBaseQuery()
+						.getIsEquipment());
+				flagBase = true;
+			}
+			// 是否为备件isSparePart
+			if (null != entity.getWebItemBaseQuery().getIsSparePart()) {
+				webItemBase.setIsSparePart(entity.getWebItemBaseQuery()
+						.getIsSparePart());
+				flagBase = true;
+			}
+			// 辅助计量单位secUnitId
+			if (null != entity.getWebItemBaseQuery().getSecUnitId()) {
+				webItemBase.setSecUnitId(entity.getWebItemBaseQuery()
+						.getSecUnitId());
+				flagBase = true;
+			}
+			// 辅助计量单位换算率 secCoefficient K3中默认初始化为0但不允许输入,排产系统中不显示保存时自 动存0
+			// entity.getWebItemBaseQuery().setSecCoefficient(0d);来自页面 传该值
+			if (null != entity.getWebItemBaseQuery().getSecCoefficient()) {
+				webItemBase.setSecCoefficient(0d);
+				flagBase = true;
+			}
+
+			// 批准文号approveNo
+			if (null != entity.getWebItemBaseQuery().getApproveNo()) {
+				webItemBase.setApproveNo(entity.getWebItemBaseQuery()
+						.getApproveNo());
+				flagBase = true;
+			}
+			// 别名falias
+			if (null != entity.getWebItemBaseQuery().getAlias()) {
+				webItemBase.setAlias(entity.getWebItemBaseQuery().getAlias());
+				flagBase = true;
+			}
+			// 物料分类typeList排产表里面
+
+			// 物料类别分类secInfoList排产表里面
+			if (flagBase) {
+				// webItemBase.setOptType(1);
+				webItemBase.setInterId(entity.getBaseitemid());
+				webItemBaseDao.saveOrUpdate(webItemBase);// 保存 到排产系统 主键是自增的
+			}
+		}
+	}
+
+	private void webBaseUpdate(Icitems entity, WebItemBase webItemBase,
+			boolean flagBase) {
+		if (null != entity.getWebItemBaseQuery()) {
+
+			// 计量单位组unitGroupId measureunitId(排产表里面) orderUnitId saleUnitId
+			// productUnitId storeUnitId
+			if (null != entity.getWebItemBaseQuery().getUnitGroupId()) {
+				webItemBase.setUnitGroupId(entity.getWebItemBaseQuery()
+						.getUnitGroupId());
+				flagBase = true;
+			}
+			if (null != entity.getUnitid()) {
+				webItemBase
+						.setOrderUnitId(Long.valueOf(entity.getUnitid() + ""));
+				webItemBase
+						.setSaleUnitId(Long.valueOf(entity.getUnitid() + ""));
+				webItemBase.setProductUnitId(Long.valueOf(entity.getUnitid()
+						+ ""));
+				webItemBase
+						.setStoreUnitId(Long.valueOf(entity.getUnitid() + ""));// 取值一样
+				flagBase = true;
+			}
+			// 默认仓库 stockListId 排产表里面
+			// 默认仓位 positionid 排产表里面
+			// 来源 teamList supplierList
+			if (null != entity.getWebItemBaseQuery().getSource()) {
+				webItemBase.setSource(entity.getWebItemBaseQuery().getSource());
+				flagBase = true;
+			}
+			// 数量精度 qtyDecimal
+			if (null != entity.getWebItemBaseQuery().getQtyDecimal()) {
+				webItemBase.setQtyDecimal(entity.getWebItemBaseQuery()
+						.getQtyDecimal());
+				flagBase = true;
+			}
+			// qtyDecimal lowLimit
+			if (null != entity.getWebItemBaseQuery().getLowLimit()) {
+				webItemBase.setLowLimit(entity.getWebItemBaseQuery()
+						.getLowLimit());
+				flagBase = true;
+			}
+			// 最高存量 highLimit
+			if (null != entity.getWebItemBaseQuery().getHighLimit()) {
+				webItemBase.setHighLimit(entity.getWebItemBaseQuery()
+						.getHighLimit());
+				flagBase = true;
+			}
+			// 安全库存数量 secInv排产表里面
+			// 使用状态useStateList排产表里面
+			// 是否为设备isEquipment
+			if (null != entity.getWebItemBaseQuery().getIsEquipmentv()) {
+
+				if ("1".equals(entity.getWebItemBaseQuery().getIsEquipmentv())) {
+					webItemBase.setIsEquipment(true);
+				} else {
+					webItemBase.setIsEquipment(false);
+				}
+				flagBase = true;
+			}
+			// 是否为备件isSparePart
+			if (null != entity.getWebItemBaseQuery().getIsSparePartv()) {
+				if ("1".equals(entity.getWebItemBaseQuery().getIsSparePartv())) {
+					webItemBase.setIsSparePart(true);
+				} else {
+					webItemBase.setIsSparePart(false);
+				}
+				flagBase = true;
+			}
+			// 辅助计量单位secUnitId
+			if (null != entity.getWebItemBaseQuery().getSecUnitId()) {
+				webItemBase.setSecUnitId(entity.getWebItemBaseQuery()
+						.getSecUnitId());
+				flagBase = true;
+			}
+			// 辅助计量单位换算率 secCoefficient K3中默认初始化为0但不允许输入,排产系统中不显示保存时自 动存0
+			// entity.getWebItemBaseQuery().setSecCoefficient(0d);来自页面 传该值
+			if (null != entity.getWebItemBaseQuery().getSecCoefficient()) {
+				webItemBase.setSecCoefficient(0d);
+				flagBase = true;
+			}
+
+			// 批准文号approveNo
+			if (null != entity.getWebItemBaseQuery().getApproveNo()) {
+				webItemBase.setApproveNo(entity.getWebItemBaseQuery()
+						.getApproveNo());
+				flagBase = true;
+			}
+			// 别名falias
+			if (null != entity.getWebItemBaseQuery().getAlias()) {
+				webItemBase.setAlias(entity.getWebItemBaseQuery().getAlias());
+				flagBase = true;
+			}
+			// 物料分类typeList排产表里面
+
+			// 物料类别分类secInfoList排产表里面
+			if (flagBase) {
+				if (null != entity.getWebItemBaseQuery().getId()) {
+					webItemBase.setId(entity.getWebItemBaseQuery().getId());
+				} else {// 为空
+					webItemBase.setInterId(entity.getBaseitemid());// 设置core 的关联
+																	// tbase_item
+				}
+				webItemBaseDao.saveOrUpdate(webItemBase);// 通过 id 拉更新,id 不存在 就
+															// 保存,保存 到排产系统
+															// 主键是自增的
+			}
+		}
+	}
+
+	private void webMaterial(Icitems entity, WebIdentity identity,
+			WebItemMaterial webItemMaterial, boolean flagMaterial) {
+		if (null != entity.getWebItemMaterialQuery()) {
+
+			// 存货科目
+			if (null != entity.getWebItemMaterialQuery().getAcctId()) {
+				webItemMaterial.setAcctId(entity.getWebItemMaterialQuery()
+						.getAcctId());
+				flagMaterial = true;
+			}
+			// 销售收入科目
+			if (null != entity.getWebItemMaterialQuery().getSaleAcctId()) {
+				webItemMaterial.setSaleAcctId(entity.getWebItemMaterialQuery()
+						.getSaleAcctId());
+				flagMaterial = true;
+			}
+			// 销售成本科
+			if (null != entity.getWebItemMaterialQuery().getCostAcctId()) {
+				webItemMaterial.setCostAcctId(entity.getWebItemMaterialQuery()
+						.getCostAcctId());
+				flagMaterial = true;
+			}
+
+			// 采购负责人orderRectorList
+			if (null != entity.getWebItemMaterialQuery().getOrderRector()) {
+				webItemMaterial.setOrderRector(entity.getWebItemMaterialQuery()
+						.getOrderRector());
+				flagMaterial = true;
+			}
+
+			// 采购负责人orderRectorList
+			if (null != entity.getWebItemMaterialQuery().getOrderRector()) {
+				webItemMaterial.setOrderRector(entity.getWebItemMaterialQuery()
+						.getOrderRector());
+				flagMaterial = true;
+			}
+			// 毛利率(%)profitRate
+			if (null != entity.getWebItemMaterialQuery().getProfitRate()) {
+				webItemMaterial.setProfitRate(entity.getWebItemMaterialQuery()
+						.getProfitRate());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setProfitRate(0d);
+			}
+			// 销售单价fsaleprice
+			/*
+			 * if(null!=entity.getFsaleprice()){ entity.setFsaleprice(
+			 * entity.getFsaleprice() );//在排产基础表中 flagMaterial=true; }
+			 */
+			// 是否采用业务批次管理isbatch
+			/*
+			 * if(null!=entity.getIsbatch()){ entity .setIsbatch(
+			 * entity.getIsbatch() );//在排产基础表中 flagMaterial=true; }
+			 */
+			// 是否进行保质期管理iskfperiod
+			if (null != entity.getWebItemMaterialQuery().getIskfperiod()) {
+				webItemMaterial.setIskfperiod(entity.getWebItemMaterialQuery()
+						.getIskfperiod());
+				flagMaterial = true;
+			}
+			// 保质期(天)kfperiod
+			if (null != entity.getWebItemMaterialQuery().getKfperiod()) {
+				webItemMaterial.setKfperiod(entity.getWebItemMaterialQuery()
+						.getKfperiod());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setKfperiod(0d);
+			}
+			// 计价方法trackList
+			if (null != entity.getWebItemMaterialQuery().getTrack()) {
+				webItemMaterial.setTrack(entity.getWebItemMaterialQuery()
+						.getTrack());
+				flagMaterial = true;
+			}
+			// 计划单价planPrice
+			if (null != entity.getWebItemMaterialQuery().getPlanPrice()) {
+				webItemMaterial.setPlanPrice(entity.getWebItemMaterialQuery()
+						.getPlanPrice());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setPlanPrice(0d);
+			}
+			// 单价精度priceDecimal
+			if (null != entity.getWebItemMaterialQuery().getPriceDecimal()) {
+				webItemMaterial.setPriceDecimal(entity
+						.getWebItemMaterialQuery().getPriceDecimal());
+				flagMaterial = true;
+			}
+			// 科目代码goodSpecId
+			if (null != entity.getWebItemMaterialQuery().getGoodSpec()) {
+				webItemMaterial.setGoodSpec(entity.getWebItemMaterialQuery()
+						.getGoodSpec());
+				flagMaterial = true;
+			}
+
+			// 成本项目costProjectId
+			if (null != entity.getWebItemMaterialQuery().getCostProject()) {
+				webItemMaterial.setCostProject(entity.getWebItemMaterialQuery()
+						.getCostProject());
+				flagMaterial = true;
+			}
+			// 是否需要库龄管理stockTime
+			if (null != entity.getWebItemMaterialQuery().getStockTime()) {
+				webItemMaterial.setStockTime(entity.getWebItemMaterialQuery()
+						.getStockTime());
+				flagMaterial = true;
+			}
+			// 是否需要进行订补货计划的运算bookPlan
+			if (null != entity.getWebItemMaterialQuery().getBookPlan()) {
+				webItemMaterial.setBookPlan(entity.getWebItemMaterialQuery()
+						.getBookPlan());
+				flagMaterial = true;
+			}
+			// 失效提前期(天)beforeExpire
+			if (null != entity.getWebItemMaterialQuery().getBeforeExpire()) {
+				webItemMaterial.setBeforeExpire(entity
+						.getWebItemMaterialQuery().getBeforeExpire());
+				flagMaterial = true;
+			}
+			// 税率(%)taxRate
+			/*
+			 * if(null!=entity.getTaxrate()){ entity.setTaxrate(
+			 * entity.getTaxrate() );//排产基础表 flagMaterial=true; }
+			 */
+			// 代管物资科目adminAcctId
+			if (null != entity.getWebItemMaterialQuery().getAdminAcctId()) {
+				webItemMaterial.setAdminAcctId(entity.getWebItemMaterialQuery()
+						.getAdminAcctId());
+				flagMaterial = true;
+			}
+			// 备注note
+			if (null != entity.getWebItemMaterialQuery().getNote()) {
+				webItemMaterial.setNote(entity.getWebItemMaterialQuery()
+						.getNote());
+				flagMaterial = true;
+			}
+			// 是否农林计税isSpecialTax
+			if (null != entity.getWebItemMaterialQuery().getIsSpecialTax()) {
+				webItemMaterial.setIsSpecialTax(entity
+						.getWebItemMaterialQuery().getIsSpecialTax());
+				flagMaterial = true;
+			}
+			// 外购超收比例(%)oihighLimit
+			if (null != entity.getWebItemMaterialQuery().getOihighLimit()) {
+				webItemMaterial.setOihighLimit(entity.getWebItemMaterialQuery()
+						.getOihighLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setOihighLimit(0d);
+			}
+			// 外购欠收比例(%)oilowLimit
+			if (null != entity.getWebItemMaterialQuery().getOilowLimit()) {
+				webItemMaterial.setOilowLimit(entity.getWebItemMaterialQuery()
+						.getOilowLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setOilowLimit(0d);
+			}
+			// 销售超交比例(%)sohighLimit
+			if (null != entity.getWebItemMaterialQuery().getSohighLimit()) {
+				webItemMaterial.setSohighLimit(entity.getWebItemMaterialQuery()
+						.getSohighLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setSohighLimit(0d);
+			}
+			// 销售欠交比例(%)solowLimit
+			if (null != entity.getWebItemMaterialQuery().getSolowLimit()) {
+				webItemMaterial.setSolowLimit(entity.getWebItemMaterialQuery()
+						.getSolowLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setSolowLimit(0d);
+			}
+			// 每周/月第()天daysPer
+			if (null != entity.getWebItemMaterialQuery().getDaysPer()) {
+				webItemMaterial.setDaysPer(entity.getWebItemMaterialQuery()
+						.getDaysPer());
+				flagMaterial = true;
+			}
+			// 上次盘点日期lastCheckDate 来自日历控件值
+			if (null != entity.getWebItemMaterialQuery().getLastCheckDate()) {
+				webItemMaterial.setLastCheckDate(entity
+						.getWebItemMaterialQuery().getLastCheckDate());// 排产系统需要,K3不存,保持默认值
+				flagMaterial = true;
+			}
+			// 盘点周期checkCycle
+			if (null != entity.getWebItemMaterialQuery().getCheckCycle()) {
+				webItemMaterial.setCheckCycle(entity.getWebItemMaterialQuery()
+						.getCheckCycle());
+				flagMaterial = true;
+			}
+			// 盘点周期单位checkCycUnitList
+			if (null != entity.getWebItemMaterialQuery().getCheckCycUnit()) {
+				webItemMaterial.setCheckCycUnit(entity
+						.getWebItemMaterialQuery().getCheckCycUnit());
+				flagMaterial = true;
+			}
+			// 成本差异科目costDiffRate
+			if (null != entity.getWebItemMaterialQuery().getCostDiffRate()) {
+				webItemMaterial.setCostDiffRate(entity
+						.getWebItemMaterialQuery().getCostDiffRate());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setCostDiffRate(0d);
+			}
+			// 参与结转式成本还原cbrestore
+			if (null != entity.getWebItemMaterialQuery().getCbrestore()) {
+				webItemMaterial.setCbrestore(entity.getWebItemMaterialQuery()
+						.getCbrestore());
+				flagMaterial = true;
+			}
+			if (flagMaterial) {
+				webItemMaterial.setInterId(identity.getTnextValue());// 关联内码
+				webItemMaterialDao.saveOrUpdate(webItemMaterial);// 保存 到排产系统
+																	// 主键是自增的
+			}
+
+		}
+	}
+
+	private void webMaterialUpdate(Icitems entity,
+			WebItemMaterial webItemMaterial, boolean flagMaterial) {
+		if (null != entity.getWebItemMaterialQuery()) {
+
+			// 存货科目
+			if (null != entity.getWebItemMaterialQuery().getAcctId()) {
+				webItemMaterial.setAcctId(entity.getWebItemMaterialQuery()
+						.getAcctId());
+				flagMaterial = true;
+			}
+			// 销售收入科目
+			if (null != entity.getWebItemMaterialQuery().getSaleAcctId()) {
+				webItemMaterial.setSaleAcctId(entity.getWebItemMaterialQuery()
+						.getSaleAcctId());
+				flagMaterial = true;
+			}
+			// 销售成本科
+			if (null != entity.getWebItemMaterialQuery().getCostAcctId()) {
+				webItemMaterial.setCostAcctId(entity.getWebItemMaterialQuery()
+						.getCostAcctId());
+				flagMaterial = true;
+			}
+
+			// 采购负责人orderRectorList
+			if (null != entity.getWebItemMaterialQuery().getOrderRector()) {
+				webItemMaterial.setOrderRector(entity.getWebItemMaterialQuery()
+						.getOrderRector());
+				flagMaterial = true;
+			}
+
+			// 采购负责人orderRectorList
+			if (null != entity.getWebItemMaterialQuery().getOrderRector()) {
+				webItemMaterial.setOrderRector(entity.getWebItemMaterialQuery()
+						.getOrderRector());
+				flagMaterial = true;
+			}
+			// 毛利率(%)profitRate
+			if (null != entity.getWebItemMaterialQuery().getProfitRate()) {
+				webItemMaterial.setProfitRate(entity.getWebItemMaterialQuery()
+						.getProfitRate());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setProfitRate(0d);
+			}
+			// 销售单价fsaleprice
+			/*
+			 * if(null!=entity.getFsaleprice()){ entity.setFsaleprice(
+			 * entity.getFsaleprice() );//在排产基础表中 flagMaterial=true; }
+			 */
+			// 是否采用业务批次管理isbatch
+			/*
+			 * if(null!=entity.getIsbatch()){ entity .setIsbatch(
+			 * entity.getIsbatch() );//在排产基础表中 flagMaterial=true; }
+			 */
+			// 是否进行保质期管理iskfperiod
+			if (null != entity.getWebItemMaterialQuery().getIskfperiod()) {
+				webItemMaterial.setIskfperiod(entity.getWebItemMaterialQuery()
+						.getIskfperiod());
+				flagMaterial = true;
+			}
+			// 保质期(天)kfperiod
+			if (null != entity.getWebItemMaterialQuery().getKfperiod()) {
+				webItemMaterial.setKfperiod(entity.getWebItemMaterialQuery()
+						.getKfperiod());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setKfperiod(0d);
+			}
+			// 计价方法trackList
+			if (null != entity.getWebItemMaterialQuery().getTrack()) {
+				webItemMaterial.setTrack(entity.getWebItemMaterialQuery()
+						.getTrack());
+				flagMaterial = true;
+			}
+			// 计划单价planPrice
+			if (null != entity.getWebItemMaterialQuery().getPlanPrice()) {
+				webItemMaterial.setPlanPrice(entity.getWebItemMaterialQuery()
+						.getPlanPrice());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setPlanPrice(0d);
+			}
+			// 单价精度priceDecimal
+			if (null != entity.getWebItemMaterialQuery().getPriceDecimal()) {
+				webItemMaterial.setPriceDecimal(entity
+						.getWebItemMaterialQuery().getPriceDecimal());
+				flagMaterial = true;
+			}
+			// 科目代码goodSpecId
+			if (null != entity.getWebItemMaterialQuery().getGoodSpec()) {
+				webItemMaterial.setGoodSpec(entity.getWebItemMaterialQuery()
+						.getGoodSpec());
+				flagMaterial = true;
+			}
+
+			// 成本项目costProjectId
+			if (null != entity.getWebItemMaterialQuery().getCostProject()) {
+				webItemMaterial.setCostProject(entity.getWebItemMaterialQuery()
+						.getCostProject());
+				flagMaterial = true;
+			}
+			// 是否需要库龄管理stockTime
+			if (null != entity.getWebItemMaterialQuery().getStockTime()) {
+				webItemMaterial.setStockTime(entity.getWebItemMaterialQuery()
+						.getStockTime());
+				flagMaterial = true;
+			}
+			// 是否需要进行订补货计划的运算bookPlan
+			if (null != entity.getWebItemMaterialQuery().getBookPlan()) {
+				webItemMaterial.setBookPlan(entity.getWebItemMaterialQuery()
+						.getBookPlan());
+				flagMaterial = true;
+			}
+			// 失效提前期(天)beforeExpire
+			if (null != entity.getWebItemMaterialQuery().getBeforeExpire()) {
+				webItemMaterial.setBeforeExpire(entity
+						.getWebItemMaterialQuery().getBeforeExpire());
+				flagMaterial = true;
+			}
+			// 税率(%)taxRate
+			/*
+			 * if(null!=entity.getTaxrate()){ entity.setTaxrate(
+			 * entity.getTaxrate() );//排产基础表 flagMaterial=true; }
+			 */
+			// 代管物资科目adminAcctId
+			if (null != entity.getWebItemMaterialQuery().getAdminAcctId()) {
+				webItemMaterial.setAdminAcctId(entity.getWebItemMaterialQuery()
+						.getAdminAcctId());
+				flagMaterial = true;
+			}
+			// 备注note
+			if (null != entity.getWebItemMaterialQuery().getNote()) {
+				webItemMaterial.setNote(entity.getWebItemMaterialQuery()
+						.getNote());
+				flagMaterial = true;
+			}
+			// 是否农林计税isSpecialTax
+			if (null != entity.getWebItemMaterialQuery().getIsSpecialTax()) {
+				webItemMaterial.setIsSpecialTax(entity
+						.getWebItemMaterialQuery().getIsSpecialTax());
+				flagMaterial = true;
+			}
+			// 外购超收比例(%)oihighLimit
+			if (null != entity.getWebItemMaterialQuery().getOihighLimit()) {
+				webItemMaterial.setOihighLimit(entity.getWebItemMaterialQuery()
+						.getOihighLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setOihighLimit(0d);
+			}
+			// 外购欠收比例(%)oilowLimit
+			if (null != entity.getWebItemMaterialQuery().getOilowLimit()) {
+				webItemMaterial.setOilowLimit(entity.getWebItemMaterialQuery()
+						.getOilowLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setOilowLimit(0d);
+			}
+			// 销售超交比例(%)sohighLimit
+			if (null != entity.getWebItemMaterialQuery().getSohighLimit()) {
+				webItemMaterial.setSohighLimit(entity.getWebItemMaterialQuery()
+						.getSohighLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setSohighLimit(0d);
+			}
+			// 销售欠交比例(%)solowLimit
+			if (null != entity.getWebItemMaterialQuery().getSolowLimit()) {
+				webItemMaterial.setSolowLimit(entity.getWebItemMaterialQuery()
+						.getSolowLimit());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setSolowLimit(0d);
+			}
+			// 每周/月第()天daysPer
+			if (null != entity.getWebItemMaterialQuery().getDaysPer()) {
+				webItemMaterial.setDaysPer(entity.getWebItemMaterialQuery()
+						.getDaysPer());
+				flagMaterial = true;
+			}
+			// 上次盘点日期lastCheckDate 来自日历控件值
+			if (null != entity.getWebItemMaterialQuery().getLastCheckDate()) {
+				webItemMaterial.setLastCheckDate(entity
+						.getWebItemMaterialQuery().getLastCheckDate());// 排产系统需要,K3不存,保持默认值
+				flagMaterial = true;
+			}
+			// 盘点周期checkCycle
+			if (null != entity.getWebItemMaterialQuery().getCheckCycle()) {
+				webItemMaterial.setCheckCycle(entity.getWebItemMaterialQuery()
+						.getCheckCycle());
+				flagMaterial = true;
+			}
+			// 盘点周期单位checkCycUnitList
+			if (null != entity.getWebItemMaterialQuery().getCheckCycUnit()) {
+				webItemMaterial.setCheckCycUnit(entity
+						.getWebItemMaterialQuery().getCheckCycUnit());
+				flagMaterial = true;
+			}
+			// 成本差异科目costDiffRate
+			if (null != entity.getWebItemMaterialQuery().getCostDiffRate()) {
+				webItemMaterial.setCostDiffRate(entity
+						.getWebItemMaterialQuery().getCostDiffRate());
+				flagMaterial = true;
+			} else {
+				webItemMaterial.setCostDiffRate(0d);
+			}
+			// 参与结转式成本还原cbrestore
+			if (null != entity.getWebItemMaterialQuery().getCbrestore()) {
+				webItemMaterial.setCbrestore(entity.getWebItemMaterialQuery()
+						.getCbrestore());
+				flagMaterial = true;
+			}
+			if (flagMaterial) {
+
+				if (null != entity.getWebItemMaterialQuery().getId()) {
+					webItemMaterial.setId(entity.getWebItemMaterialQuery()
+							.getId());
+				} else {// 为空
+					webItemMaterial.setInterId(entity.getBaseitemid());// 设置core
+																		// 的关联
+																		// tbase_item
+				}
+				webItemMaterialDao.saveOrUpdate(webItemMaterial);// 保存 到排产系统
+																	// 主键是自增的
+			}
+
+		}
+	}
+
+	private void webPlanUpdate(Icitems entity, WebIcitemPlan webItemPlan,
+			boolean flagPlan) {
+		if (null != entity.getWebItemPlanQuery()) {
+
+			// planTrategyList计划策略
+			if (null != entity.getWebItemPlanQuery().getPlanTrategy()) {
+				webItemPlan.setPlanTrategy(entity.getWebItemPlanQuery()
+						.getPlanTrategy());
+				flagPlan = true;
+			}
+			// orderTrategyList订货策略
+			if (null != entity.getWebItemPlanQuery().getOrderTrategy()) {
+				webItemPlan.setOrderTrategy(entity.getWebItemPlanQuery()
+						.getOrderTrategy());
+				flagPlan = true;
+			}
+			// fixLeadTime固定提前期
+			if (null != entity.getWebItemPlanQuery().getFixLeadTime()) {
+				webItemPlan.setFixLeadTime(entity.getWebItemPlanQuery()
+						.getFixLeadTime());
+				flagPlan = true;
+			} else {
+				webItemPlan.setFixLeadTime(0f);
+			}
+			// leadTime变动提前期
+			if (null != entity.getWebItemPlanQuery().getLeadTime()) {
+				webItemPlan.setLeadTime(entity.getWebItemPlanQuery()
+						.getLeadTime());
+				flagPlan = true;
+			} else {
+				webItemPlan.setLeadTime(0f);
+			}
+			// orderInterVal订货间隔期(天)
+			if (null != entity.getWebItemPlanQuery().getOrderInterVal()) {
+				webItemPlan.setOrderInterVal(entity.getWebItemPlanQuery()
+						.getOrderInterVal());
+				flagPlan = true;
+			}
+			// qtyMin最小订货量
+			/*
+			 * if(null!=entity.getQtyMin()){
+			 * webItemPlan.setPlanTrategy(entity.getWebItemPlanQuery
+			 * ().getPlanTrategy());//存到排产基础表里面 flagPlan=true; }
+			 */
+			// qtyMax最大订货量
+			if (null != entity.getWebItemPlanQuery().getQtyMax()) {
+				webItemPlan.setQtyMax(entity.getWebItemPlanQuery().getQtyMax());
+				flagPlan = true;
+			} else {
+				webItemPlan.setQtyMax(0d);
+			}
+			// batchAppendQty批量增量
+			if (null != entity.getWebItemPlanQuery().getBatchAppendQty()) {
+				webItemPlan.setBatchAppendQty(entity.getWebItemPlanQuery()
+						.getBatchAppendQty());
+				flagPlan = true;
+			} else {
+				webItemPlan.setBatchAppendQty(0d);
+			}
+			// orderPoint再订货点
+			if (null != entity.getWebItemPlanQuery().getOrderPoint()) {
+				webItemPlan.setOrderPoint(entity.getWebItemPlanQuery()
+						.getOrderPoint());
+				flagPlan = true;
+			} else {
+				webItemPlan.setOrderPoint(0d);
+			}
+			// batChangeEconomy变动提前期批量
+			if (null != entity.getWebItemPlanQuery().getBatChangeEconomy()) {
+				webItemPlan.setBatChangeEconomy(entity.getWebItemPlanQuery()
+						.getBatChangeEconomy());
+				flagPlan = true;
+			} else {
+				webItemPlan.setBatChangeEconomy(0d);
+			}
+			// requirePoint需求时界(天)
+			if (null != entity.getWebItemPlanQuery().getRequirePoint()) {
+				webItemPlan.setRequirePoint(entity.getWebItemPlanQuery()
+						.getRequirePoint());
+				flagPlan = true;
+			}
+			// planPoint计划时界(天)
+			if (null != entity.getWebItemPlanQuery().getPlanPoint()) {
+				webItemPlan.setPlanPoint(entity.getWebItemPlanQuery()
+						.getPlanPoint());
+				flagPlan = true;
+			}
+			// workTypeList默认生产类型
+			if (null != entity.getWebItemPlanQuery().getDefaultWorkTypeId()) {
+				webItemPlan.setDefaultWorkTypeId(entity.getWebItemPlanQuery()
+						.getDefaultWorkTypeId());
+				flagPlan = true;
+			}
+			// productPrincipalList生产负责人
+			if (null != entity.getWebItemPlanQuery().getProductPrincipal()) {
+				webItemPlan.setProductPrincipal(entity.getWebItemPlanQuery()
+						.getProductPrincipal());
+				flagPlan = true;
+			}
+			// dailyConsume日消耗量
+			if (null != entity.getWebItemPlanQuery().getDailyConsume()) {
+				webItemPlan.setDailyConsume(entity.getWebItemPlanQuery()
+						.getDailyConsume());
+				flagPlan = true;
+			} else {
+				webItemPlan.setDailyConsume(0d);
+			}
+			// mrpcon MRP计算是否合并需求
+			if (null != entity.getWebItemPlanQuery().getMrpcon()) {
+				webItemPlan.setMrpcon(entity.getWebItemPlanQuery().getMrpcon());
+				flagPlan = true;
+			}
+			// containerName容器名称
+			if (null != entity.getWebItemPlanQuery().getContainerName()) {
+				webItemPlan.setContainerName(entity.getWebItemPlanQuery()
+						.getContainerName());
+				flagPlan = true;
+			}
+			// kanBanCapability看板容量
+			if (null != entity.getWebItemPlanQuery().getKanBanCapability()) {
+				webItemPlan.setKanBanCapability(entity.getWebItemPlanQuery()
+						.getKanBanCapability());
+				flagPlan = true;
+			}
+
+			// plannerList计划员
+			if (null != entity.getWebItemPlanQuery().getPlanner()) {
+				webItemPlan.setPlanner(entity.getWebItemPlanQuery()
+						.getPlanner());
+				flagPlan = true;
+			}
+			// inHighLimit完工超收比例(%)
+			if (null != entity.getWebItemPlanQuery().getInHighLimit()) {
+				webItemPlan.setInHighLimit(entity.getWebItemPlanQuery()
+						.getInHighLimit());
+				flagPlan = true;
+			} else {
+				webItemPlan.setInHighLimit(0d);
+			}
+			// inLowLimit完工欠收比例(%)
+			if (null != entity.getWebItemPlanQuery().getInLowLimit()) {
+				webItemPlan.setInLowLimit(entity.getWebItemPlanQuery()
+						.getInLowLimit());
+				flagPlan = true;
+			} else {
+				webItemPlan.setInLowLimit(0d);
+			}
+
+			// ctrlTypeList控制类型
+			if (null != entity.getWebItemPlanQuery().getCtrlType()) {
+				webItemPlan.setCtrlType(entity.getWebItemPlanQuery()
+						.getCtrlType());
+				flagPlan = true;
+			}
+
+			// putInteger投料自动取整
+			if (null != entity.getWebItemPlanQuery().getPutInteger()) {
+				webItemPlan.setPutInteger(entity.getWebItemPlanQuery()
+						.getPutInteger());
+				flagPlan = true;
+			}
+
+			// isBackFlush 是否倒冲
+			if (null != entity.getWebItemPlanQuery().getIsBackFlush()) {
+				webItemPlan.setIsBackFlush(entity.getWebItemPlanQuery()
+						.getIsBackFlush());
+				flagPlan = true;
+			}
+
+			if (flagPlan) {
+
+				if (null != entity.getWebItemPlanQuery().getId()) {
+					webItemPlan.setId(entity.getWebItemPlanQuery().getId());
+				} else {// 为空
+					webItemPlan.setInterId(entity.getBaseitemid());// 设置core 的关联
+																	// tbase_item
+				}
+				webIcitemPlanDao.saveOrUpdate(webItemPlan);// 保存 到排产系统 主键是自增的
+			}
+		}
+	}
+
+	private void webPlan(Icitems entity, WebIdentity identity,
+			WebIcitemPlan webItemPlan, boolean flagPlan) {
+		if (null != entity.getWebItemPlanQuery()) {
+
+			// planTrategyList计划策略
+			if (null != entity.getWebItemPlanQuery().getPlanTrategy()) {
+				webItemPlan.setPlanTrategy(entity.getWebItemPlanQuery()
+						.getPlanTrategy());
+				flagPlan = true;
+			}
+			// orderTrategyList订货策略
+			if (null != entity.getWebItemPlanQuery().getOrderTrategy()) {
+				webItemPlan.setOrderTrategy(entity.getWebItemPlanQuery()
+						.getOrderTrategy());
+				flagPlan = true;
+			}
+			// fixLeadTime固定提前期
+			if (null != entity.getWebItemPlanQuery().getFixLeadTime()) {
+				webItemPlan.setFixLeadTime(entity.getWebItemPlanQuery()
+						.getFixLeadTime());
+				flagPlan = true;
+			} else {
+				webItemPlan.setFixLeadTime(0f);
+			}
+			// leadTime变动提前期
+			if (null != entity.getWebItemPlanQuery().getLeadTime()) {
+				webItemPlan.setLeadTime(entity.getWebItemPlanQuery()
+						.getLeadTime());
+				flagPlan = true;
+			} else {
+				webItemPlan.setLeadTime(0f);
+			}
+			// orderInterVal订货间隔期(天)
+			if (null != entity.getWebItemPlanQuery().getOrderInterVal()) {
+				webItemPlan.setOrderInterVal(entity.getWebItemPlanQuery()
+						.getOrderInterVal());
+				flagPlan = true;
+			}
+			// qtyMin最小订货量
+			/*
+			 * if(null!=entity.getQtyMin()){
+			 * webItemPlan.setPlanTrategy(entity.getWebItemPlanQuery
+			 * ().getPlanTrategy());//存到排产基础表里面 flagPlan=true; }
+			 */
+			// qtyMax最大订货量
+			if (null != entity.getWebItemPlanQuery().getQtyMax()) {
+				webItemPlan.setQtyMax(entity.getWebItemPlanQuery().getQtyMax());
+				flagPlan = true;
+			} else {
+				webItemPlan.setQtyMax(0d);
+			}
+			// batchAppendQty批量增量
+			if (null != entity.getWebItemPlanQuery().getBatchAppendQty()) {
+				webItemPlan.setBatchAppendQty(entity.getWebItemPlanQuery()
+						.getBatchAppendQty());
+				flagPlan = true;
+			} else {
+				webItemPlan.setBatchAppendQty(0d);
+			}
+			// orderPoint再订货点
+			if (null != entity.getWebItemPlanQuery().getOrderPoint()) {
+				webItemPlan.setOrderPoint(entity.getWebItemPlanQuery()
+						.getOrderPoint());
+				flagPlan = true;
+			} else {
+				webItemPlan.setOrderPoint(0d);
+			}
+			// batChangeEconomy变动提前期批量
+			if (null != entity.getWebItemPlanQuery().getBatChangeEconomy()) {
+				webItemPlan.setBatChangeEconomy(entity.getWebItemPlanQuery()
+						.getBatChangeEconomy());
+				flagPlan = true;
+			} else {
+				webItemPlan.setBatChangeEconomy(0d);
+			}
+			// requirePoint需求时界(天)
+			if (null != entity.getWebItemPlanQuery().getRequirePoint()) {
+				webItemPlan.setRequirePoint(entity.getWebItemPlanQuery()
+						.getRequirePoint());
+				flagPlan = true;
+			}
+			// planPoint计划时界(天)
+			if (null != entity.getWebItemPlanQuery().getPlanPoint()) {
+				webItemPlan.setPlanPoint(entity.getWebItemPlanQuery()
+						.getPlanPoint());
+				flagPlan = true;
+			}
+			// workTypeList默认生产类型
+			if (null != entity.getWebItemPlanQuery().getDefaultWorkTypeId()) {
+				webItemPlan.setDefaultWorkTypeId(entity.getWebItemPlanQuery()
+						.getDefaultWorkTypeId());
+				flagPlan = true;
+			}
+			// productPrincipalList生产负责人
+			if (null != entity.getWebItemPlanQuery().getProductPrincipal()) {
+				webItemPlan.setProductPrincipal(entity.getWebItemPlanQuery()
+						.getProductPrincipal());
+				flagPlan = true;
+			}
+			// dailyConsume日消耗量
+			if (null != entity.getWebItemPlanQuery().getDailyConsume()) {
+				webItemPlan.setDailyConsume(entity.getWebItemPlanQuery()
+						.getDailyConsume());
+				flagPlan = true;
+			} else {
+				webItemPlan.setDailyConsume(0d);
+			}
+			// mrpcon MRP计算是否合并需求
+			if (null != entity.getWebItemPlanQuery().getMrpcon()) {
+				webItemPlan.setMrpcon(entity.getWebItemPlanQuery().getMrpcon());
+				flagPlan = true;
+			}
+			// containerName容器名称
+			if (null != entity.getWebItemPlanQuery().getContainerName()) {
+				webItemPlan.setContainerName(entity.getWebItemPlanQuery()
+						.getContainerName());
+				flagPlan = true;
+			}
+			// kanBanCapability看板容量
+			if (null != entity.getWebItemPlanQuery().getKanBanCapability()) {
+				webItemPlan.setKanBanCapability(entity.getWebItemPlanQuery()
+						.getKanBanCapability());
+				flagPlan = true;
+			}
+
+			// plannerList计划员
+			if (null != entity.getWebItemPlanQuery().getPlanner()) {
+				webItemPlan.setPlanner(entity.getWebItemPlanQuery()
+						.getPlanner());
+				flagPlan = true;
+			}
+			// inHighLimit完工超收比例(%)
+			if (null != entity.getWebItemPlanQuery().getInHighLimit()) {
+				webItemPlan.setInHighLimit(entity.getWebItemPlanQuery()
+						.getInHighLimit());
+				flagPlan = true;
+			} else {
+				webItemPlan.setInHighLimit(0d);
+			}
+			// inLowLimit完工欠收比例(%)
+			if (null != entity.getWebItemPlanQuery().getInLowLimit()) {
+				webItemPlan.setInLowLimit(entity.getWebItemPlanQuery()
+						.getInLowLimit());
+				flagPlan = true;
+			} else {
+				webItemPlan.setInLowLimit(0d);
+			}
+
+			// ctrlTypeList控制类型
+			if (null != entity.getWebItemPlanQuery().getCtrlType()) {
+				webItemPlan.setCtrlType(entity.getWebItemPlanQuery()
+						.getCtrlType());
+				flagPlan = true;
+			}
+
+			// putInteger投料自动取整
+			if (null != entity.getWebItemPlanQuery().getPutInteger()) {
+				webItemPlan.setPutInteger(entity.getWebItemPlanQuery()
+						.getPutInteger());
+				flagPlan = true;
+			}
+
+			// isBackFlush 是否倒冲
+			if (null != entity.getWebItemPlanQuery().getIsBackFlush()) {
+				webItemPlan.setIsBackFlush(entity.getWebItemPlanQuery()
+						.getIsBackFlush());
+				flagPlan = true;
+			}
+
+			if (flagPlan) {
+				webItemPlan.setInterId(identity.getTnextValue());// 关联内码
+				webIcitemPlanDao.saveOrUpdate(webItemPlan);// 保存 到排产系统 主键是自增的
+			}
+		}
+	}
+
+	private void webDesign(Icitems entity, WebIdentity identity,
+			IcitemDesign webItemDesign, boolean flagDesign) {
+		if (null != entity.getWebItemDesignQuery()) {
+
+			// chartNumber图号
+			/*
+			 * if(null!=entity.getFchartnumber()){
+			 * webItemPlan.setPlanTrategy(entity
+			 * .getWebItemPlanQuery().getPlanTrategy());//图号是在排产基础表里面
+			 * flagDesign=true; }
+			 */
+
+			// isKeyItem是否关键件
+			if (null != entity.getWebItemDesignQuery().getIsKeyItem()) {
+				webItemDesign.setIsKeyItem(entity.getWebItemDesignQuery()
+						.getIsKeyItem());
+				flagDesign = true;
+			}
+			// grossWeight毛重
+			if (null != entity.getWebItemDesignQuery().getGrossWeight()) {
+				webItemDesign.setGrossWeight(entity.getWebItemDesignQuery()
+						.getGrossWeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setGrossWeight(0d);
+			}
+			// netWeight净重
+			if (null != entity.getWebItemDesignQuery().getNetWeight()) {
+				webItemDesign.setNetWeight(entity.getWebItemDesignQuery()
+						.getNetWeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setNetWeight(0d);
+			}
+			// maundId重量单位
+			if (null != entity.getWebItemDesignQuery().getMaund()) {
+				webItemDesign.setMaund(entity.getWebItemDesignQuery()
+						.getMaund());
+				flagDesign = true;
+			}
+			// length长度
+			if (null != entity.getWebItemDesignQuery().getLength()) {
+				webItemDesign.setLength(entity.getWebItemDesignQuery()
+						.getLength());
+				flagDesign = true;
+			} else {
+				webItemDesign.setLength(0d);
+			}
+			// width宽度
+			if (null != entity.getWebItemDesignQuery().getWidth()) {
+				webItemDesign.setWidth(entity.getWebItemDesignQuery()
+						.getWidth());
+				flagDesign = true;
+			} else {
+				webItemDesign.setWidth(0d);
+			}
+			// height高度
+			if (null != entity.getWebItemDesignQuery().getHeight()) {
+				webItemDesign.setHeight(entity.getWebItemDesignQuery()
+						.getHeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setHeight(0d);
+			}
+			// cubicMeasureId长度单位
+			if (null != entity.getWebItemDesignQuery().getCubicMeasure()) {
+				webItemDesign.setCubicMeasure(entity.getWebItemDesignQuery()
+						.getCubicMeasure());
+				flagDesign = true;
+			}
+			// version 版本号
+			if (null != entity.getWebItemDesignQuery().getVersion()) {
+				webItemDesign.setVersion(entity.getWebItemDesignQuery()
+						.getVersion());
+				flagDesign = true;
+			}
+
+			// begin 原排产设计表中有的K3中没有的
+			// 公称直径DN fdn nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFdn()) {
+				webItemDesign.setFdn(entity.getWebItemDesignQuery().getFdn());
+				flagDesign = true;
+			}
+			// 公称压力PN fpn nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpn()) {
+				webItemDesign.setFpn(entity.getWebItemDesignQuery().getFpn());
+				flagDesign = true;
+			}
+			// 产品名称 fpdname nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpdname()) {
+				webItemDesign.setFpdname(entity.getWebItemDesignQuery()
+						.getFpdname());
+				flagDesign = true;
+			}
+			// 产品型号Type fpdtype nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpdtype()) {
+				webItemDesign.setFpdtype(entity.getWebItemDesignQuery()
+						.getFpdtype());
+				flagDesign = true;
+			}
+			// 最大进口压力 fmaxip nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFmaxip()) {
+				webItemDesign.setFmaxip(entity.getWebItemDesignQuery()
+						.getFmaxip());
+				flagDesign = true;
+			}
+			// Ps fps nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFps()) {
+				webItemDesign.setFps(entity.getWebItemDesignQuery().getFps());
+				flagDesign = true;
+			}
+			// 进口压力范围 fipr nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFipr()) {
+				webItemDesign.setFipr(entity.getWebItemDesignQuery().getFipr());
+				flagDesign = true;
+			}
+			// Bpu fbpu nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFbpu()) {
+				webItemDesign.setFbpu(entity.getWebItemDesignQuery().getFbpu());
+				flagDesign = true;
+			}
+			// 出口压力范围 fopr nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFopr()) {
+				webItemDesign.setFopr(entity.getWebItemDesignQuery().getFopr());
+				flagDesign = true;
+			}
+			// Wd fwd nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFwd()) {
+				webItemDesign.setFwd(entity.getWebItemDesignQuery().getFwd());
+				flagDesign = true;
+			}
+			// 设定压力范围Wds fwds nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFwds()) {
+				webItemDesign.setFwds(entity.getWebItemDesignQuery().getFwds());
+				flagDesign = true;
+			}
+			// 设定压力Pds fpds nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpds()) {
+				webItemDesign.setFpds(entity.getWebItemDesignQuery().getFpds());
+				flagDesign = true;
+			}
+			// 阀体材质 fbody nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFbody()) {
+				webItemDesign.setFbody(entity.getWebItemDesignQuery()
+						.getFbody());
+				flagDesign = true;
+			}
+			// 流量系数Cg fcg nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFcg()) {
+				webItemDesign.setFcg(entity.getWebItemDesignQuery().getFcg());
+				flagDesign = true;
+			}
+			// end 原排产设计表中有的K3中没有的
+
+			// 排产新增的
+
+			// 结构长度 structlen
+			if (null != entity.getWebItemDesignQuery().getStructlen()) {
+				webItemDesign.setStructlen(entity.getWebItemDesignQuery()
+						.getStructlen() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setStructlen(0 + "");
+			}
+			// 设计压力 allowpresure
+			if (null != entity.getWebItemDesignQuery().getAllowpresure()) {
+				webItemDesign.setAllowpresure(entity.getWebItemDesignQuery()
+						.getAllowpresure());
+				flagDesign = true;
+			} else {
+				webItemDesign.setAllowpresure("0kPa");
+			}
+			// 结构类型 structtype
+			if (null != entity.getWebItemDesignQuery().getStructtype()) {
+				webItemDesign.setStructtype(entity.getWebItemDesignQuery()
+						.getStructtype());
+				flagDesign = true;
+			}
+			// 适用介质 fgas
+			if (null != entity.getWebItemDesignQuery().getFgas()) {
+				webItemDesign.setFgas(entity.getWebItemDesignQuery().getFgas());
+				flagDesign = true;
+			}
+			// 工作温度范围 otemprange
+			if (null != entity.getWebItemDesignQuery().getOtemprange()) {
+				webItemDesign.setOtemprange(entity.getWebItemDesignQuery()
+						.getOtemprange());
+				flagDesign = true;
+			}
+			// 最小进出口压差 mindifference
+			if (null != entity.getWebItemDesignQuery().getMindifference()) {
+				webItemDesign.setMindifference(entity.getWebItemDesignQuery()
+						.getMindifference() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setMindifference(0 + "");
+			}
+			// 皮膜最大压差 chambermax
+			if (null != entity.getWebItemDesignQuery().getChambermax()) {
+				webItemDesign.setChambermax(entity.getWebItemDesignQuery()
+						.getChambermax() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setChambermax(0 + "");
+			}
+			// 皮膜腔最大工作压力 pressmax
+			if (null != entity.getWebItemDesignQuery().getPressmax()) {
+				webItemDesign.setPressmax(entity.getWebItemDesignQuery()
+						.getPressmax() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setPressmax(0 + "");
+			}
+			// 设定压力范围 setpressure
+			if (null != entity.getWebItemDesignQuery().getSetpressure()) {
+				webItemDesign.setSetpressure(entity.getWebItemDesignQuery()
+						.getSetpressure());
+				flagDesign = true;
+			}
+			// 超高压设定范围 soverpressure
+			if (null != entity.getWebItemDesignQuery().getSoverpressure()) {
+				webItemDesign.setSoverpressure(entity.getWebItemDesignQuery()
+						.getSoverpressure());
+				flagDesign = true;
+			}
+			// 超高压切断设定值 soverpressureval
+			if (null != entity.getWebItemDesignQuery().getSoverpressureval()) {
+				webItemDesign.setSoverpressureval(entity
+						.getWebItemDesignQuery().getSoverpressureval());
+				flagDesign = true;
+			}
+			// /超低压切断范围 sunderpressure
+			if (null != entity.getWebItemDesignQuery().getSunderpressure()) {
+				webItemDesign.setSunderpressure(entity.getWebItemDesignQuery()
+						.getSunderpressure());
+				flagDesign = true;
+			}
+			// 超低压切断设定值 sunderpressureval
+			if (null != entity.getWebItemDesignQuery().getSunderpressureval()) {
+				webItemDesign.setSunderpressureval(entity
+						.getWebItemDesignQuery().getSunderpressureval());
+				flagDesign = true;
+			}
+			// 响应时间 resptime
+			if (null != entity.getWebItemDesignQuery().getResptime()) {
+				webItemDesign.setResptime(entity.getWebItemDesignQuery()
+						.getResptime());
+				flagDesign = true;
+			}
+			// 复位压差 resetdifferent
+			if (null != entity.getWebItemDesignQuery().getResetdifferent()) {
+				webItemDesign.setResetdifferent(entity.getWebItemDesignQuery()
+						.getResetdifferent() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setResetdifferent(0 + "");
+			}
+
+			if (flagDesign) {
+				webItemDesign.setInterId(identity.getTnextValue());// 关联内码
+				webItemDesign.setBaseitemid(identity.getTnextValue());// 关联内码
+				icitemDesignDao.saveOrUpdate(webItemDesign);// 保存 到排产系统 主键是自增的
+			}
+
+		}
+	}
+
+	private void webDesignUpdate(Icitems entity, IcitemDesign webItemDesign,
+			boolean flagDesign) {
+		if (null != entity.getWebItemDesignQuery()) {
+
+			// chartNumber图号
+			/*
+			 * if(null!=entity.getFchartnumber()){
+			 * webItemPlan.setPlanTrategy(entity
+			 * .getWebItemPlanQuery().getPlanTrategy());//图号是在排产基础表里面
+			 * flagDesign=true; }
+			 */
+
+			// isKeyItem是否关键件
+			if (null != entity.getWebItemDesignQuery().getIsKeyItem()) {
+				webItemDesign.setIsKeyItem(entity.getWebItemDesignQuery()
+						.getIsKeyItem());
+				flagDesign = true;
+			}
+			// grossWeight毛重
+			if (null != entity.getWebItemDesignQuery().getGrossWeight()) {
+				webItemDesign.setGrossWeight(entity.getWebItemDesignQuery()
+						.getGrossWeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setGrossWeight(0d);
+			}
+			// netWeight净重
+			if (null != entity.getWebItemDesignQuery().getNetWeight()) {
+				webItemDesign.setNetWeight(entity.getWebItemDesignQuery()
+						.getNetWeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setNetWeight(0d);
+			}
+			// maundId重量单位
+			if (null != entity.getWebItemDesignQuery().getMaund()) {
+				webItemDesign.setMaund(entity.getWebItemDesignQuery()
+						.getMaund());
+				flagDesign = true;
+			} else {
+				webItemDesign.setMaund(0);
+			}
+			// length长度
+			if (null != entity.getWebItemDesignQuery().getLength()) {
+				webItemDesign.setLength(entity.getWebItemDesignQuery()
+						.getLength());
+				flagDesign = true;
+			} else {
+				webItemDesign.setLength(0d);
+			}
+			// width宽度
+			if (null != entity.getWebItemDesignQuery().getWidth()) {
+				webItemDesign.setWidth(entity.getWebItemDesignQuery()
+						.getWidth());
+				flagDesign = true;
+			} else {
+				webItemDesign.setWidth(0d);
+			}
+			// height高度
+			if (null != entity.getWebItemDesignQuery().getHeight()) {
+				webItemDesign.setHeight(entity.getWebItemDesignQuery()
+						.getHeight());
+				flagDesign = true;
+			} else {
+				webItemDesign.setHeight(0d);
+			}
+			// cubicMeasureId长度单位
+			if (null != entity.getWebItemDesignQuery().getCubicMeasure()) {
+				webItemDesign.setCubicMeasure(entity.getWebItemDesignQuery()
+						.getCubicMeasure());
+				flagDesign = true;
+			} else {
+				webItemDesign.setCubicMeasure(0);
+			}
+			// version 版本号
+			if (null != entity.getWebItemDesignQuery().getVersion()) {
+				webItemDesign.setVersion(entity.getWebItemDesignQuery()
+						.getVersion());
+				flagDesign = true;
+			}
+
+			// begin 原排产设计表中有的K3中没有的
+			// 公称直径DN fdn nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFdn()) {
+				webItemDesign.setFdn(entity.getWebItemDesignQuery().getFdn());
+				flagDesign = true;
+			}
+			// 公称压力PN fpn nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpn()) {
+				webItemDesign.setFpn(entity.getWebItemDesignQuery().getFpn());
+				flagDesign = true;
+			}
+			// 产品名称 fpdname nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpdname()) {
+				webItemDesign.setFpdname(entity.getWebItemDesignQuery()
+						.getFpdname());
+				flagDesign = true;
+			}
+			// 产品型号Type fpdtype nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpdtype()) {
+				webItemDesign.setFpdtype(entity.getWebItemDesignQuery()
+						.getFpdtype());
+				flagDesign = true;
+			}
+			// 最大进口压力 fmaxip nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFmaxip()) {
+				webItemDesign.setFmaxip(entity.getWebItemDesignQuery()
+						.getFmaxip());
+				flagDesign = true;
+			}
+			// Ps fps nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFps()) {
+				webItemDesign.setFps(entity.getWebItemDesignQuery().getFps());
+				flagDesign = true;
+			}
+			// 进口压力范围 fipr nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFipr()) {
+				webItemDesign.setFipr(entity.getWebItemDesignQuery().getFipr());
+				flagDesign = true;
+			}
+			// Bpu fbpu nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFbpu()) {
+				webItemDesign.setFbpu(entity.getWebItemDesignQuery().getFbpu());
+				flagDesign = true;
+			}
+			// 出口压力范围 fopr nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFopr()) {
+				webItemDesign.setFopr(entity.getWebItemDesignQuery().getFopr());
+				flagDesign = true;
+			}
+			// Wd fwd nvarchar(50) 50
+			if (null != entity.getWebItemDesignQuery().getFwd()) {
+				webItemDesign.setFwd(entity.getWebItemDesignQuery().getFwd());
+				flagDesign = true;
+			}
+			// 设定压力范围Wds fwds nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFwds()) {
+				webItemDesign.setFwds(entity.getWebItemDesignQuery().getFwds());
+				flagDesign = true;
+			}
+			// 设定压力Pds fpds nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFpds()) {
+				webItemDesign.setFpds(entity.getWebItemDesignQuery().getFpds());
+				flagDesign = true;
+			}
+			// 阀体材质 fbody nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFbody()) {
+				webItemDesign.setFbody(entity.getWebItemDesignQuery()
+						.getFbody());
+				flagDesign = true;
+			}
+			// 流量系数Cg fcg nvarchar(50)
+			if (null != entity.getWebItemDesignQuery().getFcg()) {
+				webItemDesign.setFcg(entity.getWebItemDesignQuery().getFcg());
+				flagDesign = true;
+			}
+			// end 原排产设计表中有的K3中没有的
+
+			// 排产新增的
+
+			// 结构长度 structlen
+			if (null != entity.getWebItemDesignQuery().getStructlen()) {
+				webItemDesign.setStructlen(entity.getWebItemDesignQuery()
+						.getStructlen() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setStructlen(0 + "");
+				flagDesign = true;
+			}
+			// 设计压力 allowpresure
+			if (null != entity.getWebItemDesignQuery().getAllowpresure()) {
+				webItemDesign.setAllowpresure(entity.getWebItemDesignQuery()
+						.getAllowpresure());
+				flagDesign = true;
+			} else {
+				webItemDesign.setAllowpresure("0kPa");
+			}
+			// 结构类型 structtype
+			if (null != entity.getWebItemDesignQuery().getStructtype()) {
+				webItemDesign.setStructtype(entity.getWebItemDesignQuery()
+						.getStructtype());
+				flagDesign = true;
+			}
+			// 适用介质 fgas
+			if (null != entity.getWebItemDesignQuery().getFgas()) {
+				webItemDesign.setFgas(entity.getWebItemDesignQuery().getFgas());
+				flagDesign = true;
+			}
+			// 工作温度范围 otemprange
+			if (null != entity.getWebItemDesignQuery().getOtemprange()) {
+				webItemDesign.setOtemprange(entity.getWebItemDesignQuery()
+						.getOtemprange());
+				flagDesign = true;
+			}
+			// 最小进出口压差 mindifference
+			if (null != entity.getWebItemDesignQuery().getMindifference()) {
+				webItemDesign.setMindifference(entity.getWebItemDesignQuery()
+						.getMindifference() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setMindifference(0 + "");
+				flagDesign = true;
+			}
+			// 皮膜最大压差 chambermax
+			if (null != entity.getWebItemDesignQuery().getChambermax()) {
+				webItemDesign.setChambermax(entity.getWebItemDesignQuery()
+						.getChambermax() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setChambermax(0 + "");
+				flagDesign = true;
+			}
+			// 皮膜腔最大工作压力 pressmax
+			if (null != entity.getWebItemDesignQuery().getPressmax()) {
+				webItemDesign.setPressmax(entity.getWebItemDesignQuery()
+						.getPressmax() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setPressmax(0 + "");
+				flagDesign = true;
+			}
+			// 设定压力范围 setpressure
+			if (null != entity.getWebItemDesignQuery().getSetpressure()) {
+				webItemDesign.setSetpressure(entity.getWebItemDesignQuery()
+						.getSetpressure());
+				flagDesign = true;
+			}
+			// 超高压设定范围 soverpressure
+			if (null != entity.getWebItemDesignQuery().getSoverpressure()) {
+				webItemDesign.setSoverpressure(entity.getWebItemDesignQuery()
+						.getSoverpressure());
+				flagDesign = true;
+			}
+			// 超高压切断设定值 soverpressureval
+			if (null != entity.getWebItemDesignQuery().getSoverpressureval()) {
+				webItemDesign.setSoverpressureval(entity
+						.getWebItemDesignQuery().getSoverpressureval());
+				flagDesign = true;
+			}
+			// /超低压切断范围 sunderpressure
+			if (null != entity.getWebItemDesignQuery().getSunderpressure()) {
+				webItemDesign.setSunderpressure(entity.getWebItemDesignQuery()
+						.getSunderpressure());
+				flagDesign = true;
+			}
+			// 超低压切断设定值 sunderpressureval
+			if (null != entity.getWebItemDesignQuery().getSunderpressureval()) {
+				webItemDesign.setSunderpressureval(entity
+						.getWebItemDesignQuery().getSunderpressureval());
+				flagDesign = true;
+			}
+			// 响应时间 resptime
+			if (null != entity.getWebItemDesignQuery().getResptime()) {
+				webItemDesign.setResptime(entity.getWebItemDesignQuery()
+						.getResptime());
+				flagDesign = true;
+			}
+			// 复位压差 resetdifferent
+			if (null != entity.getWebItemDesignQuery().getResetdifferent()) {
+				webItemDesign.setResetdifferent(entity.getWebItemDesignQuery()
+						.getResetdifferent() + "");
+				flagDesign = true;
+			} else {
+				webItemDesign.setResetdifferent(0 + "");
+				flagDesign = true;
+			}
+
+			if (flagDesign) {
+
+				if (null != entity.getWebItemDesignQuery().getId()) {
+					webItemDesign.setId(entity.getWebItemDesignQuery().getId());
+				} else {// 为空
+					webItemDesign.setInterId(entity.getBaseitemid());// 设置core
+																		// 的关联
+																		// tbase_item
+					webItemDesign.setBaseitemid(entity.getBaseitemid());
+				}
+				icitemDesignDao.saveOrUpdate(webItemDesign);// 保存 到排产系统 主键是自增的
+			}
+
+		}
+	}
+
+	private void webStandard(Icitems entity, WebIdentity identity,
+			WebItemStandard webItemStandard, boolean flagStandard) {
+		if (null != entity.getWebItemStandardQuery()) {
+
+			// 标准数据
+			// standardCost单位标准成本
+			if (null != entity.getWebItemStandardQuery().getStandardCost()) {
+				webItemStandard.setStandardCost(entity
+						.getWebItemStandardQuery().getStandardCost());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStandardCost(0d);
+			}
+			// cbappendRate附加费率(%)
+			if (null != entity.getWebItemStandardQuery().getCbappendRate()) {
+				webItemStandard.setCbappendRate(entity
+						.getWebItemStandardQuery().getCbappendRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setCbappendRate(0d);
+			}
+			// costBomId成本BOM
+			if (null != entity.getWebItemStandardQuery().getCostBomId()) {
+				webItemStandard.setCostBomId(entity.getWebItemStandardQuery()
+						.getCostBomId());
+				flagStandard = true;
+			}
+			// cbrouting成本工艺路线
+			if (null != entity.getWebItemStandardQuery().getCbrouting()) {
+				webItemStandard.setCbrouting(entity.getWebItemStandardQuery()
+						.getCbrouting());
+				flagStandard = true;
+			}
+			// stdBatchQty标准加工批量
+			if (null != entity.getWebItemStandardQuery().getStdBatchQty()) {
+				webItemStandard.setStdBatchQty(entity.getWebItemStandardQuery()
+						.getStdBatchQty());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdBatchQty(0d);
+			}
+			// standardManHour单位标准工时(小时)
+			if (null != entity.getWebItemStandardQuery().getStandardManHour()) {
+				webItemStandard.setStandardManHour(entity
+						.getWebItemStandardQuery().getStandardManHour());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStandardManHour(0d);
+			}
+			// stdPayRate标准工资率
+			if (null != entity.getWebItemStandardQuery().getStdPayRate()) {
+				webItemStandard.setStdPayRate(entity.getWebItemStandardQuery()
+						.getStdPayRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdPayRate(0d);
+			}
+			// chgFeeRate变动制造费用分配率
+			if (null != entity.getWebItemStandardQuery().getChgFeeRate()) {
+				webItemStandard.setChgFeeRate(entity.getWebItemStandardQuery()
+						.getChgFeeRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setChgFeeRate(0d);
+			}
+			// stdFixFeeRate单位标准固定制造费用金额
+			if (null != entity.getWebItemStandardQuery().getStdFixFeeRate()) {
+				webItemStandard.setStdFixFeeRate(entity
+						.getWebItemStandardQuery().getStdFixFeeRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdFixFeeRate(0d);
+			}
+			// outMachFee单位委外加工费
+			if (null != entity.getWebItemStandardQuery().getOutMachFee()) {
+				webItemStandard.setOutMachFee(entity.getWebItemStandardQuery()
+						.getOutMachFee());
+				flagStandard = true;
+			} else {
+				webItemStandard.setOutMachFee(0d);
+			}
+			// pieceRate单位计件工资
+			if (null != entity.getWebItemStandardQuery().getPieceRate()) {
+				webItemStandard.setPieceRate(entity.getWebItemStandardQuery()
+						.getPieceRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setPieceRate(0d);
+			}
+			// povacctId采购订单差异科目
+			if (null != entity.getWebItemStandardQuery().getPovacctId()) {
+				webItemStandard.setPovacctId(entity.getWebItemStandardQuery()
+						.getPovacctId());
+				flagStandard = true;
+			}
+			// pivacctId采购发票差异科目
+			if (null != entity.getWebItemStandardQuery().getPivacctId()) {
+				webItemStandard.setPivacctId(entity.getWebItemStandardQuery()
+						.getPivacctId());
+				flagStandard = true;
+			}
+			// pcvacctId加工费差异科目
+			if (null != entity.getWebItemStandardQuery().getPcvacctId()) {
+				webItemStandard.setPcvacctId(entity.getWebItemStandardQuery()
+						.getPcvacctId());
+				flagStandard = true;
+			}
+			// mcvacctId材料成本差异科目
+			if (null != entity.getWebItemStandardQuery().getMcvacctId()) {
+				webItemStandard.setMcvacctId(entity.getWebItemStandardQuery()
+						.getMcvacctId());
+				flagStandard = true;
+			}
+			// cavacctId标准成本调整差异科目
+			if (null != entity.getWebItemStandardQuery().getCavacctId()) {
+				webItemStandard.setCavacctId(entity.getWebItemStandardQuery()
+						.getCavacctId());
+				flagStandard = true;
+			}
+			if (flagStandard) {
+				webItemStandard.setInterId(identity.getTnextValue());// 关联内码
+				webItemStandardDao.saveOrUpdate(webItemStandard);// 保存 到排产系统
+																	// 主键是自增的
+			}
+		}
+	}
+
+	private void webStandardUpdate(Icitems entity,
+			WebItemStandard webItemStandard, boolean flagStandard) {
+		if (null != entity.getWebItemStandardQuery()) {
+
+			// 标准数据
+			// standardCost单位标准成本
+			if (null != entity.getWebItemStandardQuery().getStandardCost()) {
+				webItemStandard.setStandardCost(entity
+						.getWebItemStandardQuery().getStandardCost());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStandardCost(0d);
+			}
+			// cbappendRate附加费率(%)
+			if (null != entity.getWebItemStandardQuery().getCbappendRate()) {
+				webItemStandard.setCbappendRate(entity
+						.getWebItemStandardQuery().getCbappendRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setCbappendRate(0d);
+			}
+			// costBomId成本BOM
+			if (null != entity.getWebItemStandardQuery().getCostBomId()) {
+				webItemStandard.setCostBomId(entity.getWebItemStandardQuery()
+						.getCostBomId());
+				flagStandard = true;
+			}
+			// cbrouting成本工艺路线
+			if (null != entity.getWebItemStandardQuery().getCbrouting()) {
+				webItemStandard.setCbrouting(entity.getWebItemStandardQuery()
+						.getCbrouting());
+				flagStandard = true;
+			}
+			// stdBatchQty标准加工批量
+			if (null != entity.getWebItemStandardQuery().getStdBatchQty()) {
+				webItemStandard.setStdBatchQty(entity.getWebItemStandardQuery()
+						.getStdBatchQty());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdBatchQty(0d);
+			}
+			// standardManHour单位标准工时(小时)
+			if (null != entity.getWebItemStandardQuery().getStandardManHour()) {
+				webItemStandard.setStandardManHour(entity
+						.getWebItemStandardQuery().getStandardManHour());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStandardManHour(0d);
+			}
+			// stdPayRate标准工资率
+			if (null != entity.getWebItemStandardQuery().getStdPayRate()) {
+				webItemStandard.setStdPayRate(entity.getWebItemStandardQuery()
+						.getStdPayRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdPayRate(0d);
+			}
+			// chgFeeRate变动制造费用分配率
+			if (null != entity.getWebItemStandardQuery().getChgFeeRate()) {
+				webItemStandard.setChgFeeRate(entity.getWebItemStandardQuery()
+						.getChgFeeRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setChgFeeRate(0d);
+			}
+			// stdFixFeeRate单位标准固定制造费用金额
+			if (null != entity.getWebItemStandardQuery().getStdFixFeeRate()) {
+				webItemStandard.setStdFixFeeRate(entity
+						.getWebItemStandardQuery().getStdFixFeeRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setStdFixFeeRate(0d);
+			}
+			// outMachFee单位委外加工费
+			if (null != entity.getWebItemStandardQuery().getOutMachFee()) {
+				webItemStandard.setOutMachFee(entity.getWebItemStandardQuery()
+						.getOutMachFee());
+				flagStandard = true;
+			} else {
+				webItemStandard.setOutMachFee(0d);
+			}
+			// pieceRate单位计件工资
+			if (null != entity.getWebItemStandardQuery().getPieceRate()) {
+				webItemStandard.setPieceRate(entity.getWebItemStandardQuery()
+						.getPieceRate());
+				flagStandard = true;
+			} else {
+				webItemStandard.setPieceRate(0d);
+			}
+			// povacctId采购订单差异科目
+			if (null != entity.getWebItemStandardQuery().getPovacctId()) {
+				webItemStandard.setPovacctId(entity.getWebItemStandardQuery()
+						.getPovacctId());
+				flagStandard = true;
+			}
+			// pivacctId采购发票差异科目
+			if (null != entity.getWebItemStandardQuery().getPivacctId()) {
+				webItemStandard.setPivacctId(entity.getWebItemStandardQuery()
+						.getPivacctId());
+				flagStandard = true;
+			}
+			// pcvacctId加工费差异科目
+			if (null != entity.getWebItemStandardQuery().getPcvacctId()) {
+				webItemStandard.setPcvacctId(entity.getWebItemStandardQuery()
+						.getPcvacctId());
+				flagStandard = true;
+			}
+			// mcvacctId材料成本差异科目
+			if (null != entity.getWebItemStandardQuery().getMcvacctId()) {
+				webItemStandard.setMcvacctId(entity.getWebItemStandardQuery()
+						.getMcvacctId());
+				flagStandard = true;
+			}
+			// cavacctId标准成本调整差异科目
+			if (null != entity.getWebItemStandardQuery().getCavacctId()) {
+				webItemStandard.setCavacctId(entity.getWebItemStandardQuery()
+						.getCavacctId());
+				flagStandard = true;
+			}
+			if (flagStandard) {
+
+				if (null != entity.getWebItemStandardQuery().getId()) {
+					webItemStandard.setId(entity.getWebItemStandardQuery()
+							.getId());
+				} else {// 为空
+					webItemStandard.setInterId(entity.getBaseitemid());// 设置core
+																		// 的关联
+																		// tbase_item
+				}
+
+				webItemStandardDao.saveOrUpdate(webItemStandard);// 保存 到排产系统
+																	// 主键是自增的
+			}
+		}
+	}
+
+	private void webQuality(Icitems entity, WebIdentity identity,
+			IcitemQuality webItemQuality, boolean flagQuality) {
+		if (null != entity.getWebItemQualityQuery()) {
+			// 质量资料
+			// finspectionLevel是否免检
+			if (null != entity.getWebItemQualityQuery().getFinspectionlevel()) {
+				webItemQuality.setFinspectionlevel(entity
+						.getWebItemQualityQuery().getFinspectionlevel());
+				flagQuality = true;
+			}
+			// inspectionLevelList采购检验方式
+			if (null != entity.getWebItemQualityQuery().getInspectionlevel()) {
+				webItemQuality.setInspectionlevel(entity
+						.getWebItemQualityQuery().getInspectionlevel());
+				flagQuality = true;
+			}
+			// proChkMdeList产品检验方式
+			if (null != entity.getWebItemQualityQuery().getProChkMde()) {
+				webItemQuality.setProChkMde(entity.getWebItemQualityQuery()
+						.getProChkMde());
+				flagQuality = true;
+			}
+			// wwchkMdeList委外加工检验方式
+			if (null != entity.getWebItemQualityQuery().getWwchkMde()) {
+				webItemQuality.setWwchkMde(entity.getWebItemQualityQuery()
+						.getWwchkMde());
+				flagQuality = true;
+			}
+			// sochkMdeList发货检验方式
+			if (null != entity.getWebItemQualityQuery().getSochkMde()) {
+				webItemQuality.setSochkMde(entity.getWebItemQualityQuery()
+						.getSochkMde());
+				flagQuality = true;
+			}
+			// wthDrwChkMdeList退货检验方式
+			if (null != entity.getWebItemQualityQuery().getWthDrwChkMde()) {
+				webItemQuality.setWthDrwChkMde(entity.getWebItemQualityQuery()
+						.getWthDrwChkMde());
+				flagQuality = true;
+			}
+			// stkChkMdeList库存检验方式
+			if (null != entity.getWebItemQualityQuery().getStkChkMde()) {
+				webItemQuality.setStkChkMde(entity.getWebItemQualityQuery()
+						.getStkChkMde());
+				flagQuality = true;
+			}
+			// otherChkMdeList其他检验方式
+			if (null != entity.getWebItemQualityQuery().getOtherChkMde()) {
+				webItemQuality.setOtherChkMde(entity.getWebItemQualityQuery()
+						.getOtherChkMde());
+				flagQuality = true;
+			}
+			// topicList来料检验方案
+			/*
+			 * if(null!=entity.getWebItemQualityQuery().gettopic){
+			 * webItemQuality
+			 * .setFinspectionlevel(entity.getWebItemQualityQuery()
+			 * .getFinspectionlevel()); //来料检测方案 topicid 排产基础表中
+			 * flagQuality=true; }
+			 */
+
+			// identifierList检验员
+			if (null != entity.getWebItemQualityQuery().getIdentifier()) {
+				webItemQuality.setIdentifier(entity.getWebItemQualityQuery()
+						.getIdentifier());
+				flagQuality = true;
+			}
+			if (flagQuality) {
+				webItemQuality.setInterId(identity.getTnextValue());// 关联内码
+				webItemQuality.setBaseitemid(identity.getTnextValue());
+				icitemQualityDao.saveOrUpdate(webItemQuality);// 保存 到排产系统 主键是自增的
+			}
+		}
+	}
+
+	private void webQualityUpdate(Icitems entity, IcitemQuality webItemQuality,
+			boolean flagQuality) {
+		if (null != entity.getWebItemQualityQuery()) {
+			// 质量资料
+			// finspectionLevel是否免检
+			if (null != entity.getWebItemQualityQuery().getFinspectionlevel()) {
+				webItemQuality.setFinspectionlevel(entity
+						.getWebItemQualityQuery().getFinspectionlevel());
+				flagQuality = true;
+			}
+			// inspectionLevelList采购检验方式
+			if (null != entity.getWebItemQualityQuery().getInspectionlevel()) {
+				webItemQuality.setInspectionlevel(entity
+						.getWebItemQualityQuery().getInspectionlevel());
+				flagQuality = true;
+			}
+			// proChkMdeList产品检验方式
+			if (null != entity.getWebItemQualityQuery().getProChkMde()) {
+				webItemQuality.setProChkMde(entity.getWebItemQualityQuery()
+						.getProChkMde());
+				flagQuality = true;
+			}
+			// wwchkMdeList委外加工检验方式
+			if (null != entity.getWebItemQualityQuery().getWwchkMde()) {
+				webItemQuality.setWwchkMde(entity.getWebItemQualityQuery()
+						.getWwchkMde());
+				flagQuality = true;
+			}
+			// sochkMdeList发货检验方式
+			if (null != entity.getWebItemQualityQuery().getSochkMde()) {
+				webItemQuality.setSochkMde(entity.getWebItemQualityQuery()
+						.getSochkMde());
+				flagQuality = true;
+			}
+			// wthDrwChkMdeList退货检验方式
+			if (null != entity.getWebItemQualityQuery().getWthDrwChkMde()) {
+				webItemQuality.setWthDrwChkMde(entity.getWebItemQualityQuery()
+						.getWthDrwChkMde());
+				flagQuality = true;
+			}
+			// stkChkMdeList库存检验方式
+			if (null != entity.getWebItemQualityQuery().getStkChkMde()) {
+				webItemQuality.setStkChkMde(entity.getWebItemQualityQuery()
+						.getStkChkMde());
+				flagQuality = true;
+			}
+			// otherChkMdeList其他检验方式
+			if (null != entity.getWebItemQualityQuery().getOtherChkMde()) {
+				webItemQuality.setOtherChkMde(entity.getWebItemQualityQuery()
+						.getOtherChkMde());
+				flagQuality = true;
+			}
+			// topicList来料检验方案
+			/*
+			 * if(null!=entity.getWebItemQualityQuery().gettopic){
+			 * webItemQuality
+			 * .setFinspectionlevel(entity.getWebItemQualityQuery()
+			 * .getFinspectionlevel()); //来料检测方案 topicid 排产基础表中
+			 * flagQuality=true; }
+			 */
+
+			// identifierList检验员
+			if (null != entity.getWebItemQualityQuery().getIdentifier()) {
+				webItemQuality.setIdentifier(entity.getWebItemQualityQuery()
+						.getIdentifier());
+				flagQuality = true;
+			}
+			if (flagQuality) {
+
+				if (null != entity.getWebItemQualityQuery().getId()) {
+					webItemQuality.setId(entity.getWebItemQualityQuery()
+							.getId());
+				} else {// 为空
+					webItemQuality.setInterId(entity.getBaseitemid());// 设置core
+																		// 的关联
+																		// tbase_item
+					webItemQuality.setBaseitemid(entity.getBaseitemid());
+				}
+				icitemQualityDao.saveOrUpdate(webItemQuality);// 保存 到排产系统 主键是自增的
+			}
+		}
+	}
+
+	private void webEntrance(Icitems entity, WebIdentity identity,
+			WebItemEntrance webItemEntrance, boolean flagEntrance) {
+		if (null != entity.getWebItemEntranceQuery()) {
+			if (null != entity.getWebItemEntranceQuery().getFnameEn()) {
+				webItemEntrance.setFnameEn(entity.getWebItemEntranceQuery()
+						.getFnameEn());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFmodelEn()) {
+				webItemEntrance.setFmodelEn(entity.getWebItemEntranceQuery()
+						.getFmodelEn());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFhsnumber()) {
+				webItemEntrance.setFhsnumber(entity.getWebItemEntranceQuery()
+						.getFhsnumber());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFexportRate()) {
+				webItemEntrance.setFexportRate(entity.getWebItemEntranceQuery()
+						.getFexportRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFexportRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFfirstUnitRate()) {
+				webItemEntrance.setFfirstUnitRate(entity
+						.getWebItemEntranceQuery().getFfirstUnitRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFfirstUnitRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFsecondUnitRate()) {
+				webItemEntrance.setFsecondUnitRate(entity
+						.getWebItemEntranceQuery().getFsecondUnitRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFsecondUnitRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFmanageType()) {
+				webItemEntrance.setFmanageType(entity.getWebItemEntranceQuery()
+						.getFmanageType());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFlenDecimal()) {
+				webItemEntrance.setFlenDecimal(entity.getWebItemEntranceQuery()
+						.getFlenDecimal());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFweightDecimal()) {
+				webItemEntrance.setFweightDecimal(entity
+						.getWebItemEntranceQuery().getFweightDecimal());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFcubageDecimal()) {
+				webItemEntrance.setFcubageDecimal(entity
+						.getWebItemEntranceQuery().getFcubageDecimal());
+				flagEntrance = true;
+			}
+			if (flagEntrance) {
+				webItemEntrance.setInterId(identity.getTnextValue());// 关联内码
+				webItemEntranceDao.saveOrUpdate(webItemEntrance);// 保存 到排产系统
+																	// 主键是自增的
+			}
+		}
+	}
+
+	private void webEntranceUpdate(Icitems entity,
+			WebItemEntrance webItemEntrance, boolean flagEntrance) {
+		if (null != entity.getWebItemEntranceQuery()) {
+			if (null != entity.getWebItemEntranceQuery().getFnameEn()) {
+				webItemEntrance.setFnameEn(entity.getWebItemEntranceQuery()
+						.getFnameEn());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFmodelEn()) {
+				webItemEntrance.setFmodelEn(entity.getWebItemEntranceQuery()
+						.getFmodelEn());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFhsnumber()) {
+				webItemEntrance.setFhsnumber(entity.getWebItemEntranceQuery()
+						.getFhsnumber());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFexportRate()) {
+				webItemEntrance.setFexportRate(entity.getWebItemEntranceQuery()
+						.getFexportRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFexportRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFfirstUnitRate()) {
+				webItemEntrance.setFfirstUnitRate(entity
+						.getWebItemEntranceQuery().getFfirstUnitRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFfirstUnitRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFsecondUnitRate()) {
+				webItemEntrance.setFsecondUnitRate(entity
+						.getWebItemEntranceQuery().getFsecondUnitRate());
+				flagEntrance = true;
+			} else {
+				webItemEntrance.setFsecondUnitRate(0d);
+			}
+			if (null != entity.getWebItemEntranceQuery().getFmanageType()) {
+				webItemEntrance.setFmanageType(entity.getWebItemEntranceQuery()
+						.getFmanageType());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFlenDecimal()) {
+				webItemEntrance.setFlenDecimal(entity.getWebItemEntranceQuery()
+						.getFlenDecimal());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFweightDecimal()) {
+				webItemEntrance.setFweightDecimal(entity
+						.getWebItemEntranceQuery().getFweightDecimal());
+				flagEntrance = true;
+			}
+			if (null != entity.getWebItemEntranceQuery().getFcubageDecimal()) {
+				webItemEntrance.setFcubageDecimal(entity
+						.getWebItemEntranceQuery().getFcubageDecimal());
+				flagEntrance = true;
+			}
+			if (flagEntrance) {
+				if (null != entity.getWebItemEntranceQuery().getId()) {
+					webItemEntrance.setId(entity.getWebItemEntranceQuery()
+							.getId());
+				} else {// 为空
+					webItemEntrance.setInterId(entity.getBaseitemid());// 设置core
+																		// 的关联
+																		// tbase_item
+				}
+				webItemEntranceDao.saveOrUpdate(webItemEntrance);// 保存 到排产系统
+																	// 主键是自增的
+			}
+		}
+	}
+
+	private void k3ItemVo(Icitems entity, ItemVo itemVo) {
+		/**
+		 * 必填
+		 */
+		itemVo.setNumber(entity.getItemcode());
+		itemVo.setName(entity.getItemname());
+		// itemVo.setDetail(1);//非必填
+		// itemVo.setDeleted(0);//非必填
+		// K3中全名
+		if (null != entity.getFullname()) {
+			itemVo.setFullName(entity.getFullname());
+		}
+		// 计量单位组名
+		if (null != entity.getUnitgroupname()) {
+			itemVo.setUnitgroupname(entity.getUnitgroupname());
+		}
+
+		itemVo.setParentNumber(entity.getItemparentcode());// 保存时可以填可以不填//现在是排产中必须有了
+	}
+
+	private void k3ItemVoUpdate(Icitems entity, ItemVo itemVo) {
+		/**
+		 * 必填
+		 */
+		itemVo.setNumber(entity.getItemcode());
+		itemVo.setName(entity.getItemname());
+		// itemVo.setDetail(1);//非必填
+		// itemVo.setDeleted(0);//非必填
+		itemVo.setFullName(entity.getFullname());
+		// 计量单位组名
+		if (null != entity.getUnitgroupname()) {
+			itemVo.setUnitgroupname(entity.getUnitgroupname());
+		}
+		itemVo.setParentNumber(entity.getItemparentcode());// 保存时可以填可以不填//现在是排产中必须有了
+	}
+
+	private void k3CoreVo(Icitems entity, ItemCoreVo itemCoreVo) {
+		if (null != entity.getWebItemCoreQuery()) {
+			if (null != entity.getWebItemCoreQuery().getAracctId()
+					&& 0 < entity.getWebItemCoreQuery().getAracctId()) {
+				// webItemCore.setAracctId(entity.getWebItemCoreQuery().getAracctId());
+				// itemCoreVo.setAcctName(entity.getWebItemCoreQuery().getAcctName());//同步K3关联的其他列表得用名称来找到对应的数据保存
+			}
+			if (null != entity.getWebItemCoreQuery().getOrderPrice()) {
+				// itemCoreVo.setOrderPrice(entity.getWebItemCoreQuery().getOrderPrice());
+			}
+			if (null != entity.getWebItemCoreQuery().getHelpCode()) {
+				// itemCoreVo.setHelpCode(entity.getWebItemCoreQuery().getHelpCode());
+			}
+			if (null != entity.getFormatno()) {
+				itemCoreVo.setModel(entity.getFormatno());
+			}
+		}
+	}
+
+	private void k3CoreVoUpdate(Icitems entity, ItemCoreVo itemCoreVo) {
+		if (null != entity.getWebItemCoreQuery()) {
+			if (null != entity.getWebItemCoreQuery().getAracctId()
+					&& 0 < entity.getWebItemCoreQuery().getAracctId()) {
+				// webItemCore.setAracctId(entity.getWebItemCoreQuery().getAracctId());
+				// itemCoreVo.setAcctName(entity.getWebItemCoreQuery().getAcctName());//同步K3关联的其他列表得用名称来找到对应的数据保存
+			}
+			if (null != entity.getWebItemCoreQuery().getOrderPrice()) {
+				// itemCoreVo.setOrderPrice(entity.getWebItemCoreQuery().getOrderPrice());
+			}
+			if (null != entity.getWebItemCoreQuery().getHelpCode()) {
+				// itemCoreVo.setHelpCode(entity.getWebItemCoreQuery().getHelpCode());
+			}
+			if (null != entity.getFormatno()) {
+				itemCoreVo.setModel(entity.getFormatno());
+			}
+		}
+	}
+
+	private void k3BaseVo(Icitems entity, ItemBaseVo itemBaseVo) {
+		itemBaseVo.setErpClsId(entity.getFinterid());
+		// 排产中基本资料2 中有值,需要同时在K3中存一份
+		// lowLimit
+		// if(null!=entity.getWebItemBaseQuery().getLowLimit()){
+		itemBaseVo.setLowLimit(0d);
+		// }
+		// highLimit
+		// if(null!=entity.getWebItemBaseQuery().getHighLimit()){
+		itemBaseVo.setHighLimit(1000d);
+		// }
+		itemBaseVo.setSecCoefficient(0d);
+
+		if (null != entity.getWebItemBaseQuery()) {
+			// K3中全名
+			if (null != entity.getWebItemBaseQuery().getFullname()) {
+				itemBaseVo.setFullname(entity.getWebItemBaseQuery()
+						.getFullname());
+			}
+			// 计量单位组unitGroupId measureunitId(排产表里面) orderUnitId saleUnitId
+			// productUnitId storeUnitId
+			if (null != entity.getWebItemBaseQuery().getUnitGroupId()) {
+
+				itemBaseVo.setUnitGroupId(Integer.valueOf(entity
+						.getWebItemBaseQuery().getUnitGroupId() + ""));
+			}
+			if (null != entity.getUnitid()) {
+
+				itemBaseVo.setUnitId(entity.getUnitid());
+				itemBaseVo.setOrderUnitId(entity.getUnitid());
+				itemBaseVo.setSaleUnitId(entity.getUnitid());
+				itemBaseVo.setProductUnitId(entity.getUnitid());
+				itemBaseVo.setStoreUnitId(entity.getUnitid());
+			}
+			if (null != entity.getStorage()) {
+				itemBaseVo.setDefaultLoc(Integer.valueOf(entity.getStorage()
+						+ ""));
+			}
+			// spid
+			if (null != entity.getPositionid()) {
+				// itemBaseVo.setSpid(Integer.valueOf( entity.getPositionid()+""
+				// ));
+			}
+			if (null != entity.getSuppliername()) {
+				// itemBaseVo.setSpid(Integer.valueOf( entity.getPositionid()+""
+				// ));
+				itemBaseVo.setSuppliername(entity.getSuppliername());
+			}
+			if (null != entity.getDepartname()) {
+				// itemBaseVo.setSpid(Integer.valueOf( entity.getPositionid()+""
+				// ));
+				itemBaseVo.setDepartname(entity.getDepartname());
+			}
+			// source
+			if (null != entity.getWebItemBaseQuery().getSource()) {
+				itemBaseVo.setSource(Integer.valueOf(entity
+						.getWebItemBaseQuery().getSource() + ""));
+			}
+			// qtyDecimal
+			if (null != entity.getWebItemBaseQuery().getQtyDecimal()) {
+				itemBaseVo.setQtyDecimal(Short.valueOf(entity
+						.getWebItemBaseQuery().getQtyDecimal() + ""));
+			}
+
+			// secInv
+			if (null != entity.getSecinv()) {
+				itemBaseVo.setSecInv(entity.getSecinv());
+			}
+			// useState
+			if (null != entity.getUsestatus()) {
+				if (1 != entity.getUsestatus()) {// 非使用
+					entity.setUsestatus(344);
+				} else {
+					entity.setUsestatus(341);
+				}
+				itemBaseVo.setUseState(entity.getUsestatus());
+			}
+			// isEquipment
+			if (null != entity.getWebItemBaseQuery().getIsEquipment()) {
+				// itemBaseVo.setIsEquipment(
+				// entity.getWebItemBaseQuery().getIsEquipment() );
+			}
+			// equipmentNum K3中不允许输入
+			// /itemBaseVo.setEquipmentNum(equipmentNum);
+			// isSparePart
+			if (null != entity.getWebItemBaseQuery().getIsSparePart()) {
+				// itemBaseVo.setIsSparePart(entity.getWebItemBaseQuery().getIsSparePart());
+			}
+			// secUnitId
+			if (null != entity.getWebItemBaseQuery().getSecUnitId()) {
+				// itemBaseVo.setSecUnitId(Integer.valueOf(
+				// entity.getWebItemBaseQuery().getSecUnitId() +"" ) );
+			}
+			// secCoefficient K3中默认初始化为0但不允许输入,排产系统中不显示保存时自 动存0
+			// if(null!=entity.getWebItemBaseQuery().getSecCoefficient()){
+
+			// }
+			// alias
+			if (null != entity.getWebItemBaseQuery().getAlias()) {
+				// itemBaseVo.setAlias(entity.getWebItemBaseQuery().getAlias());
+			}
+			// approveNo
+			if (null != entity.getWebItemBaseQuery().getApproveNo()) {
+				// itemBaseVo.setApproveNo(entity.getWebItemBaseQuery().getApproveNo());
+			}
+			// auxClassId
+			// itemBaseVo.setauxClassId(defaultLoc);不处理
+			// typeId
+			if (null != entity.getTypeId()) {
+				// itemBaseVo.setTypeId(entity.getTypeId());
+			}
+
+		}
+	}
+
+	private void k3BaseVoUpdate(Icitems entity, ItemBaseVo itemBaseVo) {
+		itemBaseVo.setErpClsId(entity.getFinterid());
+
+		if (null != entity.getWebItemBaseQuery()) {
+
+			// 计量单位组unitGroupId measureunitId(排产表里面) orderUnitId saleUnitId
+			// productUnitId storeUnitId
+			if (null != entity.getWebItemBaseQuery().getUnitGroupId()) {
+
+				itemBaseVo.setUnitGroupId(Integer.valueOf(entity
+						.getWebItemBaseQuery().getUnitGroupId() + ""));
+			}
+			if (null != entity.getUnitid()) {
+
+				itemBaseVo.setUnitId(entity.getUnitid());
+				itemBaseVo.setOrderUnitId(entity.getUnitid());
+				itemBaseVo.setSaleUnitId(entity.getUnitid());
+				itemBaseVo.setProductUnitId(entity.getUnitid());
+				itemBaseVo.setStoreUnitId(entity.getUnitid());
+			}
+			if (null != entity.getStorage()) {
+				itemBaseVo.setDefaultLoc(Integer.valueOf(entity.getStorage()
+						+ ""));
+			}
+			// spid
+			if (null != entity.getPositionid()) {
+				// itemBaseVo.setSpid(Integer.valueOf( entity.getPositionid()+""
+				// ));
+			}
+			// source
+			if (null != entity.getWebItemBaseQuery().getSource()) {
+				itemBaseVo.setSource(Integer.valueOf(entity
+						.getWebItemBaseQuery().getSource() + ""));
+			}
+			// qtyDecimal
+			if (null != entity.getWebItemBaseQuery().getQtyDecimal()) {
+				itemBaseVo.setQtyDecimal(Short.valueOf(entity
+						.getWebItemBaseQuery().getQtyDecimal() + ""));
+			}
+
+			// secInv
+			if (null != entity.getSecinv()) {
+				itemBaseVo.setSecInv(entity.getSecinv());
+			}
+			// useState
+			if (null != entity.getUsestatus()) {
+				if (1 != entity.getUsestatus()) {// 非使用
+					entity.setUsestatus(344);
+				} else {
+					entity.setUsestatus(341);
+				}
+				itemBaseVo.setUseState(entity.getUsestatus());
+			}
+			// isEquipment
+			if (null != entity.getWebItemBaseQuery().getIsEquipment()) {
+				// itemBaseVo.setIsEquipment(
+				// entity.getWebItemBaseQuery().getIsEquipment() );
+			}
+			// equipmentNum K3中不允许输入
+			// /itemBaseVo.setEquipmentNum(equipmentNum);
+			// isSparePart
+			if (null != entity.getWebItemBaseQuery().getIsSparePart()) {
+				// itemBaseVo.setIsSparePart(entity.getWebItemBaseQuery().getIsSparePart());
+			}
+			// secUnitId
+			if (null != entity.getWebItemBaseQuery().getSecUnitId()) {
+				// itemBaseVo.setSecUnitId(Integer.valueOf(
+				// entity.getWebItemBaseQuery().getSecUnitId() +"" ) );
+			}
+			// secCoefficient K3中默认初始化为0但不允许输入,排产系统中不显示保存时自 动存0
+			// if(null!=entity.getWebItemBaseQuery().getSecCoefficient()){
+
+			// }
+			// alias
+			if (null != entity.getWebItemBaseQuery().getAlias()) {
+				// itemBaseVo.setAlias(entity.getWebItemBaseQuery().getAlias());
+			}
+			// approveNo
+			if (null != entity.getWebItemBaseQuery().getApproveNo()) {
+				// itemBaseVo.setApproveNo(entity.getWebItemBaseQuery().getApproveNo());
+			}
+			// auxClassId
+			// itemBaseVo.setauxClassId(defaultLoc);不处理
+			// typeId
+			if (null != entity.getTypeId()) {
+				// itemBaseVo.setTypeId(entity.getTypeId());
+			}
+
+		}
+	}
+
+	private void k3MaterialVo(Icitems entity, ItemMaterialVo itemMaterialVo) {
+		boolean flagMaterial;
+		// 毛利率(%)profitRate
+		// if(null!=entity.getWebItemMaterialQuery().getProfitRate()){
+		itemMaterialVo.setProfitRate(0d);
+		// }
+		// 保质期(天)kfperiod
+		// if(null!=entity.getWebItemMaterialQuery().getKfperiod()){
+		itemMaterialVo.setKfperiod(0d);
+		// }
+		// 计划单价planPrice
+		// if(null!=entity.getWebItemMaterialQuery().getPlanPrice()){
+		itemMaterialVo.setPlanPrice(0d);
+		// }
+		// 失效提前期(天)beforeExpire
+		// if(null!=entity.getWebItemMaterialQuery().getBeforeExpire()){
+		itemMaterialVo.setBeforeExpire(0);
+		// }
+		// 计划单价planPrice
+		// if(null!=entity.getWebItemMaterialQuery().getPlanPrice()){
+		itemMaterialVo.setPlanPrice(0d);
+		// }
+		if (null != entity.getWebItemMaterialQuery()) {
+
+			// 存货科目
+			if (null != entity.getWebItemMaterialQuery().getAcctId()) {
+				itemMaterialVo.setAcctId(entity.getWebItemMaterialQuery()
+						.getAcctId());
+				flagMaterial = true;
+			}
+			// 销售收入科目
+			if (null != entity.getWebItemMaterialQuery().getSaleAcctId()) {
+				itemMaterialVo.setSaleAcctId(entity.getWebItemMaterialQuery()
+						.getSaleAcctId());
+				flagMaterial = true;
+			}
+			// 销售成本科
+			if (null != entity.getWebItemMaterialQuery().getCostAcctId()) {
+				itemMaterialVo.setCostAcctId(entity.getWebItemMaterialQuery()
+						.getCostAcctId());
+				flagMaterial = true;
+			}
+
+			// 采购负责人orderRectorList
+			if (null != entity.getWebItemMaterialQuery().getOrderRector()) {
+				itemMaterialVo.setOrderRector(Integer.valueOf(entity
+						.getWebItemMaterialQuery().getOrderRector() + ""));
+			}
+
+			// 销售单价fsaleprice
+			if (null != entity.getFsaleprice()) {
+				itemMaterialVo.setSalePrice(entity.getFsaleprice());// 在排产基础表中
+			}
+			// 是否采用业务批次管理isbatch 不同步
+			/*
+			 * if (null != entity.getIsbatch()) { if (1 == entity.getIsbatch())
+			 * { itemMaterialVo.setBatchManager(true); } else {
+			 * itemMaterialVo.setBatchManager(false); } }
+			 */
+			// 是否进行保质期管理iskfperiod
+			if (null != entity.getWebItemMaterialQuery().getIskfperiod()) {
+				// itemMaterialVo.setIskfperiod(
+				// entity.getWebItemMaterialQuery().getIskfperiod() );
+			}
+
+			// 计价方法trackList
+			if (null != entity.getWebItemMaterialQuery().getTrack()) {
+				itemMaterialVo.setTrack(entity.getWebItemMaterialQuery()
+						.getTrack());
+			}
+
+			// 单价精度priceDecimal
+			if (null != entity.getWebItemMaterialQuery().getPriceDecimal()) {
+				itemMaterialVo.setPriceDecimal(Short.valueOf(entity
+						.getWebItemMaterialQuery().getPriceDecimal() + ""));
+			}
+			// 科目代码goodSpecId
+			if (null != entity.getWebItemMaterialQuery().getGoodSpec()) {
+				// itemMaterialVo.setGoodSpec(
+				// entity.getWebItemMaterialQuery().getGoodSpec() );
+			}
+
+			// 成本项目costProjectId
+			if (null != entity.getWebItemMaterialQuery().getCostProject()) {
+				// itemMaterialVo.setCostProject(
+				// entity.getWebItemMaterialQuery().getCostProject() );
+			}
+			// 是否需要库龄管理stockTime
+			if (null != entity.getWebItemMaterialQuery().getStockTime()) {
+				// itemMaterialVo.setStockTime(
+				// entity.getWebItemMaterialQuery().getStockTime() );
+			}
+			// 是否需要进行订补货计划的运算bookPlan
+			if (null != entity.getWebItemMaterialQuery().getBookPlan()) {
+				// itemMaterialVo.setBookPlan(
+				// entity.getWebItemMaterialQuery().getBookPlan() );
+			}
+
+			// 税率(%)taxRate
+			if (null != entity.getTaxrate()) {
+				itemMaterialVo.setTaxRate(entity.getFtaxrate());// 排产基础表
+			}
+			// 代管物资科目adminAcctId
+			if (null != entity.getWebItemMaterialQuery().getAdminAcctId()) {
+				// itemMaterialVo.setAdminAcctId(
+				// entity.getWebItemMaterialQuery().getAdminAcctId() );
+			}
+			// 备注note
+			if (null != entity.getWebItemMaterialQuery().getNote()) {
+				itemMaterialVo.setNote(entity.getWebItemMaterialQuery()
+						.getNote());
+			}
+			// 是否农林计税isSpecialTax
+			if (null != entity.getWebItemMaterialQuery().getIsSpecialTax()) {
+				// itemMaterialVo.setIsSpecialTax(
+				// entity.getWebItemMaterialQuery().getIsSpecialTax() );
+			}
+			// 外购超收比例(%)oihighLimit
+			if (null != entity.getWebItemMaterialQuery().getOihighLimit()) {
+				itemMaterialVo.setCostProject(entity.getWebItemMaterialQuery()
+						.getCostProject());
+			}
+			// 外购欠收比例(%)oilowLimit
+			if (null != entity.getWebItemMaterialQuery().getOilowLimit()) {
+				itemMaterialVo.setOilowLimit(entity.getWebItemMaterialQuery()
+						.getOilowLimit());
+			}
+			// 销售超交比例(%)sohighLimit
+			if (null != entity.getWebItemMaterialQuery().getSohighLimit()) {
+				itemMaterialVo.setSohighLimit(entity.getWebItemMaterialQuery()
+						.getSohighLimit());
+			}
+			// 销售欠交比例(%)solowLimit
+			if (null != entity.getWebItemMaterialQuery().getSolowLimit()) {
+				itemMaterialVo.setSolowLimit(entity.getWebItemMaterialQuery()
+						.getSolowLimit());
+			}
+			// 每周/月第()天daysPer
+			if (null != entity.getWebItemMaterialQuery().getDaysPer()) {
+				// itemMaterialVo.setDaysPer(
+				// entity.getWebItemMaterialQuery().getDaysPer() );
+			}
+			// 上次盘点日期lastCheckDate 来自日历控件值
+			/*
+			 * if(null!=entity.getWebItemMaterialQuery().getLastCheckDate()){
+			 * itemMaterialVo.setLastCheckDate(
+			 * entity.getWebItemMaterialQuery().getLastCheckDate()
+			 * );//排产系统需要,K3不存,保持默认值 }
+			 */
+			// 盘点周期checkCycle
+			if (null != entity.getWebItemMaterialQuery().getCheckCycle()) {
+				// itemMaterialVo.setCheckCycle(
+				// entity.getWebItemMaterialQuery().getCheckCycle() );
+			}
+			// 盘点周期单位checkCycUnitList
+			if (null != entity.getWebItemMaterialQuery().getCheckCycUnit()) {
+				// itemMaterialVo.setCheckCycUnit(
+				// entity.getWebItemMaterialQuery().getCheckCycUnit() );
+			}
+			// 成本差异科目costDiffRate
+			if (null != entity.getWebItemMaterialQuery().getCostDiffRate()) {
+				// itemMaterialVo.setCostDiffRate(
+				// entity.getWebItemMaterialQuery().getCostDiffRate() );
+			}
+			// 参与结转式成本还原cbrestore
+			if (null != entity.getWebItemMaterialQuery().getCbrestore()) {
+				itemMaterialVo.setCbrestore(entity.getWebItemMaterialQuery()
+						.getCbrestore());
+			}
+		}
+	}
+
+	private void k3PlanVo(Icitems entity, ItemPlanVo icitemPlanVo) {
+		// inHighLimit完工超收比例(%)
+		// if(null!=entity.getWebItemPlanQuery().getInHighLimit()){
+		icitemPlanVo.setInHighLimit(0d);
+		// }
+		// inLowLimit完工欠收比例(%)
+		// if(null!=entity.getWebItemPlanQuery().getInLowLimit()){
+		icitemPlanVo.setInLowLimit(0d);
+		// }
+		// orderInterVal订货间隔期(天)
+		// if(null!=entity.getWebItemPlanQuery().getOrderInterVal()){
+		icitemPlanVo.setOrderInterVal(0);
+		// //}
+		// qtyMin最小订货量
+		// if(null!=entity.getQtyMin()){
+		icitemPlanVo.setQtyMin(1d);// 存到排产基础表里面
+		// }
+		// qtyMax最大订货量
+		// if(null!=entity.getWebItemPlanQuery().getQtyMax()){
+		icitemPlanVo.setQtyMax(1000d);
+		// }
+		// batchAppendQty批量增量
+		// if(null!=entity.getWebItemPlanQuery().getBatchAppendQty()){
+		icitemPlanVo.setBatchAppendQty(1d);
+		// }
+		// orderPoint再订货点
+		// if(null!=entity.getWebItemPlanQuery().getOrderPoint()){
+		icitemPlanVo.setOrderPoint(0d);
+		// }
+		// batChangeEconomy变动提前期批量
+		// if(null!=entity.getWebItemPlanQuery().getBatChangeEconomy()){
+		icitemPlanVo.setBatChangeEconomy(1d);
+		// }
+		// requirePoint需求时界(天)
+		// if(null!=entity.getWebItemPlanQuery().getRequirePoint()){
+		icitemPlanVo.setRequirePoint(1);
+		// }
+		// planPoint计划时界(天)
+		// if(null!=entity.getWebItemPlanQuery().getPlanPoint()){
+		icitemPlanVo.setPlanPoint(1);
+		// }
+		// dailyConsume日消耗量
+		// if(null!=entity.getWebItemPlanQuery().getDailyConsume()){
+		icitemPlanVo.setDailyConsume(0d);
+		// }
+		// kanBanCapability看板容量
+		// if(null!=entity.getWebItemPlanQuery().getKanBanCapability()){
+		icitemPlanVo.setKanBanCapability(1);
+		// }
+		// ctrlTypeList控制类型
+		// if(null!=entity.getWebItemPlanQuery().getCtrlType()){
+		icitemPlanVo.setCtrlType(14039);
+		// }
+		// 累计提前期
+		icitemPlanVo.setTotalTqq(0);
+		// 订货间隔期(天)
+		icitemPlanVo.setOrderInterVal(0);
+		// 固定/经济批量
+		icitemPlanVo.setBatFixEconomy(0d);
+		// 控制策略
+		icitemPlanVo.setCtrlStraregy(0);
+		// 倒冲仓库
+		icitemPlanVo.setBackFlushStockId(0);
+		// 倒冲仓位
+		icitemPlanVo.setBackFlushSpid(0);
+
+		if (null != entity.getWebItemPlanQuery()) {
+
+			// planTrategyList计划策略
+			if (null != entity.getWebItemPlanQuery().getPlanTrategy()) {
+				icitemPlanVo.setPlanTrategy(entity.getWebItemPlanQuery()
+						.getPlanTrategy());
+			}
+			// orderTrategyList订货策略
+			if (null != entity.getWebItemPlanQuery().getOrderTrategy()) {
+				icitemPlanVo.setOrderTrategy(entity.getWebItemPlanQuery()
+						.getOrderTrategy());
+			}
+			// fixLeadTime固定提前期
+			if (null != entity.getWebItemPlanQuery().getFixLeadTime()) {
+				icitemPlanVo.setFixLeadTime(entity.getWebItemPlanQuery()
+						.getFixLeadTime());
+			}
+			// leadTime变动提前期
+			if (null != entity.getWebItemPlanQuery().getLeadTime()) {
+				icitemPlanVo.setLeadTime(entity.getWebItemPlanQuery()
+						.getLeadTime());
+			}
+
+			// workTypeList默认生产类型
+			if (null != entity.getWebItemPlanQuery().getDefaultWorkTypeId()) {
+				// icitemPlanVo.setDefaultWorkTypeId(entity.getWebItemPlanQuery().getDefaultWorkTypeId());
+			}
+			// productPrincipalList生产负责人
+			if (null != entity.getWebItemPlanQuery().getProductPrincipal()) {
+				icitemPlanVo.setProductPrincipal(entity.getWebItemPlanQuery()
+						.getProductPrincipal());
+			}
+
+			// mrpcon MRP计算是否合并需求
+			if (null != entity.getWebItemPlanQuery().getMrpcon()) {
+				icitemPlanVo
+						.setMrpcon(entity.getWebItemPlanQuery().getMrpcon());
+			}
+			// containerName容器名称
+			if (null != entity.getWebItemPlanQuery().getContainerName()) {
+				// icitemPlanVo.setContainerName(entity.getWebItemPlanQuery().getContainerName());
+			}
+
+			// plannerList计划员
+			if (null != entity.getWebItemPlanQuery().getPlanner()) {
+				icitemPlanVo.setPlanner(entity.getWebItemPlanQuery()
+						.getPlanner());
+			}
+
+			// putInteger投料自动取整
+			if (null != entity.getWebItemPlanQuery().getPutInteger()) {
+				icitemPlanVo.setPutInteger(entity.getWebItemPlanQuery()
+						.getPutInteger());
+			}
+
+			// isBackFlush 是否倒冲
+			if (null != entity.getWebItemPlanQuery().getIsBackFlush()) {
+				// icitemPlanVo.setIsBackFlush(entity.getWebItemPlanQuery().getIsBackFlush());
+			}
+
+		}
+	}
+
+	private void k3DesignVo(Icitems entity, ItemDesignVo itemDesignVo) {
+		if (null != entity.getWebItemDesignQuery()) {
+
+			// chartNumber图号
+			if (null != entity.getFchartnumber()) {
+				// itemDesignVo.setChartNumber(entity.getFchartnumber());//图号是在排产基础表里面
+			}
+			// isKeyItem是否关键件
+			if (null != entity.getWebItemDesignQuery().getIsKeyItem()) {
+				// itemDesignVo.setIsKeyItem(entity.getWebItemDesignQuery().getIsKeyItem());
+			}
+
+			// grossWeight毛重
+			if (null != entity.getWebItemDesignQuery().getGrossWeight()) {
+				itemDesignVo.setGrossWeight(entity.getWebItemDesignQuery()
+						.getGrossWeight());
+			}
+			itemDesignVo.setMaund(0);
+			// maundId重量单位
+			if (null != entity.getWebItemDesignQuery().getMaund()) {
+				itemDesignVo
+						.setMaund(entity.getWebItemDesignQuery().getMaund());
+			}
+			itemDesignVo.setCubicMeasure(0);
+			// cubicMeasureId长度单位
+			if (null != entity.getWebItemDesignQuery().getCubicMeasure()) {
+				itemDesignVo.setCubicMeasure(entity.getWebItemDesignQuery()
+						.getCubicMeasure());
+			}
+			// version 版本号
+			if (null != entity.getWebItemDesignQuery().getVersion()) {
+				// itemDesignVo.setVersion(entity.getWebItemDesignQuery().getVersion());
+			}
+
+		}
+
+		// netWeight净重
+		// if(null!=entity.getWebItemDesignQuery().getGrossWeight() ){
+		itemDesignVo.setGrossWeight(0d);
+		// }
+
+		// length长度
+		// if(null!=entity.getWebItemDesignQuery().getGrossWeight() ){
+		itemDesignVo.setGrossWeight(0d);
+		// }
+		// width宽度
+		// if(null!=entity.getWebItemDesignQuery().getWidth() ){
+		itemDesignVo.setWidth(0d);
+		// }
+		// height高度
+		// if(null!=entity.getWebItemDesignQuery().getHeight() ){
+		itemDesignVo.setHeight(0d);
+		// }
+		// size体积
+		itemDesignVo.setSize(0d);
+		// cubicMeasureId长度单位
+		// if(null!=entity.getWebItemDesignQuery().getCubicMeasure() ){
+
+		// }
+	}
+
+	public void k3StandardVo(ItemStandardVo itemStandardVo) {
+		// if( null!=entity.getWebItemStandardQuery() ){
+
+		// 标准数据
+		// standardCost单位标准成本
+		// if(null!=entity.getWebItemStandardQuery().getStandardCost()){
+		itemStandardVo.setStandardCost(0d);
+		// }
+		// cbappendRate附加费率(%)
+		// if(null!=entity.getWebItemStandardQuery().getCbappendRate() ){
+		itemStandardVo.setCbappendRate(0d);
+		// }
+		// costBomId成本BOM
+		/*
+		 * if(null!=entity.getWebItemStandardQuery().getCostBomId() ){
+		 * itemStandardVo
+		 * .setCostBomId(entity.getWebItemStandardQuery().getCostBomId()); }
+		 * //cbrouting成本工艺路线
+		 * if(null!=entity.getWebItemStandardQuery().getCbrouting() ){
+		 * itemStandardVo
+		 * .setCbrouting(entity.getWebItemStandardQuery().getCbrouting()); }
+		 */
+		// stdBatchQty标准加工批量
+		// if(null!=entity.getWebItemStandardQuery().getStdBatchQty() ){
+		itemStandardVo.setStdBatchQty(1d);
+		// }
+		// standardManHour单位标准工时(小时)
+		// if(null!=entity.getWebItemStandardQuery().getStandardManHour() ){
+		itemStandardVo.setStandardManHour(0d);
+		// }
+		// stdPayRate标准工资率
+		// if(null!=entity.getWebItemStandardQuery().getStdPayRate() ){
+		itemStandardVo.setStdPayRate(0d);
+		// }
+		// chgFeeRate变动制造费用分配率
+		// if(null!=entity.getWebItemStandardQuery().getChgFeeRate()){
+		itemStandardVo.setChgFeeRate(0d);
+		// }
+		// stdFixFeeRate单位标准固定制造费用金额
+		// if(null!=entity.getWebItemStandardQuery().getStdFixFeeRate() ){
+		itemStandardVo.setStdFixFeeRate(0d);
+		// }
+		// outMachFee单位委外加工费
+		// if(null!=entity.getWebItemStandardQuery().getOutMachFee() ){
+		itemStandardVo.setOutMachFee(0d);
+		// }
+		// pieceRate单位计件工资
+		// if(null!=entity.getWebItemStandardQuery().getPieceRate() ){
+		itemStandardVo.setPieceRate(0d);
+		// }
+		/*
+		 * //povacctId采购订单差异科目
+		 * if(null!=entity.getWebItemStandardQuery().getPovacctId() ){
+		 * itemStandardVo
+		 * .setPovacctId(Integer.valueOf(entity.getWebItemStandardQuery
+		 * ().getPovacctId()+"")); } //pivacctId采购发票差异科目
+		 * if(null!=entity.getWebItemStandardQuery().getPivacctId() ){
+		 * itemStandardVo
+		 * .setPivacctId(Integer.valueOf(entity.getWebItemStandardQuery
+		 * ().getPivacctId()+"")); } //pcvacctId加工费差异科目
+		 * if(null!=entity.getWebItemStandardQuery().getPcvacctId() ){
+		 * itemStandardVo
+		 * .setPcvacctId(Integer.valueOf(entity.getWebItemStandardQuery
+		 * ().getPcvacctId()+"")); } //mcvacctId材料成本差异科目
+		 * if(null!=entity.getWebItemStandardQuery().getMcvacctId() ){
+		 * itemStandardVo.setMcvacctId(
+		 * Integer.valueOf(entity.getWebItemStandardQuery().getMcvacctId()+""));
+		 * } //cavacctId标准成本调整差异科目
+		 * if(null!=entity.getWebItemStandardQuery().getCavacctId() ){
+		 * webItemStandard
+		 * .setCavacctId(entity.getWebItemStandardQuery().getCavacctId()); }
+		 */
+		// }
+	}
+
+	private void k3QualityVo(ItemQualityVo itemQualityVo) {
+		// if( null!=entity.getWebItemQualityQuery() ){
+		// 质量资料
+
+		// inspectionLevelList采购检验方式
+		// if(null!=entity.getWebItemQualityQuery().getFinspectionlevel()){
+		itemQualityVo.setInspectionLevel(352);
+		// }
+		// proChkMdeList产品检验方式
+		// if(null!=entity.getWebItemQualityQuery().getProChkMde()){
+		itemQualityVo.setProChkMde(352);
+		// }
+		// wwchkMdeList委外加工检验方式
+		// if(null!=entity.getWebItemQualityQuery().getWwchkMde()){
+		itemQualityVo.setWwchkMde(352);
+		// }
+		// sochkMdeList发货检验方式
+		// if(null!=entity.getWebItemQualityQuery().getSochkMde()){
+		itemQualityVo.setSochkMde(352);
+		// }
+		// wthDrwChkMdeList退货检验方式
+		// if(null!=entity.getWebItemQualityQuery().getWthDrwChkMde()){
+		itemQualityVo.setWthDrwChkMde(352);
+		// }
+		// stkChkMdeList库存检验方式
+		// if(null!=entity.getWebItemQualityQuery().getStkChkMde()){
+		itemQualityVo.setStkChkMde(352);
+		// }
+		// otherChkMdeList其他检验方式
+		// if(null!=entity.getWebItemQualityQuery().getOtherChkMde()){
+		itemQualityVo.setOtherChkMde(352);
+		// }
+		// topicList来料检验方案
+		/*
+		 * if(null!=entity.getTopicid()){
+		 * webItemQuality.setFinspectionlevel(entity.Topicid); //来料检测方案 topicid
+		 * 排产基础表中 K3不需要 flagQuality=true; }
+		 */
+
+		// identifierList检验员
+		/*
+		 * if(null!=entity.getWebItemQualityQuery().getIdentifier()){
+		 * itemQualityVo
+		 * .setIdentifier(entity.getWebItemQualityQuery().getIdentifier()); }
+		 */
+		// }
+		itemQualityVo.setStkChkPrd(9999);
+		itemQualityVo.setStkChkAlrm(0);
+	}
+
+	private void k3EntranceVo(ItemEntranceVo itemEntranceVo) {
+		// if( null!=entity.getWebItemEntranceQuery() ){
+		/*
+		 * if(null!=entity.getWebItemEntranceQuery().getFnameEn()){
+		 * //itemEntranceVo
+		 * .setFnameEn(entity.getWebItemEntranceQuery().getFnameEn()); }
+		 * if(null!=entity.getWebItemEntranceQuery().getFmodelEn()){
+		 * //itemEntranceVo
+		 * .setFmodelEn(entity.getWebItemEntranceQuery().getFmodelEn()); }
+		 * if(null!=entity.getWebItemEntranceQuery().getFhsnumber()){
+		 * //itemEntranceVo
+		 * .setFhsnumber(entity.getWebItemEntranceQuery().getFhsnumber()); }
+		 */
+		// fimpostTaxRate 进口关税率%
+		itemEntranceVo.setFimpostTaxRate(0d);
+		// fconsumeTaxRate 进口消费税率%N
+		itemEntranceVo.setFconsumeTaxRate(0d);
+		// if(null!=entity.getWebItemEntranceQuery().getFexportRate()){
+		itemEntranceVo.setFexportRate(0d);
+		// }
+		// if(null!=entity.getWebItemEntranceQuery().getFfirstUnitRate()){
+		itemEntranceVo.setFfirstUnitRate(0d);
+		// }
+		// if(null!=entity.getWebItemEntranceQuery().getFsecondUnitRate()){
+		itemEntranceVo.setFsecondUnitRate(0d);
+		// }
+		itemEntranceVo.setFisManage(false);
+		// if(null!=entity.getWebItemEntranceQuery().getFmanageType()){
+		// itemEntranceVo.setFmanageType(0);
+		// }
+		// if(null!=entity.getWebItemEntranceQuery().getFlenDecimal()){
+		itemEntranceVo.setFlenDecimal(2);
+		// }
+		// if(null!=entity.getWebItemEntranceQuery().getFweightDecimal()){
+		itemEntranceVo.setFweightDecimal(4);
+		// }
+		// if(null!=entity.getWebItemEntranceQuery().getFcubageDecimal()){
+		itemEntranceVo.setFcubageDecimal(2);
+		// }
+		// }
+	}
+
+	/**
+	 * 
+	 */
+	public void updateItemOpt(Icitems entity) throws ServiceException {
+
+		entity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(),
+				"yyyy-MM-dd HH:mm:ss"));
+		entity.setItemproperty(entity.getFinterid());
+		entity.setOptType(2);
+
+		// 设置全名
+		if (null == entity.getFullname()) {
+			BaseItem basePItem = baseItemDao.getBaseByColumn("itemcode",
+					entity.getItemparentcode());
+			if (null != basePItem) {
+				entity.setFullname(basePItem.getFullname() + "_"
+						+ entity.getItemname());
+			}
+		}
+		if (341 != entity.getUsestatus()) {// 非使用
+			entity.setUsestatus(0);
+		} else {
+			entity.setUsestatus(1);
+		}
+		itemBasicDao.saveOrUpdate(entity);
+		// 排产系统中 保存
+		// core 中
+		// 排产基本资料1 core 表
+		WebItemCore webItemCore = new WebItemCore();
+		boolean flag = false;
+		webCoreUpdate(entity, webItemCore, flag);
+		// base 中
+		// 排产基本资料2 base 表
+		WebItemBase webItemBase = new WebItemBase();
+		boolean flagBase = false;
+		webBaseUpdate(entity, webItemBase, flagBase);
+		// 排产物料物流资料表
+		WebItemMaterial webItemMaterial = new WebItemMaterial();
+		boolean flagMaterial = false;
+		webMaterialUpdate(entity, webItemMaterial, flagMaterial);
+		// 排产系统计划资料信息
+		WebIcitemPlan webItemPlan = new WebIcitemPlan();
+		boolean flagPlan = false;
+		webPlanUpdate(entity, webItemPlan, flagPlan);
+		// 排产系统设计资料信息
+		IcitemDesign webItemDesign = new IcitemDesign();
+		boolean flagDesign = false;
+		webDesignUpdate(entity, webItemDesign, flagDesign);
+
+		// 排产系统标准资料信息
+		WebItemStandard webItemStandard = new WebItemStandard();
+		boolean flagStandard = false;
+		webStandardUpdate(entity, webItemStandard, flagStandard);
+		// 排产系统质量资料信息
+		IcitemQuality webItemQuality = new IcitemQuality();
+		boolean flagQuality = false;
+		webQualityUpdate(entity, webItemQuality, flagQuality);
+		// 排产系统进出口信息
+		WebItemEntrance webItemEntrance = new WebItemEntrance();
+		boolean flagEntrance = false;
+		webEntranceUpdate(entity, webItemEntrance, flagEntrance);
+
+		// 同时对K3数据库做更新
+		IItemOptService service = new ItemOptService();
+
+		// 物料基础表
+		ItemVo itemVo = new ItemVo();
+
+		// 设置短编码
+		String itemcode = entity.getItemcode();
+		int lastDotIndex = itemcode.lastIndexOf(".");
+		String itemShortNumber = itemcode.substring(lastDotIndex + 1,
+				itemcode.length());
+		itemVo.setShortNumber(itemShortNumber);
+
+		k3ItemVoUpdate(entity, itemVo);
+		// 基本资料1
+		ItemCoreVo itemCoreVo = new ItemCoreVo();
+		k3CoreVoUpdate(entity, itemCoreVo);
+
+		// 基本资料2
+		ItemBaseVo itemBaseVo = new ItemBaseVo();
+		k3BaseVoUpdate(entity, itemBaseVo);
+
+		/*
+		 * ItemVo itemVo = new ItemVo();
+		 * 
+		 * k3ItemVo(entity, itemVo);
+		 * 
+		 * ItemCoreVo itemCoreVo = entity.getItemCore(); if (null == itemCoreVo)
+		 * { itemCoreVo = new ItemCoreVo(); } // itemCoreVo.setHelpCode("111");
+		 * ItemBaseVo itemBaseVo = entity.getItemBase(); if (null == itemBaseVo)
+		 * { itemBaseVo = new ItemBaseVo(); }
+		 */
+		// itemBaseVo.setErpClsId(2);
+		// itemBaseVo.set
+		TREReturn trereturn = service.updateItemBaseInfo(
+				entity.getOlditemcode(), itemVo, itemCoreVo, itemBaseVo);
+
+		if (trereturn.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+		}
+
+		// 进出口资料
+		/*
+		 * ItemEntranceVo itemEntranceVo = entity.getItemEntrance(); if (null ==
+		 * itemEntranceVo) { itemEntranceVo = new ItemEntranceVo(); } TREReturn
+		 * returnEntrance = service.updateBaseIcitemEntrance(entity
+		 * .getOlditemcode(), itemVo, itemEntranceVo); if
+		 * (returnEntrance.getnCode() != 1) { throw new
+		 * ServiceException("保存失败，原因：" + returnEntrance.getStrInfo()); }
+		 */
+
+		WebItemEntranceQuery webItemEntranceQuery = entity
+				.getWebItemEntranceQuery();
+		if (null == webItemEntranceQuery) {
+			webItemEntranceQuery = new WebItemEntranceQuery();
+		}
+		TREReturn returnEntrance = service.updateBaseIcitemEntranceK3(
+				entity.getOlditemcode(), itemVo, webItemEntranceQuery);
+		if (returnEntrance.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnEntrance.getStrInfo());
+		}
+
+		// 计划资料
+		/*
+		 * ItemPlanVo itemPlanVo = entity.getItemPlan(); if (null == itemPlanVo)
+		 * { itemPlanVo = new ItemPlanVo(); } TREReturn returnPlan =
+		 * service.updateItemPlan(entity.getOlditemcode(), itemVo, itemPlanVo);
+		 * 
+		 * if (returnPlan.getnCode() != 1) { throw new
+		 * ServiceException("保存失败，原因：" + returnPlan.getStrInfo()); }
+		 */
+		WebIcitemPlanQuery webItemPlanQuery = entity.getWebItemPlanQuery();
+		if (null == webItemPlanQuery) {
+			webItemPlanQuery = new WebIcitemPlanQuery();
+		}
+		TREReturn returnPlan = service.updateItemPlanK3(
+				entity.getOlditemcode(), itemVo, webItemPlanQuery);
+		if (returnPlan.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnPlan.getStrInfo());
+		}
+		// 设计资料
+		/*
+		 * ItemDesignVo itemDesignVo = entity.getItemDesign(); if (null ==
+		 * itemDesignVo) { itemDesignVo = new ItemDesignVo(); } TREReturn
+		 * returnDesign = service.updateItemDesign(entity .getOlditemcode(),
+		 * itemVo, itemDesignVo); if (returnDesign.getnCode() != 1) { throw new
+		 * ServiceException("保存失败，原因：" + returnDesign.getStrInfo()); }
+		 */
+
+		IcitemDesignQuery webItemDesignQuery = entity.getWebItemDesignQuery();
+		if (null == webItemDesignQuery) {
+			webItemDesignQuery = new IcitemDesignQuery();
+		}
+		TREReturn returnDesign = service.updateItemDesignK3(
+				entity.getOlditemcode(), itemVo, webItemDesignQuery);
+		if (returnDesign.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnDesign.getStrInfo());
+		}
+
+		// 标准数据
+		/*
+		 * ItemStandardVo itemStandardVo = entity.getItemStandard(); if (null ==
+		 * itemStandardVo) { itemStandardVo = new ItemStandardVo(); } TREReturn
+		 * returnStandard = service.updateItemStandard(entity .getOlditemcode(),
+		 * itemVo, itemStandardVo); if (returnStandard.getnCode() != 1) { throw
+		 * new ServiceException("保存失败，原因：" + returnStandard.getStrInfo()); }
+		 */
+
+		WebItemStandardQuery webItemStandardQuery = entity
+				.getWebItemStandardQuery();
+		if (null == webItemStandardQuery) {
+			webItemStandardQuery = new WebItemStandardQuery();
+		}
+		TREReturn returnStandard = service.updateItemStandardK3(
+				entity.getOlditemcode(), itemVo, webItemStandardQuery);
+		if (returnStandard.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnStandard.getStrInfo());
+		}
+		// 质量资料
+		/*
+		 * ItemQualityVo itemQualityVo = entity.getItemQuality(); if (null ==
+		 * itemQualityVo) { itemQualityVo = new ItemQualityVo(); }
+		 * 
+		 * 
+		 * TREReturn returnQuality = service.updateItemQuality(entity
+		 * .getOlditemcode(), itemVo, itemQualityVo);
+		 * 
+		 * if (returnQuality.getnCode() != 1) { throw new
+		 * ServiceException("保存失败，原因：" + returnQuality.getStrInfo()); }
+		 */
+		IcitemQualityQuery webItemQualityQuery = entity
+				.getWebItemQualityQuery();
+		if (null == webItemQualityQuery) {
+			webItemQualityQuery = new IcitemQualityQuery();
+		}
+		// 质量资料
+		// inspectionLevelList采购检验方式
+		// if(null!=entity.getWebItemQualityQuery().getFinspectionlevel()){
+		webItemQualityQuery.setInspectionLevel(352);
+		// }
+		// proChkMdeList产品检验方式
+		// if(null!=entity.getWebItemQualityQuery().getProChkMde()){
+		webItemQualityQuery.setProChkMde(352);
+		// }
+		// wwchkMdeList委外加工检验方式
+		// if(null!=entity.getWebItemQualityQuery().getWwchkMde()){
+		webItemQualityQuery.setWwchkMde(352);
+		// }
+		// sochkMdeList发货检验方式
+		// if(null!=entity.getWebItemQualityQuery().getSochkMde()){
+		webItemQualityQuery.setSochkMde(352);
+		// }
+		// wthDrwChkMdeList退货检验方式
+		// if(null!=entity.getWebItemQualityQuery().getWthDrwChkMde()){
+		webItemQualityQuery.setWthDrwChkMde(352);
+		// }
+		// stkChkMdeList库存检验方式
+		// if(null!=entity.getWebItemQualityQuery().getStkChkMde()){
+		webItemQualityQuery.setStkChkMde(352);
+		// }
+		// otherChkMdeList其他检验方式
+		// if(null!=entity.getWebItemQualityQuery().getOtherChkMde()){
+		webItemQualityQuery.setOtherChkMde(352);
+
+		TREReturn returnQuality = service.updateItemQualityK3(
+				entity.getOlditemcode(), itemVo, webItemQualityQuery);
+		if (returnQuality.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnQuality.getStrInfo());
+		}
+		// 物流资料
+		// ItemMaterialVo itemMaterialVo = entity.getItemMaterial();
+		/*
+		 * if (null == itemMaterialVo) { itemMaterialVo = new ItemMaterialVo();
+		 * } TREReturn returnMaterial = service.updateItemMaterial(entity
+		 * .getOlditemcode(), itemVo, itemMaterialVo);
+		 */
+		WebItemMaterialQuery webItemMaterialQuery = entity
+				.getWebItemMaterialQuery();
+		if (null == webItemMaterialQuery) {
+			webItemMaterialQuery = new WebItemMaterialQuery();
+		}
+		TREReturn returnMaterial = service.updateItemMaterialK3(
+				entity.getOlditemcode(), itemVo, webItemMaterialQuery);
+
+		if (returnMaterial.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + returnMaterial.getStrInfo());
+		}
+	}
+
+	public static void main(String[] args) {
+		String a = "1";
+		System.out.println("1" == a);
+	}
+
+	@Override
+	public void saveDataToERP(Icitems entity) throws ServiceException {
+		// 同时保存到K3数据库一份
+		IItemOptService service = new ItemOptService();
+		// 物料基础表
+		ItemVo itemVo = new ItemVo();
+		k3ItemVo(entity, itemVo);
+		// 基本资料1
+		ItemCoreVo itemCoreVo = new ItemCoreVo();
+		k3CoreVo(entity, itemCoreVo);
+
+		// 基本资料2
+		ItemBaseVo itemBaseVo = new ItemBaseVo();
+		k3BaseVo(entity, itemBaseVo);
+
+		// 物流
+		ItemMaterialVo itemMaterialVo = new ItemMaterialVo();
+		k3MaterialVo(entity, itemMaterialVo);
+		// 计划资料
+		ItemPlanVo icitemPlanVo = new ItemPlanVo();
+		k3PlanVo(entity, icitemPlanVo);
+
+		// 设计资料
+		ItemDesignVo itemDesignVo = new ItemDesignVo();
+		k3DesignVo(entity, itemDesignVo);
+
+		// 标准
+		ItemStandardVo itemStandardVo = new ItemStandardVo();
+		k3StandardVo(itemStandardVo);
+		// 质量
+		ItemQualityVo itemQualityVo = new ItemQualityVo();
+		k3QualityVo(itemQualityVo);
+
+		// 进出口
+		ItemEntranceVo itemEntranceVo = new ItemEntranceVo();
+		k3EntranceVo(itemEntranceVo);
+
+		TREReturn trereturn = service.saveitem(itemVo, itemCoreVo, itemBaseVo,
+				itemMaterialVo, icitemPlanVo, itemDesignVo, itemStandardVo,
+				itemQualityVo, itemEntranceVo);
+		if (trereturn.getnCode() != 1) {
+			throw new ServiceException("保存失败，原因：" + trereturn.getStrInfo());
+		}
+		
+	}
+}

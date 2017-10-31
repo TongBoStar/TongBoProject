@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="GchartInfo">
+	<resultMap id="RM.GchartInfo" class="com.terrence.crm.dol.bean.GchartInfo">
+        <result property="gchartid" column="gchartid"/>
+        <result property="modelid" column="modelid"/>
+        <result property="startrow" column="startrow"/>
+        <result property="endrow" column="endrow"/>
+        <result property="chartname" column="chartname"/>
+        <result property="forder" column="forder"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="GchartInfo.columns">
+	    <![CDATA[
+        	t_check_gchart.gchartid ,
+        	t_check_gchart.modelid ,
+        	t_check_gchart.startrow ,
+        	t_check_gchart.endrow, 
+        	t_check_gchart.chartname,
+        	t_check_gchart.forder
+	    ]]>
+	</sql>
+	
+   <insert id="GchartInfo.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_check_gchart (
+        	modelid,
+        	startrow ,
+        	endrow,
+        	chartname,
+        	forder
+        ) VALUES (
+        	#modelid#,
+        	#startrow# ,
+        	#endrow#,
+        	#chartname#,
+        	#forder#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="gchartid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <select id="GchartInfo.findList" resultMap="RM.GchartInfo">
+    	select <include refid="GchartInfo.columns"/>	    
+	        from t_check_gchart where modelid = #modelid#
+    </select>
+    <select id="GchartInfo.getById" resultMap="RM.GchartInfo">
+    	select <include refid="GchartInfo.columns"/>	    
+	        from t_check_gchart where gchartid = $gchartid$
+    </select>
+	<update id="GchartInfo.update" parameterClass="com.terrence.crm.dol.bean.GchartInfo">         
+        UPDATE t_check_gchart set 
+        	startrow = #startrow# ,endrow = #endrow# ,chartname = #chartname# ,forder=#forder#
+        WHERE 
+	        gchartid = #gchartid# 
+    </update>
+    
+	<delete id="GchartInfo.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_gchart where gchartid = #gchartid# 
+    ]]>
+    </delete>
+</sqlMap>

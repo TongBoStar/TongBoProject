@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<!-- 不使用namespace是由于sql搜索定位会比较方便 -->
+<sqlMap>
+	<resultMap id="RM.Menu" class="com.terrence.core.dol.bean.Menu">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="pCode" column="pCode"/>
+        <result property="pId" column="pId"/>
+        <result property="url" column="url"/>
+        <result property="iconCls" column="iconCls"/>
+        <result property="sort" column="sort"/>
+        <result property="iconFont" column="iconFont"/>
+        <result property="iconColor" column="iconColor"/>
+        <result property="layers" column="layers"/>
+        <result property="keywords" column="keywords"/>
+        <result property="showPosition" column="showPosition"/>
+    </resultMap>
+
+	<sql id="Menu.columns">
+	    <![CDATA[
+        	 id,name,code,pCode,pId,url,iconCls,sort,iconFont,iconColor,layers,keywords,showPosition
+	    ]]>
+	</sql>
+
+	<sql id="Menu.findPage.where">
+	    <dynamic prepend="WHERE">
+	    	<isGreaterThan prepend="AND" property="layers" compareValue="0">
+	    		layers = #layers#
+	    	</isGreaterThan>
+	    	<isNotEmpty prepend="AND" property="pId">
+	   			pId = #pId# 
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="pCode">
+	   			pCode = #pCode# 
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="ids">
+	   			id in ($ids$)
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="likePCode">
+	   			code like '$likePCode$%' and code !=#likePCode#
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="keywords">
+	   			keywords = #keywords# 
+	     	</isNotEmpty>
+	    </dynamic>
+	</sql>
+
+	<select id="Menu.findPage.count" resultClass="long">
+        SELECT count(*) FROM core_menu <include refid="Menu.findPage.where"/>
+    </select>
+    
+    <select id="Menu.findPage" resultMap="RM.Menu">
+    	SELECT <include refid="Menu.columns"/> 
+    	FROM core_menu <include refid="Menu.findPage.where"/>
+		<isNotEmpty property="notTop"> and
+       	id not in(select $notTop$ id from core_menu <include refid="Menu.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty> ) 
+	   	</isNotEmpty>  
+	   	<isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+ 		</isNotEmpty>
+    </select>
+    
+    <select id="Menu.findList" resultMap="RM.Menu">
+    	SELECT <include refid="Menu.columns"/> 
+    	FROM core_menu <include refid="Menu.findPage.where"/>
+    </select>
+    <!-- 菜单添加父级查询 -->
+    <select id="Menu.findmenuList" resultMap="RM.Menu">
+    	SELECT <include refid="Menu.columns"/> 
+    	FROM core_menu where
+    	 <isNotEmpty prepend="AND" property="pId">
+	   			pId = #pId# 
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="pCode">
+	   			pCode = #pCode# 
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="ids">
+	   			id in ($ids$)
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="likePCode">
+	   			code like '$likePCode$%' and code !=#likePCode#
+	     	</isNotEmpty>
+	     	<isNotEmpty prepend="AND" property="keywords">
+	   			keywords = #keywords# 
+	     	</isNotEmpty>
+	   			layers&lt;3 and layers is not null	     	
+    </select>
+    
+    <select id="Menu.getById" resultMap="RM.Menu">
+       SELECT <include refid="Menu.columns"/>
+       <![CDATA[
+       FROM core_menu 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+   
+	<select id="Menu.getShowList" resultMap="RM.Menu">
+		select <include refid="Menu.columns"/> 
+		from core_menu 
+		where 
+			1=1 
+		<isNotEmpty prepend="AND" property="empId">
+		    id in (select distinct menuId from core_role_power where roleId in (select roleId from t_admin_role where adminId=#empId#) and code='show') 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="pId">
+	   		pId = #pId# 
+		</isNotEmpty>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+ 		</isNotEmpty>
+	</select>
+	
+	<select id="Menu.findByUserId" resultMap="RM.Menu" >
+	    SELECT <include refid="Menu.columns"/>  from core_menu 
+	    <![CDATA[
+	        WHERE id in (select distinct menuId from core_role_power where code='show' and roleId in (select roleId from t_admin_role where adminId=#userId#)) 
+	    ]]>
+    </select>
+   <insert id="Menu.insert" >
+       INSERT INTO core_menu
+       (
+        	name
+        	<isNotNull prepend="," property="keywords">
+	           keywords
+	       </isNotNull>
+	       <isNotNull prepend="," property="code">
+	           code
+	       </isNotNull>
+	       <isNotNull prepend="," property="pCode">
+	           pCode
+	       </isNotNull>
+	       <isNotNull prepend="," property="pId">
+	           pId 
+	       </isNotNull>
+	       <isNotNull prepend="," property="url">
+	           url
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconCls">
+	           iconCls
+	       </isNotNull>
+	       <isNotNull prepend="," property="sort">
+	           sort
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconFont">
+	           iconFont
+	       </isNotNull>
+	       <isNotNull prepend="," property="layers">
+	           layers
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconColor">
+	           iconColor
+	       </isNotNull>
+	       <isNotNull prepend="," property="showPosition">
+	           showPosition
+	       </isNotNull>
+       )
+       VALUES
+       (
+        	#name#
+        	<isNotNull prepend="," property="keywords">
+	           #keywords#
+	       </isNotNull>
+	       <isNotNull prepend="," property="code">
+	           #code#
+	       </isNotNull>
+	       <isNotNull prepend="," property="pCode">
+	           #pCode#
+	       </isNotNull>
+	       <isNotNull prepend="," property="pId">
+	           #pId#
+	       </isNotNull>
+	       <isNotNull prepend="," property="url">
+	           #url#
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconCls">
+	           #iconCls#
+	       </isNotNull>
+	       <isNotNull prepend="," property="sort">
+	           #sort#
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconFont">
+	           #iconFont#
+	       </isNotNull>
+	       <isNotNull prepend="," property="layers">
+	           #layers#
+	       </isNotNull>
+	       <isNotNull prepend="," property="iconColor">
+	           #iconColor#
+	       </isNotNull>
+	        <isNotNull prepend="," property="showPosition">
+	           #showPosition#
+	       </isNotNull>
+       )
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="Menu.update" >
+       UPDATE core_menu
+       <dynamic prepend="SET">
+       <isNotNull prepend="," property="name">
+           name = #name# 
+       </isNotNull>
+       <isNotNull prepend="," property="keywords">
+           keywords = #keywords# 
+       </isNotNull>
+       <isNotNull prepend="," property="code">
+           code = #code# 
+       </isNotNull>
+       <isNotNull prepend="," property="pCode">
+           pCode = #pCode# 
+       </isNotNull>
+       <isNotNull prepend="," property="pId">
+           pId = #pId# 
+       </isNotNull>
+       <isNotNull prepend="," property="url">
+           url = #url# 
+       </isNotNull>
+       <isNotNull prepend="," property="iconCls">
+           iconCls = #iconCls# 
+       </isNotNull>
+       <isNotNull prepend="," property="sort">
+           sort = #sort# 
+       </isNotNull>
+       <isNotNull prepend="," property="iconFont">
+           iconFont = #iconFont# 
+       </isNotNull>
+       <isNotNull prepend="," property="layers">
+           layers = #layers# 
+       </isNotNull>
+       <isNotNull prepend="," property="iconColor">
+           iconColor = #iconColor# 
+       </isNotNull>
+       <isNotNull prepend="," property="showPosition">
+           showPosition = #showPosition# 
+       </isNotNull>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+   <delete id="Menu.delete">
+       <![CDATA[
+       DELETE FROM core_menu WHERE
+       id = #id# 
+       ]]>
+	</delete>
+</sqlMap>

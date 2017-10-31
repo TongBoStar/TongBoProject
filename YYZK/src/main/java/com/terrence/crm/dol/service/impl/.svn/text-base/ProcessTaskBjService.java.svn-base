@@ -1,0 +1,165 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessTaskBj;
+import com.terrence.crm.dol.dao.IProcessTaskBjDao;
+import com.terrence.crm.dol.query.ProcessTaskBjQuery;
+import com.terrence.crm.dol.service.IProcessTaskBjService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class ProcessTaskBjService extends BaseService implements IProcessTaskBjService {
+	protected static Logger logger = LoggerFactory.getLogger(ProcessTaskBjService.class);
+	@Autowired
+	@Qualifier("processTaskBjDao")
+	private IProcessTaskBjDao processTaskBjDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ProcessTaskBj";
+	}
+	@Transactional(readOnly=true)
+	public ProcessTaskBj getById(java.lang.Long id) throws ServiceException
+	{
+		return processTaskBjDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProcessTaskBj entity) throws ServiceException
+	{
+		processTaskBjDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ProcessTaskBj entity) throws ServiceException
+	{
+		Long adId = processTaskBjDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProcessTaskBj entity) throws ServiceException
+	{
+		Integer returnValue =  processTaskBjDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = processTaskBjDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = processTaskBjDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProcessTaskBjQuery query = new ProcessTaskBjQuery();
+		try {
+			return processTaskBjDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessTaskBj> findPage(Page<ProcessTaskBj> page, ProcessTaskBjQuery query) throws ServiceException
+	{
+		return processTaskBjDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessTaskBj> findPage(Page<ProcessTaskBj> page,String statement, ProcessTaskBjQuery query) throws ServiceException
+	{
+		return processTaskBjDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTaskBj> findList(ProcessTaskBjQuery query) throws ServiceException
+	{
+		return processTaskBjDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTaskBj> findList(ProcessTaskBjQuery query,Integer pageSize) throws ServiceException
+	{
+		return processTaskBjDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProcessTaskBj> findList(ProcessTaskBjQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return processTaskBjDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessTaskBj> findAllList() throws ServiceException
+	{
+		return processTaskBjDao.findAllList();
+	}
+	@Override
+	public void saveCheckOut(ProcessTaskBj entity) throws Exception{
+		Date cdate=new Date();
+	   	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  
+		entity.setCreatedate(DateUtils.GetDateTime());
+		entity.setPlanenddate(sdf.parse(DateUtils.DateAdd(sdf.format(cdate), 7, 2)));	
+		if(null==entity.getExplain()){
+			entity.setExplain("");
+		}
+		
+		ProcessTaskBj pt=null;//processTaskBjDao.getByProperty("itemcode", entity.getItemcode());
+		
+		ProcessTaskBjQuery query=new ProcessTaskBjQuery();
+		query.setItemcode( entity.getItemcode());
+		query.setFverid(entity.getFverid());
+		List<ProcessTaskBj> list=processTaskBjDao.findList(query, 1);
+		if(list.size()>0)
+		{
+			pt=list.get(0);
+		}
+		
+		if(null==pt){
+			processTaskBjDao.saveOrUpdate(entity);
+		}
+		else
+		{
+			pt.setPlanenddate(entity.getPlanenddate());
+			pt.setExplain(entity.getExplain());
+			pt.setCreatedate(DateUtils.GetDateTime());
+			pt.setTasktype(entity.getTasktype());
+			processTaskBjDao.update(pt);
+		}
+		
+		
+		
+	}
+
+}

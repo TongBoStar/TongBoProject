@@ -1,0 +1,55 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PackageItem;
+import com.terrence.crm.dol.dao.IPackageItemDao;
+
+@Repository
+public class PackageItemDao extends BaseIbatisDao<PackageItem,java.lang.Long> implements IPackageItemDao{
+
+		
+	public void saveOrUpdate(PackageItem entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PackageItem";
+	}
+	public PackageItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PackageItem)this.getSqlMapClientTemplate().queryForObject("PackageItem.getByProperty", map);		
+	}
+
+	@Override
+	public List<Long> findpItemsByPid(Long pid) {
+		Map map=new HashMap();		
+		map.put("pid", pid);
+		return (List<Long>)this.getSqlMapClientTemplate().queryForList("PackageItem.findpItemsByPid", map);
+	}
+
+	@Override
+	public void deleteBypidandtplid(Long pid, Long tplid) {
+		Map map=new HashMap();		
+		map.put("pid", pid);
+		map.put("tplid", tplid);
+		this.getSqlMapClientTemplate().delete("PackageItem.deleteBypidandtplid", map);
+	}
+
+}

@@ -1,0 +1,74 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+
+@Repository
+public class IcbillnoDao extends BaseIbatisDao<Icbillno,java.lang.Long> implements IIcbillnoDao{
+
+		
+	public void saveOrUpdate(Icbillno entity) {
+		if(entity.getFbillid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Icbillno";
+	}
+	public Icbillno getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Icbillno)this.getSqlMapClientTemplate().queryForObject("Icbillno.getByProperty", map);		
+	}
+
+	@Override
+	public Icbillno findfcurno(IcbillnoQuery icbillnoQuery) {
+		return (Icbillno) this.getSqlMapClientTemplate().queryForObject("Icbillno.findfcurno", icbillnoQuery);
+	}
+
+	@Override
+	public void updatefcurno(Icbillno entity) {
+		this.getSqlMapClientTemplate().update("Icbillno.updatefcurno", entity);
+		
+	}
+	@Override
+	public String genflowcode(String code) throws ServiceException{
+		IcbillnoQuery icbillnoQuery = new IcbillnoQuery();
+		icbillnoQuery.setFpreletter(code);
+		Icbillno icbillno = (Icbillno) this.getSqlMapClientTemplate().queryForObject("Icbillno.findfcurno", icbillnoQuery);
+		String sssy = "";
+		Integer ay = icbillno.getFcurno();
+		String sy = ay.toString();
+		String ssy = "";
+		if((icbillno.getFlength()-sy.length())>0){
+			for(int y = 0;y<(icbillno.getFlength()-sy.length());y++){
+				ssy+="0";
+			}
+			sssy=icbillno.getFpreletter()+ssy + sy;
+		}else{
+			sssy= icbillno.getFpreletter() + sy;
+		}
+		Icbillno icq = new Icbillno();//查询完加1
+		icq.setFcurno(icbillno.getFcurno()+1);
+		icq.setFbillid(icbillno.getFbillid());
+		icq.setFpreletter(icbillno.getFpreletter());
+		this.getSqlMapClientTemplate().update("Icbillno.update.new.fcurno.data", icq);
+		return sssy;
+	}
+
+}

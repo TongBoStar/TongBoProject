@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="AgreementVar">
+
+<resultMap id="RM.AgreementVar" class="com.terrence.crm.dol.bean.AgreementVar">
+	<result property="id" column="id"/>
+	<result property="attrName" column="attrName"/>
+	<result property="attrLen" column="attrLen"/>
+	<result property="fmark" column="fmark"/>
+	<result property="remark" column="remark"/>
+	<result property="attrType" column="attrType"/>
+	<result property="fmust" column="fmust"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="AgreementVar.columns">
+	<![CDATA[
+		t_agreement_var.id ,
+		t_agreement_var.attrName ,
+		t_agreement_var.attrLen ,
+		t_agreement_var.fmark ,
+		t_agreement_var.remark ,
+		t_agreement_var.attrType ,
+		t_agreement_var.fmust
+	]]>
+</sql>
+
+<insert id="AgreementVar.insert" >
+	<![CDATA[
+	INSERT INTO t_agreement_var (
+		attrName,
+		attrLen,
+		fmark,
+		remark,
+		attrType,
+		fmust
+	) VALUES (
+		#attrName#,
+		#attrLen#,
+		#fmark#,
+		#remark#,
+		#attrType#,
+		#fmust#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="AgreementVar.update" parameterClass="com.terrence.crm.dol.bean.AgreementVar"> 
+	UPDATE t_agreement_var 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="attrName">
+			attrName = #attrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="attrLen">
+			attrLen = #attrLen# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="remark">
+			remark = #remark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="attrType">
+			attrType = #attrType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmust">
+			fmust = #fmust# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="AgreementVar.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_agreement_var.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="attrName">
+			t_agreement_var.attrName = #attrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="attrLen">
+			t_agreement_var.attrLen = #attrLen# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_agreement_var.fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="remark">
+			t_agreement_var.remark = #remark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="attrType">
+			t_agreement_var.attrType = #attrType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmust">
+			t_agreement_var.fmust = #fmust# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="AgreementVar.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_agreement_var.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="attrName">
+		t_agreement_var.attrName = #attrName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="attrLen">
+		t_agreement_var.attrLen = #attrLen# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_agreement_var.fmark = #fmark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="remark">
+		t_agreement_var.remark = #remark# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="attrType">
+		t_agreement_var.attrType = #attrType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmust">
+		t_agreement_var.fmust = #fmust# 
+	</isNotEmpty>
+</sql>
+
+<select id="AgreementVar.getById" resultMap="RM.AgreementVar">
+	select <include refid="AgreementVar.columns"/> from t_agreement_var where id=#id#
+</select>
+
+<select id="AgreementVar.getByProperty" resultMap="RM.AgreementVar">
+	select <include refid="AgreementVar.columns"/> from t_agreement_var where $propertyName$=#propertyValue#
+</select>
+
+<delete id="AgreementVar.delete">
+	<![CDATA[
+		DELETE FROM t_agreement_var WHERE id=#id#
+	]]>
+</delete>
+<delete id="AgreementVar.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_agreement_var WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="AgreementVar.findPage.count" resultClass="long">
+	select count(*) from t_agreement_var <include refid="AgreementVar.findPage.where"/>
+</select>
+
+<select id="AgreementVar.findPage" resultMap="RM.AgreementVar">
+	select <include refid="AgreementVar.columns"/> 
+		from t_agreement_var 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_agreement_var <include refid="AgreementVar.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="AgreementVar.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="AgreementVar.findList" resultMap="RM.AgreementVar">
+	SELECT <include refid="AgreementVar.columns"/> FROM t_agreement_var
+	<include refid="AgreementVar.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

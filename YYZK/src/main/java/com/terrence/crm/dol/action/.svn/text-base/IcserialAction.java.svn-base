@@ -1,0 +1,768 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.query.IcserialQuery;
+import com.terrence.crm.dol.service.IIcserialService;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/icserial")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "icserial." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class IcserialAction extends CrudActionSupport<Icserial>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("icserialService")
+	private IIcserialService icserialService;
+	
+	
+	private Icserial entity;
+
+	private IcserialQuery icserialQuery;
+	
+	
+	private java.lang.Long icserialId;
+	
+	/** 分页器 */
+	private Page<Icserial> page = new Page<Icserial>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Icserial> icserialList;
+	
+	private List<List<Icserial>> listicserialList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (icserialId != null ) {
+			entity = icserialService.getById(icserialId);
+		} else {
+			entity = new Icserial();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			icserialService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findList(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToPicking()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findList(icserialQuery, "Icserial.find.listToPicking");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String listToPdetail()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findList(icserialQuery, "Icserial.find.listToPdetail");
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("icserialId");
+			page.setOrder(Page.DESC);
+		}
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			page = icserialService.findPage(page, icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			icserialService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public void prepareUpdateIcserialNum() throws Exception{
+		prepareModel();
+	}
+	public String updateIcserialNum(){
+		try{
+			icserialService.updateIcserialNum(icserialQuery);		
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}	
+		
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = icserialService.getById(icserialId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			icserialList = icserialService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public void prepareSaveSerial() throws Exception{
+		prepareModel();
+	}
+	public String saveSerial() throws Exception {//保存序列号
+			
+			try {
+				icserialService.saveSerial(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+				
+			}
+			return JSON;
+		}
+	
+	public String findAllNumber()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findAllNumber(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 序列号查询，已锁库的除外
+	 * @return
+	 * @throws Exception
+	 */
+	public String findNumberNot()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			
+			icserialQuery.setLockstatus(0);//未锁库
+			icserialQuery.setFstatus(1);//在库
+			icserialQuery.setFvalid(1);//可用
+			icserialList = icserialService.findNumberNot(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public String findentitydata()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			
+			if(icserialQuery.getFxmark() != null){
+				icserialQuery.setDb(icserialQuery.getFxmark());
+			}else{
+				icserialQuery.setDb(3);
+			}
+			
+			icserialList = icserialService.findAllNumber(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String findataserila()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			
+			icserialList = icserialService.findAllNumber(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 修改退货物料的序列号状态
+	 * @throws Exception
+	 */
+	public void prepareUpdateIcserial() throws Exception{
+		prepareModel();
+	}
+	public String updateIcserial(){
+		try{
+			icserialService.updateIcserial(icserialQuery);		
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}	
+		
+		return JSON;
+	}
+	
+	/**
+	 * 退货序列号查询用
+	 * @return
+	 * @throws Exception
+	 */
+	public String findRENumber()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findRENumber(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 序列号管理查询
+	 * @return
+	 * @throws Exception
+	 */
+	public String findserialNumber()throws Exception
+	{
+		if(icserialQuery == null) {
+			icserialQuery = new IcserialQuery();
+		}
+		
+		try {
+			icserialList = icserialService.findserialNumber(icserialQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 序列号管理保存序列号
+	 * @throws Exception
+	 */
+	public void prepareSaveNumber() throws Exception{
+		prepareModel();
+	}
+	@Action("/updataserial/saveNumber")
+	public String saveNumber() throws Exception {//保存序列号
+			
+			try {
+				icserialService.saveNumber(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "保存成功";
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "保存失败";
+				
+			}
+			return JSON;
+		}
+	
+	/**
+	 * 序列号作废状态修改
+	 * @throws Exception
+	 */
+	public void prepareUpdateSerial() throws Exception{
+		prepareModel();
+	}
+	@Action("/updataserial/delserial")
+	public String updateSerial() throws Exception {//作废序列号
+			
+			try {
+				icserialService.updateSerial(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+				
+			}
+			return JSON;
+		}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Icserial getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public IcserialQuery getIcserialQuery() {
+		return icserialQuery;
+	}
+
+	
+	public void setIcserialQuery(IcserialQuery icserialQuery) {
+		this.icserialQuery = icserialQuery;
+	}
+
+	public void setIcserialId(java.lang.Long icserialId) {
+		this.icserialId = icserialId;
+	}
+	
+	
+	public java.lang.Long getIcserialId() {
+		return this.icserialId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Icserial> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Icserial> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Icserial> getIcserialList() {
+		return icserialList;
+	}
+
+	public List<List<Icserial>> getListicserialList() {
+		return listicserialList;
+	}
+
+	public void setListicserialList(List<List<Icserial>> listicserialList) {
+		this.listicserialList = listicserialList;
+	}
+	
+	
+}

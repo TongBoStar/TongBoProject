@@ -1,0 +1,666 @@
+package com.terrence.crm.dol.service.impl;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.bean.PlanTask;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.PurchasePlan;
+import com.terrence.crm.dol.bean.PurchaseplanDetail;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.dao.IPlanTaskDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.dao.IPurchasePlanDao;
+import com.terrence.crm.dol.dao.IPurchaseplanDetailDao;
+import com.terrence.crm.dol.dao.impl.PorequestDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.query.PlanTaskQuery;
+import com.terrence.crm.dol.query.PorequestQuery;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+import com.terrence.crm.dol.query.PurchasePlanQuery;
+import com.terrence.crm.dol.query.PurchaseplanDetailQuery;
+import com.terrence.crm.dol.service.IPlanTaskService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class PlanTaskService extends BaseService implements IPlanTaskService {
+	@Autowired
+	@Qualifier("planTaskDao")
+	private IPlanTaskDao planTaskDao;
+	@Autowired
+	@Qualifier("purchasePlanDao")
+	private IPurchasePlanDao purchasePlanDao;
+	
+	@Autowired
+	@Qualifier("purchaseplanDetailDao")
+	private IPurchaseplanDetailDao purchaseplanDetailDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao  icbillnoDao;
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	@Autowired
+	@Qualifier("porequestentryDao")
+	private IPorequestentryDao porequestentryDao;
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	@Override
+	public PlanTask getById(Long id) throws ServiceException {
+		PlanTask da = planTaskDao.getById(id);
+		ModelListQuery mquery = new ModelListQuery();
+		mquery.setDesignassistId(da.getSourceId());
+		mquery.setModelMark("t_bracket_list");
+		da.setBracketLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_bait_list");
+		da.setBaitLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assweld_list");
+		da.setAssweldLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_assemble_list");
+		da.setAssembleLists(modelListDao.findList(mquery));
+		mquery.setModelMark("t_delivery_list");
+		da.setDeliveryLists(modelListDao.findList(mquery));
+		return da;
+	}
+	@Override
+	public void saveOrUpdate(PlanTask entity) throws ServiceException {
+		planTaskDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(PlanTask entity) throws ServiceException {
+		return planTaskDao.save(entity);
+	}
+	@Override
+	public Integer update(PlanTask entity) throws ServiceException {
+		return planTaskDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return planTaskDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = planTaskDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<PlanTask> findPage(Page<PlanTask> page, PlanTaskQuery query) throws ServiceException{
+		return planTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PlanTask> findPage(Page<PlanTask> page,String statement, PlanTaskQuery query) throws ServiceException{
+		return planTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PlanTask> findList(PlanTaskQuery query) throws ServiceException{
+		return planTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PlanTask> findList(PlanTaskQuery query,Integer pageSize) throws ServiceException{
+		return planTaskDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PlanTask> findList(PlanTaskQuery query,String statement,Integer pageSize) throws ServiceException{
+		return planTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PlanTask> findAllList() throws ServiceException{
+		return planTaskDao.findAllList();
+	}
+	@Override
+	public void exeProcess(PlanTask entity, ProcessExetask processExetask)  throws Exception{
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);
+		if((Boolean)map.get("rebackTag")){
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+			changeMessage(entity,processExetask.getTaskCode(),map);
+		}else if((Boolean)map.get("flag")){
+			Integer step = (Integer)map.get("step");
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);
+			changeMessage(entity,processExetask.getTaskCode(),map);
+			if((Boolean)map.get("endTag")){//进入下推流程
+				PlanTask da = planTaskDao.getById(entity.getId());
+				ModelListQuery mquery = new ModelListQuery();
+				
+				if(processExetask.getTaskCode().equals("TO_BRACKET_PUSHPLAN_TASK")){
+					mquery.setDesignassistId(da.getSourceId());
+					mquery.setModelMark("t_bracket_list");
+					da.setBracketLists(modelListDao.findList(mquery));
+				}else if(processExetask.getTaskCode().equals("TO_BAIT_PUSHPLAN_TASK")){
+					mquery.setDesignassistId(da.getSourceId());
+					mquery.setModelMark("t_bait_list");
+					da.setBaitLists(modelListDao.findList(mquery));
+				}else if(processExetask.getTaskCode().equals("TO_ASSWELD_PUSHPLAN_TASK")){
+					mquery.setDesignassistId(da.getSourceId());
+					mquery.setModelMark("t_assweld_list");
+					da.setAssweldLists(modelListDao.findList(mquery));
+				}else if(processExetask.getTaskCode().equals("TO_ASSEMBLE_PUSHPLAN_TASK")){
+					mquery.setDesignassistId(da.getSourceId());
+					mquery.setModelMark("t_assemble_list");
+					da.setAssembleLists(modelListDao.findList(mquery));
+				}else if(processExetask.getTaskCode().equals("TO_DELIVERY_PUSHPLAN_TASK")){
+					mquery.setDesignassistId(da.getSourceId());
+					mquery.setModelMark("t_delivery_list");
+					da.setDeliveryLists(modelListDao.findList(mquery));
+				}
+				String pushTime = DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+				/**
+				 * 下推到采购计划中
+				 */
+				if(da!=null){
+					//采购任务表-》采购计划表
+					PurchasePlanQuery pquery = new PurchasePlanQuery();
+					pquery.setPlantaskid(da.getId());
+					List<PurchasePlan> plans = purchasePlanDao.findList(pquery);
+					PurchasePlan purchasePlan = new PurchasePlan();
+					Long planId = null;
+					if(plans!=null&&plans.size()>0){
+						purchasePlan = plans.get(0);
+						planId = purchasePlan.getId(); 
+					}else{
+						purchasePlan.setBaitDate(da.getBaitDate());
+						purchasePlan.setCreaterId(da.getCreaterId());
+						purchasePlan.setCreateTime(da.getCreateTime());
+						purchasePlan.setFcount(da.getFcount());
+						purchasePlan.setFmark(da.getFmark());
+						purchasePlan.setFstatus(null);
+						purchasePlan.setFstatusDesc(null);
+						purchasePlan.setMakeNumberCode(da.getMakeNumberCode());
+						/*SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddhhmm");
+						purchasePlan.setPlanCode("PPLAN"+sf.format(new Date()).substring(2, 12));*/
+						purchasePlan.setPlanCode(this.icbillnoDao.genflowcode("PPLAN"));
+						purchasePlan.setProductCode(da.getProductCode());
+						purchasePlan.setProductModel(da.getProductModel());
+						purchasePlan.setProductName(da.getProductName());
+						purchasePlan.setSourceId(da.getSourceId());
+						purchasePlan.setSourceCode(da.getSourceCode());
+						purchasePlan.setPlantaskid(da.getId());
+						purchasePlan.setPlantaskcode(da.getPlanTaskCode());
+						purchasePlan.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+						purchasePlan.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+						purchasePlan.setAddStatus(1);
+						purchasePlan.setPlanendtime(da.getPlanendtime()==null?null:da.getPlanendtime());//计划完成时间
+						planId = this.purchasePlanDao.save(purchasePlan);
+					}
+					System.out.println(planId);
+					//任务详单-》计划详细表
+					if(processExetask.getTaskCode().equals("TO_BRACKET_PUSHPLAN_TASK")){
+						List<ModelList> lists= da.getBracketLists();
+						saveOrUpdatedetail(uionModels(lists),planId);
+					}else if(processExetask.getTaskCode().equals("TO_BAIT_PUSHPLAN_TASK")){
+						List<ModelList> lists= da.getBaitLists();
+						saveOrUpdatedetail(uionModels(lists),planId);
+					}else if(processExetask.getTaskCode().equals("TO_ASSWELD_PUSHPLAN_TASK")){
+						List<ModelList> lists= da.getAssweldLists();
+						saveOrUpdatedetail(uionModels(lists),planId);
+					}else if(processExetask.getTaskCode().equals("TO_ASSEMBLE_PUSHPLAN_TASK")){
+						List<ModelList> lists= da.getAssembleLists();
+						saveOrUpdatedetail(uionModels(lists),planId);
+					}else if(processExetask.getTaskCode().equals("TO_DELIVERY_PUSHPLAN_TASK")){
+						List<ModelList> lists= da.getDeliveryLists();
+						saveOrUpdatedetail(uionModels(lists),planId);
+					}else{
+						
+					}
+					operationLogDao.save(ConfigTerrence.MODEL_PURCHASEPLAN, ConfigTerrence.OPT_ADD, "主键为："+planId+"的采购计划添加成功");
+					
+				}
+			}
+		}else{
+			throw new ServiceException((String)map.get("msg"));
+		}
+		planTaskDao.update(entity);
+		if(processExetask.getTaskCode().equals("TO_BRACKET_PUSHPLAN_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_PLANTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的采购任务支架下料审核成功");
+		}else if(processExetask.getTaskCode().equals("TO_BAIT_PUSHPLAN_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_PLANTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的采购任务下料审核成功");
+		}else if(processExetask.getTaskCode().equals("TO_ASSWELD_PUSHPLAN_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_PLANTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的采购任务组焊审核成功");
+		}else if(processExetask.getTaskCode().equals("TO_ASSEMBLE_PUSHPLAN_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_PLANTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的采购任务装配审核成功");
+		}else if(processExetask.getTaskCode().equals("TO_DELIVERY_PUSHPLAN_TASK")){
+			operationLogDao.save(ConfigTerrence.MODEL_PLANTASK, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getId()+"的采购任务发货审核成功");
+		}else{
+			
+		}
+	}
+	
+	public void dispatchStatus(PlanTask entity,String mark,Integer step,String desc){
+		if(mark.equals("TO_BRACKET_PUSHPLAN_TASK")){
+			entity.setBracketStatus(step);
+			entity.setBracketStatusDesc(desc);
+		}else if(mark.equals("TO_BAIT_PUSHPLAN_TASK")){
+			entity.setBaitStatus(step);
+			entity.setBaitStatusDesc(desc);
+		}else if(mark.equals("TO_ASSWELD_PUSHPLAN_TASK")){
+			entity.setAssweldStatus(step);
+			entity.setAssweldStatusDesc(desc);
+		}else if(mark.equals("TO_ASSEMBLE_PUSHPLAN_TASK")){
+			entity.setAssembleStatus(step);
+			entity.setAssembleStatusDesc(desc);
+		}else if(mark.equals("TO_DELIVERY_PUSHPLAN_TASK")){
+			entity.setDeliveryStatus(step);
+			entity.setDeliveryStatusDesc(desc);
+		}else{
+			
+		}
+	}
+	//更新和保存系统消息
+	public void changeMessage(PlanTask entity,String mark,Map<String,Object> map){
+		PlanTask da = planTaskDao.getById(entity.getId());
+		if(mark.equals("TO_BRACKET_PUSHPLAN_TASK")){
+			saveOrupdateMessage(da,"TO_BRACKET_PUSHPLAN_TASK",map,"采购任务支架下料待审核",1);
+		}else if(mark.equals("TO_BAIT_PUSHPLAN_TASK")){
+			saveOrupdateMessage(da,"TO_BAIT_PUSHPLAN_TASK",map,"采购任务下料待审核",1);
+		}else if(mark.equals("TO_ASSWELD_PUSHPLAN_TASK")){
+			saveOrupdateMessage(da,"TO_ASSWELD_PUSHPLAN_TASK",map,"采购任务组焊待审核",1);
+		}else if(mark.equals("TO_ASSEMBLE_PUSHPLAN_TASK")){
+			saveOrupdateMessage(da,"TO_ASSEMBLE_PUSHPLAN_TASK",map,"采购任务装配待审核",1);
+		}else if(mark.equals("TO_DELIVERY_PUSHPLAN_TASK")){
+			saveOrupdateMessage(da,"TO_DELIVERY_PUSHPLAN_TASK",map,"采购任务发货待审核",1);
+		}else{
+			
+		}
+	}
+	public void saveOrupdateMessage(PlanTask da,String mark,Map<String,Object> map,String mesname,Integer mestype){
+		//1先将原来的消息更新为status=2
+		MessageQuery query = new MessageQuery();
+		query.setFbillid(da.getId());
+		query.setProcessname(mark);
+		query.setSortColumns("id");
+		List<Message> lists = messageDao.findList(query);
+		if(lists!=null&&lists.size()>0){
+			Message mes = lists.get(lists.size()-1);
+			mes.setStatus(2);
+			mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+			this.messageDao.update(mes);
+		}
+		//2如果有当前执行人则插入数据
+		if(map!=null&&map.get("handlerIds")!=null){
+			List<Long> handlerIds = new ArrayList<Long>();
+			handlerIds = (List<Long>) map.get("handlerIds");
+			String empids="";
+			if(handlerIds!=null&&handlerIds.size()>0){
+				for(int i=0;i<handlerIds.size();i++){
+					if(i==handlerIds.size()-1){
+						empids +=handlerIds.get(i);
+					}else{
+						empids +=handlerIds.get(i)+",";
+					}
+				}
+			}
+			if(empids!=null&&!empids.equals("")){
+				Message message = new Message();
+				message.setName(mesname);//消息名称
+				message.setContent("任务单号："+da.getPlanTaskCode()+";产品编码："+da.getProductCode()+";产品名称："+da.getProductName()+";制令号："+da.getMakeNumberCode());//消息内容
+				message.setType(mestype);//单据类型
+				message.setFbillno(da.getPlanTaskCode());//单据编号
+				message.setFbillid(da.getId());//单据主键
+				message.setUrl("procure/plantask.htm");//链接地址
+				message.setStatus(1);//消息状态(1未处理2已处理)
+				message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+				message.setEmpids(empids);//执行人
+				message.setProcessname(mark);//流程名称
+				this.messageDao.save(message);
+			}
+		}
+	}
+	public void saveOrUpdatedetail(List<ModelList> lists,Long planId){
+		if(lists!=null&&lists.size()>0){
+			for(int i=0;i<lists.size();i++){
+				//根据物料名称和计划id查找计划详细表数据
+				PurchaseplanDetailQuery detailQuery = new PurchaseplanDetailQuery();
+				detailQuery.setPlanid(planId);
+				detailQuery.setItemcode(lists.get(i).getItemcode());
+				List<PurchaseplanDetail> details = this.purchaseplanDetailDao.findList(detailQuery);
+				//根据物料编码查找物料相关信息
+				BaseItem ppd = new BaseItem();//计算年采购量youtput、采购周期cyclename、安全库存secinv、在途数量 Makingnums、已有需求existednums、库存数量fqty、已有计划planednum 
+				BaseItemQuery basequery = new BaseItemQuery();
+				basequery.setItemcode(lists.get(i).getItemcode());
+				List<BaseItem> itemlist = this.baseItemDao.getPlanParam(basequery);
+				if(itemlist!=null&&itemlist.size()>0){
+					ppd = itemlist.get(0);
+				}
+				//将任务详细表-》计划详细表
+				PurchaseplanDetail detail = null;
+				if(details!=null&&details.size()>0){
+					detail = details.get(0);
+				}
+				if(detail==null)
+				{
+					detail=new PurchaseplanDetail();
+					detail.setPlannum((lists.get(i).getSumnum()==null?0:lists.get(i).getSumnum()));//本次计划
+					detail.setProperty(null);//物料归属
+					detail.setPlanid(planId);//计划id
+					detail.setItemcode(lists.get(i).getItemcode());//itemcode
+					detail.setStatus(0);//单据状态:0未审
+					detail.setRealnum(0.0);//实际下单数量
+				}else{
+					detail.setPlannum((lists.get(i).getSumnum()==null?0:lists.get(i).getSumnum())+(detail.getPlannum()==null?0:detail.getPlannum()));
+				}
+				/**
+				 * 年采购量youtput   采购周期cyclename  安全库存secinv  在途数量 Makingnums  已有需求existednums 库存数量fqty 
+					已有计划planednum  总需求amount  建议下单数量innum
+				 */
+				if(ppd==null){
+					detail.setCyclename(null);//采购周期
+					detail.setYoutput(0.0);//年采购量
+					detail.setExistednums(0.0);//已有需求
+					detail.setMakingnums(0.0);//在途数量
+					detail.setFqty(0.0);//库存数量
+					detail.setSecinv(0.0);//安全库存
+					detail.setPlanednum(0.0);//已有计划
+					detail.setAmount(detail.getPlannum());//总需求
+					detail.setInnum(detail.getPlannum());//建议下单数量
+				}else{
+					Double amount=0d;
+					detail.setCyclename(ppd.getCyclename()==null?null:ppd.getCyclename());//采购周期
+					detail.setYoutput(ppd.getYoutput()==null?0:ppd.getYoutput());//年采购量
+					detail.setExistednums(ppd.getExistednums()==null?0:ppd.getExistednums());//已有需求
+					detail.setMakingnums(ppd.getMakingnums()==null?0:ppd.getMakingnums());//在途数量
+					detail.setFqty(ppd.getFqty()==null?0:ppd.getFqty());//库存数量
+					detail.setSecinv(ppd.getSecinv()==null?0:ppd.getSecinv());//安全库存
+					detail.setPlanednum(ppd.getPlanednum()==null?0:ppd.getPlanednum());//已有计划
+					//原计算方式：下单量：(安全库存+本次计划+已有需求-库存量-在制品量-已有计划)>(年产量*系数)?(安全库存+本次计划+已有需求-库存量-在制品量-已有计划):(年产量*系数)
+					/*if((ppd.getFqty()==null?0:ppd.getFqty())+(ppd.getMakingnums()==null?0:ppd.getMakingnums())+detail.getPlanednum()-detail.getPlannum()-(ppd.getExistednums()==null?0:ppd.getExistednums())>(ppd.getSecinv()==null?0:ppd.getSecinv()))
+					{
+						amount=0d;
+					}
+					else
+					{
+						if((ppd.getYoutput()==null?0:ppd.getYoutput())*(ppd.getRatio()==null?0:ppd.getRatio())>(ppd.getSecinv()==null?0:ppd.getSecinv())+detail.getPlannum()+(ppd.getExistednums()==null?0:ppd.getExistednums())-(ppd.getFqty()==null?0:ppd.getFqty())-(ppd.getMakingnums()==null?0:ppd.getMakingnums())-detail.getPlanednum())
+						{
+							amount=(ppd.getYoutput()==null?0:ppd.getYoutput())*(ppd.getRatio()==null?0:ppd.getRatio());
+						}
+						else
+						{
+							amount=(ppd.getSecinv()==null?0:ppd.getSecinv())+detail.getPlannum()+(ppd.getExistednums()==null?0:ppd.getExistednums())-(ppd.getFqty()==null?0:ppd.getFqty())-(ppd.getMakingnums()==null?0:ppd.getMakingnums())-detail.getPlanednum();
+						}
+					}*/
+					//现已有计划没有参与计算:下单量：(安全库存+本次计划+已有需求-库存量-在制品量-已有计划)>(年产量*系数)?(安全库存+本次计划+已有需求-库存量-在制品量-已有计划):(年产量*系数)
+					/**此计算中本次计划均不参与计算
+					 * if（库存+在途数量+已有计划-本次计划-已有需求）》安全库存时：建议下单数量=0
+					 * else
+					 *     if(安全库存+本次计划+已有需求-库存量-在制品量-已有计划)>(年产量*系数)  建议下单数量=安全库存+本次计划+已有需求-库存量-在制品量-已有计划
+					 *     else 年产量*系数
+					 */
+					if((ppd.getFqty()==null?0:ppd.getFqty())+(ppd.getMakingnums()==null?0:ppd.getMakingnums())-detail.getPlannum()-(ppd.getExistednums()==null?0:ppd.getExistednums())>(ppd.getSecinv()==null?0:ppd.getSecinv()))
+					{
+						amount=0d;
+					}
+					else
+					{
+						if((ppd.getYoutput()==null?0:ppd.getYoutput())*(ppd.getRatio()==null?0:ppd.getRatio())>(ppd.getSecinv()==null?0:ppd.getSecinv())+detail.getPlannum()+(ppd.getExistednums()==null?0:ppd.getExistednums())-(ppd.getFqty()==null?0:ppd.getFqty())-(ppd.getMakingnums()==null?0:ppd.getMakingnums()))
+						{
+							amount=(ppd.getYoutput()==null?0:ppd.getYoutput())*(ppd.getRatio()==null?0:ppd.getRatio());
+						}
+						else
+						{
+							amount=(ppd.getSecinv()==null?0:ppd.getSecinv())+detail.getPlannum()+(ppd.getExistednums()==null?0:ppd.getExistednums())-(ppd.getFqty()==null?0:ppd.getFqty())-(ppd.getMakingnums()==null?0:ppd.getMakingnums());
+						}
+					}
+					detail.setAmount(amount);//总需求
+					detail.setInnum(amount);//建议下单数量
+				}
+				if(detail.getPlanenddate()==null){
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					detail.setPlanenddate(sdf.format(new Date()));//计划交货日期
+				}
+				this.purchaseplanDetailDao.saveOrUpdate(detail);
+			}
+		}
+	}
+	public List<ModelList> uionModels(List<ModelList> modelListLists){
+		//根据物料编码合并数据 合并数据时 如果单位为kg则合并aweight字段 否则合并 fcount字段
+		Map<String, ModelList> maps = new HashMap<String, ModelList>();
+		if(modelListLists!=null&&modelListLists.size()>0){
+			for(int i=0;i<modelListLists.size();i++){
+				ModelList model = modelListLists.get(i);
+				ModelList map = new ModelList();
+				if(model.getItemcode()!=null&&model.getItemcode()!=""){
+					map = maps.get(model.getItemcode());
+					if(map==null){
+						map = model;
+						if(map.getUnitname()!=null&&map.getUnitname().equals("kg")){
+							map.setSumnum(map.getAweight()==null?0.0:map.getAweight());
+						}else if(map.getUnitname()!=null){
+							map.setSumnum(map.getFcount()==null?0.0:map.getFcount());
+						}
+					}else{
+						if(map.getUnitname()!=null&&map.getUnitname().equals("kg")){
+							map.setSumnum((map.getSumnum()==null?0.0:map.getSumnum())+(model.getAweight()==null?0.0:model.getAweight()));
+						}else if(map.getUnitname()!=null){
+							map.setSumnum((map.getSumnum()==null?0.0:map.getSumnum())+(model.getFcount()==null?0.0:model.getFcount()));
+						}
+						
+					}
+					maps.put(model.getItemcode(), map);
+				}
+				
+			}
+		}
+		List<ModelList> modelListList = new ArrayList<ModelList>();
+		if(maps!=null){
+			Set<Map.Entry<String, ModelList>> entryseSet=maps.entrySet();
+			for (Map.Entry<String, ModelList> entry:entryseSet) {
+				ModelList models= entry.getValue();
+				if(models!=null){
+					modelListList.add(models);
+				}
+				
+			}
+		}
+		return modelListList;
+	}
+	
+	@Override
+	public void closeToJson(List<Long> checkedIdList, PlanTask entity)
+			throws Exception {
+		PlanTask temp = null;
+		for(Long id:checkedIdList){
+			temp = new PlanTask();
+			temp.setId(id);
+			temp.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			temp.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+			temp.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+			temp.setFstatus(100);
+			planTaskDao.update(temp);
+		}
+	}
+	@Override
+	public void unexamine(PlanTaskQuery planTaskQuery) throws Exception {
+		PlanTask planTask = planTaskDao.getById(planTaskQuery.getId());
+		PorequestentryQuery porequestentryQuery = new PorequestentryQuery();
+		porequestentryQuery.setSourcecode(planTask.getSourceCode());
+		List<Porequestentry> list = porequestentryDao.findItemcodeSum(porequestentryQuery);
+		if(null!=list&&list.size()>0){
+			throw new ServiceException("已经进入采购申请流程，请先处理!");
+		}
+		//采购计划单暂时不处理
+		//采购任务单改变状态
+		if(planTaskQuery.getFmark().equals("bracket")){
+			planTask.setBracketStatus(0);
+		}else if(planTaskQuery.getFmark().equals("bait")){
+			planTask.setBaitStatus(0);
+		}else if(planTaskQuery.getFmark().equals("assweld")){
+			planTask.setAssweldStatus(0);
+		}else if(planTaskQuery.getFmark().equals("assemble")){
+			planTask.setAssembleStatus(0);
+		}else{
+			planTask.setDeliveryStatus(0);
+		}
+		planTaskDao.update(planTask);
+	}
+	@Override
+	public void pushchange(List<ModelList> modelLists) throws Exception {
+		Map<String, ModelList> map = new HashMap<String, ModelList>();
+		Map<String, Double> porequestmap = new HashMap<String, Double>();
+		if(null!=modelLists&&modelLists.size()>0){
+			for(ModelList mo:modelLists){
+				map.put(mo.getItemcode(), mo);
+			}
+		}
+		PlanTaskQuery ptquery = new PlanTaskQuery();
+		ptquery.setSourceId(modelLists.get(0).getDesignassistId());
+		List<PlanTask> planTasks = planTaskDao.findList(ptquery);
+		boolean flag = false;
+		if(null!=planTasks&&planTasks.size()>0){
+			PlanTask planTask = planTasks.get(0);
+			//计算采购申请单中已经有多少单量
+			PorequestentryQuery porequestentryQuery = new PorequestentryQuery();
+			porequestentryQuery.setF102(planTask.getSourceCode());
+			List<Porequestentry> porequestentries = porequestentryDao.findList("Porequestentry.findBySourceCode.sum",porequestentryQuery);
+			for(Porequestentry porequestentry:porequestentries){
+				porequestmap.put(porequestentry.getItemcode(), porequestentry.getAmount());
+			}
+			if(modelLists.get(0).getModelMark().equals("t_bracket_list")){
+				if(null!=planTask.getBracketStatus()&&planTask.getBracketStatus().intValue()==100){
+					flag = true;
+				}
+			}else if(modelLists.get(0).getModelMark().equals("t_bait_list")){
+				if(null!=planTask.getBaitStatus()&&planTask.getBaitStatus().intValue()==100){
+					flag = true;
+				}
+			}else if(modelLists.get(0).getModelMark().equals("t_assweld_list")){
+				if(null!=planTask.getAssweldStatus()&&planTask.getAssweldStatus().intValue()==100){
+					flag = true;
+				}
+			}else if(modelLists.get(0).getModelMark().equals("t_assemble_list")){
+				if(null!=planTask.getAssembleStatus()&&planTask.getAssembleStatus().intValue()==100){
+					flag = true;
+				}
+			}else if(modelLists.get(0).getModelMark().equals("t_delivery_list")){
+				if(null!=planTask.getDeliveryStatus()&&planTask.getDeliveryStatus().intValue()==100){
+					flag = true;
+				}
+			}else{
+				
+			}
+			//根据本次变更的数量和申请单中已经有的数量作对比，看是否需要退订购买
+			if(flag){//已经下推过了
+				//变更采购计划
+				PurchasePlanQuery purchasePlanQuery = new PurchasePlanQuery();
+				purchasePlanQuery.setPlantaskid(planTask.getId());
+				List<PurchasePlan> purchasePlans = purchasePlanDao.findList(purchasePlanQuery);
+				if(null!=purchasePlans&&purchasePlans.size()>0){
+					PurchasePlan purchasePlan = purchasePlans.get(0);
+					PurchaseplanDetailQuery purchaseplanDetailQuery = new PurchaseplanDetailQuery();
+					purchaseplanDetailQuery.setPlanid(purchasePlan.getId());
+					List<PurchaseplanDetail> purchaseplanDetails = purchaseplanDetailDao.findList(purchaseplanDetailQuery);
+					if(null!=purchaseplanDetails&&purchaseplanDetails.size()>0){
+						for(PurchaseplanDetail temp:purchaseplanDetails){
+							if(map.containsKey(temp.getItemcode())&&porequestmap.containsKey(temp.getItemcode())){//计划明细中的物料在变更单中，而且采购计划中也存在
+								ModelList modelList = map.get(temp.getItemcode());
+								if(modelList.getChangestatus().intValue()==3){
+									if(modelList.getFcount()-porequestmap.get(temp.getItemcode())<=0){
+										temp.setPlannum(temp.getPlannum()-modelList.getFcount());//生成负数的计划,但是如果有需要购买的就减去删除的之后才是需要购买的数量
+										purchaseplanDetailDao.update(temp);
+									}else{
+										temp.setPlannum(modelList.getFcount()-temp.getPlannum()>0?0:temp.getPlannum()-modelList.getFcount());//申请单中本身就没有购买，但是变更中被删除，则现在购买量为0
+										purchaseplanDetailDao.update(temp);
+									}
+								}else if(modelList.getChangestatus().intValue()==1){//此条是新增的
+									temp.setAmount(modelList.getFcount()+temp.getPlannum());//与之前的累加
+									purchaseplanDetailDao.update(temp);
+								}else{//修改数量
+									if(modelList.getFcount().doubleValue()-modelList.getModifycount().doubleValue()>0){//数量减少
+										double lesscount = modelList.getFcount().doubleValue() - modelList.getModifycount().doubleValue();
+										if(temp.getPlannum().doubleValue()-lesscount>=0){//减少的数量比本次计划的少
+											temp.setAmount(temp.getPlannum().doubleValue()-lesscount);//与之前的相减
+										}else{//减少的数量比本次计划的多
+											if(lesscount-porequestmap.get(temp.getItemcode())<=0){//减少的数量不如购买的多
+												temp.setPlannum(temp.getPlannum()-modelList.getFcount());//生成负数的计划,但是如果有需要购买的就减去删除的之后才是需要购买的数量
+											}else{//减少的数量不如购买的多
+												temp.setPlannum(-porequestmap.get(temp.getItemcode()).doubleValue());
+											}
+										}
+										purchaseplanDetailDao.update(temp);	
+									}else{//数量增加
+										double addcount = modelList.getModifycount().doubleValue() - modelList.getFcount().doubleValue();
+										temp.setAmount(addcount+temp.getPlannum());//与之前的累加
+										purchaseplanDetailDao.update(temp);	
+									}
+								}
+								map.remove(modelList.getItemcode().trim());
+							}else if(map.containsKey(temp.getItemcode())&&!porequestmap.containsKey(temp.getItemcode())){//计划明细中的物料在变更单中，但是没有在采购计划中
+								ModelList modelList = map.get(temp.getItemcode());
+								if(modelList.getChangestatus().intValue()==3){
+									temp.setPlannum(modelList.getFcount()-temp.getPlannum()>0?0:temp.getPlannum()-modelList.getFcount());//申请单中本身就没有购买变，但是更中被删除，则现在购买量为0
+									//purchaseplanDetailDao.update(temp);
+									if(modelList.getFcount().doubleValue()-temp.getPlannum().doubleValue()>=0){
+										purchaseplanDetailDao.deleteById(temp.getPlandetailid());
+									}else{
+										purchaseplanDetailDao.update(temp);
+									}
+								}else if(modelList.getChangestatus().intValue()==1){//此条是新增的
+									temp.setPlannum(modelList.getFcount()+temp.getPlannum());//与之前的累加
+									purchaseplanDetailDao.update(temp);
+								}else{//修改数量
+									
+								}
+								map.remove(modelList.getItemcode().trim());
+							}else{//计划明细中的物料不在变更单中
+								//无操作
+							}
+						}
+						if(null!=map&&map.size()>0){
+							for(Entry<String, ModelList> entry:map.entrySet()){
+								ModelList modelList = entry.getValue();
+								PurchaseplanDetail purchaseplanDetail = new PurchaseplanDetail();
+								purchaseplanDetail.setPlanid(purchasePlan.getId());
+								purchaseplanDetail.setItemcode(modelList.getItemcode());
+								purchaseplanDetail.setItemname(modelList.getItemname());
+								purchaseplanDetail.setPlannum(modelList.getFcount());
+								purchaseplanDetailDao.save(purchaseplanDetail);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

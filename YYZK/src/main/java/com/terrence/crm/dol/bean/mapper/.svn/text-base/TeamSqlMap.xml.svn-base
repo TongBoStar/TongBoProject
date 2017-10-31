@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Team">
+
+        
+	<resultMap id="RM.Team" class="com.terrence.crm.dol.bean.Team">
+        <result property="teamseq" column="teamseq"/>
+        <result property="fdeptid" column="fdeptid"/>
+        <result property="adminid" column="adminid"/>
+        <result property="fname" column="fname"/>
+    </resultMap>
+	
+	  <resultMap id="Team.RM.select.list" class="com.terrence.crm.dol.bean.Team">
+        <result property="teamseq" column="teamseq"/>
+        <result property="fdeptid" column="fdeptid"/>
+        <result property="adminid" column="adminid"/>
+        <result property="fname" column="fname"/>
+        <result property="adminName" column="adminName"/>
+        <result property="teamname" column="teamname"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Team.columns">
+	    <![CDATA[
+        	t_team.teamseq ,
+        	t_team.fdeptid ,
+        	t_team.adminid ,
+        	t_team.fname 
+	    ]]>
+	</sql>
+	
+   <insert id="Team.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_team (
+        	fdeptid ,
+        	adminid ,
+        	fname 
+        ) VALUES (
+        	#fdeptid# ,
+        	#adminid# ,
+        	#fname# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="teamseq" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Team.update" parameterClass="com.terrence.crm.dol.bean.Team">         
+        UPDATE t_team 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fdeptid">
+	        	fdeptid = #fdeptid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        teamseq = #teamseq# 
+    </update>
+    
+	<delete id="Team.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_team where
+       teamseq = #teamseq# 
+    ]]>
+    </delete>
+    
+    <delete id="Team.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_team 
+        WHERE
+       teamseq in ($teamseq$) 
+    ]]>
+    </delete>
+    
+    <select id="Team.getById" resultMap="RM.Team">
+	    select <include refid="Team.columns"/>
+	    
+	        from t_team 
+	        where 
+		        teamseq = #teamseq# 
+	    
+    </select>
+    
+	<select id="Team.getByProperty" resultMap="RM.Team">
+		select <include refid="Team.columns"/> from t_team where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Team.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="teamseq">
+	             t_team.teamseq = #teamseq#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdeptid">
+	             t_team.fdeptid = #fdeptid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_team.adminid = #adminid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_team.fname like  ('%$fname$%')
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Team.findPage.and">
+			<isNotEmpty prepend="AND" property="teamseq">
+	             t_team.teamseq = #teamseq#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdeptid">
+	             t_team.fdeptid = #fdeptid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="adminid">
+	             t_team.adminid = #adminid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_team.fname  like  ('%$fname$%')
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Team.Entity" resultMap="RM.Team">
+    	SELECT 	<include refid="Team.columns"/> FROM t_team <include refid="Team.findPage.where"/>
+    </select>
+    
+    <select id="Team.findList" resultMap="RM.Team">
+    	SELECT 
+    		<include refid="Team.columns"/> 
+    	FROM 
+    		t_team
+		<include refid="Team.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Team.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_team
+         left join t_department on t_team.fdeptid = t_department.teamid
+	     left join t_admin on t_team.adminid = t_admin.adminId
+    ]]>
+		<include refid="Team.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Team.findPage" resultMap="RM.Team">
+    	select <include refid="Team.columns"/>	    
+	        from t_team 	   
+		<include refid="Team.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Team.findPage" resultMap="Team.RM.select.list">
+    	select <include refid="Team.columns"/>,t_admin.adminName adminName ,t_department.teamname teamname
+	        from t_team 
+	        left join t_department on t_team.fdeptid = t_department.teamid
+	        left join t_admin on t_team.adminid = t_admin.adminId
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       teamseq 
+	   not in(select $notTop$ 
+       teamseq 
+	   from t_team 
+	    left join t_department on t_team.fdeptid = t_department.teamid
+	        left join t_admin on t_team.adminid = t_admin.adminId
+	   <include refid="Team.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Team.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Team.getTeam.data.select" resultMap="Team.RM.select.list">
+	    select <include refid="Team.columns"/>,t_admin.adminName adminName ,t_department.teamname teamname
+	    
+	        from t_team 
+	         left join t_department on t_team.fdeptid = t_department.teamid
+	        left join t_admin on t_team.adminid = t_admin.adminId
+	        
+		        <include refid="Team.findPage.where"/>
+	    
+    </select>
+	
+</sqlMap>

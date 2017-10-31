@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Currency">
+
+        
+	<resultMap id="RM.Currency" class="com.terrence.crm.dol.bean.Currency">
+        <result property="fcurrencyid" column="fcurrencyid"/>
+        <result property="fdeleted" column="fdeleted"/>
+        <result property="fexchangerate" column="fexchangerate"/>
+        <result property="ffixrate" column="ffixrate"/>
+        <result property="fname" column="fname"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="foperator" column="foperator"/>
+        <result property="fscale" column="fscale"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Currency.columns">
+	    <![CDATA[
+        	t_currency.fcurrencyid ,
+        	t_currency.fdeleted ,
+        	t_currency.fexchangerate ,
+        	t_currency.ffixrate ,
+        	t_currency.fname ,
+        	t_currency.fnumber ,
+        	t_currency.foperator ,
+        	t_currency.fscale 
+	    ]]>
+	</sql>
+	
+   <insert id="Currency.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_currency (
+        	fcurrencyid ,
+        	fdeleted ,
+        	fexchangerate ,
+        	ffixrate ,
+        	fname ,
+        	fnumber ,
+        	foperator ,
+        	fscale 
+        ) VALUES (
+        	#fcurrencyid# ,
+        	#fdeleted# ,
+        	#fexchangerate# ,
+        	#ffixrate# ,
+        	#fname# ,
+        	#fnumber# ,
+        	#foperator# ,
+        	#fscale# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fcurrencyid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Currency.update" parameterClass="com.terrence.crm.dol.bean.Currency">         
+        UPDATE t_currency 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fdeleted">
+	        	fdeleted = #fdeleted# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fexchangerate">
+	        	fexchangerate = #fexchangerate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ffixrate">
+	        	ffixrate = #ffixrate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="foperator">
+	        	foperator = #foperator# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fscale">
+	        	fscale = #fscale# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fcurrencyid = #fcurrencyid# 
+    </update>
+    
+	<delete id="Currency.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_currency where
+       fcurrencyid = #fcurrencyid# 
+    ]]>
+    </delete>
+    
+    <delete id="Currency.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_currency 
+        WHERE
+       fcurrencyid in ($fcurrencyid$) 
+    ]]>
+    </delete>
+    
+    <select id="Currency.getById" resultMap="RM.Currency">
+	    select <include refid="Currency.columns"/>
+	    
+	        from t_currency 
+	        where 
+		        fcurrencyid = #fcurrencyid# 
+	    
+    </select>
+    
+	<select id="Currency.getByProperty" resultMap="RM.Currency">
+		select <include refid="Currency.columns"/> from t_currency where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Currency.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fcurrencyid">
+	             t_currency.fcurrencyid = #fcurrencyid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_currency.fdeleted = #fdeleted#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fexchangerate">
+	             t_currency.fexchangerate = #fexchangerate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ffixrate">
+	             t_currency.ffixrate = #ffixrate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_currency.fname = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_currency.fnumber = #fnumber#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="foperator">
+	             t_currency.foperator = #foperator#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fscale">
+	             t_currency.fscale = #fscale#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Currency.findPage.and">
+			<isNotEmpty prepend="AND" property="fcurrencyid">
+	             t_currency.fcurrencyid = #fcurrencyid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_currency.fdeleted = #fdeleted#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fexchangerate">
+	             t_currency.fexchangerate = #fexchangerate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ffixrate">
+	             t_currency.ffixrate = #ffixrate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_currency.fname = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_currency.fnumber = #fnumber#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="foperator">
+	             t_currency.foperator = #foperator#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fscale">
+	             t_currency.fscale = #fscale#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Currency.Entity" resultMap="RM.Currency">
+    	SELECT 	<include refid="Currency.columns"/> FROM t_currency <include refid="Currency.findPage.where"/>
+    </select>
+    
+    <select id="Currency.findList" resultMap="RM.Currency">
+    	SELECT 
+    		<include refid="Currency.columns"/> 
+    	FROM 
+    		t_currency
+		<include refid="Currency.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Currency.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_currency
+    ]]>
+		<include refid="Currency.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Currency.findPage" resultMap="RM.Currency">
+    	select <include refid="Currency.columns"/>	    
+	        from t_currency 	   
+		<include refid="Currency.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Currency.findPage" resultMap="RM.Currency">
+    	select <include refid="Currency.columns"/>	    
+	        from t_currency where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fcurrencyid 
+	   not in(select $notTop$ 
+       fcurrencyid 
+	   from t_currency <include refid="Currency.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Currency.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Currency.find.listAll" resultMap="RM.Currency"><!-- 币别查询 -->
+		select <include refid="Currency.columns"/> from t_currency
+	</select>
+	
+</sqlMap>

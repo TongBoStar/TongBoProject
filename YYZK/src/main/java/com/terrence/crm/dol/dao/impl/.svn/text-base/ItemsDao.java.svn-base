@@ -1,0 +1,66 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Items;
+import com.terrence.crm.dol.dao.IItemsDao;
+import com.terrence.crm.dol.query.ItemsQuery;
+
+@Repository
+public class ItemsDao extends BaseIbatisDao<Items,java.lang.Long> implements IItemsDao{
+
+		
+	public void saveOrUpdate(Items entity) {
+		if(entity.getItemid() == null) {
+			save(entity);
+		}
+		else {
+			update(entity);
+			
+		}
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Items";
+	}
+	public Items getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Items)this.getSqlMapClientTemplate().queryForObject("Items.getByProperty", map);		
+	}
+	
+	public List<Items> getListByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (List<Items>)this.getSqlMapClientTemplate().queryForList("Items.getByProperty", map);		
+	}
+
+	@Override
+	public List<Items> findlistDetail(ItemsQuery iQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Items.findlist.Detail.list",iQuery);
+	}
+
+	@Override
+	public Items findParent(ItemsQuery itemQuery) {
+		return (Items)this.getSqlMapClientTemplate().queryForObject("Items.findParent.Code", itemQuery);		
+	}
+	
+	public Integer updatechildinfo(Items entity) throws DataAccessException{
+		return  this.getSqlMapClientTemplate().update("Items.updatechildinfo",entity);
+		
+	}
+
+	@Override
+	public List<Items> findRootItem(ItemsQuery iQuery) {
+		return (List<Items>)this.getSqlMapClientTemplate().queryForList("Items.findRootItems",iQuery);
+	}
+}

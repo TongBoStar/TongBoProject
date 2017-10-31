@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Seorderentry;
+import com.terrence.crm.dol.query.SeorderentryQuery;
+import com.terrence.crm.dol.dao.ISeorderentryDao;
+import com.terrence.crm.dol.service.ISeorderentryService;
+
+@Service
+@Transactional
+public class SeorderentryService extends BaseService implements ISeorderentryService {
+	protected static Logger logger = LoggerFactory.getLogger(SeorderentryService.class);
+	@Autowired
+	@Qualifier("seorderentryDao")
+	private ISeorderentryDao seorderentryDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Seorderentry";
+	}
+	@Transactional(readOnly=true)
+	public Seorderentry getById(java.lang.Long id) throws ServiceException
+	{
+		return seorderentryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Seorderentry entity) throws ServiceException
+	{
+		seorderentryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Seorderentry entity) throws ServiceException
+	{
+		Long adId = seorderentryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Seorderentry entity) throws ServiceException
+	{
+		Integer returnValue =  seorderentryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = seorderentryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = seorderentryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SeorderentryQuery query = new SeorderentryQuery();
+		try {
+			return seorderentryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Seorderentry> findPage(Page<Seorderentry> page, SeorderentryQuery query) throws ServiceException
+	{
+		return seorderentryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Seorderentry> findPage(Page<Seorderentry> page,String statement, SeorderentryQuery query) throws ServiceException
+	{
+		return seorderentryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorderentry> findList(SeorderentryQuery query) throws ServiceException
+	{
+		return seorderentryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorderentry> findList(SeorderentryQuery query,Integer pageSize) throws ServiceException
+	{
+		return seorderentryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Seorderentry> findList(SeorderentryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return seorderentryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Seorderentry> findAllList() throws ServiceException
+	{
+		return seorderentryDao.findAllList();
+	}
+
+}

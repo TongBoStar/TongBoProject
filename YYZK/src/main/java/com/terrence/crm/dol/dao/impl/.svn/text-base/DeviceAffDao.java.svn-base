@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.DeviceAff;
+import com.terrence.crm.dol.dao.IDeviceAffDao;
+
+@Repository
+public class DeviceAffDao extends BaseIbatisDao<DeviceAff,java.lang.Long> implements IDeviceAffDao{
+
+		
+	public void saveOrUpdate(DeviceAff entity) {
+		if(entity.getAffid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "DeviceAff";
+	}
+	public DeviceAff getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (DeviceAff)this.getSqlMapClientTemplate().queryForObject("DeviceAff.getByProperty", map);		
+	}
+
+}

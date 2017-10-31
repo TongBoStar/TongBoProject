@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+	<resultMap id="RM.RolePower" class="com.terrence.core.dol.bean.RolePower">
+		<result property="id" column="id" />
+		<result property="roleId" column="roleId" />
+		<result property="code" column="code" />
+		<result property="authorityId" column="authorityId" />
+		<result property="menuId" column="menuId" />
+	</resultMap>
+
+	<sql id="RolePower.columns">
+       <![CDATA[
+           id,roleId,code,authorityId,menuId
+       ]]>
+	</sql>
+
+
+	<insert id="RolePower.insert">
+   	<![CDATA[
+       INSERT INTO core_role_power
+       (
+        roleId
+        ,code
+        ,authorityId
+        ,menuId
+       )
+       VALUES
+       (
+        #roleId#
+        ,#code#
+        ,#authorityId#
+        ,#menuId#
+       )
+   	]]>
+		<selectKey resultClass="java.lang.Long" type="post"
+			keyProperty="id">
+			SELECT @@identity
+		</selectKey>
+	</insert>
+
+	<update id="RolePower.update">
+		UPDATE core_role_power
+		<dynamic prepend="SET">
+			<isNotEmpty prepend="," property="roleId">
+				roleId = #roleId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="code">
+				code = #code#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="authorityId">
+				authorityId = #authorityId#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="menuId">
+				menuId = #menuId#
+			</isNotEmpty>
+		</dynamic>
+		WHERE
+		id = #id#
+	</update>
+
+	<delete id="RolePower.delete">
+       <![CDATA[
+       DELETE FROM core_role_power WHERE
+       id = #id# 
+       ]]>
+	</delete>
+
+	<delete id="RolePower.deleteByRoleId">
+       <![CDATA[
+       DELETE FROM core_role_power WHERE
+       roleId = #roleId# 
+       ]]>
+	</delete>
+
+	<select id="RolePower.getById" resultMap="RM.RolePower">
+		SELECT
+		<include refid="RolePower.columns" />
+       <![CDATA[
+       FROM core_role_power 
+       WHERE 
+       id = #id# 
+       ]]>
+	</select>
+
+	<sql id="RolePower.findPage.where">
+		<isNotEmpty prepend="AND" property="id">
+			id = #id#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="roleId">
+			roleId = #roleId#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="code">
+			code = #code#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="authorityId">
+			authorityId = #authorityId#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="roleIds">
+			roleId in ($roleIds$)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="menuId">
+			menuId = #menuId#
+		</isNotEmpty>
+	</sql>
+
+	<select id="RolePower.findPage.count" resultClass="long">
+		SELECT count(*) FROM core_role_power where 1=1
+		<include refid="RolePower.findPage.where" />
+	</select>
+
+	<select id="RolePower.findPage" resultMap="RM.RolePower">
+		SELECT
+		<include refid="RolePower.columns" />
+		FROM core_role_power where 1=1
+		<include refid="RolePower.findPage.where" />
+		<isNotEmpty property="notTop">
+			and
+			id not in(select $notTop$ id from core_role_power where 1=1
+			<include refid="RolePower.findPage.where" />
+			<isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>
+			)
+		</isNotEmpty>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+	<select id="RolePower.findList" resultMap="RM.RolePower">
+		SELECT
+		<include refid="RolePower.columns" />
+		FROM core_role_power where 1=1
+		<include refid="RolePower.findPage.where" />
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	</select>
+
+</sqlMap>

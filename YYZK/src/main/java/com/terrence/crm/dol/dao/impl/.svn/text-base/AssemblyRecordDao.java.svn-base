@@ -1,0 +1,56 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyRecord;
+import com.terrence.crm.dol.dao.IAssemblyRecordDao;
+import com.terrence.crm.dol.query.AssemblyRecordQuery;
+
+@Repository
+public class AssemblyRecordDao extends BaseIbatisDao<AssemblyRecord,java.lang.Long> implements IAssemblyRecordDao{
+
+		
+	public void saveOrUpdate(AssemblyRecord entity) {
+		if(entity.getRecordid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyRecord";
+	}
+	public AssemblyRecord getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyRecord)this.getSqlMapClientTemplate().queryForObject("AssemblyRecord.getByProperty", map);		
+	}
+
+	@Override
+	public AssemblyRecord findRecordData(AssemblyRecordQuery assemblyRecordQuery) {
+		return (AssemblyRecord) this.getSqlMapClientTemplate().queryForObject("AssemblyRecord.findRecordData", assemblyRecordQuery);
+	}
+
+	@Override
+	public void updateData(AssemblyRecord entity) {
+		this.getSqlMapClientTemplate().update("AssemblyRecord.update.data.for.newData", entity);
+	}
+
+	@Override
+	public AssemblyRecord findEntity(AssemblyRecordQuery aR) {
+		return (AssemblyRecord) this.getSqlMapClientTemplate().queryForObject("AssemblyRecord.find.Entity.data", aR);
+	}
+
+
+}

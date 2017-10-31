@@ -1,0 +1,130 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Currency;
+import com.terrence.crm.dol.dao.ICurrencyDao;
+import com.terrence.crm.dol.query.CurrencyQuery;
+import com.terrence.crm.dol.service.ICurrencyService;
+
+
+
+@Service
+@Transactional
+public class CurrencyService extends BaseService implements ICurrencyService {
+	protected static Logger logger = LoggerFactory.getLogger(CurrencyService.class);
+	@Autowired
+	@Qualifier("currencyDao")
+	private ICurrencyDao currencyDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Currency";
+	}
+	@Transactional(readOnly=true)
+	public Currency getById(java.lang.Long id) throws ServiceException
+	{
+		return currencyDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Currency entity) throws ServiceException
+	{
+		currencyDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Currency entity) throws ServiceException
+	{
+		Long adId = currencyDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Currency entity) throws ServiceException
+	{
+		Integer returnValue =  currencyDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = currencyDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = currencyDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CurrencyQuery query = new CurrencyQuery();
+		try {
+			return currencyDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Currency> findPage(Page<Currency> page, CurrencyQuery query) throws ServiceException
+	{
+		return currencyDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Currency> findPage(Page<Currency> page,String statement, CurrencyQuery query) throws ServiceException
+	{
+		return currencyDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Currency> findList(CurrencyQuery query) throws ServiceException
+	{
+		return currencyDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Currency> findList(CurrencyQuery query,Integer pageSize) throws ServiceException
+	{
+		return currencyDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Currency> findList(CurrencyQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return currencyDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Currency> findAllList() throws ServiceException
+	{
+		return currencyDao.findAllList();
+	}
+	@Override
+	public List<Currency> findlistAll() throws ServiceException {
+		return currencyDao.findlistAll();
+	}
+
+}

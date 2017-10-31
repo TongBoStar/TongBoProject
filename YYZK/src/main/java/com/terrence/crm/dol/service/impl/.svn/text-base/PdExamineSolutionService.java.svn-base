@@ -1,0 +1,216 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts2.ServletActionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdExamineSolution;
+import com.terrence.crm.dol.bean.PdExamineSolutionItem;
+import com.terrence.crm.dol.bean.PdExamineSolutionItemCol;
+import com.terrence.crm.dol.dao.IPdExamineSolutionDao;
+import com.terrence.crm.dol.dao.IPdExamineSolutionItemColDao;
+import com.terrence.crm.dol.dao.IPdExamineSolutionItemDao;
+import com.terrence.crm.dol.query.PdExamineSolutionItemColQuery;
+import com.terrence.crm.dol.query.PdExamineSolutionItemQuery;
+import com.terrence.crm.dol.query.PdExamineSolutionQuery;
+import com.terrence.crm.dol.service.IPdExamineSolutionService;
+
+@Service
+@Transactional
+public class PdExamineSolutionService extends BaseService implements IPdExamineSolutionService {
+	protected static Logger logger = LoggerFactory.getLogger(PdExamineSolutionService.class);
+	@Autowired
+	@Qualifier("pdExamineSolutionDao")
+	private IPdExamineSolutionDao pdExamineSolutionDao;
+	@Autowired
+	@Qualifier("pdExamineSolutionItemDao")
+	private IPdExamineSolutionItemDao pdExamineSolutionItemDao;
+	@Autowired
+	@Qualifier("pdExamineSolutionItemColDao")
+	private IPdExamineSolutionItemColDao pdExamineSolutionItemColDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdExamineSolution";
+	}
+	@Transactional(readOnly=true)
+	public PdExamineSolution getById(java.lang.Long id) throws ServiceException
+	{
+		return pdExamineSolutionDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdExamineSolution entity) throws ServiceException
+	{
+		pdExamineSolutionDao.saveOrUpdate(entity);
+	}
+/*	public java.lang.Long save(PdExamineSolution entity) throws ServiceException
+	{
+		pdExamineSolutionDao.saveOrUpdate(entity);
+		Long adId = entity.getSolutionid();
+		List<Long> itemids=entity.getItemids();
+		List<Long> pisiids=entity.getPisiids();
+		for(int i=0;i<itemids.size();i++)
+		{
+			PdExamineSolutionItem pesi=new PdExamineSolutionItem();
+			pesi.setSolutionid(adId);
+			Long itemid=itemids.get(i);
+			pesi.setItemid(itemid);
+			if(pisiids.get(i)==null)
+			{
+				pdExamineSolutionItemDao.save(pesi);
+			
+				String str[]=ServletActionContext.getRequest().getParameterValues("subitem"+itemid);
+				
+				for(String s:str)
+				{
+					PdExamineSolutionItemCol pesic=new PdExamineSolutionItemCol();
+					pesic.setColid(Long.parseLong(s));
+					pesic.setPisiid(pesi.getPisiid());
+					pesic.setItemid(itemid);
+					pesic.setSolutionid(adId);
+					String spesicid=ServletActionContext.getRequest().getParameter("pesicid"+s);
+					if(spesicid!=null)
+					{
+					pesic.setPesicid(Long.parseLong(spesicid));
+					}
+					pdExamineSolutionItemColDao.saveOrUpdate(pesic);
+				}
+			}
+		}
+		return adId;
+	}*/
+	public java.lang.Long save(PdExamineSolution entity) throws ServiceException
+	{
+		pdExamineSolutionDao.saveOrUpdate(entity);
+		Long adId = entity.getSolutionid();
+		PdExamineSolutionItemColQuery query=new PdExamineSolutionItemColQuery();
+		query.setSolutionid(adId);
+		pdExamineSolutionItemColDao.deleteItemCol("PdExamineSolutionItemCol.deleteEntity", query);
+		PdExamineSolutionItemQuery pesiquery=new PdExamineSolutionItemQuery();
+		pesiquery.setSolutionid(adId);
+		pdExamineSolutionItemDao.deleteByEntity("PdExamineSolutionItem.deleteEntity",pesiquery);
+		List<Long> itemids=entity.getItemids();
+		for(int i=0;i<itemids.size();i++)
+		{
+			PdExamineSolutionItem pesi=new PdExamineSolutionItem();
+			pesi.setSolutionid(adId);
+			Long itemid=itemids.get(i);
+			pesi.setItemid(itemid);
+				pdExamineSolutionItemDao.save(pesi);
+			
+				String str[]=ServletActionContext.getRequest().getParameterValues("subitem"+itemid);
+				
+				for(String s:str)
+				{
+					PdExamineSolutionItemCol pesic=new PdExamineSolutionItemCol();
+					pesic.setColid(Long.parseLong(s));
+					pesic.setPisiid(pesi.getPisiid());
+					pesic.setItemid(itemid);
+					pesic.setSolutionid(adId);
+					pdExamineSolutionItemColDao.save(pesic);
+				}
+		}
+		return adId;
+	}
+	
+	public Integer update(PdExamineSolution entity) throws ServiceException
+	{
+		Integer returnValue =  pdExamineSolutionDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		PdExamineSolutionItemColQuery query=new PdExamineSolutionItemColQuery();
+		query.setSolutionid(id);
+		pdExamineSolutionItemColDao.deleteItemCol("PdExamineSolutionItemCol.deleteEntity", query);
+		PdExamineSolutionItemQuery pesiquery=new PdExamineSolutionItemQuery();
+		pesiquery.setSolutionid(id);
+		pdExamineSolutionItemDao.deleteByEntity("PdExamineSolutionItem.deleteEntity",pesiquery);
+		Integer returnValue = pdExamineSolutionDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdExamineSolutionDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdExamineSolutionQuery query = new PdExamineSolutionQuery();
+		try {
+			return pdExamineSolutionDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineSolution> findPage(Page<PdExamineSolution> page, PdExamineSolutionQuery query) throws ServiceException
+	{
+		return pdExamineSolutionDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineSolution> findPage(Page<PdExamineSolution> page,String statement, PdExamineSolutionQuery query) throws ServiceException
+	{
+		return pdExamineSolutionDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineSolution> findList(PdExamineSolutionQuery query) throws ServiceException
+	{
+		return pdExamineSolutionDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineSolution> findList(PdExamineSolutionQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdExamineSolutionDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdExamineSolution> findList(PdExamineSolutionQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdExamineSolutionDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineSolution> findAllList() throws ServiceException
+	{
+		return pdExamineSolutionDao.findAllList();
+	}
+	@Override
+	public PdExamineSolution getById(Long id, String statement)
+			throws ServiceException {
+		return pdExamineSolutionDao.getById(statement, id);
+	}
+	@Override
+	public List<PdExamineSolution> findListSolution(
+			PdExamineSolutionQuery pdExamineSolutionQuery)
+			throws ServiceException {
+		return pdExamineSolutionDao.findListSolution(pdExamineSolutionQuery);
+	}
+
+}

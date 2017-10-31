@@ -1,0 +1,74 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+
+@Repository
+public class CheckRecordDao extends BaseIbatisDao<CheckRecord,java.lang.Long> implements ICheckRecordDao{
+
+		
+	public void saveOrUpdate(CheckRecord entity) {
+		if(entity.getRecordid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckRecord";
+	}
+	public CheckRecord getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CheckRecord)this.getSqlMapClientTemplate().queryForObject("CheckRecord.getByProperty", map);		
+	}
+
+	@Override
+	public void updateByprocessid(Long processid, Double price) {
+		Map map=new HashMap();		
+		map.put("propertyId", processid);
+		map.put("propertyPrice", price);
+		this.getSqlMapClientTemplate().update("CheckRecord.updateByProcessid", map);
+	}
+
+	@Override
+	public void deleteByemployeeTaskid(String employeeTaskid) {
+		
+		this.getSqlMapClientTemplate().delete("CheckRecord.deleteEmpTask", employeeTaskid);
+	}
+
+	@Override
+	public void deleteByCheckid(Long checkid) {
+		this.getSqlMapClientTemplate().delete("CheckRecord.deleteByCheckid",checkid);
+	}
+
+	@Override
+	public Integer getAllAccept(Long checkId) {
+
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("CheckRecord.findAllAccept", checkId);
+		
+	}
+
+	@Override
+	public Integer getAllDownK3(Long checkId) {
+		
+		return (Integer)this.getSqlMapClientTemplate().queryForObject("CheckRecord.findAllDownK3", checkId);
+		
+	}
+	
+
+}

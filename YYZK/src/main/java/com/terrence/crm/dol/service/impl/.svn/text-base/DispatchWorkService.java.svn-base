@@ -1,0 +1,490 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.xwork.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.WorkSeq;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.query.DispatchWorkQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.query.WorkSeqQuery;
+import com.terrence.crm.dol.service.IDispatchWorkService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+@Service
+@Transactional
+public class DispatchWorkService extends BaseService implements IDispatchWorkService {
+	protected static Logger logger = LoggerFactory.getLogger(DispatchWorkService.class);
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	public String getIbatisSqlMapNamespace() {
+		return "DispatchWork";
+	}
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	@Autowired
+	@Qualifier("teamDao")
+	private ITeamDao teamDao;
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	
+	@Transactional(readOnly=true)
+	public DispatchWork getById(java.lang.Long id) throws ServiceException
+	{
+		return dispatchWorkDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DispatchWork entity) throws ServiceException
+	{
+		dispatchWorkDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DispatchWork entity) throws ServiceException
+	{
+		Long adId = dispatchWorkDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Long saveTeamProcess(DispatchWork entity) throws ServiceException
+	{
+	//	Long adId=dispatchWorkDao.saveTeamProcess(entity);
+		
+		DispatchWork dwork=new DispatchWork();
+			Long icmoid=entity.getWorkid();
+			Long itemprocessid= entity.getItemprocessid();
+			ItemProcess itemProcess = itemProcessDao.getById(itemprocessid);
+			
+			//procedureDao.getById(itemProcedureDao.getById(itemProcess.getItemprocedureid()).getProcedureid()).getProcedurename();
+			
+			dwork.setWorkid(icmoid);//icmoid
+			dwork.setItemcode(icmoDao.getById(icmoid).getItemcode());//
+			dwork.setItemname(icmoDao.getById(icmoid).getItemname());//
+			dwork.setItemprocessid(itemprocessid);//
+			dwork.setStatus(0);//
+			
+			ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+			itemProcedureQuery.setItemprocedureid(itemProcess.getItemprocedureid());
+			
+			
+		//	procedureDao.getById(ipdlist.get(i).getProcedureid()).getProcedurename();
+			dwork.setProcessid(procedureDao.getById(itemProcedureDao.findList(itemProcedureQuery).get(0).getProcedureid()).getProcedurerid());//原工序id--
+			dwork.setProcessname(procedureDao.getById(itemProcedureDao.findList(itemProcedureQuery).get(0).getProcedureid()).getProcedurename());//??--原工序名称,新
+			
+			dwork.setProcessnum(icmoDao.getById(icmoid).getFqty());//??原加工数量--
+			dwork.setTeamid(itemProcess.getTeamid());//
+			dwork.setTeamname(teamDao.getById(itemProcess.getTeamid()).getTeamname());//
+			
+			dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+			dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+			dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+			dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+			dwork.setCenterid(itemProcess.getProcessid());//新添加的工作中心----
+			dwork.setTools("");//???-----------------刀具名暂空
+			dwork.setBlades("");//???---------------刀片名暂空
+			dwork.setContent("");//现在无备注--
+			dwork.setAcceptednum(0);
+			dwork.setProgramname("");//程序名称?--空
+			dwork.setOrderid(-1);//??排序编号?--空
+			dwork.setWsstatus(0);//
+			dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			
+			WorkSeq workSeq=new WorkSeq();
+			workSeq.setIcmoid(icmoid);
+			workSeq.setItemprocedureid(itemProcess.getItemprocedureid());
+			workSeq.setItemcode(icmoDao.getById(icmoid).getItemcode());
+			workSeq.setProcedurerid(procedureDao.getById(itemProcedureDao.findList(itemProcedureQuery).get(0).getProcedureid()).getProcedurerid());
+			workSeq.setQualified(0D);
+			if(null==entity.getWorkseqid()||"".equals(entity.getWorkseqid())){//手动添加
+				workSeq.setPreorder(0L);
+				dwork.setPreorder(0L);
+				dwork.setWorkseqid(workSeqDao.save(workSeq));
+			}else{//在本序添加--(分添加本序和添加下序)
+//				if(workSeqDao.getById(entity.getWorkseqid()).getProcedurerid().longValue()==entity.getProcessid().longValue()){
+//					//同一序
+//					dwork.setPreorder(workSeqDao.getById(entity.getWorkseqid()).getPreorder());//??取什么?//班组任务实际id上序	
+//					workSeq.setPreorder(workSeqDao.getById(entity.getWorkseqid()).getPreorder());
+//				}else{
+//					dwork.setPreorder(entity.getWorkseqid());
+//					workSeq.setPreorder(entity.getWorkseqid());
+//				}
+				//----------------
+				WorkSeqQuery wQuery=new WorkSeqQuery(); 
+				List<WorkSeq> wlist =new ArrayList<WorkSeq>();
+				wQuery.setIcmoid(entity.getWorkid());
+				wQuery.setProcedurerid(entity.getProcessid());
+				wlist= workSeqDao.findList(wQuery);
+				if(wlist.size()>0){//workseq已存在--
+					dwork.setPreorder(wlist.get(0).getPreorder());
+					dwork.setWorkseqid(wlist.get(0).getWorkseqid());
+				}else{
+					dwork.setPreorder(entity.getWorkseqid());
+					workSeq.setPreorder(entity.getWorkseqid());
+					dwork.setWorkseqid(workSeqDao.save(workSeq));
+				}
+				//--------
+			}
+//			System.out.println("time:"+entity.getPlanstarttime());
+			dwork.setPlanstarttime(entity.getPlanstarttime());
+			dwork.setPlanendtime(entity.getPlanendtime());
+		
+		return dispatchWorkDao.savePlanTime(dwork);
+
+	}
+	public Integer update(DispatchWork entity) throws ServiceException
+	{
+		Integer returnValue =  dispatchWorkDao.update(entity);
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		EmployeeTaskQuery query=new EmployeeTaskQuery();
+		query.setDispatchid(id);
+		query.setStates("1,2");
+		if(employeeTaskDao.findList(query).size()>0)
+		{
+			return -2;
+		}
+//--删除任务时每道工序最少保留一个--------------
+		List<DispatchWork> dispatchlist=new ArrayList<DispatchWork>();
+		DispatchWorkQuery dispatchWorkQuery=new DispatchWorkQuery();
+		dispatchWorkQuery.setWorkseqid(dispatchWorkDao.getById(id).getWorkseqid());
+		dispatchlist= dispatchWorkDao.findList(dispatchWorkQuery);
+		if(dispatchlist.size()==1){//此工序只剩一个工作中心
+			WorkSeqQuery workSeqQuery=new WorkSeqQuery();
+			workSeqQuery.setPreorder(dispatchWorkDao.getById(id).getWorkseqid());
+			List<WorkSeq> wseqlist =new ArrayList<WorkSeq>();
+			wseqlist = workSeqDao.findList(workSeqQuery);
+			if(wseqlist.size()>0){//是否有下序,有:禁止删除,无:可删
+					//有下序
+					return -3;
+			}
+			
+		}
+//------------------		
+		query.setStates("0,3");//未开工,反检
+		if(employeeTaskDao.findList(query).size()>0){
+			for(EmployeeTask ep:employeeTaskDao.findList(query)){
+				employeeTaskDao.deleteById(ep.getEmployeetaskid());
+			}
+		}
+		long wid=dispatchWorkDao.getById(id).getWorkseqid();
+		Integer returnValue = dispatchWorkDao.deleteById(id);
+		if(dispatchlist.size()==1){//同时删除work_seq
+			workSeqDao.deleteById(wid);
+		}
+		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = dispatchWorkDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DispatchWorkQuery query = new DispatchWorkQuery();
+		try {
+			return dispatchWorkDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DispatchWork> findPage(Page<DispatchWork> page, DispatchWorkQuery query) throws ServiceException
+	{
+		return dispatchWorkDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DispatchWork> findList(DispatchWorkQuery query) throws ServiceException
+	{
+		return dispatchWorkDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DispatchWork> findAllList() throws ServiceException
+	{
+		return dispatchWorkDao.findAllList();
+	}
+	@Override
+	public List<DispatchWork> findList(String statement, DispatchWorkQuery query)
+			throws ServiceException {
+		return dispatchWorkDao.findList(statement,query);
+	}
+	@Override
+	public void updateWorkShopStatus(List<Long> idList, DispatchWork entity)
+			throws ServiceException {
+		Icmo icmo=new Icmo();
+		icmo.setIcmoid(entity.getWorkid());
+		icmo.setFqty(entity.getFqty());
+		icmo.setDispathstatu(Icmo.DISPATCHED);
+		icmoDao.update(icmo);
+		DispatchWork dwork=null;
+		for(Long id:idList)
+		{
+			dwork=new DispatchWork();
+			dwork.setId(id);
+			dwork.setWsstatus(DispatchWork.ALLOACTED);
+			dispatchWorkDao.update(dwork);
+		}
+	}
+
+	@Override
+	public int saveProcessAuto(DispatchWork entity) throws ServiceException{
+		Icmo icmo=new Icmo();
+		icmo=icmoDao.getById(entity.getWorkid());
+		int returnValue = saveWorkSeqDispatch(icmo.getIcmoid(),icmo);//新版自动添加默认工作中心任务
+		return returnValue;
+		
+/*原自动添加任务
+		Long workid = entity.getWorkid();
+		ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+		itemProcessQuery.setItemcode(entity.getItemcode());
+		itemProcessQuery.setIsdefault(1);
+		itemProcessQuery.setSortColumns("itemprocessid");
+		List<ItemProcess> itemprocessList = itemProcessDao.findList(itemProcessQuery);
+		
+		DispatchWork dpwork=new DispatchWork();
+		int n=0;
+		Long preorder=0L ;
+		for(ItemProcess itprocess:itemprocessList){
+			dpwork.setItemprocessid(itprocess.getItemprocessid());
+			if(n==0){//第一序
+				dpwork.setPreorder(0L);
+				n++;
+			}else{
+				dpwork.setPreorder(preorder);
+			}
+			dpwork.setWorkid(workid);
+			preorder= dispatchWorkDao.saveTeamProcess(dpwork);
+		}*/
+	}
+
+	@Override
+	public Integer updateTofinish(DispatchWork entity) throws ServiceException{
+		employeeTaskDao.updateTofinish(entity.getId());		
+		Integer returnValue =  dispatchWorkDao.update(entity);
+		return returnValue;
+	}
+
+	@Override
+	public DispatchWork findItemprocess(DispatchWork entity) {
+		
+		
+		//System.out.println("====="+entity.getId());
+		DispatchWork dispatchWork=dispatchWorkDao.getById(entity.getId());
+		List<ItemProcess> itemprolist=new ArrayList<ItemProcess>();
+		ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+		//获取同一工序下的工作中心
+		itemProcessQuery.setItemprocedureid(itemProcessDao.getById(dispatchWork.getItemprocessid()).getItemprocedureid());
+		itemprolist = itemProcessDao.findList(itemProcessQuery);
+		
+		dispatchWork.setItemprocesslist(itemprolist);
+		
+		return dispatchWork;
+	}
+
+	@Override
+	public DispatchWork getPriceById(Long dispatchWorkId) {
+
+		DispatchWork dispatchWork=new DispatchWork();
+		
+		dispatchWork=dispatchWorkDao.getProcedurePrice(dispatchWorkId);
+		
+		
+		return dispatchWork;
+	}
+	
+	public int saveWorkSeqDispatch(Long icmoid,Icmo entity) {
+
+//		itemProcedureDao
+		List<ItemProcedure> itemProcedurelist=new ArrayList<ItemProcedure>();
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(baseitem.getBaseitemid());
+
+		itemProcedurelist = itemProcedureDao.findList(itemProcedureQuery);
+		if(itemProcedurelist.size()!=0){//此物料下有工序
+			WorkSeq workSeq=new WorkSeq();
+			workSeq.setIcmoid(icmoid);
+			workSeq.setItemcode(entity.getItemcode());
+			workSeq.setQualified(0D);
+			//workSeq.setProcedurerid(procedurerid)
+			List<ItemProcedure> ipdlist=new ArrayList<ItemProcedure>();
+			changelist(-1L,itemProcedurelist,ipdlist);//工序按上下级排序
+			
+			DispatchWork dwork=new DispatchWork();
+			long workSeqid=0;
+			int len=ipdlist.size();
+			//for(int i=0;i<len;i++){
+			int i=0;
+			for(ItemProcedure itpd:ipdlist){	
+				workSeq.setItemprocedureid(itpd.getItemprocedureid());
+				if(i==0){
+					workSeq.setPreorder(0L);
+				}else{
+					workSeq.setPreorder(workSeqid);
+				}
+				workSeq.setProcedurerid(itpd.getProcedureid());
+				
+				/**t_work_seq添加end**/
+				/**t_dispatch_work添加begin**/
+				
+				ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+				ItemProcess itemProcess=new ItemProcess();
+				itemProcessQuery.setItemprocedureid(itpd.getItemprocedureid());
+				itemProcessQuery.setIsdefault(1);//获取默认工作中心
+				if(itemProcessDao.findList(itemProcessQuery).size()>0){//存在默认的工作中心
+					itemProcess=itemProcessDao.findList(itemProcessQuery).get(0);//默认的工作中心
+				
+				dwork=new DispatchWork();
+				dwork.setWorkid(icmoid);//icmoid
+				dwork.setItemcode(entity.getItemcode());//
+				dwork.setItemname(entity.getItemname());//
+				dwork.setItemprocessid(itemProcess.getItemprocessid());//
+				dwork.setStatus(0);//
+				
+			//	procedureDao.getById(ipdlist.get(i).getProcedureid()).getProcedurename();
+
+				dwork.setProcessid(procedureDao.getById(itpd.getProcedureid()).getProcedurerid());//原工序id--
+				dwork.setProcessname(procedureDao.getById(itpd.getProcedureid()).getProcedurename());//??--原工序名称,新
+				dwork.setProcessnum(entity.getFqty());//??原加工数量--
+				dwork.setTeamid(itemProcess.getTeamid());//
+				dwork.setTeamname(teamDao.getById(itemProcess.getTeamid()).getTeamname());//
+				
+				dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+				dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+				dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+				dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+				dwork.setCenterid(itemProcess.getProcessid());//新添加工作中心
+				dwork.setTools("");//???-----------------刀具名暂空
+				dwork.setBlades("");//???---------------刀片名暂空
+				dwork.setContent("");//现在无备注--
+				dwork.setAcceptednum(0);
+				dwork.setProgramname("");//程序名称?--空
+				dwork.setOrderid(-1);//??排序编号?--空
+				dwork.setWsstatus(0);//
+				if(i==0){
+					dwork.setPreorder(0L);//??取什么?//班组任务实际id上序
+				}else{
+					dwork.setPreorder(workSeqid);//??取什么?//班组任务实际id上序
+				}
+				dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+
+				workSeqid=workSeqDao.save(workSeq);
+
+				dwork.setWorkseqid(workSeqid);
+				dispatchWorkDao.save(dwork);
+				/**t_dispatch_work添加End**/
+				
+				}
+				i++;
+			}
+			return 0;
+		}else{
+			return -1;
+		}
+		
+		/*
+		workseqid	workseqid	
+		任务单id	icmoid	
+		物料工序id	itemprocedureid	
+		上序id	preorder	
+		质检合格数	qualified	
+		物料编码	itemcode	
+		
+		*/
+	}
+	private void changelist(Long pid,List<ItemProcedure> itemProcedurelist,List<ItemProcedure> ipdlist) {
+		for(ItemProcedure itemProcedure:itemProcedurelist){
+			if(itemProcedure.getParentid().longValue()==pid.longValue()){
+				ipdlist.add(itemProcedure);
+				changelist(itemProcedure.getItemprocedureid(),itemProcedurelist,ipdlist);
+			}
+		}
+}
+
+	@Override
+	public DispatchWork getItemprocessByProcedureid(DispatchWork entity) {
+
+//		System.out.println(entity.getItemcode());
+//		System.out.println(entity.getProcedurerid());
+		BaseItem baseItem=baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery(); 
+		ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+		
+		itemProcedureQuery.setItemid(baseItem.getBaseitemid());
+		itemProcedureQuery.setProcedureid(entity.getProcedurerid());
+		
+		itemProcessQuery.setItemprocedureid(itemProcedureDao.findList(itemProcedureQuery).get(0).getItemprocedureid());
+		
+		entity.setItemprocesslist(itemProcessDao.findList(itemProcessQuery));
+		entity.setProcedure(procedureDao.getById(entity.getProcedurerid()));
+		return entity;
+	}
+
+}

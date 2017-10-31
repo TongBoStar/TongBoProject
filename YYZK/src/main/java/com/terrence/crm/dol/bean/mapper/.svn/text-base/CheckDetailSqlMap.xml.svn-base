@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckDetail">
+
+        
+	<resultMap id="RM.CheckDetail" class="com.terrence.crm.dol.bean.CheckDetail">
+        <result property="detailid" column="detailid"/>
+        <result property="recordid" column="recordid"/>
+        <result property="checkpoints" column="checkpoints"/>
+        <result property="checkval" column="checkval"/>
+        <result property="verdict" column="verdict"/>
+        <result property="checktype" column="checktype"/>
+        <result property="explains" column="explains"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckDetail.columns">
+	    <![CDATA[
+        	t_check_detail.detailid ,
+        	t_check_detail.recordid ,
+        	t_check_detail.checkpoints ,
+        	t_check_detail.checkval ,
+        	t_check_detail.verdict ,
+        	t_check_detail.checktype ,
+        	t_check_detail.explains 
+	    ]]>
+	</sql>
+	
+   <insert id="CheckDetail.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_check_detail (
+        	recordid ,
+        	checkpoints ,
+        	checkval ,
+        	verdict ,
+        	checktype ,
+        	explains 
+        ) VALUES (
+        	#recordid# ,
+        	#checkpoints# ,
+        	#checkval# ,
+        	#verdict# ,
+        	#checktype# ,
+        	#explains# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="detailid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CheckDetail.update" parameterClass="com.terrence.crm.dol.bean.CheckDetail">         
+        UPDATE t_check_detail 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="recordid">
+	        	recordid = #recordid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkpoints">
+	        	checkpoints = #checkpoints# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checkval">
+	        	checkval = #checkval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="verdict">
+	        	verdict = #verdict# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="checktype">
+	        	checktype = #checktype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="explains">
+	        	explains = #explains# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        detailid = #detailid# 
+    </update>
+    
+	<delete id="CheckDetail.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_detail where
+       detailid = #detailid# 
+    ]]>
+    </delete>
+    
+    <delete id="CheckDetail.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_check_detail 
+        WHERE
+       detailid in ($detailid$) 
+    ]]>
+    </delete>
+    
+    <select id="CheckDetail.getById" resultMap="RM.CheckDetail">
+	    select <include refid="CheckDetail.columns"/>
+	    
+	        from t_check_detail 
+	        where 
+		        detailid = #detailid# 
+	    
+    </select>
+    
+	<select id="CheckDetail.getByProperty" resultMap="RM.CheckDetail">
+		select <include refid="CheckDetail.columns"/> from t_check_detail where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CheckDetail.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="detailid">
+	             t_check_detail.detailid = #detailid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="recordid">
+	             t_check_detail.recordid = #recordid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checkpoints">
+	             t_check_detail.checkpoints = #checkpoints#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checkval">
+	             t_check_detail.checkval = #checkval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="verdict">
+	             t_check_detail.verdict = #verdict#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checktype">
+	             t_check_detail.checktype = #checktype#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="explains">
+	             t_check_detail.explains = #explains#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CheckDetail.findPage.and">
+			<isNotEmpty prepend="AND" property="detailid">
+	             t_check_detail.detailid = #detailid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="recordid">
+	             t_check_detail.recordid = #recordid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checkpoints">
+	             t_check_detail.checkpoints = #checkpoints#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checkval">
+	             t_check_detail.checkval = #checkval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="verdict">
+	             t_check_detail.verdict = #verdict#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checktype">
+	             t_check_detail.checktype = #checktype#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="explains">
+	             t_check_detail.explains = #explains#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="CheckDetail.findList" resultMap="RM.CheckDetail">
+    	SELECT 
+    		<include refid="CheckDetail.columns"/> 
+    	FROM 
+    		t_check_detail
+		<include refid="CheckDetail.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CheckDetail.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_check_detail
+    ]]>
+		<include refid="CheckDetail.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="CheckDetail.findPage" resultMap="RM.CheckDetail">
+    	select <include refid="CheckDetail.columns"/>	    
+	        from t_check_detail 	   
+		<include refid="CheckDetail.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.CheckDetail.findPage" resultMap="RM.CheckDetail">
+    	select <include refid="CheckDetail.columns"/>	    
+	        from t_check_detail where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       detailid 
+	   not in(select $notTop$ 
+       detailid 
+	   from t_check_detail <include refid="CheckDetail.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CheckDetail.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

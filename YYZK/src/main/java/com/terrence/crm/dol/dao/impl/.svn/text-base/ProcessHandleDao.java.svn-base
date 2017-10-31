@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.dao.IProcessHandleDao;
+@Repository
+public class ProcessHandleDao extends BaseIbatisDao<ProcessHandle,java.lang.Long> implements IProcessHandleDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ProcessHandle"; 
+	}
+	public void saveOrUpdate(ProcessHandle entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public ProcessHandle getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProcessHandle)this.getSqlMapClientTemplate().queryForObject("ProcessHandle.getByProperty", map);
+	}
+}

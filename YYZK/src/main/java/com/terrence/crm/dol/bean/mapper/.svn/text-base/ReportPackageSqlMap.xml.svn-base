@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ReportPackage">
+
+        
+	<resultMap id="RM.ReportPackage" class="com.terrence.crm.dol.bean.ReportPackage">
+        <result property="pid" column="pid"/>
+        <result property="fname" column="fname"/>
+        <result property="fnotes" column="fnotes"/>
+        <result property="createdate" column="createdate"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ReportPackage.columns">
+	    <![CDATA[
+        	t_report_package.pid ,
+        	t_report_package.fname ,
+        	t_report_package.fnotes ,
+        	t_report_package.createdate 
+	    ]]>
+	</sql>
+	
+   <insert id="ReportPackage.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_report_package (
+        	fname ,
+        	fnotes ,
+        	createdate 
+        ) VALUES (
+        	#fname# ,
+        	#fnotes# ,
+        	#createdate# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="pid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ReportPackage.update" parameterClass="com.terrence.crm.dol.bean.ReportPackage">         
+        UPDATE t_report_package 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnotes">
+	        	fnotes = #fnotes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        pid = #pid# 
+    </update>
+    
+	<delete id="ReportPackage.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_report_package where
+       pid = #pid# 
+    ]]>
+    </delete>
+    
+    <delete id="ReportPackage.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_report_package 
+        WHERE
+       pid in ($pid$) 
+    ]]>
+    </delete>
+    
+    <select id="ReportPackage.getById" resultMap="RM.ReportPackage">
+	    select <include refid="ReportPackage.columns"/>
+	    
+	        from t_report_package 
+	        where 
+		        pid = #pid# 
+	    
+    </select>
+    
+	<select id="ReportPackage.getByProperty" resultMap="RM.ReportPackage">
+		select <include refid="ReportPackage.columns"/> from t_report_package where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ReportPackage.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="pid">
+	             t_report_package.pid = #pid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_report_package.fname = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnotes">
+	             t_report_package.fnotes = #fnotes#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_report_package.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_report_package.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ReportPackage.findPage.and">
+			<isNotEmpty prepend="AND" property="pid">
+	             t_report_package.pid = #pid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_report_package.fname = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnotes">
+	             t_report_package.fnotes = #fnotes#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_report_package.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_report_package.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ReportPackage.Entity" resultMap="RM.ReportPackage">
+    	SELECT 	<include refid="ReportPackage.columns"/> FROM t_report_package <include refid="ReportPackage.findPage.where"/>
+    </select>
+    
+    <select id="ReportPackage.findList" resultMap="RM.ReportPackage">
+    	SELECT 
+    		<include refid="ReportPackage.columns"/> 
+    	FROM 
+    		t_report_package
+		<include refid="ReportPackage.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ReportPackage.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_report_package
+    ]]>
+		<include refid="ReportPackage.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ReportPackage.findPage" resultMap="RM.ReportPackage">
+    	select <include refid="ReportPackage.columns"/>	    
+	        from t_report_package 	   
+		<include refid="ReportPackage.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ReportPackage.findPage" resultMap="RM.ReportPackage">
+    	select <include refid="ReportPackage.columns"/>	    
+	        from t_report_package where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       pid 
+	   not in(select $notTop$ 
+       pid 
+	   from t_report_package <include refid="ReportPackage.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ReportPackage.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

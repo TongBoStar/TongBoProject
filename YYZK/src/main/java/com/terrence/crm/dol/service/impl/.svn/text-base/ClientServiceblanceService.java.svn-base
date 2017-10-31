@@ -1,0 +1,80 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ClientServiceblance;
+import com.terrence.crm.dol.dao.IClientServiceblanceDao;
+import com.terrence.crm.dol.query.ClientServiceblanceQuery;
+import com.terrence.crm.dol.service.IClientServiceblanceService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class ClientServiceblanceService extends BaseService implements IClientServiceblanceService {
+	@Autowired
+	@Qualifier("clientServiceblanceDao")
+	private IClientServiceblanceDao clientServiceblanceDao;
+	@Override
+	public ClientServiceblance getById(Long id) throws ServiceException {
+		return clientServiceblanceDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ClientServiceblance entity) throws ServiceException {
+		entity.setCreateDate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//自动设置“创建时间”到数据库,也可以在sqlmap.xml文件中在'创建时间'的位置上加上getdate()
+		//entity.setBalanceDate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//自动设置“结算日期”到数据库,也可以在sqlmap.xml文件中在'创建时间'的位置上加上getdate()
+		entity.setCreateUserName(SpringSecurityUtils.getCurrentUserName());//自动设置“创建人名称”
+		entity.setCreateaUserId(SpringSecurityUtils.getCurrentUserId());//自动设置“创建人id”
+		clientServiceblanceDao.saveOrUpdate(entity);
+		
+	}
+	@Override
+	public Long save(ClientServiceblance entity) throws ServiceException {
+		return clientServiceblanceDao.save(entity);
+	}
+	@Override
+	public Integer update(ClientServiceblance entity) throws ServiceException {
+		return clientServiceblanceDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return clientServiceblanceDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = clientServiceblanceDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ClientServiceblance> findPage(Page<ClientServiceblance> page, ClientServiceblanceQuery query) throws ServiceException{
+		return clientServiceblanceDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ClientServiceblance> findPage(Page<ClientServiceblance> page,String statement, ClientServiceblanceQuery query) throws ServiceException{
+		return clientServiceblanceDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ClientServiceblance> findList(ClientServiceblanceQuery query) throws ServiceException{
+		return clientServiceblanceDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ClientServiceblance> findList(ClientServiceblanceQuery query,Integer pageSize) throws ServiceException{
+		return clientServiceblanceDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ClientServiceblance> findList(ClientServiceblanceQuery query,String statement,Integer pageSize) throws ServiceException{
+		return clientServiceblanceDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ClientServiceblance> findAllList() throws ServiceException{
+		return clientServiceblanceDao.findAllList();
+	}
+}

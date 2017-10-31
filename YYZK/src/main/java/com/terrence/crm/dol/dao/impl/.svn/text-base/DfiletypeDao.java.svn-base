@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Dfiletype;
+import com.terrence.crm.dol.dao.IDfiletypeDao;
+
+@Repository
+public class DfiletypeDao extends BaseIbatisDao<Dfiletype,java.lang.Long> implements IDfiletypeDao{
+
+		
+	public void saveOrUpdate(Dfiletype entity) {
+		if(entity.getTypeid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Dfiletype";
+	}
+	public Dfiletype getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Dfiletype)this.getSqlMapClientTemplate().queryForObject("Dfiletype.getByProperty", map);		
+	}
+
+}

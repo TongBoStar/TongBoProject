@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Positions;
+import com.terrence.crm.dol.dao.IPositionsDao;
+import com.terrence.crm.dol.query.PositionsQuery;
+
+@Repository
+public class PositionsDao extends BaseIbatisDao<Positions,java.lang.Long> implements IPositionsDao{
+
+		
+	public void saveOrUpdate(Positions entity) {
+		if(entity.getPositionid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Positions";
+	}
+	public Positions getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Positions)this.getSqlMapClientTemplate().queryForObject("Positions.getByProperty", map);		
+	}
+
+	@Override
+	public List<Positions> findPositionidNameList(PositionsQuery positionsQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Positions.find.positionName.list", positionsQuery);
+	}
+
+	@Override
+	public List<Positions> findPositionidPoorder(PositionsQuery positionsQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Position.find.position.in.poorder",positionsQuery);
+	}
+
+}

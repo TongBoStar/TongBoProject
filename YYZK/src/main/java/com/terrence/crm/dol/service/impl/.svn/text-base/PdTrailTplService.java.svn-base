@@ -1,0 +1,169 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdTrailTpl;
+import com.terrence.crm.dol.query.PdTrailTplQuery;
+import com.terrence.crm.dol.dao.IPdTrailTplDao;
+import com.terrence.crm.dol.service.IPdTrailTplService;
+
+@Service
+@Transactional
+public class PdTrailTplService extends BaseService implements IPdTrailTplService {
+	protected static Logger logger = LoggerFactory.getLogger(PdTrailTplService.class);
+	@Autowired
+	@Qualifier("pdTrailTplDao")
+	private IPdTrailTplDao pdTrailTplDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdTrailTpl";
+	}
+	@Transactional(readOnly=true)
+	public PdTrailTpl getById(java.lang.Long id) throws ServiceException
+	{
+		return pdTrailTplDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdTrailTpl entity) throws ServiceException
+	{
+		pdTrailTplDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdTrailTpl entity) throws ServiceException
+	{
+		Long adId = pdTrailTplDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdTrailTpl entity) throws ServiceException
+	{
+		Integer returnValue =  pdTrailTplDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdTrailTplDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdTrailTplDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdTrailTplQuery query = new PdTrailTplQuery();
+		try {
+			return pdTrailTplDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdTrailTpl> findPage(Page<PdTrailTpl> page, PdTrailTplQuery query) throws ServiceException
+	{
+		return pdTrailTplDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdTrailTpl> findPage(Page<PdTrailTpl> page,String statement, PdTrailTplQuery query) throws ServiceException
+	{
+		return pdTrailTplDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTrailTpl> findList(PdTrailTplQuery query) throws ServiceException
+	{
+		return pdTrailTplDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTrailTpl> findList(PdTrailTplQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdTrailTplDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdTrailTpl> findList(PdTrailTplQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdTrailTplDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdTrailTpl> findAllList() throws ServiceException
+	{
+		return pdTrailTplDao.findAllList();
+	}
+	@Override
+	public void savebind(PdTrailTpl entity) throws ServiceException {
+		
+		Long tplid = entity.getTplid();//模版id
+		String[] codelist =null; 
+		codelist=entity.getCodelist();
+		Integer[] isdefaultlist=null; 
+		isdefaultlist= entity.getDefaultlist();
+		
+		PdTrailTplQuery pquery=new PdTrailTplQuery();
+		pquery.setTplid(tplid);
+		
+		pdTrailTplDao.deleteByWhere("PdTrailTpl.deleteByTplid", pquery);
+		
+		if(codelist==null||codelist.length==0){
+			return ;
+		}
+		
+		PdTrailTpl pdTrailTpl=new PdTrailTpl();
+		int numbers=0;
+		for(String code:codelist){
+			pdTrailTpl=new PdTrailTpl();
+			pdTrailTpl.setTplid(tplid);
+			pdTrailTpl.setItemcode(code);
+			pdTrailTpl.setTrialid(entity.getTrialid());
+			pdTrailTpl.setIsdefault(isdefaultlist[numbers]);
+			pdTrailTplDao.save(pdTrailTpl);
+			numbers++;
+		}
+		
+		
+	}
+	@Override
+	public List<PdTrailTpl> findListcode(PdTrailTplQuery pdTrailTplQuery)
+			throws ServiceException {
+			
+		 List<PdTrailTpl> list=new ArrayList<PdTrailTpl>(); 
+		 System.out.println("=================="+pdTrailTplQuery.getTplid());
+		 
+		 list = pdTrailTplDao.findList("PdTrailTpl.findList.code", pdTrailTplQuery);
+		
+		
+		return list;
+	}
+
+}

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Pl;
+import com.terrence.crm.dol.dao.IPlDao;
+
+@Repository
+public class PlDao extends BaseIbatisDao<Pl,java.lang.Long> implements IPlDao{
+
+		
+	public void saveOrUpdate(Pl entity) {
+		if(entity.getPlid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Pl";
+	}
+	public Pl getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Pl)this.getSqlMapClientTemplate().queryForObject("Pl.getByProperty", map);		
+	}
+
+}

@@ -1,0 +1,177 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Disqualification;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.query.DisqualificationQuery;
+import com.terrence.crm.dol.dao.IDisqualificationDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.service.IDisqualificationService;
+
+@Service
+@Transactional
+public class DisqualificationService extends BaseService implements IDisqualificationService {
+	protected static Logger logger = LoggerFactory.getLogger(DisqualificationService.class);
+	@Autowired
+	@Qualifier("disqualificationDao")
+	private IDisqualificationDao disqualificationDao;
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Disqualification";
+	}
+	@Transactional(readOnly=true)
+	public Disqualification getById(java.lang.Long id) throws ServiceException
+	{
+		return disqualificationDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Disqualification entity) throws ServiceException
+	{
+		disqualificationDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Disqualification entity) throws ServiceException
+	{
+		Long adId = disqualificationDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Disqualification entity) throws ServiceException
+	{
+		Integer returnValue =  disqualificationDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = disqualificationDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = disqualificationDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DisqualificationQuery query = new DisqualificationQuery();
+		try {
+			return disqualificationDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Disqualification> findPage(Page<Disqualification> page, DisqualificationQuery query) throws ServiceException
+	{
+		return disqualificationDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Disqualification> findPage(Page<Disqualification> page,String statement, DisqualificationQuery query) throws ServiceException
+	{
+		return disqualificationDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Disqualification> findList(DisqualificationQuery query) throws ServiceException
+	{
+		return disqualificationDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Disqualification> findList(DisqualificationQuery query,Integer pageSize) throws ServiceException
+	{
+		return disqualificationDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Disqualification> findList(DisqualificationQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return disqualificationDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Disqualification> findAllList() throws ServiceException
+	{
+		return disqualificationDao.findAllList();
+	}
+	@Override
+	public Disqualification saveentity(Disqualification entity) throws ServiceException {
+		ItemWait wait = new ItemWait();
+		wait.setWaitid(entity.getWaitid());
+		ItemWait itemwait = itemWaitDao.finditemwait(wait);
+		
+		Disqualification disqualification = new Disqualification();
+		disqualification.setWaitid(entity.getWaitid());
+		disqualification.setFname(itemwait.getItembase().getItemname());
+		disqualification.setItemmode(itemwait.getItembase().getFormatno());
+		disqualification.setPdno(itemwait.getBatchno());
+		disqualification.setStandno(itemwait.getItemcode());
+		disqualification.setFqty(itemwait.getFqty());
+		disqualification.setInvalidnum(itemwait.getNopassfqty());
+		disqualification.setNotes(itemwait.getExplains());
+		disqualification.setAdminid(itemwait.getCheckemp());
+		disqualification.setCheckdate(itemwait.getSizedate());
+		
+		disqualification.setStatus(1);//状态：1:起动状态,2:结束状态
+		disqualification.setStep(1);//第一步
+		//Disqualification disquali = disqualificationDao.save(disqualification, "Disqualification.insert.save.new");
+		Long disqualid = disqualificationDao.saveNew(disqualification);
+		
+		Disqualification discation = new Disqualification();
+		discation.setDqid(disqualid);
+		
+		ItemWait waititem = new ItemWait();
+		waititem.setWaitid(entity.getWaitid());
+		waititem.setProcstatus(2);//1:未处理:2:已处理
+		itemWaitDao.update("ItemWait.in.disqualification.update", waititem);
+		return discation;
+		
+		
+		
+	}
+	@Override
+	public Disqualification findEntity(
+			DisqualificationQuery disqualificationQuery)
+			throws ServiceException {
+		return disqualificationDao.findEntity(disqualificationQuery);
+	}
+	@Override
+	public void saveemp(Disqualification entity)
+			throws ServiceException {
+		disqualificationDao.updateemp(entity);
+		
+	}
+
+}

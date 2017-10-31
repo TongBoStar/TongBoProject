@@ -1,0 +1,138 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdCategory;
+import com.terrence.crm.dol.bean.ToolClass;
+import com.terrence.crm.dol.query.PdCategoryQuery;
+import com.terrence.crm.dol.query.ToolClassQuery;
+import com.terrence.crm.dol.dao.IToolClassDao;
+import com.terrence.crm.dol.service.IToolClassService;
+
+@Service
+@Transactional
+public class ToolClassService extends BaseService implements IToolClassService {
+	protected static Logger logger = LoggerFactory.getLogger(ToolClassService.class);
+	@Autowired
+	@Qualifier("toolClassDao")
+	private IToolClassDao toolClassDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ToolClass";
+	}
+	@Transactional(readOnly=true)
+	public ToolClass getById(java.lang.Long id) throws ServiceException
+	{
+		return toolClassDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ToolClass entity) throws ServiceException
+	{
+		toolClassDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ToolClass entity) throws ServiceException
+	{
+		Long adId = toolClassDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ToolClass entity) throws ServiceException
+	{
+		Integer returnValue =  toolClassDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = toolClassDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = toolClassDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ToolClassQuery query = new ToolClassQuery();
+		try {
+			return toolClassDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ToolClass> findPage(Page<ToolClass> page, ToolClassQuery query) throws ServiceException
+	{
+		return toolClassDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ToolClass> findPage(Page<ToolClass> page,String statement, ToolClassQuery query) throws ServiceException
+	{
+		return toolClassDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ToolClass> findList(ToolClassQuery query) throws ServiceException
+	{
+		return toolClassDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ToolClass> findList(ToolClassQuery query,Integer pageSize) throws ServiceException
+	{
+		return toolClassDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ToolClass> findList(ToolClassQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return toolClassDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ToolClass> findAllList() throws ServiceException
+	{
+		return toolClassDao.findAllList();
+	}
+	@Override
+	public String findSubNode(long classid) throws ServiceException {
+		ToolClassQuery query=new ToolClassQuery();
+		query.setParentid(classid);
+		List<ToolClass> list=toolClassDao.findList(query);
+		String toolids="";
+		for(ToolClass toolclass:list)
+		{
+			toolids+=","+toolclass.getClassid()+findSubNode(toolclass.getClassid());
+		}
+		return toolids;
+	}
+
+}

@@ -1,0 +1,186 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProjectBom;
+import com.terrence.crm.dol.query.ProjectBomQuery;
+import com.terrence.crm.dol.dao.IProjectBomDao;
+import com.terrence.crm.dol.service.IProjectBomService;
+
+@Service
+@Transactional
+public class ProjectBomService extends BaseService implements IProjectBomService {
+	protected static Logger logger = LoggerFactory.getLogger(ProjectBomService.class);
+	@Autowired
+	@Qualifier("projectBomDao")
+	private IProjectBomDao projectBomDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ProjectBom";
+	}
+	@Transactional(readOnly=true)
+	public ProjectBom getById(java.lang.Long id) throws ServiceException
+	{
+		return projectBomDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProjectBom entity) throws ServiceException
+	{
+		projectBomDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ProjectBom entity) throws ServiceException
+	{
+		Long adId = projectBomDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProjectBom entity) throws ServiceException
+	{
+		Integer returnValue =  projectBomDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = projectBomDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = projectBomDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProjectBomQuery query = new ProjectBomQuery();
+		try {
+			return projectBomDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectBom> findPage(Page<ProjectBom> page, ProjectBomQuery query) throws ServiceException
+	{
+		return projectBomDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProjectBom> findPage(Page<ProjectBom> page,String statement, ProjectBomQuery query) throws ServiceException
+	{
+		return projectBomDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectBom> findList(ProjectBomQuery query) throws ServiceException
+	{
+		return projectBomDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectBom> findList(ProjectBomQuery query,Integer pageSize) throws ServiceException
+	{
+		return projectBomDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProjectBom> findList(ProjectBomQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return projectBomDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProjectBom> findAllList() throws ServiceException
+	{
+		return projectBomDao.findAllList();
+	}
+	@Override
+	public ProjectBom saveNewProjectBom(ProjectBom entity)
+			throws ServiceException {
+		if(entity!=null){
+			//先根据主表的id删除详细表的信息
+			/*if(entity.getInfoid()!=null&&!"".equals(entity.getInfoid())){
+				ProjectBomQuery query = new ProjectBomQuery();
+				query.setInfoid(entity.getInfoid());
+				this.projectBomDao.deleteByInfoId(query);
+			}*/
+			List<java.lang.Long> bomids = entity.getBomids();
+			List<java.lang.String> itemcodes = entity.getItemcodes();
+			List<java.lang.String> itemnames  = entity.getItemnames();
+			List<java.lang.String> fmodels  = entity.getFmodels();
+			List<java.lang.String> fdescripts  = entity.getFdescripts();
+			List<java.lang.String> flevels = entity.getFlevels();
+			List<java.lang.String> fpositions  = entity.getFpositions();
+			List<java.lang.String> fmakers  = entity.getFmakers();
+			List<java.lang.String> srcareas  = entity.getSrcareas();
+			List<java.lang.String> units  = entity.getUnits();
+			List<Double> fnums  = entity.getFnums();
+			List<Double> factors  = entity.getFactors();
+			List<Double> bidprices  = entity.getBidprices();
+			List<Double> bidtotalprices  = entity.getBidtotalprices();
+			List<Double> listprices  = entity.getListprices();
+			List<Double> listtotalprices  = entity.getListtotalprices();
+			List<Double> costprices  = entity.getCostprices();
+			List<Double> costtotalprices  = entity.getCosttotalprices();
+			if(itemcodes!=null&&itemcodes.size()>0){
+				for(int i=0;i<itemnames.size();i++){
+					if(itemnames.get(i)!=null&&!"".equals(itemnames.get(i).trim())){
+						ProjectBom bom = new ProjectBom();
+						if(bomids.get(i)!=null&&bomids.get(i).toString()!=""){
+							bom.setBomid(bomids.get(i));
+						}
+						bom.setInfoid(entity.getInfoid());
+						bom.setItemcode(itemcodes.get(i));
+						bom.setItemname(itemnames.get(i));
+						bom.setFmodel(fmodels.get(i));
+						bom.setFdescript(fdescripts.get(i));
+						bom.setFlevel(flevels.get(i));
+						bom.setFposition(fpositions.get(i));
+						bom.setFmaker(fmakers.get(i));
+						bom.setSrcarea(srcareas.get(i));
+						bom.setUnit(units.get(i));
+						bom.setFnum(fnums.get(i));
+						bom.setFactor(factors.get(i));
+						bom.setBidprice(bidprices.get(i));
+						bom.setBidtotalprice(bidtotalprices.get(i));
+						bom.setListprice(listprices.get(i));
+						bom.setListtotalprice(listtotalprices.get(i));
+						bom.setCostprice(costprices.get(i));
+						bom.setCosttotalprice(costtotalprices.get(i));
+						this.projectBomDao.saveOrUpdate(bom);
+					}
+					
+				}
+			}
+		}
+		
+		return null;
+	}
+
+}

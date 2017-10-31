@@ -1,0 +1,202 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.UserContextHolder;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.Process;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IProcessDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.dao.impl.CheckRecordDao;
+import com.terrence.crm.dol.event.AdminLogEvent;
+import com.terrence.crm.dol.query.CheckQuery;
+import com.terrence.crm.dol.query.ProcessQuery;
+import com.terrence.crm.dol.service.IProcessBjService;
+
+@Service
+@Transactional
+public class ProcessBjService extends BaseService implements IProcessBjService {
+	protected static Logger logger = LoggerFactory.getLogger(ProcessBjService.class);
+	@Autowired
+	@Qualifier("processDao")
+	private IProcessDao processDao;
+	
+	@Autowired
+	@Qualifier("teamDao")
+	private ITeamDao teamDao;
+	
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Process";
+	}
+	@Transactional(readOnly=true)
+	public Process getById(java.lang.Long id) throws ServiceException
+	{
+		return processDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Process entity) throws ServiceException
+	{
+		if( null==entity.getProcessid()){
+			//---日志记录------------------------------------------------
+			AdminLogEvent event=new AdminLogEvent("添加工作中心");
+			event.setAdminId(UserContextHolder.get().getId());
+			event.setOperatingContent(UserContextHolder.get().getName()+"添加了工作中心:"+entity.getProcessname()+
+					"，(工作中心名称："+entity.getProcessname()+
+					",准备时间："+entity.getPreparemin()+
+					",标准价格："+entity.getPrice()+
+					",计费系数："+entity.getRatio()+
+					",班组："+entity.getTeamname()+
+					",设备："+entity.getDevicename()+
+			")");
+			this.publishEvent(event);
+			
+			entity.setTeamname(teamDao.getById(entity.getTeamid()).getTeamname());
+			processDao.saveOrUpdate(entity);
+			//---------------------------------------------------	
+		}else{
+			Process pp = processDao.getById(entity.getProcessid());
+			//---日志记录------------------------------------------------
+			AdminLogEvent event=new AdminLogEvent("修改工作中心");
+			event.setAdminId(UserContextHolder.get().getId());
+			event.setOperatingContent(UserContextHolder.get().getName()+"对工作中心名称:"+pp.getProcessname()+
+					",进行了修改(工作中心名："+entity.getProcessname()+
+					",准备时间："+entity.getPreparemin()+
+					",标准价格："+entity.getPrice()+
+					",计费系数："+entity.getRatio()+
+					",班组："+entity.getTeamname()+
+					",设备："+entity.getDevicename()+" )");
+			this.publishEvent(event);
+			//---------------------------------------------------	
+			entity.setTeamname(teamDao.getById(entity.getTeamid()).getTeamname());
+			processDao.saveOrUpdate(entity);
+			//--工序修改时对应的质检价格--质检记录也要修改--且只变当月
+
+			checkDao.updateByprocessid(entity.getProcessid(), entity.getPrice());
+			checkRecordDao.updateByprocessid(entity.getProcessid(), entity.getPrice());
+			
+			
+		} 
+			
+	}
+	
+	public java.lang.Long save(Process entity) throws ServiceException
+	{
+		Long adId = processDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Process entity) throws ServiceException
+	{
+		Integer returnValue =  processDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = processDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		List<Process> processlist=new ArrayList<Process>(); 
+		String delIds = StringUtils.join(idList, ",");
+		for(Long pid:idList){
+			processlist.add(processDao.getById(pid));
+		}
+		
+		Integer returnValue = processDao.deleteByMultipleId(delIds);
+		
+		for(Process p:processlist){
+			//---日志记录------------------------------------------------
+			AdminLogEvent event=new AdminLogEvent("删除工序");
+			event.setAdminId(UserContextHolder.get().getId());
+			event.setOperatingContent(UserContextHolder.get().getName()+"对工序名称:"+p.getProcessname()+",进行了删除");
+			this.publishEvent(event);
+			//---------------------------------------------------	
+		}
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProcessQuery query = new ProcessQuery();
+		try {
+			return processDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Process> findPage(Page<Process> page, ProcessQuery query) throws ServiceException
+	{
+		return processDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Process> findList(ProcessQuery query) throws ServiceException
+	{
+		return processDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Process> findAllList() throws ServiceException
+	{
+		return processDao.findAllList();
+	}
+	@Override
+	public List<Process> findList(String statement, ProcessQuery query)
+			throws ServiceException {
+		if(statement.equals(""))
+		{
+			return processDao.findList(query);
+		}
+		else
+		{
+			return processDao.findList(statement,query);
+		}
+	}
+	@Override
+	public Process getByProcessid(ProcessQuery processQuery)
+			throws ServiceException {
+		
+		return processDao.getByEntity("Process.getByProcessid", processQuery);
+		
+	}
+
+}

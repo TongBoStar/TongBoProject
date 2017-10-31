@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TemplateFlow">
+
+        
+	<resultMap id="RM.TemplateFlow" class="com.terrence.crm.dol.bean.TemplateFlow">
+        <result property="stepid" column="stepid"/>
+        <result property="nodeid" column="nodeid"/>
+        <result property="templateid" column="templateid"/>
+        <result property="laststep" column="laststep"/>
+        <result property="seqno" column="seqno"/>
+        <result property="teamid" column="teamid"/>
+        <result property="seqtask" column="seqtask"/>
+        <result property="daydiffer" column="daydiffer"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TemplateFlow.columns">
+	    <![CDATA[
+        	t_template_flow.stepid ,
+        	t_template_flow.nodeid ,
+        	t_template_flow.templateid ,
+        	t_template_flow.laststep ,
+        	t_template_flow.seqno ,
+        	t_template_flow.teamid ,
+        	t_template_flow.seqtask ,
+        	t_template_flow.daydiffer
+	    ]]>
+	</sql>
+	
+   <insert id="TemplateFlow.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_template_flow (
+        	nodeid ,
+        	templateid ,
+        	laststep ,
+        	seqno  ,
+        	teamid ,
+        	seqtask,
+        	daydiffer
+        ) VALUES (
+        	#nodeid# ,
+        	#templateid# ,
+        	#laststep# ,
+        	#seqno# ,
+        	#teamid#  ,
+        	#seqtask# ,
+        	#daydiffer#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="stepid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TemplateFlow.update" parameterClass="com.terrence.crm.dol.bean.TemplateFlow">         
+        UPDATE t_template_flow 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="nodeid">
+	        	nodeid = #nodeid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="templateid">
+	        	templateid = #templateid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="laststep">
+	        	laststep = #laststep# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="seqtask">
+	        	seqtask = #seqtask# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="daydiffer">
+	        	daydiffer = #daydiffer# 
+	        </isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        stepid = #stepid# 
+    </update>
+    
+	<delete id="TemplateFlow.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_template_flow where
+       stepid = #stepid# 
+    ]]>
+    </delete>
+    
+    <delete id="TemplateFlow.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_template_flow 
+        WHERE
+       stepid in ($stepid$) 
+    ]]>
+    </delete>
+    <delete id="TemplateFlow.deleteByTemplate">
+    <![CDATA[
+        DELETE FROM 
+        	t_template_flow where t_template_flow.templateid in ($templateid$)
+    ]]>
+    </delete>
+    <select id="TemplateFlow.getById" resultMap="RM.TemplateFlow">
+	    select <include refid="TemplateFlow.columns"/>
+	    
+	        from t_template_flow 
+	        where 
+		        stepid = #stepid# 
+	    
+    </select>
+    
+	<select id="TemplateFlow.getByProperty" resultMap="RM.TemplateFlow">
+		select <include refid="TemplateFlow.columns"/> from t_template_flow where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TemplateFlow.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_template_flow.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_template_flow.nodeid = #nodeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_template_flow.templateid = #templateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="laststep">
+	             t_template_flow.laststep = #laststep#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_template_flow.seqno = #seqno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_template_flow.teamid = #teamid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="seqtask">
+	             t_template_flow.seqtask = #seqtask#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="daydiffer">
+	             t_template_flow.daydiffer = #daydiffer#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TemplateFlow.findPage.and">
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_template_flow.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_template_flow.nodeid = #nodeid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="templateid">
+	             t_template_flow.templateid = #templateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="laststep">
+	             t_template_flow.laststep = #laststep#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_template_flow.seqno = #seqno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_template_flow.teamid = #teamid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="seqtask">
+	             t_template_flow.seqtask = #seqtask#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="daydiffer">
+	             t_template_flow.daydiffer = #daydiffer#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="TemplateFlow.findList" resultMap="RM.TemplateFlow">
+    	SELECT 
+    		<include refid="TemplateFlow.columns"/> 
+    	FROM 
+    		t_template_flow
+		<include refid="TemplateFlow.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TemplateFlow.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_template_flow
+    ]]>
+		<include refid="TemplateFlow.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="TemplateFlow.findPage" resultMap="RM.TemplateFlow">
+    	select <include refid="TemplateFlow.columns"/>	    
+	        from t_template_flow 	   
+		<include refid="TemplateFlow.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.TemplateFlow.findPage" resultMap="RM.TemplateFlow">
+    	select <include refid="TemplateFlow.columns"/>	    
+	        from t_template_flow where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       stepid 
+	   not in(select $notTop$ 
+       stepid 
+	   from t_template_flow <include refid="TemplateFlow.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TemplateFlow.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	<select id="TemplateFlow.findByNodeIdAndTpId" resultMap="RM.TemplateFlow">
+		select <include refid="TemplateFlow.columns"/> from t_template_flow 
+		<include refid="TemplateFlow.findPage.where"/>
+	</select>
+</sqlMap>

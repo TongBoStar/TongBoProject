@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Teams">
+  <resultMap id="RM.Teams" class="com.terrence.crm.dol.bean.Teams">
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+        <result property="adminid" column="adminid"/>
+        <result property="subteam" column="subteam"/>
+    </resultMap>
+  <resultMap id="RM.Teams.Admin" class="com.terrence.crm.dol.bean.Teams">
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="teamsuperior" column="teamsuperior"/>
+        <result property="teamlevel" column="teamlevel"/>
+        <result property="teamorder" column="teamorder"/>
+        <result property="adminid" column="adminid"/>
+        <result property="subteam" column="subteam"/>
+        <result property="admin" resultMap="RM.Teams.Admin.Detail"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.Admin" id="RM.Teams.Admin.Detail">
+		<result property="adminName" column="adminName"/>
+	</resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Teams.columns">
+	    <![CDATA[
+        	t_teams.teamid ,
+        	t_teams.teamname ,
+        	t_teams.teamsuperior ,
+        	t_teams.teamlevel ,
+        	t_teams.teamorder ,
+        	t_teams.secid,
+        	t_teams.adminid,
+        	t_teams.subteam
+	    ]]>
+	</sql>
+	<sql id="Teams.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_teams.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_teams.teamname like ('%$teamname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamsuperior">
+	             t_teams.teamsuperior = #teamsuperior#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamlevel">
+	             t_teams.teamlevel = #teamlevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamorder">
+	             t_teams.teamorder = #teamorder#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secid">
+	        	 t_teams.secid = #secid# 
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminid">
+	        	 t_teams.adminid = #adminid# 
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	<select id="Teams.findList" resultMap="RM.Teams.Admin">
+    	SELECT 
+    		<include refid="Teams.columns"/> ,t_admin.adminName 
+	        from t_teams left join t_admin on t_teams.adminid=t_admin.adminid
+		<include refid="Teams.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+
+
+	<select id="Teams.getById" resultMap="RM.Teams">
+	    select <include refid="Teams.columns"/>
+	    
+	        from t_teams 
+	        where 
+		        teamid = #teamid# 
+	    
+    </select>
+</sqlMap>

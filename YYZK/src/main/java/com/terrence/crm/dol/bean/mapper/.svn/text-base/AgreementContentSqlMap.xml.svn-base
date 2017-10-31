@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="AgreementContent">
+
+<resultMap id="RM.AgreementContent" class="com.terrence.crm.dol.bean.AgreementContent">
+	<result property="id" column="id"/>
+	<result property="agreeId" column="agreeId"/>
+	<result property="contentAttr" column="contentAttr"/>
+	<result property="flen" column="flen"/>
+	<result property="startPosition" column="startPosition"/>
+	<result property="endPosition" column="endPosition"/>
+	<result property="seqno" column="seqno"/>
+	<result property="content" column="content"/>
+	<result property="attrName" column="attrName"/>
+	<result property="fmark" column="fmark"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="AgreementContent.columns">
+	<![CDATA[
+		t_agreement_content.id ,
+		t_agreement_content.agreeId ,
+		t_agreement_content.contentAttr ,
+		t_agreement_content.flen ,
+		t_agreement_content.startPosition ,
+		t_agreement_content.endPosition ,
+		t_agreement_content.seqno ,
+		t_agreement_content.content
+	]]>
+</sql>
+
+<insert id="AgreementContent.insert" >
+	<![CDATA[
+	INSERT INTO t_agreement_content (
+		agreeId,
+		contentAttr,
+		flen,
+		startPosition,
+		endPosition,
+		seqno,
+		content
+	) VALUES (
+		#agreeId#,
+		#contentAttr#,
+		#flen#,
+		#startPosition#,
+		#endPosition#,
+		#seqno#,
+		#content#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="AgreementContent.update" parameterClass="com.terrence.crm.dol.bean.AgreementContent"> 
+	UPDATE t_agreement_content 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="agreeId">
+			agreeId = #agreeId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="contentAttr">
+			contentAttr = #contentAttr# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="flen">
+			flen = #flen# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="startPosition">
+			startPosition = #startPosition# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="endPosition">
+			endPosition = #endPosition# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="seqno">
+			seqno = #seqno# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="content">
+			content = #content# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="AgreementContent.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_agreement_content.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="agreeId">
+			t_agreement_content.agreeId = #agreeId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="contentAttr">
+			t_agreement_content.contentAttr = #contentAttr# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="flen">
+			t_agreement_content.flen = #flen# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="startPosition">
+			t_agreement_content.startPosition = #startPosition# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="endPosition">
+			t_agreement_content.endPosition = #endPosition# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="seqno">
+			t_agreement_content.seqno = #seqno# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="content">
+			t_agreement_content.content = #content# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="AgreementContent.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_agreement_content.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="agreeId">
+		t_agreement_content.agreeId = #agreeId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="contentAttr">
+		t_agreement_content.contentAttr = #contentAttr# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="flen">
+		t_agreement_content.flen = #flen# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="startPosition">
+		t_agreement_content.startPosition = #startPosition# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="endPosition">
+		t_agreement_content.endPosition = #endPosition# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="seqno">
+		t_agreement_content.seqno = #seqno# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="content">
+		t_agreement_content.content = #content# 
+	</isNotEmpty>
+</sql>
+
+<select id="AgreementContent.getById" resultMap="RM.AgreementContent">
+	select <include refid="AgreementContent.columns"/> from t_agreement_content where id=#id#
+</select>
+
+<select id="AgreementContent.getByProperty" resultMap="RM.AgreementContent">
+	select <include refid="AgreementContent.columns"/> ,t_agreement_var.attrName,t_agreement_var.fmark 
+	 FROM t_agreement_content 
+	 left join t_agreement_var on t_agreement_content.contentAttr = t_agreement_var.id  where $propertyName$=#propertyValue#
+</select>
+
+<delete id="AgreementContent.delete">
+	<![CDATA[
+		DELETE FROM t_agreement_content WHERE id=#id#
+	]]>
+</delete>
+<delete id="AgreementContent.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_agreement_content WHERE id in ($id$)
+	]]>
+</delete>
+<delete id="AgreementContent.delete.agreeId">
+	<![CDATA[
+		DELETE FROM t_agreement_content WHERE agreeId=$agreeId$
+	]]>
+</delete>
+
+<select id="AgreementContent.findPage.count" resultClass="long">
+	select count(*) from t_agreement_content <include refid="AgreementContent.findPage.where"/>
+</select>
+
+<select id="AgreementContent.findPage" resultMap="RM.AgreementContent">
+	select <include refid="AgreementContent.columns"/> ,t_agreement_var.attrName,t_agreement_var.fmark 
+	 FROM t_agreement_content 
+	 left join t_agreement_var on t_agreement_content.contentAttr = t_agreement_var.id 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_agreement_content <include refid="AgreementContent.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="AgreementContent.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="AgreementContent.findList" resultMap="RM.AgreementContent">
+	SELECT <include refid="AgreementContent.columns"/>,t_agreement_var.attrName,t_agreement_var.fmark 
+	 FROM t_agreement_content 
+	 left join t_agreement_var on t_agreement_content.contentAttr = t_agreement_var.id 
+	<include refid="AgreementContent.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

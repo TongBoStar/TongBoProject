@@ -1,0 +1,64 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.BillsDetail;
+import com.terrence.crm.dol.dao.IBillsDetailDao;
+import com.terrence.crm.dol.query.BillsDetailQuery;
+
+@Repository
+public class BillsDetailDao extends BaseIbatisDao<BillsDetail,java.lang.Long> implements IBillsDetailDao{
+
+		
+	public void saveOrUpdate(BillsDetail entity) {
+		if(entity.getDetailno() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "BillsDetail";
+	}
+	public BillsDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (BillsDetail)this.getSqlMapClientTemplate().queryForObject("BillsDetail.getByProperty", map);		
+	}
+
+	
+	@Override
+	public Object saveBillsDetail(BillsDetailQuery billsDetailQuery) {
+		return this.getSqlMapClientTemplate().insert("BillsDetail.insertData", billsDetailQuery);
+	}
+
+	@Override
+	public Integer updateBillsDetail(BillsDetail entity) {
+		return this.getSqlMapClientTemplate().update("BillsDetail.update", entity);
+		
+	}
+
+	@Override
+	public List<Integer> findbdnosBydidandft(Long dispatchid, int fadditem) {
+		Map map=new HashMap();		
+		map.put("dispatchid", dispatchid);
+		map.put("fadditem", fadditem);
+		return (List<Integer>)this.getSqlMapClientTemplate().queryForList("BillsDetail.finddetailnoBydidandft", map);	
+	}
+
+	@Override
+	public BillsDetail getEntityId(BillsDetail bdill) {
+		return (BillsDetail) this.getSqlMapClientTemplate().queryForObject("BillsDetail.getentity.byId", bdill);
+	}
+
+}

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yqcode">
+
+<resultMap id="RM.Yqcode" class="com.terrence.crm.dol.bean.Yqcode">
+	<result property="id" column="id"/>
+	<result property="seqno" column="seqno"/>
+	<result property="fmark" column="fmark"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yqcode.columns">
+	<![CDATA[
+		t_yqcode.id ,
+		t_yqcode.seqno ,
+		t_yqcode.fmark
+	]]>
+</sql>
+
+<insert id="Yqcode.insert" >
+	<![CDATA[
+	INSERT INTO t_yqcode (
+		seqno,
+		fmark
+	) VALUES (
+		#seqno#,
+		#fmark#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yqcode.update" parameterClass="com.terrence.crm.dol.bean.Yqcode"> 
+	UPDATE t_yqcode 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="seqno">
+			seqno = #seqno# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yqcode.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yqcode.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="seqno">
+			t_yqcode.seqno = #seqno# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_yqcode.fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yqcode.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yqcode.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="seqno">
+		t_yqcode.seqno = #seqno# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_yqcode.fmark = #fmark# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yqcode.getById" resultMap="RM.Yqcode">
+	select <include refid="Yqcode.columns"/> from t_yqcode where id=#id#
+</select>
+
+<select id="Yqcode.getByProperty" resultMap="RM.Yqcode">
+	select <include refid="Yqcode.columns"/> from t_yqcode where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yqcode.delete">
+	<![CDATA[
+		DELETE FROM t_yqcode WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yqcode.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yqcode WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yqcode.findPage.count" resultClass="long">
+	select count(*) from t_yqcode <include refid="Yqcode.findPage.where"/>
+</select>
+
+<select id="Yqcode.findPage" resultMap="RM.Yqcode">
+	select <include refid="Yqcode.columns"/> 
+		from t_yqcode 
+	<include refid="Yqcode.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yqcode.findList" resultMap="RM.Yqcode">
+	SELECT <include refid="Yqcode.columns"/> FROM t_yqcode
+	<include refid="Yqcode.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

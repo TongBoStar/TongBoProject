@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.SurveysEntry;
+import com.terrence.crm.dol.dao.ISurveysEntryDao;
+
+@Repository
+public class SurveysEntryDao extends BaseIbatisDao<SurveysEntry,java.lang.Long> implements ISurveysEntryDao{
+
+		
+	public void saveOrUpdate(SurveysEntry entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "SurveysEntry";
+	}
+	public SurveysEntry getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SurveysEntry)this.getSqlMapClientTemplate().queryForObject("SurveysEntry.getByProperty", map);		
+	}
+
+}

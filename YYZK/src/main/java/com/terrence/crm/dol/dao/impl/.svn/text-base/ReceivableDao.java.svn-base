@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Receivable;
+import com.terrence.crm.dol.dao.IReceivableDao;
+import com.terrence.crm.dol.query.ReceivableQuery;
+
+@Repository
+public class ReceivableDao extends BaseIbatisDao<Receivable,java.lang.Long> implements IReceivableDao{
+
+		
+	public void saveOrUpdate(Receivable entity) {
+		if(entity.getReceivableid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Receivable";
+	}
+	public Receivable getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Receivable)this.getSqlMapClientTemplate().queryForObject("Receivable.getByProperty", map);		
+	}
+
+	@Override
+	public Double countAtypeBySaler(ReceivableQuery rquery, String user) {
+		Map map=new HashMap();		
+		map.put("startTime", rquery.getStartTime());
+		map.put("endTime", rquery.getEndTime());
+		map.put("saler",user);
+		return (Double)this.getSqlMapClientTemplate().queryForObject("Receivable.countAtypeBySaler", map);
+	}
+
+}

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItemRule">
+
+        
+	<resultMap id="RM.ItemRule" class="com.terrence.crm.dol.bean.ItemRule">
+        <result property="itemruleid" column="itemruleid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="rulename" column="rulename"/>
+        <result property="seq" column="seq"/>
+        <result property="showseq" column="showseq"/>
+        <result property="sign" column="sign"/>
+        <result property="hideitemids" column="hideitemids"/>
+    </resultMap>
+	
+	<resultMap id="RM.ItemRule.findListDetail" class="com.terrence.crm.dol.bean.ItemRule">
+        <result property="itemruleid" column="itemruleid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="rulename" column="rulename"/>
+        <result property="seq" column="seq"/>
+        <result property="showseq" column="showseq"/>
+        <result property="sign" column="sign"/>
+        <result property="hideitemids" column="hideitemids"/>
+        <result property="itemRuleDetaillist" column="itemruleid" select="ItemRule.findList.ItemRuleDetail"/>
+    </resultMap>
+		  
+	<resultMap id="RM.ItemRule.ItemRuleDetail" class="com.terrence.crm.dol.bean.ItemRuleDetail">
+        <result property="detailid" column="detailid"/>
+        <result property="itemruleid" column="itemruleid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="fname" column="fname"/>
+        <result property="fcode" column="fcode"/>
+        <result property="delitemids" column="delitemids"/>
+        <result property="seq" column="seq"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ItemRule.columns">
+	    <![CDATA[
+        	t_item_rule.itemruleid ,
+        	t_item_rule.itemid ,
+        	t_item_rule.rulename ,
+        	t_item_rule.seq,
+        	t_item_rule.showseq,
+        	t_item_rule.sign,
+        	t_item_rule.hideitemids
+	    ]]>
+	</sql>
+	
+   <insert id="ItemRule.insert" >
+    
+        INSERT INTO
+        t_item_rule (
+        	itemid 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="rulename">rulename</isNotEmpty>
+        		<isNotEmpty prepend="," property="seq">seq</isNotEmpty>
+        		<isNotEmpty prepend="," property="showseq">showseq</isNotEmpty>
+        		<isNotNull prepend="," property="sign">sign</isNotNull>
+        		<isNotNull prepend="," property="hideitemids">hideitemids</isNotNull>
+        	</dynamic>
+        ) VALUES (
+        	#itemid#
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="rulename">#rulename#</isNotEmpty>
+        		<isNotEmpty prepend="," property="seq">#seq#</isNotEmpty>
+        		<isNotEmpty prepend="," property="showseq">#showseq#</isNotEmpty>
+        		<isNotNull prepend="," property="sign">#sign#</isNotNull>
+        		<isNotNull prepend="," property="hideitemids">#hideitemids#</isNotNull>
+        	</dynamic>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="itemruleid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ItemRule.update" parameterClass="com.terrence.crm.dol.bean.ItemRule">         
+        UPDATE t_item_rule 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemid">
+	        	itemid = #itemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="rulename">
+	        	rulename = #rulename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seq">
+	        	seq = #seq# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="showseq">
+	        	showseq = #showseq# 
+	        </isNotEmpty>
+	        <isNotNull prepend="," property="sign">
+	        	sign = #sign# 
+	        </isNotNull>
+	        <isNotNull prepend="," property="hideitemids">
+	        	hideitemids = #hideitemids# 
+	        </isNotNull>
+	    </dynamic>
+        WHERE 
+	        itemruleid = #itemruleid# 
+    </update>
+    
+	<delete id="ItemRule.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_item_rule where
+       itemruleid = #itemruleid# 
+    ]]>
+    </delete>
+    
+    <delete id="ItemRule.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_item_rule 
+        WHERE
+       itemruleid in ($itemruleid$) 
+    ]]>
+    </delete>
+    
+    <select id="ItemRule.getById" resultMap="RM.ItemRule">
+	    select <include refid="ItemRule.columns"/>
+	    
+	        from t_item_rule 
+	        where 
+		        itemruleid = #itemruleid# 
+	    
+    </select>
+    
+	<select id="ItemRule.getByProperty" resultMap="RM.ItemRule">
+		select <include refid="ItemRule.columns"/> from t_item_rule where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ItemRule.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="itemruleid">
+	             t_item_rule.itemruleid = #itemruleid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_item_rule.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="rulename">
+	             t_item_rule.rulename = #rulename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seq">
+	             t_item_rule.seq = #seq#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="showseq">
+	             t_item_rule.showseq = #showseq#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sign">
+	             t_item_rule.sign = #sign#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="hideitemids">
+	             t_item_rule.hideitemids = #hideitemids#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ItemRule.findPage.and">
+			<isNotEmpty prepend="AND" property="itemruleid">
+	             t_item_rule.itemruleid = #itemruleid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_item_rule.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="rulename">
+	             t_item_rule.rulename = #rulename#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seq">
+	             t_item_rule.seq = #seq#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="showseq">
+	             t_item_rule.showseq = #showseq#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="sign">
+	             t_item_rule.sign = #sign#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="hideitemids">
+	             t_item_rule.hideitemids = #hideitemids#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ItemRule.Entity" resultMap="RM.ItemRule">
+    	SELECT 	<include refid="ItemRule.columns"/> FROM t_item_rule <include refid="ItemRule.findPage.where"/>
+    </select>
+    
+    <select id="ItemRule.findList" resultMap="RM.ItemRule">
+    	SELECT 
+    		<include refid="ItemRule.columns"/> 
+    	FROM 
+    		t_item_rule
+		<include refid="ItemRule.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ItemRule.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item_rule
+    ]]>
+		<include refid="ItemRule.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ItemRule.findPage" resultMap="RM.ItemRule">
+    	select <include refid="ItemRule.columns"/>	    
+	        from t_item_rule 	   
+		<include refid="ItemRule.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ItemRule.findPage" resultMap="RM.ItemRule">
+    	select <include refid="ItemRule.columns"/>	    
+	        from t_item_rule where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       itemruleid 
+	   not in(select $notTop$ 
+       itemruleid 
+	   from t_item_rule <include refid="ItemRule.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ItemRule.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+    <select id="ItemRule.findList.findListDetail" resultMap="RM.ItemRule.findListDetail">
+    	SELECT 
+    		<include refid="ItemRule.columns"/> 
+    	FROM 
+    		t_item_rule
+		where 
+		t_item_rule.itemid=#itemid#
+		
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+
+    <select id="ItemRule.findList.ItemRuleDetail" resultMap="RM.ItemRule.ItemRuleDetail">
+    	SELECT 
+    		t_item_rule_detail.detailid ,
+        	t_item_rule_detail.itemruleid ,
+        	t_item_rule_detail.itemid ,
+        	t_item_rule_detail.fname ,
+        	t_item_rule_detail.fcode,
+        	t_item_rule_detail.delitemids,
+        	t_item_rule_detail.seq 
+    	FROM 
+    		t_item_rule_detail
+		where 
+		t_item_rule_detail.itemruleid=#itemruleid# 
+		order by t_item_rule_detail.seq
+    </select>
+
+ <select id="ItemRule.findlist.itemdetail" resultMap="RM.ItemRule.findListDetail"><!-- 2013/11/12 -->
+    	SELECT 
+    		<include refid="ItemRule.columns"/> 
+    	FROM 
+    		t_item_rule
+		where 
+		t_item_rule.itemid=#itemid#
+		
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+</sqlMap>

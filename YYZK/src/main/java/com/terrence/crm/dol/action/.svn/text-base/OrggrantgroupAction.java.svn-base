@@ -1,0 +1,588 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IOrggrantgroupService;
+import com.terrence.crm.dol.service.IProvinceService;
+import com.terrence.crm.dol.bean.Orggrantgroup;
+import com.terrence.crm.dol.bean.Province;
+import com.terrence.crm.dol.query.OrggrantgroupQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/orggrantgroup")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "orggrantgroup." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class OrggrantgroupAction extends CrudActionSupport<Orggrantgroup>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("orggrantgroupService")
+	private IOrggrantgroupService orggrantgroupService;
+	
+	@Autowired
+	@Qualifier("provinceService")
+	private IProvinceService provinceService;
+	
+	private Orggrantgroup entity;
+
+	private OrggrantgroupQuery orggrantgroupQuery;
+	
+	
+	private java.lang.Long orggrantgroupId;
+	
+	
+	private List<Province> provinceList;
+	
+	/** 分页器 */
+	private Page<Orggrantgroup> page = new Page<Orggrantgroup>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	private ApplicationContext ctx;
+	
+	private List<Orggrantgroup> orggrantgroupList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (orggrantgroupId != null ) {
+			entity = orggrantgroupService.getById(orggrantgroupId);
+		} else {
+			entity = new Orggrantgroup();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			orggrantgroupService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(orggrantgroupQuery == null) {
+			orggrantgroupQuery = new OrggrantgroupQuery();
+		}
+		
+		try {
+			orggrantgroupList = orggrantgroupService.findList(orggrantgroupQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("orggrantgroupId");
+			page.setOrder(Page.DESC);
+		}
+		if(orggrantgroupQuery == null) {
+			orggrantgroupQuery = new OrggrantgroupQuery();
+		}
+		
+		try {
+			page = orggrantgroupService.findPage(page, orggrantgroupQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToAll() throws Exception{
+		try {
+			listAllGroup();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listAllGroup() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("orggrantgroupId");
+			page.setOrder(Page.DESC);
+		}
+		if(orggrantgroupQuery == null) {
+			orggrantgroupQuery = new OrggrantgroupQuery();
+		}
+		
+		try {
+			page = orggrantgroupService.findPage(page, "Sql.Orggrantgroup.findPage", orggrantgroupQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			
+			orggrantgroupService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = orggrantgroupService.getById(orggrantgroupId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			orggrantgroupList = orggrantgroupService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String findModel() throws Exception {
+		try{
+			orggrantgroupList = orggrantgroupService.findModel(orggrantgroupId);
+			provinceList = provinceService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public void prepareSaveAll() throws Exception {
+		prepareModel();
+	}
+	
+	public String saveAll() throws Exception {
+		try{
+//			System.out.println("checkedIdList=========="+checkedIdList);
+//			String ids = StringUtils.join(checkedIdList,",");
+//			orggrantgroupQuery.setIdlist(ids);
+//			System.out.println("checkedIdList=========="+ids);
+			orggrantgroupId = orggrantgroupService.saveAll(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareSaveclientAll()throws Exception
+	{
+		prepareModel();
+	}
+	//保存客户分组信息
+	public String saveclientAll() throws Exception {
+		try{
+			OrggrantgroupQuery query = new  OrggrantgroupQuery();
+			query.setGroupnames(entity.getGroupname());
+			List<Orggrantgroup> orggrantgrouplist = orggrantgroupService.findList(query);
+			
+			if(!orggrantgrouplist.isEmpty()&&entity.getGroupid()==0){
+				
+				resultInfo[1] = "您输入的组名称已存在！";
+			}else{
+				if(entity.getIdlist().equals("")){
+					resultInfo[1] = "您未选择客户！";
+				}else{
+					orggrantgroupId = orggrantgroupService.saveClientAll(entity);
+					resultInfo[0] = "0";
+					resultInfo[1] = "操作成功";
+				}
+			}
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareUpdateAll()throws Exception
+	{
+		prepareModel();
+	}
+	public String updateAll() throws Exception {
+		try{
+
+			orggrantgroupService.updateAll(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareUpdateClientAll()throws Exception
+	{
+		prepareModel();
+	}
+	public String updateClientAll() throws Exception {
+		try{
+			OrggrantgroupQuery query=new OrggrantgroupQuery();
+			query.setGroupname(entity.getGroupname());
+			query.setGroupid(entity.getGroupid());
+			Orggrantgroup grantgroup=orggrantgroupService.getbyUnique(query);
+			
+			if(null!=grantgroup){//说明是新输入的数据
+				resultInfo[0] = "-1";
+				resultInfo[1] = "您输入的组名称已存在！";
+			}else{
+				orggrantgroupService.updateClientAll(entity);
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+			}
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Orggrantgroup getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public OrggrantgroupQuery getOrggrantgroupQuery() {
+		return orggrantgroupQuery;
+	}
+
+	
+	public void setOrggrantgroupQuery(OrggrantgroupQuery orggrantgroupQuery) {
+		this.orggrantgroupQuery = orggrantgroupQuery;
+	}
+
+	public void setOrggrantgroupId(java.lang.Long orggrantgroupId) {
+		this.orggrantgroupId = orggrantgroupId;
+	}
+	
+	
+	public java.lang.Long getOrggrantgroupId() {
+		return this.orggrantgroupId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Orggrantgroup> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Orggrantgroup> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	
+
+	
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Orggrantgroup> getOrggrantgroupList() {
+		return orggrantgroupList;
+	}
+
+	public List<Province> getProvinceList() {
+		return provinceList;
+	}
+
+	public void setProvinceList(List<Province> provinceList) {
+		this.provinceList = provinceList;
+	}
+	
+	
+}

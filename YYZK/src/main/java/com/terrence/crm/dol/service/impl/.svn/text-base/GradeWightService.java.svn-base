@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.GradeWight;
+import com.terrence.crm.dol.query.GradeWightQuery;
+import com.terrence.crm.dol.dao.IGradeWightDao;
+import com.terrence.crm.dol.service.IGradeWightService;
+
+@Service
+@Transactional
+public class GradeWightService extends BaseService implements IGradeWightService {
+	protected static Logger logger = LoggerFactory.getLogger(GradeWightService.class);
+	@Autowired
+	@Qualifier("gradeWightDao")
+	private IGradeWightDao gradeWightDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "GradeWight";
+	}
+	@Transactional(readOnly=true)
+	public GradeWight getById(java.lang.Long id) throws ServiceException
+	{
+		return gradeWightDao.getById(id);
+	}
+	
+	public void saveOrUpdate(GradeWight entity) throws ServiceException
+	{
+		gradeWightDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(GradeWight entity) throws ServiceException
+	{
+		Long adId = gradeWightDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(GradeWight entity) throws ServiceException
+	{
+		Integer returnValue =  gradeWightDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = gradeWightDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = gradeWightDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		GradeWightQuery query = new GradeWightQuery();
+		try {
+			return gradeWightDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<GradeWight> findPage(Page<GradeWight> page, GradeWightQuery query) throws ServiceException
+	{
+		return gradeWightDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<GradeWight> findPage(Page<GradeWight> page,String statement, GradeWightQuery query) throws ServiceException
+	{
+		return gradeWightDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<GradeWight> findList(GradeWightQuery query) throws ServiceException
+	{
+		return gradeWightDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<GradeWight> findList(GradeWightQuery query,Integer pageSize) throws ServiceException
+	{
+		return gradeWightDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<GradeWight> findList(GradeWightQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return gradeWightDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<GradeWight> findAllList() throws ServiceException
+	{
+		return gradeWightDao.findAllList();
+	}
+
+}

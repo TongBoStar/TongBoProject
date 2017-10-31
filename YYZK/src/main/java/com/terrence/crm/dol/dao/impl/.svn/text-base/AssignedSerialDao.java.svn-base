@@ -1,0 +1,59 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssignedSerial;
+import com.terrence.crm.dol.dao.IAssignedSerialDao;
+import com.terrence.crm.dol.query.AssignedSerialQuery;
+
+@Repository
+public class AssignedSerialDao extends BaseIbatisDao<AssignedSerial,java.lang.Long> implements IAssignedSerialDao{
+
+		
+	public void saveOrUpdate(AssignedSerial entity) {
+		if(entity.getSerialid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssignedSerial";
+	}
+	public AssignedSerial getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssignedSerial)this.getSqlMapClientTemplate().queryForObject("AssignedSerial.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteData(AssignedSerialQuery aSerialQuery) {
+		this.getSqlMapClientTemplate().delete("AssignedSerial.delete.fserial.data", aSerialQuery);
+		
+	}
+
+	@Override
+	public void deleteAssigned(AssignedSerial aSerial) {
+		this.getSqlMapClientTemplate().delete("AssignedSerial.delete.assdel.data", aSerial);
+	}
+
+	@Override
+	public void delASerail(AssignedSerial aSerial) {
+		this.getSqlMapClientTemplate().delete("AssignedSerial.delete.for.isreturnStock",aSerial);		
+	}
+
+	@Override
+	public void deleteSerialnum(AssignedSerialQuery aSerialQuery) {
+		this.getSqlMapClientTemplate().delete("AssignedSerial.delete.serialnum.for.pickingdetail", aSerialQuery);
+	}
+
+}

@@ -1,0 +1,102 @@
+
+var isIE = (document.all) ? true : false;
+
+var aa = function (id) {
+	return "string" == typeof id ? document.getElementById(id) : id;
+};
+
+var Class = {
+	create: function() {
+		return function() { this.initialize.apply(this, arguments); }
+	}
+}
+
+var Extend = function(destination, source) {
+	for (var property in source) {
+		destination[property] = source[property];
+	}
+}
+
+var Bind = function(object, fun) {
+	return function() {
+		return fun.apply(object, arguments);
+	}
+}
+
+var BindAsEventListener = function(object, fun) {
+	return function(event) {
+		return fun.call(object, (event || window.event));
+	}
+}
+
+function addEventHandler(oTarget, sEventType, fnHandler) {
+	if (oTarget.addEventListener) {
+		oTarget.addEventListener(sEventType, fnHandler, false);
+	} else if (oTarget.attachEvent) {
+		oTarget.attachEvent("on" + sEventType, fnHandler);
+	} else {
+		oTarget["on" + sEventType] = fnHandler;
+	}
+};
+
+function removeEventHandler(oTarget, sEventType, fnHandler) {
+    if (oTarget.removeEventListener) {
+        oTarget.removeEventListener(sEventType, fnHandler, false);
+    } else if (oTarget.detachEvent) {
+        oTarget.detachEvent("on" + sEventType, fnHandler);
+    } else { 
+        oTarget["on" + sEventType] = null;
+    }
+};
+
+//拖放程序
+var SimpleDrag = Class.create();
+SimpleDrag.prototype = {
+  //拖放对象,触发对象
+  initialize: function(drag) {
+	this.Drag = document.getElementById(drag);
+	this._x = this._y = 0;
+	this._fM = BindAsEventListener(this, this.Move);
+	this._fS = Bind(this, this.Stop);
+	this.Drag.style.position = "absolute";
+	
+	this.DragHead = this.Drag.getElementsByTagName("h1")[0];
+
+  	if(this.DragHead != null){
+		addEventHandler(this.DragHead, "mousedown", BindAsEventListener(this, this.Start));
+		this.DragHead.style.cursor="move";
+	}else{
+		addEventHandler(this.Drag, "mousedown", BindAsEventListener(this, this.Start));
+	}
+  },
+  //准备拖动
+  Start: function(oEvent) {
+	this._x = oEvent.clientX - this.Drag.offsetLeft;
+	this._y = oEvent.clientY - this.Drag.offsetTop;
+	if(this._x < 0) {
+		this._x = 0;
+	}
+	addEventHandler(document, "mousemove", this._fM);
+	addEventHandler(document, "mouseup", this._fS);
+  },
+  //拖动
+  Move: function(oEvent) {
+	var left = 0;
+	var top = 0;
+	if((oEvent.clientX - this._x) > 0) {
+		left = oEvent.clientX - this._x;
+	}
+	if((oEvent.clientY - this._y) > 0) {
+		top = oEvent.clientY - this._y;
+	}
+	this.Drag.style.left = left + "px";
+	this.Drag.style.top =  top + "px";
+	 
+	
+  },
+  //停止拖动
+  Stop: function() {
+	removeEventHandler(document, "mousemove", this._fM);
+	removeEventHandler(document, "mouseup", this._fS);
+  }
+};

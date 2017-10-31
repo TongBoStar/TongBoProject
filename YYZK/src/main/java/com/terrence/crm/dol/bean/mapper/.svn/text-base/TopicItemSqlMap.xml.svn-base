@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TopicItem">
+
+        
+	<resultMap id="RM.TopicItem" class="com.terrence.crm.dol.bean.TopicItem">
+        <result property="testitemid" column="testitemid"/>
+        <result property="topicid" column="topicid"/>
+        <result property="secid" column="secid"/>
+    </resultMap>
+    <resultMap id="RM.TopicItem.Secname" class="com.terrence.crm.dol.bean.TopicItem">
+        <result property="testitemid" column="testitemid"/>
+        <result property="topicid" column="topicid"/>
+        <result property="secid" column="secid"/>
+        <result property="sortcodesec" resultMap="RM.TopicItem.SortSec.Detail"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.Sortcodesec" id="RM.TopicItem.SortSec.Detail">
+		<result property="secname" column="secname"/>
+	</resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TopicItem.columns">
+	    <![CDATA[
+        	t_topic_item.testitemid ,
+        	t_topic_item.topicid ,
+        	t_topic_item.secid 
+	    ]]>
+	</sql>
+	
+   <insert id="TopicItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_topic_item (
+        	topicid ,
+        	secid 
+        ) VALUES (
+        	#topicid# ,
+        	#secid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="testitemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TopicItem.update" parameterClass="com.terrence.crm.dol.bean.TopicItem">         
+        UPDATE t_topic_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="topicid">
+	        	topicid = #topicid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secid">
+	        	secid = #secid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        testitemid = #testitemid# 
+    </update>
+    
+	<delete id="TopicItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_topic_item where
+       testitemid = #testitemid# 
+    ]]>
+    </delete>
+    
+    <delete id="TopicItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_topic_item 
+        WHERE
+       testitemid in ($testitemid$) 
+    ]]>
+    </delete>
+    <sql id="TopicItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="testitemid">
+	             t_topic_item.testitemid = #testitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="topicid">
+	             t_topic_item.topicid = #topicid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="secid">
+	             t_topic_item.secid = #secid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TopicItem.findPage.and">
+			<isNotEmpty prepend="AND" property="testitemid">
+	             t_topic_item.testitemid = #testitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="topicid">
+	             t_topic_item.topicid = #topicid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="secid">
+	             t_topic_item.secid = #secid#
+	       </isNotEmpty>
+	</sql>
+    <delete id="TopicItem.deleteMultiple.Entity">
+    	delete FROM t_topic_item <include refid="TopicItem.findPage.where"/>
+    </delete>
+    <select id="TopicItem.getById" resultMap="RM.TopicItem">
+	    select <include refid="TopicItem.columns"/>
+	    
+	        from t_topic_item 
+	        where 
+		        testitemid = #testitemid# 
+	    
+    </select>
+    
+	<select id="TopicItem.getByProperty" resultMap="RM.TopicItem">
+		select <include refid="TopicItem.columns"/> from t_topic_item where $propertyName$=#propertyValue#
+	</select>
+	
+	
+	
+    <select id="TopicItem.Entity" resultMap="RM.TopicItem">
+    	SELECT 	<include refid="TopicItem.columns"/> FROM t_topic_item <include refid="TopicItem.findPage.where"/>
+    </select>
+    
+    <select id="TopicItem.findList" resultMap="RM.TopicItem">
+    	SELECT 
+    		<include refid="TopicItem.columns"/> 
+    	FROM 
+    		t_topic_item
+		<include refid="TopicItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="TopicItem.Secname.findList" resultMap="RM.TopicItem.Secname">
+    select t_sortcodesec.secname,t_topic_item.secid,t_topic_item.testitemid,t_topic_item.topicid
+ 	from t_sortcodesec,t_topic_item where t_sortcodesec.secid=t_topic_item.secid 
+	and t_topic_item.topicid=#topicid#
+    </select>
+    <select id="TopicItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select count(*) from t_topic_item
+    ]]>
+		<include refid="TopicItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TopicItem.findPage" resultMap="RM.TopicItem">
+    	select <include refid="TopicItem.columns"/>	    
+	        from t_topic_item 	   
+		<include refid="TopicItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TopicItem.findPage" resultMap="RM.TopicItem">
+    	select <include refid="TopicItem.columns"/>	    
+	        from t_topic_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       testitemid 
+	   not in(select $notTop$ 
+       testitemid 
+	   from t_topic_item <include refid="TopicItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TopicItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

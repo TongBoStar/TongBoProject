@@ -1,0 +1,37 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrialRunStatus;
+import com.terrence.crm.dol.dao.ITrialRunStatusDao;
+
+@Repository
+public class TrialRunStatusDao extends BaseIbatisDao<TrialRunStatus,java.lang.Long> implements ITrialRunStatusDao{
+
+		
+	public void saveOrUpdate(TrialRunStatus entity) {
+		if(entity.getStatusid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrialRunStatus";
+	}
+	public TrialRunStatus getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrialRunStatus)this.getSqlMapClientTemplate().queryForObject("TrialRunStatus.getByProperty", map);		
+	}
+
+}

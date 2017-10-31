@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Area;
+import com.terrence.crm.dol.dao.IAreaDao;
+import com.terrence.crm.dol.query.AreaQuery;
+
+@Repository
+public class AreaDao extends BaseIbatisDao<Area,java.lang.Long> implements IAreaDao{
+
+		
+	public void saveOrUpdate(Area entity) {
+		if(entity.getAreaid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Area";
+	}
+	public Area getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Area)this.getSqlMapClientTemplate().queryForObject("Area.getByProperty", map);		
+	}
+
+	@Override
+	public void syncAreaERPData() {
+		this.getSqlMapClientTemplate().queryForObject("Area.synAreaErp.data");
+	}
+
+	@Override
+	public List<Area> findAreaList(AreaQuery areaQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Area.find.data.areaList", areaQuery);
+	}
+
+}

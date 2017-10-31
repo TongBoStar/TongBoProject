@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Classtype;
+import com.terrence.crm.dol.dao.IClasstypeDao;
+
+@Repository
+public class ClasstypeDao extends BaseIbatisDao<Classtype,java.lang.Long> implements IClasstypeDao{
+
+		
+	public void saveOrUpdate(Classtype entity) {
+		if(entity.getClasstypeid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Classtype";
+	}
+	public Classtype getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Classtype)this.getSqlMapClientTemplate().queryForObject("Classtype.getByProperty", map);		
+	}
+
+}

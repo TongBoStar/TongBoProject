@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Itemclass">
+
+        
+	<resultMap id="RM.Itemclass" class="com.terrence.crm.dol.bean.Itemclass">
+        <result property="fitemclassid" column="fitemclassid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="fsqltablename" column="fsqltablename"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Itemclass.columns">
+	    <![CDATA[
+        	t_itemclass.fitemclassid ,
+        	t_itemclass.fnumber ,
+        	t_itemclass.fname ,
+        	t_itemclass.fsqltablename 
+	    ]]>
+	</sql>
+	
+   <insert id="Itemclass.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_itemclass (
+        	fitemclassid ,
+        	fnumber ,
+        	fname ,
+        	fsqltablename 
+        ) VALUES (
+        	#fitemclassid# ,
+        	#fnumber# ,
+        	#fname# ,
+        	#fsqltablename# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fitemclassid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Itemclass.update" parameterClass="com.terrence.crm.dol.bean.Itemclass">         
+        UPDATE t_itemclass 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsqltablename">
+	        	fsqltablename = #fsqltablename# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fitemclassid = #fitemclassid# 
+    </update>
+    
+	<delete id="Itemclass.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_itemclass where
+       fitemclassid = #fitemclassid# 
+    ]]>
+    </delete>
+    
+    <delete id="Itemclass.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_itemclass 
+        WHERE
+       fitemclassid in ($fitemclassid$) 
+    ]]>
+    </delete>
+    
+    <select id="Itemclass.getById" resultMap="RM.Itemclass">
+	    select <include refid="Itemclass.columns"/>
+	    
+	        from t_itemclass 
+	        where 
+		        fitemclassid = #fitemclassid# 
+	    
+    </select>
+    
+	<select id="Itemclass.getByProperty" resultMap="RM.Itemclass">
+		select <include refid="Itemclass.columns"/> from t_itemclass where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Itemclass.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fitemclassid">
+	             t_itemclass.fitemclassid = #fitemclassid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_itemclass.fnumber = #fnumber#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_itemclass.fname = #fname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsqltablename">
+	             t_itemclass.fsqltablename = #fsqltablename#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Itemclass.findPage.and">
+			<isNotEmpty prepend="AND" property="fitemclassid">
+	             t_itemclass.fitemclassid = #fitemclassid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_itemclass.fnumber = #fnumber#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_itemclass.fname = #fname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsqltablename">
+	             t_itemclass.fsqltablename = #fsqltablename#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Itemclass.Entity" resultMap="RM.Itemclass">
+    	SELECT 	<include refid="Itemclass.columns"/> FROM t_itemclass <include refid="Itemclass.findPage.where"/>
+    </select>
+    
+    <select id="Itemclass.findList" resultMap="RM.Itemclass">
+    	SELECT 
+    		<include refid="Itemclass.columns"/> 
+    	FROM 
+    		t_itemclass
+		<include refid="Itemclass.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Itemclass.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_itemclass
+    ]]>
+		<include refid="Itemclass.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Itemclass.findPage" resultMap="RM.Itemclass">
+    	select <include refid="Itemclass.columns"/>	    
+	        from t_itemclass 	   
+		<include refid="Itemclass.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Itemclass.findPage" resultMap="RM.Itemclass">
+    	select <include refid="Itemclass.columns"/>	    
+	        from t_itemclass where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fitemclassid 
+	   not in(select $notTop$ 
+       fitemclassid 
+	   from t_itemclass <include refid="Itemclass.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Itemclass.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+	<procedure id="Itemclass.tongbu.rep.data">
+		{call pro_ItemClassErpData()}
+	</procedure>
+</sqlMap>

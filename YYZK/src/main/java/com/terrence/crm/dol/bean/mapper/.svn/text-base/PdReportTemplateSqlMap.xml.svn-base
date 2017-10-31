@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdReportTemplate">
+
+        
+	<resultMap id="RM.PdReportTemplate" class="com.terrence.crm.dol.bean.PdReportTemplate">
+        <result property="tplid" column="tplid"/>
+        <result property="ltplname" column="ltplname"/>
+        <result property="stplname" column="stplname"/>
+        <result property="fdesc" column="fdesc"/>
+        <result property="createdate" column="createdate"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fparent" column="fparent"/>
+        <result property="fparentname" column="fparentname"/>
+        <result property="furl" column="furl"/>
+        <result property="fsequence" column="fsequence"/>
+        <result property="stemplates" column="tplid" select="RM.PdReportTemplate_Second"/>
+        <result property="pdReportTemplate" column="tplid" select="PdReportTemplate.getParent"/>
+    </resultMap>
+	<resultMap id="RM.PdReportTemplate_Sresult" class="com.terrence.crm.dol.bean.PdReportTemplate">
+        <result property="tplid" column="tplid"/>
+        <result property="ltplname" column="ltplname"/>
+        <result property="stplname" column="stplname"/>
+        <result property="fdesc" column="fdesc"/>
+        <result property="createdate" column="createdate"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fparent" column="fparent"/>
+        <result property="furl" column="furl"/>
+        <result property="fsequence" column="fsequence"/>
+        <result property="fparentname" column="fparentname"/>
+    </resultMap>
+    <resultMap id="RM.PdReportTemplate_parent" class="com.terrence.crm.dol.bean.PdReportTemplate">
+        <result property="tplid" column="tplid"/>
+        <result property="ltplname" column="ltplname"/>
+        <result property="stplname" column="stplname"/>
+        <result property="fdesc" column="fdesc"/>
+        <result property="createdate" column="createdate"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fparent" column="fparent"/>
+        <result property="furl" column="furl"/>
+        <result property="fsequence" column="fsequence"/>
+    </resultMap>
+	<resultMap id="RM.PdReportTemplate_Basic" class="com.terrence.crm.dol.bean.PdReportTemplate">
+        <result property="tplid" column="tplid"/>
+        <result property="ltplname" column="ltplname"/>
+        <result property="stplname" column="stplname"/>
+        <result property="fdesc" column="fdesc"/>
+        <result property="createdate" column="createdate"/>
+        <result property="flevel" column="flevel"/>
+        <result property="fparent" column="fparent"/>
+        <result property="furl" column="furl"/>
+        <result property="fsequence" column="fsequence"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdReportTemplate.columns">
+	    <![CDATA[
+        	t_pd_report_template.tplid ,
+        	t_pd_report_template.ltplname ,
+        	t_pd_report_template.stplname ,
+        	t_pd_report_template.fdesc ,
+        	t_pd_report_template.createdate,
+        	t_pd_report_template.flevel ,
+        	t_pd_report_template.fparent,
+        	t_pd_report_template.furl ,
+        	t_pd_report_template.fsequence 
+	    ]]>
+	</sql>
+	
+   <insert id="PdReportTemplate.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_pd_report_template (
+        	ltplname ,
+        	stplname ,
+        	fdesc ,
+        	createdate ,
+        	flevel,
+        	fparent,
+        	furl,
+        	fsequence
+        ) VALUES (
+        	#ltplname# ,
+        	#stplname# ,
+        	#fdesc# ,
+        	#createdate# ,
+        	#flevel#,
+        	#fparent#,
+        	#furl#,
+        	#fsequence#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="tplid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdReportTemplate.update" parameterClass="com.terrence.crm.dol.bean.PdReportTemplate">         
+        UPDATE t_pd_report_template set 
+	        	ltplname = #ltplname# ,
+	        	stplname = #stplname# ,
+	        	fdesc = #fdesc# ,
+	        	flevel = #flevel# ,
+	        	fparent = #fparent# ,
+	        	furl = #furl# ,
+	        	fsequence =  #fsequence# 
+        WHERE 
+	        tplid = #tplid# 
+    </update>
+    
+	<delete id="PdReportTemplate.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_report_template where
+       tplid = #tplid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdReportTemplate.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_report_template 
+        WHERE
+       tplid in ($tplid$) 
+    ]]>
+    </delete>
+    
+    <select id="PdReportTemplate.getById" resultMap="RM.PdReportTemplate">
+	    select <include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+	        where 
+		        t_pd_report_template.tplid = #tplid# 
+	    
+    </select>
+    <select id="PdReportTemplate.getParent" resultMap="RM.PdReportTemplate_parent">
+	    select <include refid="PdReportTemplate.columns"/> 
+		 from t_pd_report_template
+	        where 
+		        t_pd_report_template.tplid = #tplid# 
+	    
+    </select>
+	<select id="PdReportTemplate.getByProperty" resultMap="RM.PdReportTemplate">
+		select <include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		 where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdReportTemplate.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_pd_report_template.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ltplname">
+	             t_pd_report_template.ltplname like ('%$ltplname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stplname">
+	             t_pd_report_template.stplname = #stplname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdesc">
+	             t_pd_report_template.fdesc = #fdesc#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_pd_report_template.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_pd_report_template.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flevel">
+	             t_pd_report_template.flevel = #flevel#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="furl">
+	             t_pd_report_template.furl = #furl#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdReportTemplate.findPage.and">
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_pd_report_template.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ltplname">
+	             t_pd_report_template.ltplname like ('%$ltplname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stplname">
+	             t_pd_report_template.stplname = #stplname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdesc">
+	             t_pd_report_template.fdesc = #fdesc#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_pd_report_template.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_pd_report_template.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flevel">
+	             t_pd_report_template.flevel = #flevel#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="furl">
+	             t_pd_report_template.furl = #furl#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdReportTemplate.Entity" resultMap="RM.PdReportTemplate">
+    	SELECT 	<include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		  <include refid="PdReportTemplate.findPage.where"/>
+    </select>
+    
+    <select id="PdReportTemplate.findList" resultMap="RM.PdReportTemplate">
+    	SELECT 
+    		<include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		<include refid="PdReportTemplate.findPage.where"/>
+		ORDER BY t_pd_report_template.fsequence asc
+    </select>
+    
+    <select id="PdReportTemplate.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_report_template
+    ]]>
+		<include refid="PdReportTemplate.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdReportTemplate.findPage" resultMap="RM.PdReportTemplate">
+    	select <include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		<include refid="PdReportTemplate.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdReportTemplate.findPage" resultMap="RM.PdReportTemplate">
+    	select <include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		 where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_pd_report_template.tplid 
+	   not in(select $notTop$ 
+       tplid 
+	   from t_pd_report_template <include refid="PdReportTemplate.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdReportTemplate.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="RM.PdReportTemplate_Second" resultMap="RM.PdReportTemplate_Sresult">
+    	select <include refid="PdReportTemplate.columns"/>,tprt1.ltplname fparentname 
+		 from t_pd_report_template 
+		 left join t_pd_report_template tprt1 on t_pd_report_template.fparent = tprt1.tplid 
+		 where t_pd_report_template.fparent = #tplid#
+    </select>
+    <select id="PdReportTemplate.listByTplids" resultMap="RM.PdReportTemplate_Basic">
+    	select <include refid="PdReportTemplate.columns"/> from t_pd_report_template 
+    	where t_pd_report_template.tplid in ($tplids$)
+    </select>
+</sqlMap>

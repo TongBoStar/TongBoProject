@@ -1,0 +1,1030 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.SysOrder;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.PorequestQuery;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IPorequestService;
+import com.terrence.crm.dol.service.IPorequestentryService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import java.util.Date;
+import java.util.List;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/porequest")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "porequest." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PorequestAction extends CrudActionSupport<Porequest>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("porequestService")
+	private IPorequestService porequestService;
+	@Autowired
+	@Qualifier("porequestentryService")
+	private IPorequestentryService porequestentryService;
+	
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	
+	private Porequest entity;
+
+	private PorequestQuery porequestQuery;
+	
+	
+	private java.lang.Long porequestId;
+	
+	/** 分页器 */
+	private Page<Porequest> page = new Page<Porequest>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Porequest> porequestList;
+	private ProcessExetask processExetask;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (porequestId != null ) {
+			entity = porequestService.getById(porequestId);
+		} else {
+			entity = new Porequest();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			porequestService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(porequestQuery == null) {
+			porequestQuery = new PorequestQuery();
+		}
+		
+		try {
+			porequestList = porequestService.findList(porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("porequestId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestQuery == null) {
+			porequestQuery = new PorequestQuery();
+		}
+		
+		try {
+			page = porequestService.findPage(page, porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			porequestService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = porequestService.getById(porequestId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			porequestList = porequestService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	/*public void prepareListtable() throws Exception{
+		prepareModel();
+	}
+	public String listtable() throws Exception {//2013-11-12采购申请单列表
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("finterid");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestQuery == null) {
+			porequestQuery = new PorequestQuery();
+		}
+		
+		try {
+			page = porequestService.findPage(page, "Porequest.findPage.list.table", porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}*/
+	
+	
+
+	public String listToPQDetail()throws Exception//查看单个订单明细
+	{
+		if(porequestQuery == null) {
+			porequestQuery = new PorequestQuery();
+		}
+		
+		try {
+			entity = porequestService.findPQDetail(porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateforPoAudit() throws Exception{
+		prepareModel();
+	}
+	@Action("/pore/updateforPoAudit")
+	public String updateforPoAudit()throws Exception//审核操作=======================================
+	{
+		try {
+			Porequest porequest = new Porequest();
+			porequest.setTaskid(entity.getTaskid());
+			porequest.setFstatus(1);//1、审核通过 0、未审核 2、待审核
+			porequestService.updateforPoAudit(checkedIdList,porequest);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	
+	
+	
+	
+	public void prepareUpdateforbatch() throws Exception{
+		prepareModel();
+	}
+	@Action("/pore/updateforbatch")
+	public String updateforbatch()throws Exception//批量审核操作=======================================
+	{
+		try {
+			Porequest porequest = new Porequest();
+			porequest.setTaskid(entity.getTaskid());
+			porequest.setFstatus(1);//1、审核通过 0、未审核 2、待审核
+			porequestService.updateforbatch(checkedIdList,porequest);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateforPoUNAudit() throws Exception{
+		prepareModel();
+	}
+	@Action("/pore/updatUNAudit")
+	public String updateforPoUNAudit()throws Exception//反审核操作
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+
+			Porequest porequest = new Porequest();
+			porequest.setFstatus(0);//1、审核通过 0、未审核
+			porequest.setCheckdate(null);
+			porequest.setCheckid(null);
+			porequest.setRejectedwhy(null);
+			porequest.setCheckstatus(null);
+			porequest.setCheckdesc(null);
+			porequestService.updateforPoUNAudit(checkedIdList,porequest);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateforclose() throws Exception{
+		prepareModel();
+	}
+	public String updateforclose()throws Exception//关闭操作
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+
+			Porequest porequest = new Porequest();
+			porequest.setFclosed(1);//1、关闭 0、未关闭
+			porequest.setClosetime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			porequest.setCloseuserId(SpringSecurityUtils.getCurrentUserId());
+			porequest.setCloseuserName(SpringSecurityUtils.getCurrentRealName());
+			porequestService.updateforclose(checkedIdList,porequest);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareUpdateforUNclose() throws Exception{
+		prepareModel();
+	}
+	public String updateforUNclose()throws Exception//申请单反关闭操作
+	{
+		try {
+			
+			
+			//po.setStartdate(DateConvertUtils.getCurrentDate());
+
+			Porequest porequest = new Porequest();
+			porequest.setFclosed(0);//1、关闭 0、未关闭
+			porequestService.updateforUNclose(checkedIdList,porequest);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	public String findListaudit()throws Exception//下推时检查是否审核
+	{
+		
+		try {
+			porequestList = porequestService.findListaudit(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	@Action("/pore/findListaudit")
+	public String findListAudit()throws Exception//下推时检查是否审核(用于下推时加权限)
+	{
+		
+		try {
+			porequestList = porequestService.findListaudit(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+
+	public String findPQtasks() throws Exception {//待办任务查看时
+		
+		try {
+			entity = porequestService.findPQtasks(porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareFindDetil() throws Exception{
+		prepareModel();
+	}
+	public String findDetil() throws Exception {//明细
+			
+			try {
+				entity = porequestService.findDetil(porequestId);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询失败";
+			}
+			return JSON;
+		}
+	
+	
+	public void prepareUpdatedetailstatus() throws Exception{
+		prepareModel();
+	}
+	@Action("/pore/updatedetailstatus")
+	public String updatedetailstatus()throws Exception//审核操作
+	{
+		try {
+			
+			porequestService.updatedetailstatus(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "审核成功";
+			
+			addActionMessage("审核成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "审核失败";
+			
+			addActionMessage("审核失败");
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareUpdateRejected() throws Exception{
+		prepareModel();
+	}
+	@Action("/pore/updateRejected")
+	public String updateRejected()throws Exception//批量驳回操作=======================================
+	{
+		try {
+//			Porequest porequest = new Porequest();
+//			porequest.setTaskid(entity.getTaskid());
+//			porequest.setRejectedwhy(entity.getRejectedwhy());
+			entity.setFstatus(0);//1、审核通过 0、未审核 2、待审核 3、驳回
+			porequestService.updateRejected(checkedIdList,entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	public String findPorequestEntity() throws Exception {//根据单据编号查询申请单
+		
+		try {
+			entity = porequestService.findPorequestEntity(porequestQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 申请单提交（明细界面）
+	* <p>Description: </p>
+	* @author yjb
+	* @date 2015-10-19上午11:27:46
+	 */
+	public void prepareUpdateStatuts() throws Exception{
+		prepareModel();
+	}
+	public String updateStatuts()throws Exception
+	{
+		try {
+			
+			porequestService.updateStatuts(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 采购申请单批量提交
+	* <p>Description: </p>
+	* @author yjb
+	* @date 2015-10-19上午11:28:41
+	 */
+	public void prepareUpdateStatutsAll() throws Exception{
+		prepareModel();
+	}
+	public String updateStatutsAll()throws Exception
+	{
+		try {
+			
+			porequestService.updateStatutsAll(checkedIdList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Porequest getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PorequestQuery getPorequestQuery() {
+		return porequestQuery;
+	}
+
+	
+	public void setPorequestQuery(PorequestQuery porequestQuery) {
+		this.porequestQuery = porequestQuery;
+	}
+
+	public void setPorequestId(java.lang.Long porequestId) {
+		this.porequestId = porequestId;
+	}
+	
+	
+	public java.lang.Long getPorequestId() {
+		return this.porequestId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Porequest> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Porequest> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Porequest> getPorequestList() {
+		return porequestList;
+	}
+	/**
+	 * 采购订单选择单号时查询列表
+	 * @return
+	 * @throws Exception
+	 */
+	public String listToJsonNew() throws Exception {
+		
+		try {
+			listNew();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listNew() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("porequestId");
+			page.setOrder(Page.DESC);
+		}
+		if(porequestQuery == null) {
+			porequestQuery = new PorequestQuery();
+		}
+		porequestQuery.setFstatus(1);
+		porequestQuery.setFclosed(0);
+		try {
+			page = porequestService.findPage(page, porequestQuery);
+			List<Porequest> porequests =  page.getResult();
+			if(porequests!=null&&porequests.size()>0){
+				for(int i=0;i<porequests.size();i++){
+					if(porequests.get(i).getFinterid()!=null){
+						PorequestentryQuery query = new PorequestentryQuery();
+						query.setFinterid(porequests.get(i).getFinterid());
+						query.setIspush(0);
+						query.setFmrpclosed(0);
+						List<Porequestentry> entrys = porequestentryService.findList(query);
+						if(entrys!=null&&entrys.size()>0){
+							porequests.get(i).setListporequestentry(entrys);
+						}
+					}
+					
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public ProcessExetask getProcessExetask() {
+		return processExetask;
+	}
+
+	public void setProcessExetask(ProcessExetask processExetask) {
+		this.processExetask = processExetask;
+	}
+
+	// -------------------自定义方法
+	public void prepareExeProcess() throws Exception {
+		prepareModel();
+	}
+	/**
+	 * 启动流程
+	 * @return
+	 */
+	public String exeProcess(){
+		try {
+			porequestService.exeProcess(entity,processExetask);
+			entity = porequestService.getById(entity.getFinterid());
+			if(entity.getCheckstatus()!=null&&entity.getCheckstatus()==100&&entity.getFstatus()==1){
+				resultInfo[0] = "2";
+			}else if(entity.getFstatus()==0){
+				resultInfo[0] = "3";
+			}else{
+				resultInfo[0] = "0";
+			}
+			resultInfo[1] = "下推成功";
+		}catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] =e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public String findPorequestEntityNew() throws Exception {//根据单据编号查询申请单和申请单分录
+		
+		try {
+			Boolean flag=true;
+			PorequestentryQuery query = new PorequestentryQuery();
+			query.setFinterid(porequestQuery.getFinterid());
+			List<Porequestentry> entrys = porequestentryService.findList(query);
+			if(entrys!=null&&entrys.size()>0){
+				for(int i=0;i<entrys.size();i++){
+					BaseItem baseitem = this.baseItemService.getByProperty("itemcode", entrys.get(i).getItemcode());
+					if(baseitem==null){
+						flag=false;
+					}
+				}
+			}
+			if(flag){
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			}else{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "该申请单中有物料表中不存在的物料，请先申请再下推！";
+			}
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+}

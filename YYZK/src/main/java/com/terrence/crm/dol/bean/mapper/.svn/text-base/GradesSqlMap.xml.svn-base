@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Grades">
+
+        
+	<resultMap id="RM.Grades" class="com.terrence.crm.dol.bean.Grades">
+        <result property="flevelid" column="flevelid"/>
+        <result property="flevel" column="flevel"/>
+        <result property="uplimit" column="uplimit"/>
+        <result property="lowlimit" column="lowlimit"/>
+        <result property="femp" column="femp"/>
+        <result property="fupdate" column="fupdate"/>
+        <result property="fempname" column="fempname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Grades.columns">
+	    <![CDATA[
+        	t_grades.flevelid ,
+        	t_grades.flevel ,
+        	t_grades.uplimit ,
+        	t_grades.lowlimit ,
+        	t_grades.femp ,
+        	t_grades.fupdate 
+	    ]]>
+	</sql>
+	
+   <insert id="Grades.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_grades (
+        	flevel ,
+        	uplimit ,
+        	lowlimit ,
+        	femp ,
+        	fupdate 
+        ) VALUES (
+        	#flevel# ,
+        	#uplimit# ,
+        	#lowlimit# ,
+        	#femp# ,
+        	#fupdate# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="flevelid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Grades.update" parameterClass="com.terrence.crm.dol.bean.Grades">         
+        UPDATE t_grades 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="flevel">
+	        	flevel = #flevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="uplimit">
+	        	uplimit = #uplimit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="lowlimit">
+	        	lowlimit = #lowlimit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="femp">
+	        	femp = #femp# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fupdate">
+	        	fupdate = #fupdate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        flevelid = #flevelid# 
+    </update>
+    
+	<delete id="Grades.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_grades where
+       flevelid = #flevelid# 
+    ]]>
+    </delete>
+    
+    <delete id="Grades.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_grades 
+        WHERE
+       flevelid in ($flevelid$) 
+    ]]>
+    </delete>
+    
+    <select id="Grades.getById" resultMap="RM.Grades">
+	    select <include refid="Grades.columns"/>,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId 
+	        where 
+		        flevelid = #flevelid# 
+	    
+    </select>
+    
+	<select id="Grades.getByProperty" resultMap="RM.Grades">
+		select <include refid="Grades.columns"/> ,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Grades.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="flevelid">
+	             t_grades.flevelid = #flevelid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_grades.flevel = #flevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="uplimit">
+	             t_grades.uplimit = #uplimit#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="lowlimit">
+	             t_grades.lowlimit = #lowlimit#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="femp">
+	             t_grades.femp = #femp#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fupdateBegin">
+	             t_grades.fupdate &gt;= #fupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fupdateEnd">
+	             t_grades.fupdate &lt;= #fupdateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Grades.findPage.and">
+			<isNotEmpty prepend="AND" property="flevelid">
+	             t_grades.flevelid = #flevelid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="flevel">
+	             t_grades.flevel = #flevel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="uplimit">
+	             t_grades.uplimit = #uplimit#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="lowlimit">
+	             t_grades.lowlimit = #lowlimit#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="femp">
+	             t_grades.femp = #femp#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fupdateBegin">
+	             t_grades.fupdate &gt;= #fupdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fupdateEnd">
+	             t_grades.fupdate &lt;= #fupdateEnd#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Grades.Entity" resultMap="RM.Grades">
+    	SELECT 	<include refid="Grades.columns"/> ,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId <include refid="Grades.findPage.where"/>
+    </select>
+    
+    <select id="Grades.findList" resultMap="RM.Grades">
+    	SELECT 
+    		<include refid="Grades.columns"/> ,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId 
+		<include refid="Grades.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Grades.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_grades
+    ]]>
+		<include refid="Grades.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Grades.findPage" resultMap="RM.Grades">
+    	select <include refid="Grades.columns"/>,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId 
+		<include refid="Grades.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Grades.findPage" resultMap="RM.Grades">
+    	select <include refid="Grades.columns"/>,t_admin.adminname fempname 
+	    
+	        from t_grades 
+	        left join t_admin on t_grades.femp=t_admin.adminId where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       flevelid 
+	   not in(select $notTop$ 
+       flevelid 
+	   from t_grades <include refid="Grades.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Grades.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

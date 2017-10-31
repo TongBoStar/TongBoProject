@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Item">
+
+        
+	<resultMap id="RM.Item" class="com.terrence.crm.dol.bean.Item">
+        <result property="fitemid" column="fitemid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="fmodel" column="fmodel"/>
+        <result property="f106" column="f_106"/>
+        <result property="f105" column="f_105"/>
+        <result property="funitid" column="funitid"/>
+        <result property="fusestate" column="fusestate"/>
+        <result property="fsecinv" column="fsecinv"/>
+        <result property="forderprice" column="forderprice"/>
+        <result property="fhighlimit" column="fhighlimit"/>
+        <result property="fiskeyitem" column="fiskeyitem"/>
+        <result property="fdeleted" column="fdeleted"/>
+        <result property="ferpclsid" column="ferpclsid"/>
+        <result property="fbatchmanager" column="fbatchmanager"/>
+        <result property="fissnmanage" column="fissnmanage"/>
+        <result property="ftrack" column="ftrack"/>
+        <result property="forderrector" column="forderrector"/>
+        <result property="fproductprincipal" column="fproductprincipal"/>
+        <result property="categoryid" column="categoryid"/>
+    </resultMap>
+    <!-- 物料返回值带计量单位名 -->
+    <resultMap id="RM.ItemInfo" class="com.terrence.crm.dol.bean.Item">
+        <result property="fitemid" column="fitemid"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="fmodel" column="fmodel"/>
+        <result property="f106" column="f_106"/>
+        <result property="f105" column="f_105"/>
+        <result property="funitid" column="funitid"/>
+        <result property="fusestate" column="fusestate"/>
+        <result property="fsecinv" column="fsecinv"/>
+        <result property="forderprice" column="forderprice"/>
+        <result property="fhighlimit" column="fhighlimit"/>
+        <result property="fiskeyitem" column="fiskeyitem"/>
+        <result property="fdeleted" column="fdeleted"/>
+        <result property="ferpclsid" column="ferpclsid"/>
+        <result property="fbatchmanager" column="fbatchmanager"/>
+        <result property="fissnmanage" column="fissnmanage"/>
+        <result property="ftrack" column="ftrack"/>
+        <result property="forderrector" column="forderrector"/>
+        <result property="fproductprincipal" column="fproductprincipal"/>
+        <!-- 计量单位名 -->
+        <result property="measureunitname" column="measureunitname"/>
+        
+        <result property="categoryid" column="categoryid"/>
+    </resultMap>
+    
+    <!-- 物料返回值材质 -->
+    <resultMap id="RM.Material.ItemInfo" class="com.terrence.crm.dol.bean.Item">
+            <result property="materialname" column="materialname"/>
+	</resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Item.columns">
+	    <![CDATA[
+        	t_item.fitemid ,
+        	t_item.fnumber ,
+        	t_item.fname ,
+        	t_item.fmodel ,
+        	t_item.f_106 ,
+        	t_item.f_105 ,
+        	t_item.funitid ,
+        	t_item.fusestate ,
+        	t_item.fsecinv ,
+        	t_item.forderprice ,
+        	t_item.fhighlimit ,
+        	t_item.fiskeyitem ,
+        	t_item.fdeleted ,
+        	t_item.ferpclsid ,
+        	t_item.fbatchmanager ,
+        	t_item.fissnmanage ,
+        	t_item.ftrack ,
+        	t_item.forderrector ,
+        	t_item.fproductprincipal ,
+        	t_item.categoryid
+	    ]]>
+	</sql>
+	
+   <insert id="Item.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_item (
+        	fitemid ,
+        	fnumber ,
+        	fname ,
+        	fmodel ,
+        	f_106 ,
+        	f_105 ,
+        	funitid ,
+        	fusestate ,
+        	fsecinv ,
+        	forderprice ,
+        	fhighlimit ,
+        	fiskeyitem ,
+        	fdeleted ,
+        	ferpclsid ,
+        	fbatchmanager ,
+        	fissnmanage ,
+        	ftrack ,
+        	forderrector ,
+        	fproductprincipal ,
+        	categoryid
+        ) VALUES (
+        	#fitemid# ,
+        	#fnumber# ,
+        	#fname# ,
+        	#fmodel# ,
+        	#f106# ,
+        	#f105# ,
+        	#funitid# ,
+        	#fusestate# ,
+        	#fsecinv# ,
+        	#forderprice# ,
+        	#fhighlimit# ,
+        	#fiskeyitem# ,
+        	#fdeleted# ,
+        	#ferpclsid# ,
+        	#fbatchmanager# ,
+        	#fissnmanage# ,
+        	#ftrack# ,
+        	#forderrector# ,
+        	#fproductprincipal#,
+        	#categoryid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fitemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<update id="Item.update.pdcategory.dataStatus" parameterClass="com.terrence.crm.dol.bean.Item">
+		 UPDATE t_item set categoryid = #categoryid#  where fitemid in ($itemids$)
+	</update>
+	<update id="Item.update.pdcategory.jiebang" parameterClass="com.terrence.crm.dol.bean.Item">
+		 UPDATE t_item set categoryid = null  where fitemid in ($itemids$)
+	</update>
+	
+	<update id="Item.update" parameterClass="com.terrence.crm.dol.bean.Item">         
+        UPDATE t_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmodel">
+	        	fmodel = #fmodel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="f106">
+	        	f_106 = #f106# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="f105">
+	        	f_105 = #f105# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="funitid">
+	        	funitid = #funitid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fusestate">
+	        	fusestate = #fusestate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsecinv">
+	        	fsecinv = #fsecinv# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderprice">
+	        	forderprice = #forderprice# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fhighlimit">
+	        	fhighlimit = #fhighlimit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fiskeyitem">
+	        	fiskeyitem = #fiskeyitem# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdeleted">
+	        	fdeleted = #fdeleted# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ferpclsid">
+	        	ferpclsid = #ferpclsid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbatchmanager">
+	        	fbatchmanager = #fbatchmanager# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fissnmanage">
+	        	fissnmanage = #fissnmanage# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ftrack">
+	        	ftrack = #ftrack# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderrector">
+	        	forderrector = #forderrector# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fproductprincipal">
+	        	fproductprincipal = #fproductprincipal# 
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="categoryid">
+	        	categoryid = #categoryid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fitemid = #fitemid# 
+    </update>
+    
+	<delete id="Item.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_item where
+       fitemid = #fitemid# 
+    ]]>
+    </delete>
+    
+    <delete id="Item.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_item 
+        WHERE
+       fitemid in ($fitemid$) 
+    ]]>
+    </delete>
+    
+    <select id="Item.getById" resultMap="RM.Item">
+	    select <include refid="Item.columns"/>
+	    
+	        from t_item 
+	        where 
+		        fitemid = #fitemid# 
+	    
+    </select>
+    <select id="Item.getItemByFNumber" resultMap="RM.Item">
+	    select <include refid="Item.columns"/>
+	    
+	        from t_item 
+	        where 
+		        fnumber = '$fnumber$'
+	    
+    </select>
+    <!-- 通过物料代码查找物料信息 -->
+    <select id="Item.getItemInfoByFNumber" resultMap="RM.ItemInfo">
+	    select <include refid="Item.columns"/>,t_measureunit.fname as measureunitname
+	        from t_item ,t_measureunit
+	        where t_item.funitid=t_measureunit.fmeasureunitid and
+		        t_item.fnumber = '$fnumber$'
+	    
+    </select>
+    <!-- 通过物料代码查找物料材质信息 -->
+    <select id="Item.getItemMaterialInfoByFNumber" resultMap="RM.Material.ItemInfo">
+	    select fname as materialname
+	        from t_bitem
+	        where  
+		        fitemid = 
+		        (select f_105 from  t_item where t_item.fnumber = '$fnumber$')
+    </select>
+    
+	<select id="Item.getByProperty" resultMap="RM.Item">
+		select <include refid="Item.columns"/> from t_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Item.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_item.fitemid = #fitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_item.fnumber like ('$fnumber$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_item.fname like ('$fname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fmodel">
+	             t_item.fmodel = #fmodel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="f106">
+	             t_item.f_106 = #f106#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="f105">
+	             t_item.f_105 = #f105#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="funitid">
+	             t_item.funitid = #funitid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fusestate">
+	             t_item.fusestate = #fusestate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsecinv">
+	             t_item.fsecinv = #fsecinv#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderprice">
+	             t_item.forderprice = #forderprice#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fhighlimit">
+	             t_item.fhighlimit = #fhighlimit#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fiskeyitem">
+	             t_item.fiskeyitem = #fiskeyitem#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_item.fdeleted = #fdeleted#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ferpclsid">
+	             t_item.ferpclsid = #ferpclsid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbatchmanager">
+	             t_item.fbatchmanager = #fbatchmanager#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fissnmanage">
+	             t_item.fissnmanage = #fissnmanage#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ftrack">
+	             t_item.ftrack = #ftrack#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderrector">
+	             t_item.forderrector = #forderrector#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fproductprincipal">
+	             t_item.fproductprincipal = #fproductprincipal#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="categoryid">
+	        	t_item.categoryid = #categoryid# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="categoryids">
+	        	t_item.categoryid in ($categoryids$)
+	        </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Item.findPage.and">
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_item.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_item.fnumber like ('$fnumber$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	             t_item.fname like ('$fname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmodel">
+	             t_item.fmodel = #fmodel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="f106">
+	             t_item.f_106 = #f106#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="f105">
+	             t_item.f_105 = #f105#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="funitid">
+	             t_item.funitid = #funitid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fusestate">
+	             t_item.fusestate = #fusestate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsecinv">
+	             t_item.fsecinv = #fsecinv#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderprice">
+	             t_item.forderprice = #forderprice#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fhighlimit">
+	             t_item.fhighlimit = #fhighlimit#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fiskeyitem">
+	             t_item.fiskeyitem = #fiskeyitem#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdeleted">
+	             t_item.fdeleted = #fdeleted#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ferpclsid">
+	             t_item.ferpclsid = #ferpclsid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbatchmanager">
+	             t_item.fbatchmanager = #fbatchmanager#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fissnmanage">
+	             t_item.fissnmanage = #fissnmanage#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ftrack">
+	             t_item.ftrack = #ftrack#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderrector">
+	             t_item.forderrector = #forderrector#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fproductprincipal">
+	             t_item.fproductprincipal = #fproductprincipal#
+	       </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="categoryid">
+	        	t_item.categoryid = #categoryid# 
+	        </isNotEmpty>
+	          <isNotEmpty prepend="AND" property="categoryid">
+	        	t_item.categoryid = #categoryid# 
+	        </isNotEmpty>
+	          <isNotEmpty prepend="AND" property="categoryids">
+	        	t_item.categoryid in ($categoryids$)
+	        </isNotEmpty>
+	</sql>
+	
+    <select id="Item.Entity" resultMap="RM.Item">
+    	SELECT 	<include refid="Item.columns"/> FROM t_item <include refid="Item.findPage.where"/>
+    </select>
+    
+    <select id="Item.findList" resultMap="RM.Item">
+    	SELECT 
+    		<include refid="Item.columns"/> 
+    	FROM 
+    		t_item
+		<include refid="Item.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Item.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item
+    ]]>
+		<include refid="Item.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Item.findPage" resultMap="RM.Item">
+    	select <include refid="Item.columns"/>	    
+	        from t_item 	   
+		<include refid="Item.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Item.findPage" resultMap="RM.Item">
+    	select <include refid="Item.columns"/>	    
+	        from t_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fitemid 
+	   not in(select $notTop$ 
+       fitemid 
+	   from t_item <include refid="Item.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Item.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <!-- 查找物料带单位 -->
+    <select id="Item.findListInfo" resultMap="RM.ItemInfo">
+		SELECT top 20
+    		<include refid="Item.columns"/>	,t_measureunit.fname as measureunitname  
+	        from t_item ,t_measureunit
+	        where t_item.funitid=t_measureunit.fmeasureunitid
+		<include refid="Item.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+	<select id="Icitem.find.pagelist.data.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_item
+    ]]>
+		<include refid="Item.findPage.where"/>    
+    </select>
+	<select id="Icitem.find.pagelist.data" resultMap="RM.Item">
+    	select <include refid="Item.columns"/>	    
+	        from t_item 
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fitemid 
+	   not in(select $notTop$ 
+       fitemid 
+	   from t_item <include refid="Item.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Item.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <procedure id="Item.find.ERP.data.all">
+    	{call pro_finderpitemall()}
+    </procedure>
+    
+</sqlMap>

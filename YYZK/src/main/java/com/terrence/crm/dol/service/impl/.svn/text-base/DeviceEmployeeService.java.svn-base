@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.DeviceEmployee;
+import com.terrence.crm.dol.dao.IDeviceEmployeeDao;
+import com.terrence.crm.dol.query.DeviceEmployeeQuery;
+import com.terrence.crm.dol.service.IDeviceEmployeeService;
+
+@Service
+@Transactional
+public class DeviceEmployeeService extends BaseService implements IDeviceEmployeeService {
+	protected static Logger logger = LoggerFactory.getLogger(DeviceEmployeeService.class);
+	@Autowired
+	@Qualifier("deviceEmployeeDao")
+	private IDeviceEmployeeDao deviceEmployeeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "DeviceEmployee";
+	}
+	@Transactional(readOnly=true)
+	public DeviceEmployee getById(java.lang.Long id) throws ServiceException
+	{
+		return deviceEmployeeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DeviceEmployee entity) throws ServiceException
+	{
+		deviceEmployeeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DeviceEmployee entity) throws ServiceException
+	{
+		Long adId = deviceEmployeeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(DeviceEmployee entity) throws ServiceException
+	{
+		Integer returnValue =  deviceEmployeeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = deviceEmployeeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = deviceEmployeeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DeviceEmployeeQuery query = new DeviceEmployeeQuery();
+		try {
+			return deviceEmployeeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceEmployee> findPage(Page<DeviceEmployee> page, DeviceEmployeeQuery query) throws ServiceException
+	{
+		return deviceEmployeeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceEmployee> findPage(Page<DeviceEmployee> page,String statement, DeviceEmployeeQuery query) throws ServiceException
+	{
+		return deviceEmployeeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceEmployee> findList(DeviceEmployeeQuery query) throws ServiceException
+	{
+		return deviceEmployeeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceEmployee> findList(DeviceEmployeeQuery query,Integer pageSize) throws ServiceException
+	{
+		return deviceEmployeeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<DeviceEmployee> findList(DeviceEmployeeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return deviceEmployeeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceEmployee> findAllList() throws ServiceException
+	{
+		return deviceEmployeeDao.findAllList();
+	}
+
+}

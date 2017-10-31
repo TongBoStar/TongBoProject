@@ -1,0 +1,87 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+
+@Repository
+public class TrialDeviceDao extends BaseIbatisDao<TrialDevice,java.lang.Long> implements ITrialDeviceDao{
+
+		
+	public void saveOrUpdate(TrialDevice entity) {
+		if(entity.getDid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrialDevice";
+	}
+	public TrialDevice getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrialDevice)this.getSqlMapClientTemplate().queryForObject("TrialDevice.getByProperty", map);		
+	}
+
+	@Override
+	public List<TrialDevice> findListAllDevice(TrialDeviceQuery trialDeviceQuery) {
+		return this.getSqlMapClientTemplate().queryForList("TrialDevice.findListAllDevice", trialDeviceQuery);
+	}
+
+	@Override
+	public TrialDevice getEditData(TrialDeviceQuery query) {
+		return (TrialDevice) this.getSqlMapClientTemplate().queryForObject("TrialDevice.getEditData",query);
+	}
+
+	@Override
+	public Integer insertDataBySql(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		Integer resultInfo = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			 stmt.execute(sql);
+			resultInfo = 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			resultInfo = 0;
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				resultInfo = 0;
+			}
+			
+			} 
+		return resultInfo;
+	}
+
+}

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ValveParts">
+
+        
+	<resultMap id="RM.ValveParts" class="com.terrence.crm.dol.bean.ValveParts">
+        <result property="id" column="id"/>
+        <result property="reportid" column="reportid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="material" column="material"/>
+        <result property="batchno" column="batchno"/>
+        <result property="type" column="type"/>
+        <result property="stockemp" column="stockemp"/> 
+        <result property="checkname" column="checkname"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ValveParts.columns">
+	    <![CDATA[
+        	t_valveParts.id,
+        	t_valveParts.reportid,
+        	t_valveParts.itemcode,
+        	t_valveParts.itemname,
+        	t_valveParts.itemmode,
+        	t_valveParts.material,
+        	t_valveParts.batchno,
+        	t_valveParts.type,
+        	t_valveParts.stockemp,
+        	t_valveParts.checkname
+	    ]]>
+	</sql>
+	
+   <insert id="ValveParts.insert" >
+   
+        INSERT INTO
+        t_valveParts (
+        	reportid 
+        	 <isNotEmpty prepend="," property="itemcode">
+	        	itemcode 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="itemname">
+	        	itemname
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="itemmode">
+	        	itemmode
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="material">
+	        	material
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="batchno">
+	        	batchno
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="type">
+	        	type
+	        </isNotEmpty>
+	        
+	          <isNotEmpty prepend="," property="stockemp">
+	        	stockemp
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="checkname">
+	        	checkname
+	        </isNotEmpty>
+        ) VALUES (
+        	#reportid#
+        	 <isNotEmpty prepend="," property="itemcode">
+	        	#itemcode# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="itemname">
+	        	#itemname#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="itemmode">
+	        	#itemmode#
+	        </isNotEmpty>
+	        
+	         <isNotEmpty prepend="," property="material">
+	        	#material#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="batchno">
+	        	#batchno#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="type">
+	        	#type#
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="stockemp">
+	        	#stockemp#
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="checkname">
+	        	#checkname#
+	        </isNotEmpty>
+        )
+   
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ValveParts.update" parameterClass="com.terrence.crm.dol.bean.ValveParts">         
+        UPDATE t_valveParts 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="reportid">
+	        	reportid = #reportid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="material">
+	        	material = #material# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="batchno">
+	        	batchno=#batchno#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="type">
+	        	type=#type#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stockemp">
+	        	stockemp=#stockemp#
+	        </isNotEmpty>
+	          <isNotEmpty prepend="," property="checkname">
+	        	checkname=#checkname#
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	       id = #id# 
+    </update>
+    
+    
+    <update id="ValveParts.update.checkname.data" parameterClass="com.terrence.crm.dol.bean.ValveParts">         
+        UPDATE t_valveParts set
+	        	checkname=#checkname#
+	   
+        WHERE 
+	       reportid = #reportid# 
+    </update>
+    
+	<delete id="ValveParts.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_valveParts where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="ValveParts.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_valveParts 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+     <delete id="ValveParts.delete.uncheck.data">
+        DELETE FROM 
+        	t_valveParts 
+        WHERE 1=1
+   		and    reportid = #reportid# 
+   
+    </delete>
+    
+    <select id="ValveParts.getById" resultMap="RM.ValveParts">
+	    select <include refid="ValveParts.columns"/>
+	    
+	        from t_valveParts 
+	        where 
+		       id = #id# 
+	    
+    </select>
+    
+	<select id="ValveParts.getByProperty" resultMap="RM.ValveParts">
+		select <include refid="ValveParts.columns"/> from t_valveParts where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ValveParts.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_valveParts.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="reportid">
+	             t_valveParts.reportid=#reportid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_valveParts.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_valveParts.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_valveParts.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="material">
+	             t_valveParts.material = #material#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="batchno">
+	        	t_valveParts.batchno=#batchno#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="type">
+	        	t_valveParts.type=#type#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="stockemp">
+	        	stockemp=#stockemp#
+	        </isNotEmpty>
+	          <isNotEmpty prepend="AND" property="checkname">
+	        	checkname=#checkname#
+	        </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ValveParts.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_valveParts.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="reportid">
+	             t_valveParts.reportid=#reportid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_valveParts.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_valveParts.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_valveParts.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="material">
+	             t_valveParts.material = #material#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="batchno">
+	        	t_valveParts.batchno=#batchno#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="type">
+	        	t_valveParts.type=#type#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="stockemp">
+	        	stockemp=#stockemp#
+	        </isNotEmpty>
+	          <isNotEmpty prepend="AND" property="checkname">
+	        	checkname=#checkname#
+	        </isNotEmpty>
+	</sql>
+	
+    <select id="ValveParts.Entity" resultMap="RM.ValveParts">
+    	SELECT 	<include refid="ValveParts.columns"/> FROM t_valveParts <include refid="ValveParts.findPage.where"/>
+    </select>
+    
+    <select id="ValveParts.findList" resultMap="RM.ValveParts">
+    	SELECT 
+    		<include refid="ValveParts.columns"/> 
+    	FROM 
+    		t_valveParts
+		<include refid="ValveParts.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ValveParts.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_valveParts
+    ]]>
+		<include refid="ValveParts.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ValveParts.findPage" resultMap="RM.ValveParts">
+    	select <include refid="ValveParts.columns"/>	    
+	        from t_valveParts 	   
+		<include refid="ValveParts.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ValveParts.findPage" resultMap="RM.ValveParts">
+    	select <include refid="ValveParts.columns"/>	    
+	        from t_valveParts where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_valveParts <include refid="ValveParts.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ValveParts.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+     <select id="ValveParts.find.data.select" resultMap="RM.ValveParts">
+    	SELECT 
+    		<include refid="ValveParts.columns"/> 
+    	FROM 
+    		t_valveParts
+		<include refid="ValveParts.findPage.where"/>
+		
+    </select>
+	
+</sqlMap>

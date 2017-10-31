@@ -1,0 +1,48 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Team;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.query.TeamQuery;
+
+@Repository
+public class TeamDao extends BaseIbatisDao<Team,java.lang.Long> implements ITeamDao{
+
+		
+	public void saveOrUpdate(Team entity) {
+		if(entity.getTeamseq() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Team";
+	}
+	public Team getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Team)this.getSqlMapClientTemplate().queryForObject("Team.getByProperty", map);		
+	}
+
+	@Override
+	public Team findTeam(TeamQuery teamQuery) {
+		return (Team) this.getSqlMapClientTemplate().queryForObject("Team.getTeam.data.select", teamQuery);
+	}
+	@Override
+	public Team findParentid(Team team) {
+		return (Team) this.getSqlMapClientTemplate().queryForObject("Team.findParent.pid", team) ;
+	}
+}

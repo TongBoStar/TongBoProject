@@ -1,0 +1,272 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckDetail;
+import com.terrence.crm.dol.bean.CheckDetailView;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Process;
+import com.terrence.crm.dol.query.CheckRecordQuery;
+import com.terrence.crm.dol.dao.ICheckDetailDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IClasstypeDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.dao.IProcessDao;
+import com.terrence.crm.dol.service.ICheckRecordService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+
+@Service
+@Transactional
+public class CheckRecordService extends BaseService implements ICheckRecordService {
+	protected static Logger logger = LoggerFactory.getLogger(CheckRecordService.class);
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("checkDetailDao")
+	private ICheckDetailDao checkDetailDao;
+	@Autowired
+	@Qualifier("processDao")
+	private IProcessDao processDao;
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	@Autowired
+	@Qualifier("classtypeDao")
+	private IClasstypeDao classtypeDao;
+	
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CheckRecord";
+	}
+	@Transactional(readOnly=true)
+	public CheckRecord getById(java.lang.Long id) throws ServiceException
+	{
+		return checkRecordDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CheckRecord entity) throws ServiceException
+	{
+		checkRecordDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CheckRecord entity) throws ServiceException
+	{
+		Long adId = checkRecordDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CheckRecord entity) throws ServiceException
+	{
+		Integer returnValue =  checkRecordDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = checkRecordDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = checkRecordDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CheckRecordQuery query = new CheckRecordQuery();
+		try {
+			return checkRecordDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckRecord> findPage(Page<CheckRecord> page, CheckRecordQuery query) throws ServiceException
+	{
+		return checkRecordDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckRecord> findList(CheckRecordQuery query) throws ServiceException
+	{
+		return checkRecordDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckRecord> findList(CheckRecordQuery query,Integer pageSize) throws ServiceException
+	{
+		return checkRecordDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CheckRecord> findAllList() throws ServiceException
+	{
+		return checkRecordDao.findAllList();
+	}
+
+	@Override
+	public List<CheckRecord> findList(String statement, CheckRecordQuery query)
+			throws ServiceException {
+		return checkRecordDao.findList(statement, query);
+	}
+
+	public void savePolling(CheckDetailView view, CheckRecord entity) {
+		EmployeeTask employeeTask=employeeTaskDao.getById(entity.getEmployeetaskid());
+					entity.setItemcode(employeeTask.getItemcode());//物料编码
+					entity.setItemname(employeeTask.getItemname());//物料名称
+					entity.setProcessid(employeeTask.getProcessid());//工序编码
+					entity.setWorkid(employeeTask.getWorkid());//班组任务编码
+					entity.setCreatetime(DateConvertUtils.getCurrentDateTime());//录入时间
+					entity.setChecktime(DateConvertUtils.getCurrentDateTime());//检查时间
+//====待确认=====================================================================================
+					entity.setBatchno("");//批次号
+					entity.setFeesinnum(0L);//投料数
+					entity.setWorknum(0L);//加工数
+					entity.setAcceptnum(entity.getChecknum()-entity.getDefectnum());//合格数
+					entity.setWorkdiscard(0L);//工废数
+					entity.setItemdiscard(0L);//料废数
+					entity.setRepairnum(0L);//返修数
+					entity.setReworknum(0L);//返工数
+					entity.setReceivernum(0L);//让步接收数
+					entity.setCheckid(0L);//质检任务id
+					entity.setTeamid(employeeTask.getTeamid());
+					entity.setReqemp(employeeTask.getEmpid());
+					entity.setItemprocessid(employeeTask.getItemprocessid());
+				//--------------------------------------------------------
+					Process processTemp = processDao.getById(employeeTask.getCenterid());
+					entity.setPrice(processTemp.getPrice());//单价
+					entity.setWage(processTemp.getPrice()*employeeTask.getProcessmins());//计件工资=标准价*加工时长
+					entity.setRatio(processTemp.getRatio());//单序系数
+					entity.setTotalratio(1.0);//总系数
+					if(employeeTask.getClasstype()==1){//白班
+						entity.setClassratio(classtypeDao.getByProperty("classname", "白班").getRadio());//白晚班系数
+						entity.setClassshift(1);//白
+					}else if(employeeTask.getClasstype()==2){//夜班
+						entity.setClassratio(classtypeDao.getByProperty("classname", "夜班").getRadio());//白晚班系数
+						entity.setClassshift(2);//晚班
+					}
+					entity.setProcessname(processTemp.getProcessname());//工序名
+					//--------------------------------------------------------
+					//System.out.println(entity.toString());
+				Long recordid=checkRecordDao.save(entity);//保存
+//===================================================================== ====================
+
+
+					String checkpoint[]=view.getCheckpoint();//检查点
+					String checkval[]=view.getCheckval();//检查结果
+					String explain[]=view.getExplains();//备注
+					for(int i=0;i<checkpoint.length;i++)
+					{
+						CheckDetail detail=new CheckDetail();
+						detail.setCheckpoints(checkpoint[i]);//检查点
+						detail.setCheckval(checkval[i]);//检查结果
+						detail.setExplains(explain[i]);//备注
+						detail.setChecktype(2);//抽检
+						detail.setRecordid(recordid);//记录id
+						
+						detail.setVerdict(-1);//合格与否
+						checkDetailDao.save(detail);
+					}
+		
+	}
+	@Override
+	public CheckRecord findLastcheck(CheckRecordQuery checkRecordQuery)
+			throws ServiceException {
+	
+			CheckRecord cc=new CheckRecord();
+			cc=checkRecordDao.getByEntity("CheckRecord.findLastcheck", checkRecordQuery);
+			return cc;
+			
+			/*
+			 * select top 1  t_check_record.checkid from t_check_record where checktype=3 and employeetaskid in(
+				select t_employee_task.employeetaskid from t_employee_task where dispatchid=(
+				select t_dispatch_work.id from t_dispatch_work where workseqid not in (
+					select preorder from t_dispatch_work  where workid=#workid#
+					) and workid=#workid#
+				)
+			)
+			 */
+	}
+	@Override
+	public CheckRecord findAcceptnum(Long checkId) throws ServiceException {
+
+				//查询最后一序所有合格数---
+				//查询所有下推数--
+				//	查询本序所有合格数
+				Integer allacceptNum=null;
+				allacceptNum=checkRecordDao.getAllAccept(checkId);
+				//查询所有下推数--
+				Integer downK3Num =null;
+				 downK3Num =checkRecordDao.getAllDownK3(checkId);
+				 
+				 if(null==allacceptNum){
+					 allacceptNum=0;
+					}
+				 if(null==downK3Num){
+					 downK3Num=0;
+					}
+				 CheckRecord checkRecord=new CheckRecord();
+				 
+				 checkRecord.setAllacceptnum(allacceptNum);
+				 checkRecord.setAlldownnum(downK3Num);
+				 //获取icmoid和单号fibllno
+				 CheckRecordQuery checkRecordQuery=new CheckRecordQuery();
+				 
+				 checkRecordQuery.setCheckid(checkId);
+				  List<CheckRecord> clist =new ArrayList<CheckRecord>(); 
+				  clist=checkRecordDao.findList(checkRecordQuery);
+				  Long icmoid=null;
+				  icmoid=clist.get(0).getWorkid();  
+				 
+				 checkRecord.setWorkid(icmoid);
+				 checkRecord.setFbillno(icmoDao.getById(icmoid).getFbillno());
+				 
+				 System.out.println("=======allacceptNum:"+allacceptNum);
+				 System.out.println("=======downK3Num:"+downK3Num);
+				 
+				return checkRecord;
+			
+	}
+
+}

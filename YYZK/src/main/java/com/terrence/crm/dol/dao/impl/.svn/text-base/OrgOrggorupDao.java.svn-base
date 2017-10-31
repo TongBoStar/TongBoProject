@@ -1,0 +1,49 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.OrgOrggorup;
+import com.terrence.crm.dol.dao.IOrgOrggorupDao;
+
+@Repository
+public class OrgOrggorupDao extends BaseIbatisDao<OrgOrggorup,java.lang.Long> implements IOrgOrggorupDao{
+
+		
+	public void saveOrUpdate(OrgOrggorup entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "OrgOrggorup";
+	}
+	public OrgOrggorup getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (OrgOrggorup)this.getSqlMapClientTemplate().queryForObject("OrgOrggorup.getByProperty", map);		
+	}
+
+	@Override
+	public Integer updateOrgOrggorup(OrgOrggorup entity) {
+		return this.getSqlMapClientTemplate().update("OrgOrggorup.updateOrgOrggorup", entity);
+	}
+
+	@Override
+	public Integer deleteByGroupId(Long ids) {
+		// TODO Auto-generated method stub
+		return this.getSqlMapClientTemplate().delete("OrgOrggorup.deleteByGroupId", ids);
+	}
+}

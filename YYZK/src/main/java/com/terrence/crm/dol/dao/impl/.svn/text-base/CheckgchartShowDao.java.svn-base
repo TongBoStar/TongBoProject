@@ -1,0 +1,53 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CheckDetail;
+import com.terrence.crm.dol.bean.CheckgchartShow;
+import com.terrence.crm.dol.dao.ICheckgchartShowDao;
+@Repository
+public class CheckgchartShowDao extends BaseIbatisDao<CheckgchartShow,java.lang.Long> implements ICheckgchartShowDao{
+
+	@Override
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CheckgchartShow";
+	}
+
+	@Override
+	public void saveOrUpdate(CheckgchartShow entity) throws DataAccessException {
+		if(null==entity.getGshowid()){
+			save(entity);
+		}else{
+			update(entity);
+		}
+	}
+
+	@Override
+	public void saveys(Long gshowid, String string) {
+		Map map=new HashMap();		
+		map.put("gshowid", gshowid);
+		map.put("ykey", string);
+		this.getSqlMapClientTemplate().insert("CheckgchartShow.insert_ys", map);
+	}
+
+	@Override
+	public List<String> findysstring(Long gshowid) {
+		Map map=new HashMap();		
+		map.put("gshowid", gshowid);
+		return (List<String>)this.getSqlMapClientTemplate().queryForList("RM.CheckgchartShow_YS_string", map);
+	}
+
+	@Override
+	public void deleteysBygshowid(Long gshowid) {
+		Map map=new HashMap();		
+		map.put("gshowid", gshowid);
+		this.getSqlMapClientTemplate().delete("RM.CheckgchartShow_YS_Delete", map);
+	}
+}

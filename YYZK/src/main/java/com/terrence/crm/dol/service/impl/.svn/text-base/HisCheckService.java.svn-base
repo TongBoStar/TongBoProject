@@ -1,0 +1,130 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.HisCheck;
+import com.terrence.crm.dol.query.HisCheckQuery;
+import com.terrence.crm.dol.dao.IHisCheckDao;
+import com.terrence.crm.dol.service.IHisCheckService;
+
+@Service
+@Transactional
+public class HisCheckService extends BaseService implements IHisCheckService {
+	protected static Logger logger = LoggerFactory.getLogger(HisCheckService.class);
+	@Autowired
+	@Qualifier("hisCheckDao")
+	private IHisCheckDao hisCheckDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "HisCheck";
+	}
+	@Transactional(readOnly=true)
+	public HisCheck getById(java.lang.Long id) throws ServiceException
+	{
+		return hisCheckDao.getById(id);
+	}
+	
+	public void saveOrUpdate(HisCheck entity) throws ServiceException
+	{
+		hisCheckDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(HisCheck entity) throws ServiceException
+	{
+		Long adId = hisCheckDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(HisCheck entity) throws ServiceException
+	{
+		Integer returnValue =  hisCheckDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = hisCheckDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = hisCheckDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		HisCheckQuery query = new HisCheckQuery();
+		try {
+			return hisCheckDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<HisCheck> findPage(Page<HisCheck> page, HisCheckQuery query) throws ServiceException
+	{
+		return hisCheckDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<HisCheck> findPage(Page<HisCheck> page,String statement, HisCheckQuery query) throws ServiceException
+	{
+		return hisCheckDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisCheck> findList(HisCheckQuery query) throws ServiceException
+	{
+		return hisCheckDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisCheck> findList(HisCheckQuery query,Integer pageSize) throws ServiceException
+	{
+		return hisCheckDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<HisCheck> findList(HisCheckQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return hisCheckDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HisCheck> findAllList() throws ServiceException
+	{
+		return hisCheckDao.findAllList();
+	}
+	@Override
+	public List<HisCheck> findList(String statement, HisCheckQuery hisCheckQuery)
+			throws ServiceException {
+		return hisCheckDao.findList(statement, hisCheckQuery);
+		
+	}
+
+}

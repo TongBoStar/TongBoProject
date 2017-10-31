@@ -1,0 +1,147 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.PdExamineItemDefault;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IPdExamineItemDefaultDao;
+import com.terrence.crm.dol.query.PdExamineItemDefaultQuery;
+import com.terrence.crm.dol.service.IPdExamineItemDefaultService;
+
+@Service
+@Transactional
+public class PdExamineItemDefaultService extends BaseService implements IPdExamineItemDefaultService {
+	protected static Logger logger = LoggerFactory.getLogger(PdExamineItemDefaultService.class);
+	@Autowired
+	@Qualifier("pdExamineItemDefaultDao")
+	private IPdExamineItemDefaultDao pdExamineItemDefaultDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdExamineItemDefault";
+	}
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Transactional(readOnly=true)
+	public PdExamineItemDefault getById(java.lang.Long id) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdExamineItemDefault entity) throws ServiceException
+	{
+		pdExamineItemDefaultDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdExamineItemDefault entity) throws ServiceException
+	{
+		Long adId = pdExamineItemDefaultDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdExamineItemDefault entity) throws ServiceException
+	{
+		Integer returnValue =  pdExamineItemDefaultDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdExamineItemDefaultDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdExamineItemDefaultDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdExamineItemDefaultQuery query = new PdExamineItemDefaultQuery();
+		try {
+			return pdExamineItemDefaultDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItemDefault> findPage(Page<PdExamineItemDefault> page, PdExamineItemDefaultQuery query) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItemDefault> findPage(Page<PdExamineItemDefault> page,String statement, PdExamineItemDefaultQuery query) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemDefault> findList(PdExamineItemDefaultQuery query) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemDefault> findList(PdExamineItemDefaultQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdExamineItemDefault> findList(PdExamineItemDefaultQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItemDefault> findAllList() throws ServiceException
+	{
+		return pdExamineItemDefaultDao.findAllList();
+	}
+	@Override
+	public Long save(PdExamineItemDefault entity, String statement)	throws ServiceException {
+		List<String> itemcodes=entity.getItemcodes();
+		for(String itemcode:itemcodes)
+		{
+			BaseItem bitem=new BaseItem();
+			bitem.setItemcode(itemcode);
+			bitem.setSolutionid(entity.getSolutionid());
+			baseItemDao.update("BaseItem.update.ByItemcode",bitem);
+			PdExamineItemDefaultQuery query=new PdExamineItemDefaultQuery();
+			query.setItemcode(itemcode);
+			pdExamineItemDefaultDao.deleteByEntity("PdExamineItemDefault.deleteByItemcode", query);
+			entity.setItemcode(itemcode);
+			pdExamineItemDefaultDao.save(entity, statement);
+		}
+		return null;
+	}
+
+}

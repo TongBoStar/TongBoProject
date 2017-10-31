@@ -1,0 +1,657 @@
+package com.terrence.crm.dol.action;
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IProjectBomService;
+import com.terrence.crm.dol.service.IProjectInfoService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.bean.ProjectBom;
+import com.terrence.crm.dol.bean.ProjectInfo;
+import com.terrence.crm.dol.query.ProjectBomQuery;
+import com.terrence.crm.dol.query.ProjectInfoQuery;
+/**
+ * hdd
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/projectInfo")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "projectInfo."+ CrudActionSupport.ACTIONSUFFIX
+		+ "?page.pageRequest=${page.pageRequest}", type = "redirect") })
+public class ProjectInfoAction extends CrudActionSupport<ProjectInfo> implements ApplicationContextAware {
+
+	@Autowired
+	@Qualifier("projectInfoService")
+	private IProjectInfoService projectInfoService;
+	
+	@Autowired
+	@Qualifier("projectBomService")
+	private IProjectBomService projectBomService;
+
+	private ProjectInfo entity;
+
+	private ProjectInfoQuery projectInfoQuery;
+
+	private java.lang.Long projectInfoId;
+
+	/** 分页器 */
+	private Page<ProjectInfo> page = new Page<ProjectInfo>();
+
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+
+	private ApplicationContext ctx;
+	private List<ProjectInfo> projectInfoList;
+	
+	private String type;//保存类型 1（正常保存） 2（另存版本） 3（另存项目）
+	
+	private ProjectBom projectBom;
+	
+	private List<ProjectBom> bomList;
+	
+	private String exportCols = "";
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (projectInfoId != null) {
+			entity = projectInfoService.getById(projectInfoId);
+		} else {
+			entity = new ProjectInfo();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		try {
+			projectInfoService.deleteByMultipleId(checkedIdList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			addActionMessage("删除成功");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		try {
+			delete();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	public String listToQuery() throws Exception {
+		if (projectInfoQuery == null) {
+			projectInfoQuery = new ProjectInfoQuery();
+		}
+		try {
+			projectInfoList = projectInfoService.findList(projectInfoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.DESC);
+		}
+		if (projectInfoQuery == null) {
+			projectInfoQuery = new ProjectInfoQuery();
+		}
+		try {
+			page = projectInfoService.findPage(page, projectInfoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+    /**
+     * 查询列表
+     * @return
+     * @throws Exception
+     */
+	public String listQuery() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.DESC);
+		}
+		if (projectInfoQuery == null) {
+			projectInfoQuery = new ProjectInfoQuery();
+		}
+		try {
+			projectInfoList = projectInfoService.findList(projectInfoQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+	public String listToJson() throws Exception {
+		try {
+			list();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public String listToJsonQuery() throws Exception {
+		try {
+			listQuery();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			ProjectInfoQuery query = new ProjectInfoQuery();
+			Date date = new Date();
+			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+			query.setQuoteOrderDate(sf.format(date));
+			List<ProjectInfo> list = this.projectInfoService.findList(query);
+			String bjNum="";
+			String czNum="";
+			if(list!=null&&list.size()>0){
+				for(ProjectInfo pro:list){
+					if(pro!=null&&pro.getQuoteOrderNo()!=null&&pro.getQuoteOrderNo()!=""&&pro.getQuoteOrderNo().substring(13,15).equals("BJ")){
+						if(Integer.parseInt(pro.getQuoteOrderNo().substring(15, pro.getQuoteOrderNo().length()))>=(bjNum==""?0:Integer.parseInt(bjNum))){
+							bjNum = pro.getQuoteOrderNo().substring(15, pro.getQuoteOrderNo().length());
+						}
+					}
+					if(pro!=null&&pro.getQuoteOrderNo()!=null&&pro.getQuoteOrderNo()!=""&&pro.getQuoteOrderNo().substring(13,15).equals("CZ")){
+						if(Integer.parseInt(pro.getQuoteOrderNo().substring(15, pro.getQuoteOrderNo().length()))>=(czNum==""?0:Integer.parseInt(czNum))){
+							czNum = pro.getQuoteOrderNo().substring(15, pro.getQuoteOrderNo().length());
+						}
+					}
+				}
+			}
+			if(bjNum!=""){
+				if(bjNum.substring(0, 1).equals("0")){
+					bjNum = "0"+(Integer.parseInt(bjNum.substring(1, bjNum.length()))+1)+"";
+				}else{
+					bjNum = Integer.parseInt(bjNum.substring(1, bjNum.length()))+1+"";
+				}
+			}else{
+				bjNum="01";
+			}
+			if(czNum!=""){
+				if(czNum.substring(0, 1).equals("0")){
+					czNum = "0"+(Integer.parseInt(czNum.substring(1, bjNum.length()))+1)+"";
+				}else{
+					czNum = Integer.parseInt(czNum.substring(1, bjNum.length()))+1+"";
+				}
+			}else{
+				czNum="01";
+			}
+			if("2".equals(type)){
+				//另存版本
+				//改变版本号
+				String version  = entity.getVersion();
+				int i =	Integer.parseInt(version.substring(1, 2));
+				String newVersion = version.substring(0, 1)+(i+1)+version.substring(2, version.length());
+				entity.setVersion(newVersion);
+			}else if("3".equals(type)){
+				//另存项目
+				entity.setId(null);
+				entity.setVersion("V1.0");
+				entity.setQuoteOrderDate(sf.format(date));
+				if(entity.getQuoteOrderNo()!=null&&entity.getQuoteOrderNo()!=""){
+					if(entity.getQuoteOrderNo().substring(13, 15).equals("BJ")){
+						entity.setQuoteOrderNo(entity.getQuoteOrderNo().substring(0, 15)+bjNum);
+					}else if(entity.getQuoteOrderNo().substring(13, 15).equals("CZ")){
+						entity.setQuoteOrderNo(entity.getQuoteOrderNo().substring(0, 15)+czNum);
+					}
+				}
+				//将bomid置空
+				List<Long> bomids = this.projectBom.getBomids();
+				List<Long> ids = new ArrayList<Long>();
+				if(bomids!=null&&bomids.size()>0){
+					for(int i=0;i<bomids.size();i++){
+						ids.add(null);
+					}
+				}
+				this.projectBom.setBomids(ids);
+			}
+			Long proId = null;
+			if(entity.getId()!=null&&entity.getId()!=0){
+				proId = entity.getId();
+				projectInfoService.update(entity);
+			}else{
+				Date date1 = new Date();
+				SimpleDateFormat sf1 = new SimpleDateFormat("yyyyMMdd");
+				String str = "TE-"+entity.getProductType()+sf1.format(date1)+"-"+entity.getArea();
+				if(entity.getArea().equals("BJ")){
+					str+=bjNum;
+				}else if(entity.getArea().equals("CZ")){
+					str+=czNum;
+				}
+				entity.setQuoteOrderNo(str);
+				proId = projectInfoService.save(entity);
+			}
+			projectInfoId = proId;
+			if(this.projectBom!=null){
+				this.projectBom.setInfoid(proId);
+				projectBomService.saveNewProjectBom(this.projectBom);
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		try {
+			save();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = null;
+			if(this.projectInfoId!=null&&projectInfoId==-1){
+				//新增
+				projectInfoId=null;
+				entity =new ProjectInfo();
+				Date date = new Date();
+				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+				entity.setQuoteOrderDate(sf.format(date));
+				entity.setVersion("V1.0");
+				resultInfo[0] = "1";
+				resultInfo[1] = "新增显示成功";
+			}else if(projectInfoId!=null&&projectInfoId!=-1){
+				//修改
+				entity = projectInfoService.getById(projectInfoId);
+				ProjectBomQuery query = new ProjectBomQuery();
+				query.setInfoid(projectInfoId);
+				bomList = this.projectBomService.findList(query);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			}
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		try {
+			show();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	// -------------------自定义方法
+	public String listAll() throws Exception {
+		try {
+			projectInfoList = projectInfoService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (ServiceException e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	@Action("/exportProject/export1")
+	public String exportProjectInfo() throws Exception{
+		HttpServletResponse response = ServletActionContext.getResponse();
+		String filename="项目信息及参数"+DateUtils.FormatDateTime(DateUtils.GetDateTime(),"yyyyMMddHHmmss")+".xlsx";
+		setResponseHeader(response, filename);
+		    try {
+		    	if(this.projectInfoId!=null&&projectInfoId!=-1){
+					entity = projectInfoService.getById(projectInfoId);
+				}
+		    	if(entity!=null){
+		    		projectInfoService.exportProjectInfo2007(response,this.entity,getRequest().getRealPath("/"));
+		    		response.getOutputStream().flush();
+				    response.getOutputStream().close();
+					resultInfo[0] = "0";
+					resultInfo[1] = "导出成功";
+		    	}
+			}catch(ServiceException e) {
+				logger.error(e.getMessage());
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return null;
+		    
+	}
+	@Action("/exportProject/export2")
+	public String exportProjectDetail() throws Exception{
+		HttpServletResponse response = ServletActionContext.getResponse();
+		String filename="设备清单"+DateUtils.FormatDateTime(DateUtils.GetDateTime(),"yyyyMMddHHmmss")+".xls";
+		setResponseHeader(response, filename);
+		    try {
+		    	if(this.projectInfoId!=null&&projectInfoId!=-1){
+					entity = projectInfoService.getById(projectInfoId);
+					ProjectBomQuery query = new ProjectBomQuery();
+					query.setInfoid(projectInfoId);
+					bomList = this.projectBomService.findList(query);
+				}
+		    	if(entity!=null){
+		    		projectInfoService.exportProjectDetail2007(response,this.entity,this.bomList,getRequest().getRealPath("/"),this.exportCols);
+		    		response.getOutputStream().flush();
+				    response.getOutputStream().close();
+					resultInfo[0] = "0";
+					resultInfo[1] = "导出成功";
+		    	}
+		    	
+			}catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return null;
+		    
+	}
+	@Action("/exportProject/exportAll")
+	public String exportProjectAll() throws Exception{
+		HttpServletResponse response = ServletActionContext.getResponse();
+		String filename="项目信息"+DateUtils.FormatDateTime(DateUtils.GetDateTime(),"yyyyMMddHHmmss")+".xls";
+		setResponseHeader(response, filename);
+		    try {
+		    	if(this.projectInfoId!=null&&projectInfoId!=-1){
+					entity = projectInfoService.getById(projectInfoId);
+					ProjectBomQuery query = new ProjectBomQuery();
+					query.setInfoid(projectInfoId);
+					bomList = this.projectBomService.findList(query);
+				}
+		    	if(entity!=null){
+		    		projectInfoService.exportProjectAll2007(response,this.entity,this.bomList,getRequest().getRealPath("/"),this.exportCols);
+		    		response.getOutputStream().flush();
+				    response.getOutputStream().close();
+					resultInfo[0] = "0";
+					resultInfo[1] = "导出成功";
+		    	}
+		    	
+			}catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return null;
+		    
+	}
+	/** 设置响应头 */
+	public void setResponseHeader(HttpServletResponse response, String fileName) {
+		try {
+			response.setContentType("application/msexcel;charset=UTF-8");
+			//两种方法都可以
+			//response.setContentType("application/octet-stream;charset=iso-8859-1");
+			response.setHeader("Content-Disposition", "attachment;filename="
+					+ new String(fileName.getBytes("UTF-8"),"iso-8859-1"));
+			// 客户端不缓存
+			response.addHeader("Pargam", "no-cache");
+			response.addHeader("Cache-Control", "no-cache");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	// -------------------自定义方法
+	/*
+	 * (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ProjectInfo getModel() {
+		return entity;
+	}
+
+	/**
+	 * 获得分页器
+	 * @return the page
+	 */
+	public Page<ProjectInfo> getPage() {
+		return page;
+	}
+
+	public ProjectInfo getEntity() {
+		return entity;
+	}
+	public void setEntity(ProjectInfo entity) {
+		this.entity = entity;
+	}
+	public ProjectInfoQuery getProjectInfoQuery() {
+		return projectInfoQuery;
+	}
+	public void setProjectInfoQuery(ProjectInfoQuery projectInfoQuery) {
+		this.projectInfoQuery = projectInfoQuery;
+	}
+	public java.lang.Long getProjectInfoId() {
+		return projectInfoId;
+	}
+	public void setProjectInfoId(java.lang.Long projectInfoId) {
+		this.projectInfoId = projectInfoId;
+	}
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+	/**
+	 * 设置分页器
+	 * @param page
+	 *        the new page
+ */
+	public void setPage(Page<ProjectInfo> page) {
+		this.page = page;
+	}
+	/**
+	 * 获得Json操作信息
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+	/**
+	 * 获得所选择的编号列表
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+	/**
+	 * 设置编号列表
+	 * @param checkedIdList
+	 *        编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+	public List<ProjectInfo> getProjectInfoList() {
+		return projectInfoList;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<ProjectBom> getBomList() {
+		return bomList;
+	}
+
+	public void setBomList(List<ProjectBom> bomList) {
+		this.bomList = bomList;
+	}
+
+	public String getExportCols() {
+		return exportCols;
+	}
+
+	public void setExportCols(String exportCols) {
+		this.exportCols = exportCols;
+	}
+
+	public ProjectBom getProjectBom() {
+		return projectBom;
+	}
+
+	public void setProjectBom(ProjectBom projectBom) {
+		this.projectBom = projectBom;
+	}
+
+}

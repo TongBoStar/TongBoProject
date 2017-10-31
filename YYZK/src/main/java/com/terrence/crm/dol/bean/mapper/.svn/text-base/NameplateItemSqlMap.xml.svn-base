@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="NameplateItem">
+
+        
+	<resultMap id="RM.NameplateItem" class="com.terrence.crm.dol.bean.NameplateItem">
+        <result property="itemid" column="itemid"/>
+        <result property="plateid" column="plateid"/>
+        <result property="attrname" column="attrname"/>
+        <result property="defval" column="defval"/>
+        <result property="frow" column="frow"/>
+        <result property="fcol" column="fcol"/>
+        <result property="cnattrname" column="cnattrname"/>
+        <result property="isitemattr" column="isitemattr"/>
+    </resultMap>
+    
+    <resultMap id="RM.NameplateItem.findPage" class="com.terrence.crm.dol.bean.NameplateItem">
+        <result property="itemid" column="itemid"/>
+        <result property="plateid" column="plateid"/>
+        <result property="attrname" column="attrname"/>
+        <result property="defval" column="defval"/>
+         <result property="frow" column="frow"/>
+        <result property="fcol" column="fcol"/>
+          <result property="cnattrname" column="cnattrname"/>
+        <result property="isitemattr" column="isitemattr"/>
+        <result property="platename" column="platename"/>
+    </resultMap>
+    
+     <resultMap id="NameplateItem.find.allList.data.list" class="com.terrence.crm.dol.bean.NameplateItem">
+        <result property="itemid" column="itemid"/>
+        <result property="plateid" column="plateid"/>
+        <result property="attrname" column="attrname"/>
+        <result property="defval" column="defval"/>
+         <result property="frow" column="frow"/>
+        <result property="fcol" column="fcol"/>
+          <result property="cnattrname" column="cnattrname"/>
+        <result property="isitemattr" column="isitemattr"/>
+        <result property="platename" column="platename"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="NameplateItem.columns">
+	    <![CDATA[
+        	t_nameplate_item.itemid ,
+        	t_nameplate_item.plateid ,
+        	t_nameplate_item.attrname ,
+        	t_nameplate_item.defval ,
+        	t_nameplate_item.frow ,
+        	t_nameplate_item.fcol,
+        	t_nameplate_item.cnattrname,
+        	t_nameplate_item.isitemattr 
+	    ]]>
+	</sql>
+	
+   <insert id="NameplateItem.insert" >
+    
+        INSERT INTO
+        t_nameplate_item (
+
+	        	plateid
+	        <isNotEmpty prepend="," property="attrname">
+	        	attrname
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="defval">
+	        	defval
+	        </isNotEmpty>
+
+        	 <isNotEmpty prepend="," property="frow">
+	        	frow
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	fcol
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="cnattrname">
+	        	cnattrname
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isitemattr">
+	        	isitemattr
+	        </isNotEmpty>
+
+        ) VALUES (
+
+        	
+	        	#plateid# 
+	        
+	        <isNotEmpty prepend="," property="attrname">
+	        	#attrname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="defval">
+	        	#defval# 
+	        </isNotEmpty>
+
+        	 <isNotEmpty prepend="," property="frow">
+	        	#frow# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	#fcol# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="cnattrname">
+	        	#cnattrname#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isitemattr">
+	        	#isitemattr#
+	        </isNotEmpty>
+
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="itemid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="NameplateItem.update" parameterClass="com.terrence.crm.dol.bean.NameplateItem">         
+        UPDATE t_nameplate_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="plateid">
+	        	plateid = #plateid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="attrname">
+	        	attrname = #attrname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="defval">
+	        	defval = #defval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="frow">
+	        	frow = #frow# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fcol">
+	        	fcol = #fcol# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="cnattrname">
+	        	cnattrname = #cnattrname# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isitemattr">
+	        	isitemattr = #isitemattr# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        itemid = #itemid# 
+    </update>
+    
+	<delete id="NameplateItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_nameplate_item where
+       itemid = #itemid# 
+    ]]>
+    </delete>
+    
+    <delete id="NameplateItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_nameplate_item 
+        WHERE
+       itemid in ($itemid$) 
+    ]]>
+    </delete>
+    
+    <select id="NameplateItem.getById" resultMap="RM.NameplateItem">
+	    select <include refid="NameplateItem.columns"/>
+	    
+	        from t_nameplate_item 
+	        where 
+		        itemid = #itemid# 
+	    
+    </select>
+    
+	<select id="NameplateItem.getByProperty" resultMap="RM.NameplateItem">
+		select <include refid="NameplateItem.columns"/> from t_nameplate_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="NameplateItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_nameplate_item.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="plateid">
+	             t_nameplate_item.plateid = #plateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="attrname">
+	             t_nameplate_item.attrname = #attrname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="defval">
+	             t_nameplate_item.defval = #defval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="platename">
+	             t_nameplate.platename like ('%$platename$%')
+	       </isNotEmpty>
+	       
+
+
+			<isNotEmpty prepend="AND" property="frow">
+	             t_nameplate_item.frow = #frow#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fcol">
+	             t_nameplate_item.fcol = #fcol#
+	       </isNotEmpty>
+	       
+	        <isNotEmpty prepend="AND" property="cnattrname">
+	        	 t_nameplate_item.cnattrname = #cnattrname# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="isitemattr">
+	        	 t_nameplate_item.isitemattr = #isitemattr# 
+	        </isNotEmpty>
+
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="NameplateItem.findPage.and">
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_nameplate_item.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="plateid">
+	             t_nameplate_item.plateid = #plateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="attrname">
+	             t_nameplate_item.attrname = #attrname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="defval">
+	             t_nameplate_item.defval = #defval#
+	       </isNotEmpty>
+
+	       <isNotEmpty prepend="AND" property="platename">
+	             t_nameplate.platename like ('%$platename$%')
+	       </isNotEmpty>
+
+			<isNotEmpty prepend="AND" property="frow">
+	             t_nameplate_item.frow = #frow#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fcol">
+	             t_nameplate_item.fcol = #fcol#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="cnattrname">
+	        	 t_nameplate_item.cnattrname = #cnattrname# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="isitemattr">
+	        	 t_nameplate_item.isitemattr = #isitemattr# 
+	        </isNotEmpty>
+
+	</sql>
+	
+    <select id="NameplateItem.Entity" resultMap="RM.NameplateItem">
+    	SELECT 	<include refid="NameplateItem.columns"/> FROM t_nameplate_item <include refid="NameplateItem.findPage.where"/>
+    </select>
+    
+    <select id="NameplateItem.findList" resultMap="RM.NameplateItem">
+    	SELECT 
+    		<include refid="NameplateItem.columns"/> 
+    	FROM 
+    		t_nameplate_item
+		<include refid="NameplateItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="NameplateItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_nameplate_item
+    ]]>
+		<include refid="NameplateItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.NameplateItem.findPage" resultMap="RM.NameplateItem">
+    	select <include refid="NameplateItem.columns"/>	    
+	        from t_nameplate_item 	   
+		<include refid="NameplateItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="NameplateItem.findPage" resultMap="RM.NameplateItem">
+    	select <include refid="NameplateItem.columns"/>	    
+	        from t_nameplate_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       itemid 
+	   not in(select $notTop$ 
+       itemid 
+	   from t_nameplate_item <include refid="NameplateItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="NameplateItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    
+    <select id="NameplateItem.fing.page.allData.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_nameplate_item
+        left join t_nameplate on t_nameplate_item.plateid = t_nameplate.plateid
+    ]]>
+		<include refid="NameplateItem.findPage.where"/>    
+    </select>
+    <select id="NameplateItem.fing.page.allData" resultMap="RM.NameplateItem.findPage"><!--  -->
+    	select <include refid="NameplateItem.columns"/>	,t_nameplate.platename   platename  
+	        from t_nameplate_item
+	        
+	        left join t_nameplate on t_nameplate_item.plateid = t_nameplate.plateid
+	         where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       itemid 
+	   not in(select $notTop$ 
+       itemid 
+	   from t_nameplate_item 
+	   left join t_nameplate on t_nameplate_item.plateid = t_nameplate.plateid
+	   <include refid="NameplateItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="NameplateItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+     <select id="NameplateItemQuery.find.allList.data" resultMap="NameplateItem.find.allList.data.list">
+    	SELECT 
+    		<include refid="NameplateItem.columns"/> ,t_nameplate.platename   platename 
+    	FROM 
+    		t_nameplate_item
+    		 left join t_nameplate on t_nameplate_item.plateid = t_nameplate.plateid
+		<include refid="NameplateItem.findPage.where"/>
+		
+    </select>
+	
+</sqlMap>

@@ -1,0 +1,89 @@
+<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@ include file="/common/childrenHeader.jsp" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>刀片管理</title>
+
+<link rel="stylesheet" type="text/css" href="/css/common.css">
+<style type="text/css">
+	.mr-control{
+		padding: 10px 5px 0px;
+	}
+</style>
+</head>
+<script type="text/javascript">
+
+function loadlog(){
+	var html='';
+	var formParam = $('#queryForm').serialize();
+	var url = "${ctx}/adminlog/adminlog!listToQuery.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		data:formParam,
+		success : function(data) {
+			data = $.parseJSON(data);
+			if(data.resultInfo[0]=='0')
+			{
+				$.each(data.adminlogList,function(i,o){
+					html+='<tr>';
+					html+='<td>'+i+'</td>';
+					html+='<td>'+o.admin.adminName+'</td>';
+					html+='<td>'+o.operatingTimeString+'</td>';
+					html+='<td>'+o.operatingContent+'</td>';
+				});
+				
+				$('#pagecontent').html(html);
+			
+			}else{
+			alert(data.resultInfo[1]);
+			}
+		}
+	});	
+		
+}
+
+
+
+
+
+
+</script>
+
+<div><div style="text-align:center;font-size: 16px;font-weight: bold;background-color: #CCCCCC;"><span>日志查看</span></div>
+
+<form name="queryForm" id="queryForm" action="" method="post">
+<!--  -->
+<div class="mr-control" >  
+	<div class="mrc-left">
+		   月<input type="text" name="adminlogQuery.beginMonth" id="begintime" onclick="WdatePicker({dateFmt:'yyyyMM'})"/>
+        	至
+        <input type="text" name="adminlogQuery.endMonth" id="endtime" onclick="WdatePicker({dateFmt:'yyyyMM'})"/>
+		<input type="button" value="搜索" onclick="javascript:loadlog();" class="btnall" style="margin-left:1em;"/>
+	</div>
+</div>
+<div>
+<table width="100%" class="datalist">
+
+  <tr>
+    <th width="5%" scope="col">序号</th>
+    <th width="10%" scope="col">人员名称</th>
+    <th width="12%" scope="col">操作时间</th>
+    <th width="73%" scope="col">操作详细</th>
+  </tr>
+  <tbody id="pagecontent">
+  
+ </tbody>
+</table>
+</div>
+
+</form>
+
+</div>
+
+
+
+
+</html>

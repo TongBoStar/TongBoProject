@@ -1,0 +1,43 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.BillnoCheck;
+import com.terrence.crm.dol.dao.IBillnoCheckDao;
+
+@Repository
+public class BillnoCheckDao extends BaseIbatisDao<BillnoCheck,java.lang.Long> implements IBillnoCheckDao{
+
+		
+	public void saveOrUpdate(BillnoCheck entity) {
+		if(entity.getBillid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "BillnoCheck";
+	}
+	public BillnoCheck getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (BillnoCheck)this.getSqlMapClientTemplate().queryForObject("BillnoCheck.getByProperty", map);		
+	}
+
+	@Override
+	public List<BillnoCheck> findbilllist(BillnoCheck billno) {
+		return this.getSqlMapClientTemplate().queryForList("BillnoCheck.find.billList", billno);
+	}
+
+}

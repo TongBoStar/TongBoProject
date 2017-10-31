@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TrailPdGroup">
+
+        
+	<resultMap id="RM.TrailPdGroup" class="com.terrence.crm.dol.bean.TrailPdGroup">
+        <result property="gid" column="gid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="gname" column="gname"/>
+        <result property="forder" column="forder"/>
+    </resultMap>
+	
+	<resultMap id="RM.TrailPdGroup.getDetailById" class="com.terrence.crm.dol.bean.TrailPdGroup">
+        <result property="gid" column="gid"/>
+        <result property="stepid" column="stepid"/>
+        <result property="gname" column="gname"/>
+        <result property="forder" column="forder"/>
+        <result property="recSetlist" column="gid" select="TrailPdGroup.find.recSetlist"/>
+        
+    </resultMap>
+	  
+	
+	<resultMap id="RM.TrailPdGroup.find.recSetlist" class="com.terrence.crm.dol.bean.TrailRecSet">
+        <result property="recid" column="recid"/>
+        <result property="gid" column="gid"/>
+        <result property="colid" column="colid"/>
+        <result property="coltitle" column="coltitle"/>
+        <result property="fename" column="fename"/>
+        <result property="fcol" column="fcol"/>
+        <result property="frow" column="frow"/>
+    </resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TrailPdGroup.columns">
+	    <![CDATA[
+        	t_trail_pd_group.gid ,
+        	t_trail_pd_group.stepid ,
+        	t_trail_pd_group.gname ,
+        	t_trail_pd_group.forder 
+	    ]]>
+	</sql>
+	
+   <insert id="TrailPdGroup.insert" >
+    
+        INSERT INTO
+        t_trail_pd_group (
+        	stepid 
+        	<isNotEmpty prepend="," property="gname">
+        	gname
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="forder">
+        	forder
+        	</isNotEmpty>
+        	 
+        ) VALUES (
+
+        	#stepid# 
+        	<isNotEmpty prepend="," property="gname">
+        	#gname# 
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="forder">
+        	#forder# 
+        	</isNotEmpty>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="gid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="TrailPdGroup.update" parameterClass="com.terrence.crm.dol.bean.TrailPdGroup">         
+        UPDATE t_trail_pd_group 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="stepid">
+	        	stepid = #stepid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="gname">
+	        	gname = #gname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forder">
+	        	forder = #forder# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        gid = #gid# 
+    </update>
+    
+	<delete id="TrailPdGroup.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trail_pd_group where
+       gid = #gid# 
+    ]]>
+    </delete>
+    
+    <delete id="TrailPdGroup.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trail_pd_group 
+        WHERE
+       gid in ($gid$) 
+    ]]>
+    </delete>
+    
+    <select id="TrailPdGroup.getById" resultMap="RM.TrailPdGroup">
+	    select <include refid="TrailPdGroup.columns"/>
+	    
+	        from t_trail_pd_group 
+	        where 
+		        gid = #gid# 
+	    
+    </select>
+    
+	<select id="TrailPdGroup.getByProperty" resultMap="RM.TrailPdGroup">
+		select <include refid="TrailPdGroup.columns"/> from t_trail_pd_group where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TrailPdGroup.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="gid">
+	             t_trail_pd_group.gid = #gid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_group.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="gname">
+	             t_trail_pd_group.gname = #gname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forder">
+	             t_trail_pd_group.forder = #forder#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TrailPdGroup.findPage.and">
+			<isNotEmpty prepend="AND" property="gid">
+	             t_trail_pd_group.gid = #gid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_trail_pd_group.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="gname">
+	             t_trail_pd_group.gname = #gname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forder">
+	             t_trail_pd_group.forder = #forder#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TrailPdGroup.Entity" resultMap="RM.TrailPdGroup">
+    	SELECT 	<include refid="TrailPdGroup.columns"/> FROM t_trail_pd_group <include refid="TrailPdGroup.findPage.where"/>
+    </select>
+    
+    <select id="TrailPdGroup.findList" resultMap="RM.TrailPdGroup">
+    	SELECT 
+    		<include refid="TrailPdGroup.columns"/> 
+    	FROM 
+    		t_trail_pd_group
+		<include refid="TrailPdGroup.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TrailPdGroup.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trail_pd_group
+    ]]>
+		<include refid="TrailPdGroup.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TrailPdGroup.findPage" resultMap="RM.TrailPdGroup">
+    	select <include refid="TrailPdGroup.columns"/>	    
+	        from t_trail_pd_group 	   
+		<include refid="TrailPdGroup.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TrailPdGroup.findPage" resultMap="RM.TrailPdGroup">
+    	select <include refid="TrailPdGroup.columns"/>	    
+	        from t_trail_pd_group where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       gid 
+	   not in(select $notTop$ 
+       gid 
+	   from t_trail_pd_group <include refid="TrailPdGroup.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TrailPdGroup.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    
+    
+    <select id="TrailPdGroup.getDetailById" resultMap="RM.TrailPdGroup.getDetailById">
+	    select <include refid="TrailPdGroup.columns"/>
+	    
+	        from t_trail_pd_group 
+	        where 
+		        gid = #gid# 
+    </select>
+    
+
+	<select id="TrailPdGroup.find.recSetlist" resultMap="RM.TrailPdGroup.find.recSetlist">
+	    select 
+	   	    t_trail_rec_set.recid ,
+        	t_trail_rec_set.gid ,
+        	t_trail_rec_set.colid ,
+        	t_trail_rec_set.fcnname coltitle ,
+        	t_trail_rec_set.fename ,
+        	t_trail_rec_set.fcol ,
+        	t_trail_rec_set.frow 
+	     from 
+	     t_trail_rec_set 
+	        where 
+		        	t_trail_rec_set.gid= #gid# 
+    </select>
+	    
+
+
+	
+	<insert id="TrailPdGroup.update.Copy"><!-- 分组复制 -->
+			insert into t_trail_pd_group(stepid,gname,forder)
+			select 
+			#stepid#,
+			gname,
+			forder
+			
+			from t_trail_pd_group where gid=#gid#
+			
+		<selectKey resultClass="java.lang.Long" type="post" keyProperty="gid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+	</insert>
+	
+	
+	
+
+
+    
+    
+    
+	
+</sqlMap>

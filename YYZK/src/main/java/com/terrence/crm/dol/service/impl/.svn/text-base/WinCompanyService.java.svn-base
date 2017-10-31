@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.WinCompany;
+import com.terrence.crm.dol.query.WinCompanyQuery;
+import com.terrence.crm.dol.dao.IWinCompanyDao;
+import com.terrence.crm.dol.service.IWinCompanyService;
+
+@Service
+@Transactional
+public class WinCompanyService extends BaseService implements IWinCompanyService {
+	protected static Logger logger = LoggerFactory.getLogger(WinCompanyService.class);
+	@Autowired
+	@Qualifier("winCompanyDao")
+	private IWinCompanyDao winCompanyDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "WinCompany";
+	}
+	@Transactional(readOnly=true)
+	public WinCompany getById(java.lang.Long id) throws ServiceException
+	{
+		return winCompanyDao.getById(id);
+	}
+	
+	public void saveOrUpdate(WinCompany entity) throws ServiceException
+	{
+		winCompanyDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(WinCompany entity) throws ServiceException
+	{
+		Long adId = winCompanyDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(WinCompany entity) throws ServiceException
+	{
+		Integer returnValue =  winCompanyDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = winCompanyDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = winCompanyDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WinCompanyQuery query = new WinCompanyQuery();
+		try {
+			return winCompanyDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<WinCompany> findPage(Page<WinCompany> page, WinCompanyQuery query) throws ServiceException
+	{
+		return winCompanyDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<WinCompany> findPage(Page<WinCompany> page,String statement, WinCompanyQuery query) throws ServiceException
+	{
+		return winCompanyDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<WinCompany> findList(WinCompanyQuery query) throws ServiceException
+	{
+		return winCompanyDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<WinCompany> findList(WinCompanyQuery query,Integer pageSize) throws ServiceException
+	{
+		return winCompanyDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<WinCompany> findList(WinCompanyQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return winCompanyDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<WinCompany> findAllList() throws ServiceException
+	{
+		return winCompanyDao.findAllList();
+	}
+
+}

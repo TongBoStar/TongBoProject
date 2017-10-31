@@ -1,0 +1,469 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProItem;
+import com.terrence.crm.dol.query.ProItemQuery;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.dao.IProItemDao;
+import com.terrence.crm.dol.service.IProItemService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class ProItemService extends BaseService implements IProItemService {
+	protected static Logger logger = LoggerFactory.getLogger(ProItemService.class);
+	@Autowired
+	@Qualifier("proItemDao")
+	private IProItemDao proItemDao;
+	
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	
+	@Autowired
+	@Qualifier("departmentDao")
+	private IDepartmentDao departmentDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ProItem";
+	}
+	@Transactional(readOnly=true)
+	public ProItem getById(java.lang.Long id) throws ServiceException
+	{
+		return proItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ProItem entity) throws ServiceException
+	{
+		proItemDao.saveOrUpdate(entity);
+		if(entity.getAid()==null){
+			operationLogDao.save(ConfigTerrence.MODEL_PROITEM, ConfigTerrence.OPT_ADD, "物料代码为："+entity.getItemcode()+"的项目物料添加成功");
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_PROITEM, ConfigTerrence.OPT_ADD, "物料代码为："+entity.getItemcode()+"的项目物料修改成功");
+		}
+	}
+	
+	public java.lang.Long save(ProItem entity) throws ServiceException
+	{
+		Long adId = proItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ProItem entity) throws ServiceException
+	{
+		Integer returnValue =  proItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = proItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = proItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ProItemQuery query = new ProItemQuery();
+		try {
+			return proItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ProItem> findPage(Page<ProItem> page, ProItemQuery query) throws ServiceException
+	{
+		return proItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProItem> findPage(Page<ProItem> page,String statement, ProItemQuery query) throws ServiceException
+	{
+		return proItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProItem> findList(ProItemQuery query) throws ServiceException
+	{
+		return proItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProItem> findList(ProItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return proItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ProItem> findList(ProItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return proItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProItem> findAllList() throws ServiceException
+	{
+		return proItemDao.findAllList();
+	}
+	@Override
+	public void saveProItem() throws ServiceException {
+		proItemDao.saveProItem();
+	}
+	@Transactional(readOnly=true)
+	public List<ProItem> findListTop20(ProItemQuery query) throws ServiceException
+	{
+		return proItemDao.findListTop20(query);
+	}
+	@Override
+	public void updateProItem() throws ServiceException {
+		proItemDao.updateProItem();
+	}
+	@Override
+	public String proItemXls(String path,ProItemQuery proItemQuery,
+			List<Long> checkedIdList) throws Exception {
+		 List<ProItem> proItemList = new ArrayList<ProItem>();
+		 proItemList = proItemDao.findList(proItemQuery);
+		 HSSFWorkbook wb = new HSSFWorkbook();
+		 HSSFSheet sheet = wb.createSheet("new sheet");
+		 HSSFCellStyle cellstyle=wb.createCellStyle();
+		 cellstyle.setWrapText(true);//自动换行
+		 creatSheetHead(sheet,wb);//创建表头
+		 int i=1;
+		 short cellNumbers=0;
+		 HSSFRow rows =null;
+		 if(proItemList!=null&&proItemList.size()>0){
+			 for(ProItem item:proItemList){
+				 rows = sheet.createRow(i);
+				 cellNumbers=0;
+				 rows.createCell(cellNumbers++).setCellValue(item.getItemcode()==null?"":item.getItemcode());
+				 rows.createCell(cellNumbers++).setCellValue(item.getItemname()==null?"":item.getItemname());
+				 rows.createCell(cellNumbers++).setCellValue(item.getFmode()==null?"":item.getFmode());
+				 rows.createCell(cellNumbers++).setCellValue(item.getFdescript()==null?"":item.getFdescript());
+				 rows.createCell(cellNumbers++).setCellValue(item.getFlevel()==null?"":item.getFlevel());
+				 rows.createCell(cellNumbers++).setCellValue(item.getFmaker()==null?"":item.getFmaker());
+				 rows.createCell(cellNumbers++).setCellValue(item.getFshortname()==null?"":item.getFshortname());
+				 rows.createCell(cellNumbers++).setCellValue(item.getSrcarea()==null?"":item.getSrcarea());
+				 rows.createCell(cellNumbers++).setCellValue(item.getBuyamount()==null?"":item.getBuyamount().toString());
+				 rows.createCell(cellNumbers++).setCellValue(item.getAvgamount()==null?"":item.getAvgamount().toString());
+				 rows.createCell(cellNumbers++).setCellValue(item.getRpamount()==null?"":item.getRpamount().toString());
+				 rows.createCell(cellNumbers++).setCellValue(item.getCostamount()==null?"":item.getCostamount().toString());
+				 rows.createCell(cellNumbers++).setCellValue(item.getListamount()==null?"":item.getListamount().toString());
+				 i++;
+			 }
+		 }
+		 String fileName=DateUtils.GetTimeFormat("yyyyMMddHHmmss")+"work.xls";
+		  try {
+				FileOutputStream outputStream=new FileOutputStream(new File(path+fileName));
+				wb.write(outputStream);
+				outputStream.flush();
+				outputStream.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		return fileName;
+	}
+	private void creatSheetHead(HSSFSheet sheet, HSSFWorkbook wb) {
+		HSSFCellStyle cellstyl = wb.createCellStyle();
+		HSSFFont font = wb.createFont();
+	  font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体
+	  font.setFontHeightInPoints((short) 12);//设置字体大小
+	  cellstyl.setFont(font);
+	  sheet.setDefaultColumnWidth((short) 20);//列宽
+	  HSSFRow firstrow = sheet.createRow(0);
+	  sheet.createFreezePane( 0, 1, 0, 1 );//冻结首行 
+	  firstrow.createCell((short) 0).setCellValue("物料代码");
+	  firstrow.createCell((short) 1).setCellValue("物料名称");
+	  firstrow.createCell((short) 2).setCellValue("型号规格");
+	  firstrow.createCell((short) 3).setCellValue("性能描述");
+	  firstrow.createCell((short) 4).setCellValue("压力等级");
+	  firstrow.createCell((short) 5).setCellValue("制造商");
+	  firstrow.createCell((short) 6).setCellValue("制造商简称");
+	  firstrow.createCell((short) 7).setCellValue("原产地");
+	  firstrow.createCell((short) 8).setCellValue("最近采购价");
+	  firstrow.createCell((short) 9).setCellValue("过去三年平均采购价");
+	  firstrow.createCell((short) 10).setCellValue("参考价");
+	  firstrow.createCell((short) 11).setCellValue("制定成本价");
+	  firstrow.createCell((short) 12).setCellValue("列表价");
+	  
+	}
+	@Override
+	public void saveOrUpdateItemXlsData(String xlsfile) throws ServiceException {
+		if(xlsfile!=null&&!"".equals(xlsfile.trim())&&xlsfile.contains(".")){
+			String type = xlsfile.substring(xlsfile.lastIndexOf("."), xlsfile.length());
+			if(type.equals(".xls")){
+				readxls(xlsfile);	
+			}else if(type.equals(".xlsx")){
+				read2007Xls(xlsfile);
+			}
+		}
+		
+	}
+	public void readxls(String file){
+		File f=new File(file);
+		try
+		{
+			FileInputStream is=new FileInputStream(f);
+			HSSFWorkbook wbs=new HSSFWorkbook(is);
+			HSSFSheet childSheet=wbs.getSheetAt(0);
+			int rows=childSheet.getLastRowNum();
+			for(int j=1;j<=rows;j++){
+				HSSFRow row=childSheet.getRow(j);
+				//导入读取每行信息并更新
+				ProItem pro = new ProItem();
+				if(null!=row){
+					int cells=row.getLastCellNum();
+					HSSFCell cell1=row.getCell(0);
+					String itemcode = cell1.getStringCellValue();
+					pro = proItemDao.getByProperty("itemcode", itemcode);
+					for(int k=1;k<cells-1;k++){
+						HSSFCell cell=row.getCell(k);
+						if(null!=cell)
+						{	
+							if(cell.getCellType()==HSSFCell.CELL_TYPE_NUMERIC){
+								if(cell.getNumericCellValue()!=0){
+									double value = cell.getNumericCellValue();
+									if(k==4){
+										pro.setFlevel(Integer.toString((int)cell.getNumericCellValue()));
+									}
+									if(k==8){
+										pro.setBuyamount(value);
+									}
+									if(k==9){
+										pro.setAvgamount(value);
+									}
+									if(k==10){
+										pro.setRpamount(value);
+									}
+									if(k==11){
+										pro.setCostamount(value);
+									}
+									
+								}
+							}else if(cell.getCellType()==HSSFCell.CELL_TYPE_STRING){
+								if(cell.getStringCellValue()!=null&&!cell.getStringCellValue().trim().equals("")){
+									String value = cell.getStringCellValue().trim();
+									if(k==1){
+										pro.setItemname(value);
+									}
+									if(k==2){
+										pro.setFmode(value);
+									}
+									if(k==3){
+										pro.setFdescript(value);
+									}
+									if(k==4){
+										pro.setFlevel(value);
+									}
+									if(k==5){
+										pro.setFmaker(value);
+									}
+									if(k==6){
+										pro.setFshortname(value);
+									}
+									if(k==7){
+										pro.setSrcarea(value);
+									}
+									if(k==8){
+										pro.setBuyamount(Double.parseDouble(value));
+									}
+									if(k==9){
+										pro.setAvgamount(Double.parseDouble(value));
+									}
+									if(k==10){
+										pro.setRpamount(Double.parseDouble(value));
+									}
+									if(k==11){
+										pro.setCostamount(Double.parseDouble(value));
+									}
+									
+								}
+							}
+							
+						}
+					}
+					if(pro!=null){
+						if(pro.getCostamount()==null||pro.getCostamount()==0){
+							if(pro.getRpamount()!=null){
+								pro.setListamount(pro.getRpamount()*2.5);
+							}
+						}else{
+							pro.setListamount(pro.getCostamount()*2.5);
+						}
+						this.proItemDao.update(pro);
+					}
+				}
+			}
+		}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+	}
+	public void read2007Xls(String file){
+		File f=new File(file);
+		try
+		{
+			FileInputStream is=new FileInputStream(f);
+			XSSFWorkbook wbs=new XSSFWorkbook(is);
+			XSSFSheet childSheet=wbs.getSheetAt(0);
+			int rows=childSheet.getLastRowNum();
+			for(int j=1;j<=rows;j++){
+				XSSFRow row=childSheet.getRow(j);
+				//导入读取每行信息并更新
+				ProItem pro = new ProItem();
+				if(null!=row){
+					int cells=row.getLastCellNum();
+					XSSFCell cell1=row.getCell(0);
+					String itemcode = cell1.getStringCellValue();
+					pro = proItemDao.getByProperty("itemcode", itemcode);
+					for(int k=1;k<cells;k++){
+						XSSFCell cell=row.getCell(k);
+						if(null!=cell)
+						{	
+							if(cell.getCellType()==HSSFCell.CELL_TYPE_NUMERIC){
+								if(cell.getNumericCellValue()!=0){
+									double value = cell.getNumericCellValue();
+									if(k==4){
+										pro.setFlevel(Integer.toString((int)cell.getNumericCellValue()));
+									}
+									if(k==8){
+										pro.setBuyamount(value);
+									}
+									if(k==9){
+										pro.setAvgamount(value);
+									}
+									if(k==10){
+										pro.setRpamount(value);
+									}
+									if(k==11){
+										pro.setCostamount(value);
+									}
+									if(k==12){
+										pro.setListamount(value);
+									}
+								}
+							}else if(cell.getCellType()==HSSFCell.CELL_TYPE_STRING){
+								if(cell.getStringCellValue()!=null&&!cell.getStringCellValue().trim().equals("")){
+									String value = cell.getStringCellValue().trim();
+									if(k==1){
+										pro.setItemname(value);
+									}
+									if(k==2){
+										pro.setFmode(value);
+									}
+									if(k==3){
+										pro.setFdescript(value);
+									}
+									if(k==4){
+										pro.setFlevel(value);
+									}
+									if(k==5){
+										pro.setFmaker(value);
+									}
+									if(k==6){
+										pro.setFshortname(value);
+									}
+									if(k==7){
+										pro.setSrcarea(value);
+									}
+									if(k==8){
+										pro.setBuyamount(Double.parseDouble(value));
+									}
+									if(k==9){
+										pro.setAvgamount(Double.parseDouble(value));
+									}
+									if(k==10){
+										pro.setRpamount(Double.parseDouble(value));
+									}
+									if(k==11){
+										pro.setCostamount(Double.parseDouble(value));
+									}
+									if(k==12){
+										pro.setListamount(Double.parseDouble(value));
+									}
+								}
+							}
+							
+						}
+					}
+					if(pro!=null){
+						if(pro.getCostamount()==null||pro.getCostamount()==0){
+							if(pro.getRpamount()!=null){
+								pro.setListamount(pro.getRpamount()*2.5);
+							}
+						}else{
+							pro.setListamount(pro.getCostamount()*2.5);
+						}
+						this.proItemDao.update(pro);
+					}
+				}
+			}
+		}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+	}
+	@Override
+	public ProItem getByProperty(String propertyName, Object propertyValue) {
+		return this.proItemDao.getByProperty(propertyName, propertyValue);
+	}
+	@Override
+	public void updateAdmin() throws ServiceException {
+		adminDao.findAdminErp();
+	}
+	@Override
+	public void updateDepart() throws ServiceException {
+		departmentDao.syncDepERPData();
+	}
+}

@@ -1,0 +1,51 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdNameplate;
+import com.terrence.crm.dol.dao.IPdNameplateDao;
+import com.terrence.crm.dol.query.PdNameplateQuery;
+
+@Repository
+public class PdNameplateDao extends BaseIbatisDao<PdNameplate,java.lang.Long> implements IPdNameplateDao{
+
+		
+	public void saveOrUpdate(PdNameplate entity) {
+		if(entity.getPnpid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdNameplate";
+	}
+	public PdNameplate getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdNameplate)this.getSqlMapClientTemplate().queryForObject("PdNameplate.getByProperty", map);		
+	}
+
+	@Override
+	public PdNameplate findEnttiy(PdNameplateQuery pdnq) {
+		return (PdNameplate) this.getSqlMapClientTemplate().queryForObject("PdNameplate.find.entity.data", pdnq);
+	}
+
+	@Override
+	public List<PdNameplate> findListPD(PdNameplateQuery pnpq) {
+		return this.getSqlMapClientTemplate().queryForList("PdNameplate.find.data.baseList", pnpq);
+	}
+
+}

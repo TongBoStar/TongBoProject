@@ -1,0 +1,676 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.ItemProcessVo;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IItemProcessService;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/itemProcess")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "itemProcess." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemProcessAction extends CrudActionSupport<ItemProcess>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("itemProcessService")
+	private IItemProcessService itemProcessService;
+	
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	
+	private ItemProcess entity;
+
+	private ItemProcessQuery itemProcessQuery;
+	
+	
+	private java.lang.Long itemProcessId;
+	private Long subitemProcessId;
+	private String itemcode;
+	/** 分页器 */
+	private Page<ItemProcess> page = new Page<ItemProcess>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ItemProcess> itemProcessList;
+
+	private BaseItem item;
+	
+	private ItemProcessVo ipvo=new ItemProcessVo();
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemProcessId != null ) {
+			entity = itemProcessService.getById(itemProcessId);
+		} else {
+			entity = new ItemProcess();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+		int returnValue	=itemProcessService.deleteByMultipleId(checkedIdList);
+			if(returnValue==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "已分派任务！不可删除！";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+				addActionMessage("删除成功");
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	@Action("/process/deleteItemProcess")
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	
+public String deleteById() throws Exception {
+		
+		try {
+			itemProcessService.deleteById(itemProcessId);
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功!";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemProcessId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemProcessQuery == null) {
+			itemProcessQuery = new ItemProcessQuery();
+		}
+		
+		try {
+			page = itemProcessService.findPage(page, itemProcessQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	public void prepareShowitemworkflow() throws Exception {
+		prepareModel();
+	}
+	@Action(value="/process/showitemworkflow",results={@Result(name="success", location="/WEB-INF/content/process/add_workflow.jsp")})
+	public String showitemworkflow()throws Exception
+	{
+		item=baseItemService.getByProperty("itemcode", itemcode);
+		return "success";
+	}
+	public void prepareAdditemprocess() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/additemprocess")
+	public String additemprocess()throws Exception
+	{
+		try {
+			itemProcessService.saveItemProcess(ipvo, entity); 
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	
+	public void prepareAddNext() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/addnext")
+	public String addNext()throws Exception
+	{
+		try {
+			itemProcessService.saveNext(ipvo, entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareUpdate() throws Exception {
+		prepareModel();
+	}
+	@Action("/process/updateItemProcess")
+	public String update()throws Exception
+	{
+		try {
+			itemProcessService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			itemProcessService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	/**
+	 * 调序
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/process/adjustOrder")
+	public String adjustOrder()throws Exception
+	{
+		try {
+			itemProcessService.updateUpOrDown(itemProcessId,subitemProcessId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	@Action("/process/saveToItemProcess")
+	public String saveToJson() throws Exception {
+		
+		try {
+			save(); 
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemProcessService.getById(itemProcessId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	@Action("/system/showItemProcess")
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	@Action("/process/listToItemprocess")
+	public String listQuery() throws Exception
+	{
+		try{
+			itemProcessQuery.setSortColumns("itemprocessid");
+			itemProcessList = itemProcessService.findList(itemProcessQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public String listAll() throws Exception {
+		try{
+			itemProcessList = itemProcessService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public void prepareUpdateItemProcessList() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/updateItemProcess")
+	public String updateItemProcessList()throws Exception
+	{
+		try {
+			itemProcessService.updatelist(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功!";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			return INPUT;
+		}
+		return JSON;
+	}
+	
+	/*@Action("/process/listToBaseItemProcess")
+	public String listToBaseItemProcess()throws Exception
+	{
+		try 
+		{
+			if(itemProcessQuery == null) {
+				itemProcessQuery = new ItemProcessQuery();
+			}
+			page=itemProcessService.findPage(page,"BaseItem.Process.findPage",itemProcessQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}*/
+	
+	@Action("/system/downloadfile")
+	public void downloadTxtFile(){
+		try {
+			String filepath=getRequest().getParameter("filepath");
+			String fname=null;
+			fname=getRequest().getParameter("filename");
+		//System.out.println("path:"+filepath);
+		//System.out.println("getRequest().getRealPath:"+getRequest().getRealPath("/"));	
+		//InputStream propertiespath=new FileInputStream();
+		//System.out.println("getRequest().getContextPath():"+getRequest().getContextPath());
+		//---------------------------------
+		 InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties");
+		  Properties props = new Properties();
+		  props.load(inputStream);
+		  //System.out.println("ppp:"+props.getProperty("upload.bashPath")); 
+		//-----------------
+		  
+		File file=new File(props.getProperty("upload.bashPath")+"/"+filepath);
+		  //File file=new File(getRequest().getRealPath("/")+filepath);
+		String filename="";
+		if(fname.equals("")){
+			 filename = file.getName();	
+		}else{
+			filename =fname;
+		}	
+		
+			
+			HttpServletResponse response = getResponse();
+			InputStream fis = new BufferedInputStream(new FileInputStream(props.getProperty("upload.bashPath")+"/"+filepath));
+			byte[] buffer = new byte[fis.available()];
+			fis.read(buffer);
+			fis.close();
+			// 清空response
+			response.reset();
+			// 设置response的Header
+			response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes("gb2312"), "ISO8859-1"));
+			response.addHeader("Content-Length", "" + file.length());
+			OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+			response.setContentType("application/octet-stream");
+			toClient.write(buffer);
+			toClient.flush();
+			toClient.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ItemProcess getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemProcessQuery getItemProcessQuery() {
+		return itemProcessQuery;
+	}
+
+	
+	public void setItemProcessQuery(ItemProcessQuery itemProcessQuery) {
+		this.itemProcessQuery = itemProcessQuery;
+	}
+
+	public void setItemProcessId(java.lang.Long itemProcessId) {
+		this.itemProcessId = itemProcessId;
+	}
+	
+	
+	public java.lang.Long getItemProcessId() {
+		return this.itemProcessId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ItemProcess> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ItemProcess> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ItemProcess> getItemProcessList() {
+		return itemProcessList;
+	}
+
+
+	
+
+	public Long getSubitemProcessId() {
+		return subitemProcessId;
+	}
+
+	public void setSubitemProcessId(Long subitemProcessId) {
+		this.subitemProcessId = subitemProcessId;
+	}
+
+	
+
+	public BaseItem getItem() {
+		return item;
+	}
+
+	public void setItem(BaseItem item) {
+		this.item = item;
+	}
+
+	public String getItemcode() {
+		return itemcode;
+	}
+
+	public void setItemcode(String itemcode) {
+		this.itemcode = itemcode;
+	}
+
+	public ItemProcessVo getIpvo() {
+		return ipvo;
+	}
+
+	public void setIpvo(ItemProcessVo ipvo) {
+		this.ipvo = ipvo;
+	}
+
+	
+	
+}

@@ -1,0 +1,110 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.query.ItemWaitQuery;
+
+@Repository
+public class ItemWaitDao extends BaseIbatisDao<ItemWait,java.lang.Long> implements IItemWaitDao{
+
+		
+	public void saveOrUpdate(ItemWait entity) {
+		if(entity.getWaitid() == null) 
+			
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "ItemWait";
+	}
+	public ItemWait getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ItemWait)this.getSqlMapClientTemplate().queryForObject("ItemWait.getByProperty", map);		
+	}
+
+	@Override
+	public ItemWait findModel(Long itemWaitId) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("ItemWait.find.Model", itemWaitId);
+	}
+
+	@Override
+	public Integer updateStatus(ItemWait entity) {
+		return this.getSqlMapClientTemplate().update("ItemWait.update", entity);
+	}
+
+	@Override
+	public List<ItemWait> findbatchno(ItemWait itemWait) {
+		return this.getSqlMapClientTemplate().queryForList("ItemWait.findbatchno.all", itemWait);
+	}
+
+	@Override
+	public List<ItemWait> saveWaitPush(ItemWait itemWait) {
+		return this.getSqlMapClientTemplate().queryForList("ItemWait.find.push.wait", itemWait);
+	}
+
+	@Override
+	public List<ItemWait> findcheckBatchno(ItemWaitQuery itemWaitQuery) {
+		return this.getSqlMapClientTemplate().queryForList("ItemWait.find.batch.itemcode", itemWaitQuery);
+	}
+
+	@Override
+	public Integer deleteWait(ItemWait itemwait) {
+		return this.getSqlMapClientTemplate().delete("ItemWait.delete.all.delids", itemwait);
+	}
+
+	@Override
+	public List<ItemWait> findiWaitList(ItemWait iwait) {
+		return this.getSqlMapClientTemplate().queryForList("ItemWait.find.waitList", iwait);
+	}
+
+	@Override
+	public ItemWait findItemWait(ItemWait itwait) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("ItemWait.find.itwait", itwait);
+	}
+
+	@Override
+	public ItemWait finditemwait(ItemWait wait) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("ItemWait.find.itemwait.baseitem", wait);
+	}
+
+	@Override
+	public Integer updateItemWait(ItemWait itemWait) {
+		return this.getSqlMapClientTemplate().update("ItemWait.update.in.putstorageentity", itemWait);
+	}
+
+	@Override
+	public List<ItemWait> findBHitem(ItemWait itemWait) {
+		return this.getSqlMapClientTemplate().queryForList("ItemWait.find.bh.for.itemcode",itemWait);
+	}
+
+	@Override
+	public ItemWait findModelNew(ItemWait itemWait) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("itemwait.check.data.find.new", itemWait);
+	}
+
+	@Override
+	public ItemWait findModelNewtwo(ItemWait itemWait) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("itemwait.check.two.data.find.saved", itemWait);
+	}
+
+	@Override
+	public ItemWait findEntity(ItemWaitQuery iwq) {
+		return (ItemWait) this.getSqlMapClientTemplate().queryForObject("ItemWait.find.fqty.baseitem.data", iwq);
+	}
+
+}

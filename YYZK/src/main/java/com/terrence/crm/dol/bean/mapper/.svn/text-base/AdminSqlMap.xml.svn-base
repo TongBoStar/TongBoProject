@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+
+<!-- 不使用namespace是由于sql搜索定位会比较方便 -->
+<sqlMap>
+
+    <resultMap id="RM.Admin" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminId" column="adminId"/>
+        <result property="adminName" column="adminName"/>
+        <result property="loginName" column="loginName"/>
+        <result property="password" column="password"/>
+        <result property="createdTime" column="createdTime"/>
+        <result property="modifiedTime" column="modifiedTime"/>
+        <result property="lastLoginTime" column="lastLoginTime"/>
+        <result property="status" column="status"/>
+        <result property="teamid" column="teamid"/>
+        <result property="type" column="type"/>
+        <result property="empcode" column="empcode"/>
+        <result property="email" column="email"/>
+        <result property="dutyid" column="dutyid"/>
+        <result property="areaid" column="areaid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="emptype" column="emptype"/>
+        <result property="empSuperior" column="emp_superior"/>
+        <result property="amanagerid" column="amanagerid"/>
+        <result property="amanagername" column="amanagername"/>
+        <result property="superiorname" column="superiorname"/>
+        
+        <result property="teamseq" column="teamseq"/>
+        <result property="salemid" column="salemid"/>
+        <result property="salemname" column="salemname"/>
+        <result property="isstruct" column="isstruct"/>
+    </resultMap>
+	<resultMap id="RM.Admin.Detart" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminId" column="adminId"/>
+        <result property="adminName" column="adminName"/>
+        <result property="loginName" column="loginName"/>
+        <result property="password" column="password"/>
+        <result property="createdTime" column="createdTime"/>
+        <result property="modifiedTime" column="modifiedTime"/>
+        <result property="lastLoginTime" column="lastLoginTime"/>
+        <result property="status" column="status"/>
+        <result property="teamid" column="teamid"/>
+        <result property="type" column="type"/>
+        <result property="empcode" column="empcode"/>
+        <result property="email" column="email"/>
+        <result property="dutyid" column="dutyid"/>
+         <result property="areaid" column="areaid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="emptype" column="emptype"/>
+        <result property="superiorname" column="superiorname"/>
+        <result property="amanagerid" column="amanagerid"/>
+        <result property="amanagername" column="amanagername"/>
+        <result property="areaname" column="areaname"/>
+        <result property="provincename" column="provincename"/>
+        <result property="empSuperior" column="emp_superior"/>
+        <result property="isstruct" column="isstruct"/>
+        <result property="dept" resultMap="RM.Admin.Detart.Deptname"/>
+        <result property="duty" resultMap="RM.Admin.Duty.DutyName"/>
+        
+        <result property="aplist" column="adminId" select="select.aplist.data.adminList"/>
+        <result property="teamseq" column="teamseq"/>
+        <result property="tefname" column="tefname"/>
+        <result property="salemid" column="salemid"/>
+        <result property="salemname" column="salemname"/>
+    </resultMap>
+    
+      <resultMap id="MR.map.select.data.adminList" class="com.terrence.crm.dol.bean.AdminProvince">
+	        <result property="apid" column="apid"/>
+	        <result property="provinceid" column="provinceid"/>
+	        <result property="adminId" column="adminId"/>
+	        <result property="areaid" column="areaid"/>
+	        <result property="provincename" column="provincename"/>
+    </resultMap>
+    
+    
+    
+    <resultMap class="com.terrence.crm.dol.bean.Department" id="RM.Admin.Detart.Deptname">
+    	<result property="teamname" column="teamname"/>
+    </resultMap>
+    <resultMap class="com.terrence.crm.dol.bean.Duty" id="RM.Admin.Duty.DutyName">
+    	<result property="dutyname" column="dutyname"/>
+    </resultMap>
+    
+    
+    <resultMap id="MR.Admin.data.select.entity" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminId" column="adminId"/>
+        <result property="adminName" column="adminName"/>
+        <result property="loginName" column="loginName"/>
+        <result property="password" column="password"/>
+        <result property="createdTime" column="createdTime"/>
+        <result property="modifiedTime" column="modifiedTime"/>
+        <result property="lastLoginTime" column="lastLoginTime"/>
+        <result property="status" column="status"/>
+        <result property="teamid" column="teamid"/>
+        <result property="type" column="type"/>
+        <result property="empcode" column="empcode"/>
+        <result property="email" column="email"/>
+        <result property="dutyid" column="dutyid"/>
+        <result property="areaid" column="areaid"/>
+        <result property="provinceid" column="provinceid"/>
+        <result property="emptype" column="emptype"/>
+        <result property="empSuperior" column="emp_superior"/>
+        <result property="amanagerid" column="amanagerid"/>
+        <result property="amanagername" column="amanagername"/>
+        <result property="superiorname" column="superiorname"/>
+        <result property="aplist" column="adminId" select="select.admin.for.adminProvince.data"/>
+        <result property="empsupname" column="empsupname"/>
+        <result property="teamseq" column="teamseq"/>
+         <result property="salemid" column="salemid"/>
+        <result property="salemname" column="salemname"/>
+        <result property="isstruct" column="isstruct"/>
+     </resultMap>   
+        <resultMap id="select.RM.AdminProvince" class="com.terrence.crm.dol.bean.AdminProvince">
+	        <result property="apid" column="apid"/>
+	        <result property="provinceid" column="provinceid"/>
+	        <result property="adminId" column="adminId"/>
+	        <result property="areaid" column="areaid"/>
+    	</resultMap>
+    
+    
+    
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Admin.columns">
+	    <![CDATA[
+        t_admin.adminId ,t_admin.adminName, t_admin.loginName ,t_admin.password ,t_admin.createdTime ,
+        t_admin.modifiedTime , t_admin.lastLoginTime, t_admin.status ,t_admin.teamid,t_admin.type,t_admin.empcode ,t_admin.email,
+        t_admin.dutyid ,t_admin.emp_superior,t_admin.superiorname,
+        t_admin.areaid,t_admin.provinceid ,t_admin.emptype,t_admin.amanagerid,t_admin.amanagername,t_admin.teamseq,
+        t_admin.salemid,t_admin.salemname,t_admin.isstruct
+	    ]]>
+	</sql>
+	
+    <insert id="Admin.insert" >
+        INSERT INTO t_admin (
+        	adminName ,
+       	 	loginName ,
+       	 	password ,
+       	 	createdTime ,
+       	 	modifiedTime ,
+       	 	lastLoginTime,       	 	
+       	 	status ,
+       	 	teamid,
+       	 	type,
+       	 	empcode ,
+        	email ,
+        	dutyid ,
+        	emp_superior,
+        	areaid,
+        	provinceid,
+        	emptype,
+        	superiorname,
+        	amanagerid,
+        	amanagername,
+        	teamseq,
+        	isstruct
+        	<isNotEmpty prepend="," property="salemid">
+        		salemid
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="salemname">
+        		salemname
+        	</isNotEmpty>
+        	
+        ) VALUES (
+        	#adminName# ,
+        	#loginName# ,
+        	#password# ,
+        	#createdTime# ,
+        	#modifiedTime# ,
+        	#lastLoginTime# ,
+        	#status# ,
+        	#teamid#,
+        	#type#,
+        	#empcode# ,
+        	#email# ,
+        	#dutyid# ,
+        	#empSuperior#,
+        	#areaid#,
+        	#provinceid#,
+        	#emptype#,
+        	#superiorname#,
+        	#amanagerid#,
+        	#amanagername#,
+        	#teamseq#,
+        	#isstruct#
+        	<isNotEmpty prepend="," property="salemid">
+        		#salemid#
+        	</isNotEmpty>
+        	<isNotEmpty prepend="," property="salemname">
+        		#salemname#
+        	</isNotEmpty>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="adminId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+    <update id="Admin.update" >
+        UPDATE t_admin 
+        	<dynamic prepend="SET">
+        			<isNotEmpty prepend="," property="loginName">
+	        			adminName = #adminName# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="loginName">
+	        			loginName = #loginName# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="password">
+	        			password = #password# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="createdTime">
+	        			createdTime = #createdTime# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="modifiedTime">
+	        			modifiedTime = #modifiedTime# 
+	        		 </isNotEmpty>
+	        		 <isNotEmpty prepend="," property="lastLoginTime">
+	        			lastLoginTime = #lastLoginTime# 
+	        		 </isNotEmpty>
+	        		<isNotEmpty prepend="," property="status">
+	        			status = #status# 
+	        		 </isNotEmpty>
+	        		 <isNotEmpty prepend="," property="teamid">
+	        			teamid = #teamid# 
+	        		 </isNotEmpty>
+	        		 <isNotEmpty prepend="," property="type">
+	        			type = #type# 
+	        		 </isNotEmpty>
+	        		 <isNotEmpty prepend="," property="empcode">
+			        	empcode = #empcode# 
+			        </isNotEmpty>
+			        <isNotEmpty prepend="," property="email">
+			        	email = #email# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="dutyid">
+			        	dutyid = #dutyid# 
+			        </isNotEmpty>
+			        <isNotEmpty prepend="," property="empSuperior">
+			        	emp_superior = #empSuperior# 
+			        </isNotEmpty>
+			        
+			         <isNotEmpty prepend="," property="areaid">
+			        	areaid = #areaid# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="provinceid">
+			        	provinceid = #provinceid# 
+			        </isNotEmpty>
+			        <isNotEmpty prepend="," property="emptype">
+			        	emptype = #emptype# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="amanagerid">
+			        	amanagerid = #amanagerid# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="amanagername">
+			        	amanagername = #amanagername# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="superiorname">
+			        	superiorname = #superiorname# 
+			        </isNotEmpty>
+			         <isNotEmpty prepend="," property="teamseq">
+			        	teamseq = #teamseq# 
+			        </isNotEmpty>
+			        <isNotEmpty prepend="," property="salemid">salemid=#salemid#</isNotEmpty>
+			        <isNotEmpty prepend="," property="salemname">salemname=#salemname#</isNotEmpty>
+			        <isNotEmpty prepend="," property="isstruct">isstruct=#isstruct#</isNotEmpty>
+	        </dynamic>	
+        WHERE 
+	        t_admin.adminId = #adminId# 
+    </update>
+
+    <delete id="Admin.delete">
+    <![CDATA[
+        DELETE FROM t_admin WHERE
+        adminId = #adminId# 
+    ]]>
+    </delete>
+    
+    <delete id="Admin.deleteMultiple">
+    <![CDATA[
+        DELETE FROM t_admin WHERE
+        adminId in ($adminId$) 
+    ]]>
+    </delete>
+    <update id="Admin.updateByMultipleId">
+    	 <![CDATA[
+        UPDATE t_admin SET isdel=1 WHERE
+        adminId in ($adminId$) 
+    ]]>
+    </update>
+    
+    <select id="Admin.getById" resultMap="RM.Admin">
+	    SELECT <include refid="Admin.columns"/>
+	    <![CDATA[
+	        FROM t_admin 
+	        WHERE 
+		        adminId = #adminId# 
+	    ]]>
+    </select>
+
+	
+	
+	<sql id="Admin.findPage.where">
+	    <dynamic prepend="WHERE">
+		       <isNotEmpty prepend="AND" property="adminId">
+		             t_admin.adminId = #adminId#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="adminName">
+		             adminName like ('%$adminName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="loginName">
+		             loginName like ('%$loginName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="password">
+		             password = #password#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="createdTimeBegin">
+		             createdTime &gt;= #createdTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="createdTimeEnd">
+		             createdTime &lt;= #createdTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="modifiedTimeBegin">
+		             modifiedTime &gt;= #modifiedTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="modifiedTimeEnd">
+		             modifiedTime &lt;= #modifiedTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="lastLoginTimeBegin">
+		             lastLoginTime &gt;= #lastLoginTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="lastLoginTimeEnd">
+		             lastLoginTime &lt;= #lastLoginTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="status">
+		             status = #status#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="teamid">
+		             teamid = #teamid#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="type">
+		             type = #type#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="types">
+		       		type in ($types$)
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="empcode">
+	             t_admin.empcode like ('%$empcode$%')
+		       </isNotEmpty>
+		       
+				<isNotEmpty prepend="AND" property="email">
+		             t_admin.email = #email#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="dutyid">
+	             t_admin.dutyid = #dutyid#
+		       </isNotEmpty>
+		       <!-- 职位集合 -->
+		       <isNotEmpty prepend="AND" property="dutyids">
+	             t_admin.dutyid  in ($dutyids$)
+		       </isNotEmpty>
+		       
+				<isNotEmpty prepend="AND" property="empSuperior">
+		             t_admin.emp_superior = #empSuperior#
+		       </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="areaid">
+		        	t_admin.areaid = #areaid# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="provinceid">
+		        	t_admin.provinceid = #provinceid# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="emptype">
+		        	t_admin.emptype = #emptype# 
+		        </isNotEmpty>
+		        
+		         <isNotEmpty prepend="AND" property="amanagerid">
+		        	amanagerid = #amanagerid# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="amanagername">
+		        	amanagername = #amanagername# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="superiorname">
+		        	superiorname = #superiorname# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="teamseq">
+		        	teamseq = #teamseq# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="isdel">
+		        	isdel =#isdel#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="isstruct"> isstruct =#isstruct#</isNotEmpty>
+	    </dynamic>	
+	</sql>
+	<sql id="Admin.findPage.and">
+		       <isNotEmpty prepend="AND" property="adminId">
+		             t_admin.adminId = #adminId#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="adminName">
+		             adminName like ('%$adminName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="loginName">
+		             loginName like ('%$loginName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="password">
+		             password = #password#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="createdTimeBegin">
+		             createdTime &gt;= #createdTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="createdTimeEnd">
+		             createdTime &lt;= #createdTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="modifiedTimeBegin">
+		             modifiedTime &gt;= #modifiedTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="modifiedTimeEnd">
+		             modifiedTime &lt;= #modifiedTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="lastLoginTimeBegin">
+		             lastLoginTime &gt;= #lastLoginTimeBegin#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="lastLoginTimeEnd">
+		             lastLoginTime &lt;= #lastLoginTimeEnd#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="status">
+		             status = #status#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="teamid">
+		             teamid = #teamid#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="type">
+		             type = #type#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="empcode">
+	             t_admin.empcode like ('%$empcode$%')
+		       </isNotEmpty>
+		       
+				<isNotEmpty prepend="AND" property="email">
+		             t_admin.email = #email#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="dutyid">
+	             t_admin.dutyid = #dutyid#
+		       </isNotEmpty>
+		       
+				<isNotEmpty prepend="AND" property="empSuperior">
+		             t_admin.emp_superior = #empSuperior#
+		       </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="areaid">
+			        	t_admin.areaid = #areaid# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="provinceid">
+		        	t_admin.provinceid = #provinceid# 
+		        </isNotEmpty>
+		          <isNotEmpty prepend="AND" property="emptype">
+		        	t_admin.emptype = #emptype# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="amanagerid">
+		        	amanagerid = #amanagerid# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="amanagername">
+		        	amanagername = #amanagername# 
+		        </isNotEmpty>
+		          <isNotEmpty prepend="AND" property="superiorname">
+		        	superiorname = #superiorname# 
+		        </isNotEmpty>
+		         <isNotEmpty prepend="AND" property="teamseq">
+		        	teamseq = #teamseq# 
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="isdel">
+	        		isdel =#isdel#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="isstruct"> isstruct =#isstruct#</isNotEmpty>
+	</sql>
+	
+	<!-- 通过部门查找用户 -->
+	<sql id="Admin.findDepartUser.and">
+		       <isNotEmpty prepend="AND" property="adminName">
+		             adminName like ('%$adminName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="loginName">
+		             loginName like ('%$loginName$%')
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="teamid">
+		             teamid = #teamid#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="teamname">
+		             t_department.teamname = #teamname#
+		       </isNotEmpty>
+		       <isNotEmpty prepend="AND" property="dutyid">
+	             t_admin.dutyid = #dutyid#
+		       </isNotEmpty>
+	</sql>
+	
+    <select id="Admin.findPage.count" resultClass="long">
+        SELECT count(*) FROM t_admin 
+       	left join t_department on t_admin.teamid=t_department.teamid 
+    	left join t_duty on t_admin.dutyid=t_duty.dutyid 
+    	left join t_area on t_admin.areaid = t_area.areaid
+    	left join t_province on t_admin.provinceid = t_province.provinceid
+    	left join t_team on t_admin.teamseq = t_team.teamseq
+         <include refid="Admin.findPage.where"/>    
+    </select>
+    
+   
+    <select id="Admin.findPage" resultMap="RM.Admin.Detart">
+    	SELECT <include refid="Admin.columns"/>,t_department.teamname,t_duty.dutyname,t_area.areaname areaname,
+    	t_province.provincename provincename,t_team.fname tefname
+    	FROM t_admin 
+    	left join t_department on t_admin.teamid=t_department.teamid 
+    	left join t_duty on t_admin.dutyid=t_duty.dutyid 
+    	left join t_area on t_admin.areaid = t_area.areaid
+    	left join t_province on t_admin.provinceid = t_province.provinceid
+    	left join t_team on t_admin.teamseq = t_team.teamseq
+    	where 1=1 
+    	<isNotEmpty property="notTop">  and 
+      			t_admin.adminId not in(
+      			select $notTop$ t_admin.adminId 
+      			from t_admin 
+      			left join t_department on t_admin.teamid=t_department.teamid 
+		    	left join t_duty on t_admin.dutyid=t_duty.dutyid 
+		    	left join t_area on t_admin.areaid = t_area.areaid
+		    	left join t_province on t_admin.provinceid = t_province.provinceid
+		    	left join t_team on t_admin.teamseq = t_team.teamseq
+      			<include refid="Admin.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>  
+	   	
+		<include refid="Admin.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+   
+    <select id="Admin.findList" resultMap="RM.Admin">
+    	SELECT <include refid="Admin.columns"/> FROM t_admin 
+		<include refid="Admin.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <!-- 通过部门信息查询用户 -->
+    <select id="Admin.findListByDepart" resultMap="RM.Admin">
+    	SELECT top 10 <include refid="Admin.columns"/> FROM t_admin ,t_department
+    	where t_admin.teamid=t_department.teamid
+		<include refid="Admin.findDepartUser.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Admin.listfindAdmin.find" resultMap="RM.Admin">
+    	SELECT top 10 <include refid="Admin.columns"/> FROM t_admin 
+    	where 1=1
+		<include refid="Admin.findDepartUser.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+	<select id="Organization.Admin.findList" resultMap="RM.Admin">
+	select distinct <include refid="Admin.columns"/> from t_org_orggorup,t_orggrantgroup,t_admin_orggroup,t_admin
+ 	where t_org_orggorup.groupid=t_orggrantgroup.groupid and t_orggrantgroup.groupid=t_admin_orggroup.groupid 
+ 	and t_admin_orggroup.adminid=t_admin.adminId and  finnerid=#finnerid#
+	</select>
+    <select id="Admin.getByLoginName" resultMap="RM.Admin" >
+	    SELECT <include refid="Admin.columns"/>
+	    <![CDATA[
+	        FROM t_admin WHERE loginName = #loginName#
+	    ]]>
+    </select>
+    
+    <!-- 2013-08-12 模糊查询-->
+    <select id="Admin.findAdminId" resultMap="RM.Admin">
+    	SELECT <include refid="Admin.columns"/> FROM t_admin 
+		<include refid="Admin.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+<!-- ==自定义查询========================================= --> 
+ <select id="getAllUsers" resultClass="java.util.HashMap">  
+    select * from t_admin left join  t_team on  t_admin.teamid=t_team.teamid
+</select>  
+    
+    <procedure id="Admin.find.ERP.data.tongbu">
+    	{call pro_AdminErpData()}
+    </procedure>
+	
+	
+	
+	<select id="Admin.find.only.entity.data" resultMap="MR.Admin.data.select.entity">
+    	SELECT <include refid="Admin.columns"/>,tadmin.adminName empsupname
+    	 FROM t_admin
+    	  left join t_admin tadmin on t_admin.emp_superior = tadmin.adminId
+    	where
+    	 t_admin.adminId = #adminId#
+		
+    </select>
+    <select id="select.admin.for.adminProvince.data" resultMap="select.RM.AdminProvince">
+    	  select t_admin_province.apid ,
+        	t_admin_province.provinceid ,
+        	t_admin_province.adminId ,
+        	t_admin_province.areaid 
+	    
+	        from t_admin_province 
+	        where 
+    	 	adminId = #adminId#
+		
+    </select>
+    
+     <select id="select.aplist.data.adminList" resultMap="MR.map.select.data.adminList">
+    	  select t_admin_province.apid ,
+        	t_admin_province.provinceid ,
+        	t_admin_province.adminId ,
+        	t_admin_province.areaid, 
+	    	t_province.provincename provincename
+	        from t_admin_province 
+	        left join t_province on t_admin_province.provinceid = t_province.provinceid
+	        where 
+    	 	adminId = #adminId#
+		
+    </select>
+    
+    <select id="Admin.find.adList.data.select" resultMap="RM.Admin">
+    	select <include refid="Admin.columns"/> from t_admin where t_admin.teamseq = #teamseq#
+    </select>
+    
+    <select id="Admin.find.admin.select.data" resultMap="RM.Admin">
+    	SELECT top 10  <include refid="Admin.columns"/> FROM t_admin 
+		where 1=1 and t_admin.status !=1 
+		<include refid="Admin.findPage.and"/>
+    </select>
+    
+    
+    <select id="Admin.find.procurement.getlist.data" resultMap="RM.Admin">
+    	SELECT   <include refid="Admin.columns"/> FROM t_admin 
+		where 1=1 and t_admin.status !=1 and teamid in ( select teamid from t_department where teamname = '采购部' )
+		<include refid="Admin.findPage.and"/>
+    </select>
+</sqlMap>
+

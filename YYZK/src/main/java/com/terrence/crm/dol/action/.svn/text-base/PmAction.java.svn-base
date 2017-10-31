@@ -1,0 +1,583 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.apache.struts2.json.annotations.JSON;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.io.File;
+import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IPmService;
+import com.terrence.crm.dol.bean.Pm;
+import com.terrence.crm.dol.query.PmQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/pm")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "pm." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class PmAction extends CrudActionSupport<Pm>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("pmService")
+	private IPmService pmService;
+	private Pm entity;
+
+	private PmQuery pmQuery;
+	
+	private File uploadFile;
+	private String uploadFileFileName;
+	
+	private java.lang.Long pmId;
+	
+	/** 分页器 */
+	private Page<Pm> page = new Page<Pm>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Pm> pmList;
+	//预计合同金额
+	private Double planAmountTotal = 0.00D;
+	//实际采购金额
+	private Double factAmountTotal = 0.00D;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (pmId != null ) {
+			entity = pmService.getById(pmId);
+		} else {
+			entity = new Pm();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			pmService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	public void prepareDelSection() throws Exception {
+		prepareModel();
+	}
+	public String delSection()throws Exception {
+
+		try {
+			pmService.delSection(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(pmQuery == null) {
+			pmQuery = new PmQuery();
+		}
+		
+		try {
+			pmList = pmService.findList(pmQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listById()throws Exception
+	{
+		if(pmQuery == null) {
+			pmQuery = new PmQuery();
+		}
+		
+		try {
+			entity = pmService.getDetailById(pmQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	public String listToDetail() throws Exception{
+		if(pmQuery == null) {
+			pmQuery = new PmQuery();
+		}	
+		
+		try {
+			/*orggrantgroup orggrantgroup  Orggrantgroup();
+			orggrantgroup.groupname*/
+			page = pmService.findPage(page, "Pm.findPage.Detail", pmQuery);
+			List<Pm> pmTempList = pmService.findList(pmQuery);
+			for(Pm pmTmp:pmTempList){
+				planAmountTotal += null==pmTmp.getPlanamount()?0:pmTmp.getPlanamount();
+				factAmountTotal += null==pmTmp.getAmount()?0:pmTmp.getAmount();
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		
+		return JSON;
+	}
+	public String exportDetailTo2003() throws Exception{
+		if(pmQuery == null) {
+			pmQuery = new PmQuery();
+		}	
+		String fileName = "特瑞斯项目列表"+(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+		HttpServletResponse response = ServletActionContext.getResponse();
+		try {
+			response.setContentType("octets/stream");
+	        response.addHeader("Content-disposition", "attachment; filename="
+					+ new String(fileName.getBytes("GB2312"), "ISO-8859-1") + ".xls");
+	        pmQuery.setPmname(URLDecoder.decode(pmQuery.getPmname(),"utf-8"));
+	        pmQuery.setFinnername(URLDecoder.decode(pmQuery.getFinnername(),"utf-8"));
+	        pmQuery.setFintername(URLDecoder.decode(pmQuery.getFintername(),"utf-8"));
+	        pmQuery.setDevicename(URLDecoder.decode(pmQuery.getDevicename(),"utf-8"));
+	        pmQuery.setWinname(URLDecoder.decode(pmQuery.getWinname(),"utf-8"));
+	        pmQuery.setBlocname(URLDecoder.decode(pmQuery.getBlocname(),"utf-8"));
+	        pmQuery.setAreaname(URLDecoder.decode(pmQuery.getAreaname(),"utf-8"));
+	        pmQuery.setProvincename(URLDecoder.decode(pmQuery.getProvincename(),"utf-8"));
+	        pmQuery.setPcname(URLDecoder.decode(pmQuery.getPcname(),"utf-8"));
+			pmList = pmService.findList(pmQuery);
+			pmService.exportToExcel2003(response.getOutputStream(), pmList, entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		
+		return null;
+	}
+	/**
+	 * 导入数据
+	 * @return
+	 * @throws Exception
+	 */
+	public String importDetailFrom2003() throws Exception{
+		/**
+		try {
+			InputStream in = null;
+			if(uploadFileFileName != null &&uploadFile!=null) {
+				in = new FileInputStream(uploadFile);
+			}else{
+				in = Struts2Utils.getRequest().getInputStream();
+			}
+			pmService.importData(in);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		*/
+		return null;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("pmId");
+			page.setOrder(Page.DESC);
+		}
+		if(pmQuery == null) {
+			pmQuery = new PmQuery();
+		}
+		
+		try {
+			page = pmService.findPage(page, pmQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			pmService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveDetail() throws Exception {
+		prepareModel();
+	}
+	public String saveDetail() throws Exception {
+		
+		try {
+			pmService.saveDetail(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getLocalizedMessage();
+		}
+		return JSON;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = pmService.getById(pmId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			pmList = pmService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Pm getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public PmQuery getPmQuery() {
+		return pmQuery;
+	}
+
+	
+	public void setPmQuery(PmQuery pmQuery) {
+		this.pmQuery = pmQuery;
+	}
+
+	public void setPmId(java.lang.Long pmId) {
+		this.pmId = pmId;
+	}
+	
+	
+	public java.lang.Long getPmId() {
+		return this.pmId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Pm> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Pm> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Pm> getPmList() {
+		return pmList;
+	}
+	@JSON(serialize=false)
+	public File getUploadFile() {
+		return uploadFile;
+	}
+
+	public void setUploadFile(File uploadFile) {
+		this.uploadFile = uploadFile;
+	}
+	@JSON(serialize=false)
+	public String getUploadFileFileName() {
+		return uploadFileFileName;
+	}
+
+	public void setUploadFileFileName(String uploadFileFileName) {
+		this.uploadFileFileName = uploadFileFileName;
+	}
+
+	public Double getPlanAmountTotal() {
+		return planAmountTotal;
+	}
+
+	public void setPlanAmountTotal(Double planAmountTotal) {
+		this.planAmountTotal = planAmountTotal;
+	}
+
+	public Double getFactAmountTotal() {
+		return factAmountTotal;
+	}
+
+	public void setFactAmountTotal(Double factAmountTotal) {
+		this.factAmountTotal = factAmountTotal;
+	}
+	
+	
+}

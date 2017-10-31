@@ -1,0 +1,125 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BillnoCheck;
+import com.terrence.crm.dol.dao.IBillnoCheckDao;
+import com.terrence.crm.dol.query.BillnoCheckQuery;
+import com.terrence.crm.dol.service.IBillnoCheckService;
+
+
+@Service
+@Transactional
+public class BillnoCheckService extends BaseService implements IBillnoCheckService {
+	protected static Logger logger = LoggerFactory.getLogger(BillnoCheckService.class);
+	@Autowired
+	@Qualifier("billnoCheckDao")
+	private IBillnoCheckDao billnoCheckDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "BillnoCheck";
+	}
+	@Transactional(readOnly=true)
+	public BillnoCheck getById(java.lang.Long id) throws ServiceException
+	{
+		return billnoCheckDao.getById(id);
+	}
+	
+	public void saveOrUpdate(BillnoCheck entity) throws ServiceException
+	{
+		billnoCheckDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(BillnoCheck entity) throws ServiceException
+	{
+		Long adId = billnoCheckDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(BillnoCheck entity) throws ServiceException
+	{
+		Integer returnValue =  billnoCheckDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = billnoCheckDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = billnoCheckDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BillnoCheckQuery query = new BillnoCheckQuery();
+		try {
+			return billnoCheckDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<BillnoCheck> findPage(Page<BillnoCheck> page, BillnoCheckQuery query) throws ServiceException
+	{
+		return billnoCheckDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<BillnoCheck> findPage(Page<BillnoCheck> page,String statement, BillnoCheckQuery query) throws ServiceException
+	{
+		return billnoCheckDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<BillnoCheck> findList(BillnoCheckQuery query) throws ServiceException
+	{
+		return billnoCheckDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<BillnoCheck> findList(BillnoCheckQuery query,Integer pageSize) throws ServiceException
+	{
+		return billnoCheckDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<BillnoCheck> findList(BillnoCheckQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return billnoCheckDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<BillnoCheck> findAllList() throws ServiceException
+	{
+		return billnoCheckDao.findAllList();
+	}
+
+}

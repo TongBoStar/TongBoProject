@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TopicItem;
+import com.terrence.crm.dol.dao.ITopicItemDao;
+import com.terrence.crm.dol.query.TopicItemQuery;
+
+@Repository
+public class TopicItemDao extends BaseIbatisDao<TopicItem,java.lang.Long> implements ITopicItemDao{
+
+		
+	public void saveOrUpdate(TopicItem entity) {
+		if(entity.getTestitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TopicItem";
+	}
+	public TopicItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TopicItem)this.getSqlMapClientTemplate().queryForObject("TopicItem.getByProperty", map);		
+	}
+
+	@Override
+	public Integer deleteByMultipleId(String statement, TopicItemQuery query)
+			throws DataAccessException {
+		return this.getSqlMapClientTemplate().delete(statement, query);
+	}
+
+}

@@ -1,0 +1,591 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.MachineMatch;
+import com.terrence.crm.dol.bean.MachineMatchEntity;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.ProcessTaskBj;
+import com.terrence.crm.dol.bean.ProdPlan;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.dao.IMachineMatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchEntityDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IProcessTaskBjDao;
+import com.terrence.crm.dol.dao.IProdPlanDao;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.MachineMatchEntityQuery;
+import com.terrence.crm.dol.query.MachineMatchQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.ProcessTaskBjQuery;
+import com.terrence.crm.dol.query.ProdPlanDetailQuery;
+import com.terrence.crm.dol.query.WorkPlanQuery;
+import com.terrence.crm.dol.service.IWorkPlanService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Service
+@Transactional
+public class WorkPlanService extends BaseService implements IWorkPlanService {
+	protected static Logger logger = LoggerFactory.getLogger(WorkPlanService.class);
+	@Autowired
+	@Qualifier("workPlanDao")
+	private IWorkPlanDao workPlanDao;
+	@Autowired
+	@Qualifier("prodPlanDao")
+	private IProdPlanDao prodPlanDao;
+	@Autowired
+	@Qualifier("prodPlanDetailDao")
+	private IProdPlanDetailDao prodPlanDetailDao;
+	@Autowired
+	@Qualifier("processTaskBjDao")
+	private IProcessTaskBjDao processTaskBjDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("inventoryDao")
+	private IInventoryDao inventoryDao;
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	@Autowired
+	@Qualifier("machineMatchDao")
+	private IMachineMatchDao machineMatchDao;
+	@Autowired
+	@Qualifier("machineMatchEntityDao")
+	private IMachineMatchEntityDao machineMatchEntityDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
+	public String getIbatisSqlMapNamespace() {
+		return "WorkPlan";
+	}
+	@Transactional(readOnly=true)
+	public WorkPlan getById(java.lang.Long id) throws ServiceException
+	{
+		return workPlanDao.getById(id);
+	}
+	/**
+	 * 创建采购单计划
+	 * @param planid
+	 * @param itemcode
+	 * @param plannum
+	 * @param bfnum
+	 */
+	public void findBom(Long planid,String itemcode,Double plannum,Double bfnum)
+	{
+		try {
+			Inventory inventory=inventoryDao.getByProperty("itemcode", itemcode);
+			Double fqty=0d;
+			if(inventory!=null)
+			{
+				if(inventory.getFqty()!=null)
+				{
+					fqty+=inventory.getFqty();
+				}
+				if(inventory.getFqty2()!=null)
+				{
+					fqty+=inventory.getFqty2();
+				}
+			}
+			if((fqty-plannum)<0)
+			{
+				OrderBomQuery query=new OrderBomQuery();
+				query.setItemcode(itemcode);
+				List<OrderBom> list=orderBomDao.findList(query);
+				for(OrderBom orderBom:list)
+				{
+					Double preplannum=0d;
+					if(orderBom.getItemproperty().intValue()==1)
+					{
+						ProdPlanDetail planDetail=null;
+						ProdPlanDetailQuery ppquery=new ProdPlanDetailQuery();
+						ppquery.setPlanid(planid);
+						ppquery.setItemcode(orderBom.getParentcode());
+						List<ProdPlanDetail> detaillist=prodPlanDetailDao.findList(ppquery);
+						if(detaillist!=null&&detaillist.size()>0)
+						{
+							planDetail=detaillist.get(0);
+							preplannum=planDetail.getBeforenum();
+						}
+						Double amount=0d;/**总需求数**/
+						ProdPlanDetail ppd=prodPlanDetailDao.getProdPlanDetail("ProdPlanDetail.getPlanParam.buy", ppquery);
+						if(ppd!=null)
+						{
+							if(planDetail==null)
+							{
+								planDetail=new ProdPlanDetail();
+								planDetail.setPlannum(plannum*orderBom.getParentqty());
+							
+							}
+							else
+							{
+								planDetail.setPlannum(planDetail.getPlannum()+((plannum-bfnum)*orderBom.getParentqty()));
+								
+							}
+							planDetail.setPlanednum(ppd.getPlanednum());/**已有计划数**/
+							if(ppd.getFqty()+ppd.getMakingnums()+ppd.getPlanednum()-planDetail.getPlannum()-(null==ppd.getExistednums()?0:ppd.getExistednums())>ppd.getSecinv())
+							{
+								amount=0d;
+							}
+							else
+							{
+								if(ppd.getYoutput()*ppd.getRatio()>ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getFqty()-ppd.getMakingnums()-ppd.getPlanednum())
+								{
+									amount=ppd.getYoutput()*ppd.getRatio();
+								}
+								else
+								{
+									amount=ppd.getSecinv()+planDetail.getPlannum()+(null==ppd.getExistednums()?0:ppd.getExistednums())-ppd.getFqty()-ppd.getMakingnums()-ppd.getPlanednum();
+								}
+							}
+							if(amount>0)/**总需求量大于零**/
+							{
+								planDetail.setAmount(amount);
+								planDetail.setItemcode(orderBom.getParentcode());
+								//planDetail.setMacenddate(macdate);
+								//planDetail.setPlanenddate(plandate);
+								planDetail.setPlanid(planid);
+								planDetail.setProperty(3);
+								planDetail.setBeforenum(planDetail.getPlannum());
+								planDetail.setCyclename(ppd.getCyclename());
+								planDetail.setYoutput(ppd.getYoutput());
+								planDetail.setExistednums(ppd.getExistednums());
+								planDetail.setMakingnums(ppd.getMakingnums());
+								planDetail.setFqty(ppd.getFqty());
+								planDetail.setSecinv(ppd.getSecinv());
+								planDetail.setRatio(ppd.getRatio());
+								planDetail.setInnum(planDetail.getAmount());
+								if(planDetail.getPlandetailid()!=null)
+								{
+									prodPlanDetailDao.update(planDetail);
+								}
+								else
+								{
+									prodPlanDetailDao.save(planDetail, "ProdPlanDetail.insert.Buy");
+								}
+								BaseItem baseItem=baseItemDao.getByProperty("itemcode", planDetail.getItemcode());
+								baseItem.setExistdemand((null==baseItem.getExistdemand()?0:baseItem.getExistdemand())+planDetail.getPlannum());
+								baseItemDao.update(baseItem);
+							}
+						}
+					}
+					else
+					{
+						findBom(planid,orderBom.getParentcode(),orderBom.getParentqty()*plannum,preplannum);
+					}
+				}
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	/**计划自制信息下推**/
+	public void saveOrUpdate(WorkPlan entity) throws ServiceException
+	{
+		Long pid = entity.getPlanid();
+		String[] makecodelist =null;
+		Double[] makenumlist =null;/**下单量**/
+		Long[] detailidlist=null;
+		makecodelist=entity.getMakecodelist();
+		makenumlist =entity.getMakenumlist();
+		detailidlist=entity.getDetailidlist();
+		String datestring=DateConvertUtils.format(new Date(), "yyyy-MM-dd");//下推时间
+		WorkPlan workPlan=new WorkPlan();
+		workPlan.setPlanid(pid.longValue());
+		workPlan.setCreatedate(datestring);
+		workPlan.setSchedustate(TerrcnceConstants.MACH_DISPATCH_STATE_NO);
+		workPlan.setBuystate(0);
+		
+		int lengths=0;
+		lengths=makecodelist.length;
+		try {
+			if(lengths>0){
+				for(int i=0;i<lengths;i++){
+					ProdPlanDetail ppd =prodPlanDetailDao.getById(detailidlist[i]);
+						workPlan.setItemcode(makecodelist[i]);
+						workPlan.setPlannum(makenumlist[i]);
+						workPlan.setPlandetailid(detailidlist[i]);
+						workPlan.setPlanenddate(ppd.getMacenddateString());
+						workPlan.setSource(TerrcnceConstants.WORK_PLAN_SOURCE_PLAN);
+						
+						if(workPlan.getPlannum().doubleValue()>0)
+						{
+							Icbillno icb = icbillnoDao.getById(222222L);
+							workPlan.setFbillno(icb.getFpreletter()+icb.getFcurno());
+							icb.setFcurno(icb.getFcurno().intValue()+1);
+
+							workPlanDao.save(workPlan);
+							icbillnoDao.update(icb);
+							
+							findBom(pid,workPlan.getItemcode(),workPlan.getPlannum(),0d);
+						}
+						
+						ppd.setInnum(workPlan.getPlannum());
+						prodPlanDetailDao.update(ppd);
+						BaseItem baseitem = baseItemDao.getByProperty("itemcode", workPlan.getItemcode());
+						baseitem.setExistdemand(baseitem.getExistdemand()+ppd.getPlannum());
+						baseItemDao.update(baseitem);
+						 /**增加工艺任务**/
+						
+						 if(baseitem.getWfstatus().intValue()==0&&workPlan.getPlannum().doubleValue()>0)
+						 {
+							 ProcessTaskBjQuery ptquery=new ProcessTaskBjQuery();
+							 ptquery.setItemcode(workPlan.getItemcode());
+							 List<ProcessTaskBj> pts=processTaskBjDao.findList(ptquery);
+							 if(pts==null||pts.size()==0)
+							 {
+								 ProcessTaskBj pt=new ProcessTaskBj();
+								 pt.setItemcode(workPlan.getItemcode());
+								 pt.setPlanenddate(sdf.parse(DateUtils.DateAdd(DateUtils.GetDate(), 7, 2)));
+								 pt.setAmount(workPlan.getPlannum());
+								 pt.setCreatedate(DateUtils.GetDateTime());
+								 pt.setOri(ProcessTaskBj.FROM_PLAN);
+								 pt.setIcmoid(0l);
+								 pt.setExplain(" ");
+								 processTaskBjDao.save(pt);
+							 }
+						 }
+				}
+				
+				ProdPlan prodPlan=new ProdPlan();
+				prodPlan.setPlanid(pid);
+				prodPlan.setPushstatus1(1);
+				prodPlanDao.update(prodPlan);
+				
+			}
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//workPlanDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(WorkPlan entity) throws ServiceException
+	{
+		Long adId = workPlanDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(WorkPlan entity) throws ServiceException
+	{
+		/**
+		 * 更新物料的已有计划数
+		 */
+		updateBaseItemData(entity,1);
+		Integer returnValue =  workPlanDao.update(entity);
+		return returnValue;
+	}
+	
+	/**
+	 * 更新物料的已有计划数
+	 * @param entity
+	 * @param flage 
+	 */
+	private void updateBaseItemData(WorkPlan entity, int flage) {//flage: 1、审核时   0、删除时
+		WorkPlan wp = workPlanDao.findEntity(entity);
+		List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+		BaseItemQuery bQuery=new BaseItemQuery();
+		bQuery.setItemcode(wp.getItemcode());
+		baseitemList = baseItemDao.findEntityBase(bQuery);
+		if(baseitemList.size()>0){
+			if(wp.getFxmark() != null && wp.getFxmark()==4){
+				Double sumplanqty = 0D;
+				if(flage==1){
+					sumplanqty = (baseitemList.get(0).getPlanfqty4()==null?0D:baseitemList.get(0).getPlanfqty4()) + wp.getPlannum();
+				}else{
+					sumplanqty = (baseitemList.get(0).getPlanfqty4()==null?0D:baseitemList.get(0).getPlanfqty4()) - wp.getPlannum();
+				}
+				BaseItem bitem = new BaseItem();
+				bitem.setItemcode(wp.getItemcode());
+				bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+				bitem.setPlanfqty4(sumplanqty<0?0D:sumplanqty);
+				baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+			}else{
+				Double sumplanqty = 0D;
+				if(flage==1){
+					sumplanqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) + wp.getPlannum();
+				}else{
+					sumplanqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) - wp.getPlannum();
+				}
+				BaseItem bitem = new BaseItem();
+				bitem.setItemcode(wp.getItemcode());
+				bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+				bitem.setPlanfqty(sumplanqty<0?0D:sumplanqty);
+				baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+			}
+		}
+		
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = workPlanDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		/**
+		 * 修改物料表的已有计划数量
+		 */
+		String delIds = StringUtils.join(idList, ",");
+		
+		WorkPlanQuery wpq = new WorkPlanQuery();
+		wpq.setWorkplanids(delIds);
+		List<WorkPlan> wplist = workPlanDao.findList("WorkPlan.find.list.for.upbaseitem.data", wpq);
+		if(wplist.size()>0){
+			for(int tt=0;tt<wplist.size();tt++){
+				updateBaseItemData(wplist.get(tt),0);
+			}
+		}
+		
+		
+		Integer returnValue = workPlanDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		WorkPlanQuery query = new WorkPlanQuery();
+		try {
+			return workPlanDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkPlan> findPage(Page<WorkPlan> page, WorkPlanQuery query) throws ServiceException
+	{
+		return workPlanDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<WorkPlan> findPage(Page<WorkPlan> page,String statement, WorkPlanQuery query) throws ServiceException
+	{
+		return workPlanDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkPlan> findList(WorkPlanQuery query) throws ServiceException
+	{
+		return workPlanDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkPlan> findList(WorkPlanQuery query,Integer pageSize) throws ServiceException
+	{
+		return workPlanDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<WorkPlan> findList(WorkPlanQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return workPlanDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<WorkPlan> findAllList() throws ServiceException
+	{
+		return workPlanDao.findAllList();
+	}
+	@Override
+	public WorkPlan getBaseitemById(Long workPlanId) {
+
+		return workPlanDao.getById("WorkPlan.getBaseitemById", workPlanId);
+		
+	}
+	@Override
+	public WorkPlan getdetailById(Long workPlanId) throws ServiceException {
+				
+		return workPlanDao.getById("WorkPlan.getItemNameById", workPlanId);
+	}
+	@Override
+	public void updatePlanStatus(WorkPlan entity) throws ServiceException {
+		//workplanid
+		//schedustate
+		//WorkPlan workPlan = workPlanDao.getById(entity.getWorkplanid());
+		machineMatchDao.deleteByworkplanid("MachineMatch.deleteByworkplanid", entity.getWorkplanid());
+		if(entity.getSchedustate().intValue()==0){//计划
+			workPlanDao.update(entity);
+		}else{//确认--并产生配料任务单
+			workPlanDao.update(entity);
+			//WorkPlan workplan = workPlanDao.getById(entity.getWorkplanid());
+			saveMachineMatch(entity.getWorkplanid());
+			
+		}
+	}
+	
+
+	/**
+	 * 未排产任务计划状态改为确认,创建配料任务单,
+	 * @param adId
+	 * @param entity
+	 */
+	private void saveMachineMatch(Long workplanid) {
+		//machineMatchDao
+		//machineMatchEntityDao
+		WorkPlan workplan = workPlanDao.getById(workplanid);
+		BaseItem baseitem = baseItemDao.getBaseByColumn("itemcode", workplan.getItemcode());
+
+		MachineMatch machineMatch=new MachineMatch();
+		machineMatch.setItemcode(workplan.getItemcode());
+		machineMatch.setItemname(baseitem.getItemname());
+		machineMatch.setItemmode(baseitem.getFormatno());
+		machineMatch.setFqty(workplan.getPlannum());
+		machineMatch.setUsestatus(0);
+		machineMatch.setWorkplanid(workplanid);
+		Long machineMatchid = machineMatchDao.save(machineMatch);//添加机加配料任务单
+		//---配料任务单添加end-------------------
+		//--配料任务单详细添加Start
+		MachineMatchEntity machineMatchEntity=null;
+		
+		OrderBomQuery orderBomQuery=new OrderBomQuery();
+		orderBomQuery.setItemcode(workplan.getItemcode());
+		List<OrderBom> orderBomlist = orderBomDao.findList(orderBomQuery);
+		if(orderBomlist.size()==0){
+			return ;
+		}
+
+		for(OrderBom orderBom:orderBomlist){
+			machineMatchEntity=new MachineMatchEntity();
+			machineMatchEntity.setFmatchid(machineMatchid);
+			machineMatchEntity.setItemcode(orderBom.getParentcode());
+			machineMatchEntity.setItemmode(baseItemDao.getBaseByColumn("itemcode", orderBom.getParentcode()).getFormatno());
+			machineMatchEntity.setItemname(orderBom.getParentname());
+			machineMatchEntity.setFqty(orderBom.getParentqty());//单位用量
+			machineMatchEntity.setPlanfqty(orderBom.getParentqty()*workplan.getPlannum());//计划数量
+			//orderBom
+			InventoryBatch	inventoryBatch=null;
+			inventoryBatch=inventoryBatchDao.getBatchnoAndDbno(orderBom.getParentcode());
+			if(inventoryBatch!=null){
+				machineMatchEntity.setPlandbno(inventoryBatch.getDbno());
+				machineMatchEntity.setPlanbatchno(inventoryBatch.getBatchno());
+				machineMatchEntity.setBatchid(inventoryBatch.getBatchid());
+			}
+			machineMatchEntityDao.save(machineMatchEntity);	
+		}
+		
+	}
+	@Override
+	public void savebreak(WorkPlanQuery workPlanQuery) throws ServiceException {
+		
+		String breakfbillno[]=workPlanQuery.getBreakfbillno();//拆分单据号
+		Double[] breakplanfqty=workPlanQuery.getBreakplanfqty();//拆分计划数
+		int breaklength=breakfbillno.length;
+		
+		WorkPlanQuery wquery=new WorkPlanQuery();
+		wquery.setFbillno(breakfbillno[0]);
+		
+		WorkPlan workPlan = workPlanDao.getByEntity("WorkPlan.getallByfbillno", wquery);//获取未排产任务
+		if(workPlan.getFbillgroup()!=null){
+			throw new ServiceException("此单据已拆分过，不可再次拆分！！"); 
+		}
+		
+		
+		MachineMatchQuery mquery=new MachineMatchQuery();//获取配料
+		mquery.setWorkplanid(workPlan.getWorkplanid());
+		MachineMatch machineMatch = machineMatchDao.getByEntity("MachineMatch.getallByworkplanid", mquery);
+
+		
+		MachineMatchEntityQuery mequery=new MachineMatchEntityQuery();//获取配料详细
+		mequery.setFmatchid(machineMatch.getFmatchid());
+		List<MachineMatchEntity> meentitylist = machineMatchEntityDao.findList("MachineMatchEntity.getallByFmatchid", mequery);
+		
+		//开始修改--拆分
+		for(int i=0;i<breaklength;i++){
+			if(i==0){//第一条，修改计划数
+				workPlan.setPlannum(breakplanfqty[i]);
+				workPlan.setFbillgroup(workPlan.getFbillno());
+				workPlanDao.update("WorkPlan.update.break", workPlan);//修改未排产计划
+				machineMatch.setFqty(breakplanfqty[i]);
+				machineMatchDao.update(machineMatch);
+				
+				for(MachineMatchEntity meentity:meentitylist){
+					meentity.setPlanfqty(breakplanfqty[i]);
+					machineMatchEntityDao.update(meentity);
+				}
+			}else{//添加拆分的单据
+				WorkPlan newworkPlan=new WorkPlan(); 
+				newworkPlan=workPlan;
+				newworkPlan.setPlannum(breakplanfqty[i]);
+				newworkPlan.setFbillno(breakfbillno[i]);
+				newworkPlan.setCheckstatus(1);
+				newworkPlan.setFxmark(workPlanQuery.getFfmark());
+				Long newworkPlanid = workPlanDao.save(newworkPlan, "WorkPlan.insertall");
+				
+				MachineMatch newmachineMatch =new MachineMatch();
+				newmachineMatch=machineMatch;
+				newmachineMatch.setFqty(breakplanfqty[i]);
+				newmachineMatch.setWorkplanid(newworkPlanid);
+				
+				Long newfmatchid = machineMatchDao.save(newmachineMatch, "MachineMatch.insertall");
+				
+				
+				for(MachineMatchEntity meentity:meentitylist){
+					meentity.setPlanfqty(breakplanfqty[i]);
+					meentity.setFmatchid(newfmatchid);
+					meentity.setDbno(workPlanQuery.getFfmark());
+					machineMatchEntityDao.save(meentity, "MachineMatchEntity.insertall");
+				}
+				
+			}
+			
+		}
+		
+		
+		
+		
+		
+		
+	}
+		
+
+}

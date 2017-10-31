@@ -1,0 +1,129 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TopicItemVal;
+import com.terrence.crm.dol.query.TopicItemValQuery;
+import com.terrence.crm.dol.dao.ITopicItemValDao;
+import com.terrence.crm.dol.service.ITopicItemValService;
+
+@Service
+@Transactional
+public class TopicItemValService extends BaseService implements ITopicItemValService {
+	protected static Logger logger = LoggerFactory.getLogger(TopicItemValService.class);
+	@Autowired
+	@Qualifier("topicItemValDao")
+	private ITopicItemValDao topicItemValDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TopicItemVal";
+	}
+	@Transactional(readOnly=true)
+	public TopicItemVal getById(java.lang.Long id) throws ServiceException
+	{
+		return topicItemValDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TopicItemVal entity) throws ServiceException
+	{
+		topicItemValDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TopicItemVal entity) throws ServiceException
+	{
+		Long adId = topicItemValDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TopicItemVal entity) throws ServiceException
+	{
+		Integer returnValue =  topicItemValDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = topicItemValDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = topicItemValDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TopicItemValQuery query = new TopicItemValQuery();
+		try {
+			return topicItemValDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TopicItemVal> findPage(Page<TopicItemVal> page, TopicItemValQuery query) throws ServiceException
+	{
+		return topicItemValDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TopicItemVal> findPage(Page<TopicItemVal> page,String statement, TopicItemValQuery query) throws ServiceException
+	{
+		return topicItemValDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TopicItemVal> findList(TopicItemValQuery query) throws ServiceException
+	{
+		return topicItemValDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TopicItemVal> findList(TopicItemValQuery query,Integer pageSize) throws ServiceException
+	{
+		return topicItemValDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TopicItemVal> findList(TopicItemValQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return topicItemValDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TopicItemVal> findAllList() throws ServiceException
+	{
+		return topicItemValDao.findAllList();
+	}
+	@Override
+	public List<TopicItemVal> findList(TopicItemValQuery query, String statement)
+			throws ServiceException {
+		return topicItemValDao.findList(statement, query);
+	}
+
+}

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ActivityItem">
+
+<resultMap id="RM.ActivityItem" class="com.terrence.crm.dol.bean.ActivityItem">
+	<result property="id" column="id"/>
+	<result property="activityItemName" column="activityItemName"/>
+	<result property="startTime" column="startTime"/>
+	<result property="endTime" column="endTime"/>
+	<result property="expiryDate" column="expiryDate"/>
+	<result property="orgId" column="orgId"/>
+	<result property="priceAux" column="priceAux"/>
+	<result property="pricePlan" column="pricePlan"/>
+	<result property="takeAddress" column="takeAddress"/>
+	<result property="activityRole" column="activityRole"/>
+	<result property="activityDesc" column="activityDesc"/>
+	<result property="activityType" column="activityType"/>
+	<result property="userLimit" column="userLimit"/>
+	<result property="timesLimit" column="timesLimit"/>
+	<result property="orderLimit" column="orderLimit"/>
+	<result property="activityItemStatus" column="activityItemStatus"/>
+	<result property="payType" column="payType"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="organization" resultMap="RM.ActivityItem.Organization"/>
+</resultMap>
+<resultMap id="RM.ActivityItem.Organization" class="com.terrence.crm.dol.bean.Organization">
+	<result property="id" column="id"/>
+	<result property="orgName" column="orgName"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ActivityItem.columns">
+	<![CDATA[
+		t_activity_item.id ,
+		t_activity_item.activityItemName ,
+		t_activity_item.startTime ,
+		t_activity_item.endTime ,
+		t_activity_item.expiryDate ,
+		t_activity_item.orgId ,
+		t_activity_item.priceAux ,
+		t_activity_item.pricePlan ,
+		t_activity_item.takeAddress ,
+		t_activity_item.activityRole ,
+		t_activity_item.activityDesc ,
+		t_activity_item.activityType ,
+		t_activity_item.userLimit ,
+		t_activity_item.timesLimit ,
+		t_activity_item.orderLimit ,
+		t_activity_item.activityItemStatus ,
+		t_activity_item.payType ,
+		t_activity_item.createTime ,
+		t_activity_item.modifyTime
+	]]>
+</sql>
+
+<insert id="ActivityItem.insert" >
+	<![CDATA[
+	INSERT INTO t_activity_item (
+		activityItemName,
+		startTime,
+		endTime,
+		expiryDate,
+		orgId,
+		priceAux,
+		pricePlan,
+		takeAddress,
+		activityRole,
+		activityDesc,
+		activityType,
+		userLimit,
+		timesLimit,
+		orderLimit,
+		activityItemStatus,
+		payType,
+		createTime,
+		modifyTime
+	) VALUES (
+		#activityItemName#,
+		#startTime#,
+		#endTime#,
+		#expiryDate#,
+		#orgId#,
+		#priceAux#,
+		#pricePlan#,
+		#takeAddress#,
+		#activityRole#,
+		#activityDesc#,
+		#activityType#,
+		#userLimit#,
+		#timesLimit#,
+		#orderLimit#,
+		#activityItemStatus#,
+		#payType#,
+		#createTime#,
+		#modifyTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ActivityItem.update" parameterClass="com.terrence.crm.dol.bean.ActivityItem"> 
+	UPDATE t_activity_item 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="activityItemName">
+			activityItemName = #activityItemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="startTime">
+			startTime = #startTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="endTime">
+			endTime = #endTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="expiryDate">
+			expiryDate = #expiryDate# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="orgId">
+			orgId = #orgId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="priceAux">
+			priceAux = #priceAux# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="pricePlan">
+			pricePlan = #pricePlan# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="takeAddress">
+			takeAddress = #takeAddress# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="activityRole">
+			activityRole = #activityRole# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="activityDesc">
+			activityDesc = #activityDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="activityType">
+			activityType = #activityType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="userLimit">
+			userLimit = #userLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="timesLimit">
+			timesLimit = #timesLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="orderLimit">
+			orderLimit = #orderLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="activityItemStatus">
+			activityItemStatus = #activityItemStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="payType">
+			payType = #payType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ActivityItem.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_activity_item.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityItemName">
+			t_activity_item.activityItemName = #activityItemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="startTime">
+			t_activity_item.startTime = #startTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="endTime">
+			t_activity_item.endTime = #endTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="expiryDate">
+			t_activity_item.expiryDate = #expiryDate# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgId">
+			t_activity_item.orgId = #orgId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="priceAux">
+			t_activity_item.priceAux = #priceAux# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="pricePlan">
+			t_activity_item.pricePlan = #pricePlan# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeAddress">
+			t_activity_item.takeAddress = #takeAddress# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityRole">
+			t_activity_item.activityRole = #activityRole# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityDesc">
+			t_activity_item.activityDesc = #activityDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityType">
+			t_activity_item.activityType = #activityType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="userLimit">
+			t_activity_item.userLimit = #userLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="timesLimit">
+			t_activity_item.timesLimit = #timesLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orderLimit">
+			t_activity_item.orderLimit = #orderLimit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="activityItemStatus">
+			t_activity_item.activityItemStatus = #activityItemStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="payType">
+			t_activity_item.payType = #payType# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_activity_item.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_activity_item.modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ActivityItem.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_activity_item.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityItemName">
+		t_activity_item.activityItemName = #activityItemName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="startTime">
+		t_activity_item.startTime = #startTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="endTime">
+		t_activity_item.endTime = #endTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="expiryDate">
+		t_activity_item.expiryDate = #expiryDate# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="orgId">
+		t_activity_item.orgId = #orgId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="priceAux">
+		t_activity_item.priceAux = #priceAux# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="pricePlan">
+		t_activity_item.pricePlan = #pricePlan# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="takeAddress">
+		t_activity_item.takeAddress = #takeAddress# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityRole">
+		t_activity_item.activityRole = #activityRole# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityDesc">
+		t_activity_item.activityDesc = #activityDesc# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityType">
+		t_activity_item.activityType = #activityType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="userLimit">
+		t_activity_item.userLimit = #userLimit# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="timesLimit">
+		t_activity_item.timesLimit = #timesLimit# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="orderLimit">
+		t_activity_item.orderLimit = #orderLimit# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="activityItemStatus">
+		t_activity_item.activityItemStatus = #activityItemStatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="payType">
+		t_activity_item.payType = #payType# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_activity_item.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_activity_item.modifyTime = #modifyTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="ActivityItem.getById" resultMap="RM.ActivityItem">
+	select <include refid="ActivityItem.columns"/> ,t_organization.orgName 
+	from t_activity_item 
+	left join t_organization on t_activity_item.orgId = t_organization.id 
+	where t_activity_item.id=#id#
+</select>
+
+<select id="ActivityItem.getByProperty" resultMap="RM.ActivityItem">
+	select <include refid="ActivityItem.columns"/> from t_activity_item where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ActivityItem.delete">
+	<![CDATA[
+		DELETE FROM t_activity_item WHERE id=#id#
+	]]>
+</delete>
+<delete id="ActivityItem.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_activity_item WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ActivityItem.findPage.count" resultClass="long">
+	select count(*) from t_activity_item <include refid="ActivityItem.findPage.where"/>
+</select>
+
+<select id="ActivityItem.findPage" resultMap="RM.ActivityItem">
+	select <include refid="ActivityItem.columns"/> ,t_organization.orgName 
+	from t_activity_item 
+	left join t_organization on t_activity_item.orgId = t_organization.id 
+	<include refid="ActivityItem.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ActivityItem.findList" resultMap="RM.ActivityItem">
+	SELECT <include refid="ActivityItem.columns"/>  ,t_organization.orgName 
+	from t_activity_item 
+	left join t_organization on t_activity_item.orgId = t_organization.id 
+	<include refid="ActivityItem.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

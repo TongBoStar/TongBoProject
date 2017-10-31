@@ -1,0 +1,123 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+
+
+@Repository
+public class PorequestentryDao extends BaseIbatisDao<Porequestentry,java.lang.Long> implements IPorequestentryDao{
+
+		
+	public void saveOrUpdate(Porequestentry entity) {
+		if(entity.getPoid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Porequestentry";
+	}
+	public Porequestentry getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Porequestentry)this.getSqlMapClientTemplate().queryForObject("Porequestentry.getByProperty", map);		
+	}
+
+	@Override
+	public List<Porequestentry> findlistToPOAll(
+			PorequestentryQuery porequestentryQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Po.find.listToPo.All", porequestentryQuery);
+	}
+
+	@Override
+	public void updateforPQ(Porequestentry entity) {
+		this.getSqlMapClientTemplate().update("Po.update.forPQ", entity);
+	}
+
+	@Override
+	public Integer updateforPoDetail(String delIds,
+			Porequestentry porequestentry) {
+		porequestentry.setPoids(delIds);
+		return this.getSqlMapClientTemplate().update("Po.update.All.Detail", porequestentry);
+	}
+
+	@Override
+	public List<Porequestentry> findListaudit(Porequestentry porequestentry) {
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.find.List.push", porequestentry);
+	}
+
+	@Override
+	public void deleteToDetail(Porequestentry porequestentry) {
+		this.getSqlMapClientTemplate().delete("Porequestentry.delet.detail", porequestentry);
+		
+	}
+
+	@Override
+	public List<Porequestentry> findListorder(Porequestentry porequestentry) {
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.find.order", porequestentry);
+	}
+
+	@Override
+	public List<Porequestentry> findDxt(String delIds, Porequestentry por) {
+		por.setPoids(delIds);
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.find.all.xt", por);
+	}
+
+	@Override
+	public List<Porequestentry> findWxt(Porequestentry poreq) {
+		return  this.getSqlMapClientTemplate().queryForList("Porequestentry.find.count", poreq);
+		
+	}
+
+	@Override
+	public List<Porequestentry> findYxt(Porequestentry poreq) {
+		return  this.getSqlMapClientTemplate().queryForList("Porequestentry.find.count.yxt", poreq);
+	}
+
+	@Override
+	public void updatestatus(Porequestentry entity) {
+		this.getSqlMapClientTemplate().update("Po.update.forPQ", entity);
+		
+	}
+
+	@Override
+	public List<Porequestentry> findpoorderandpoorderentry(Porequestentry pp) {
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.find.order",pp);
+	}
+
+	@Override
+	public List<Porequestentry> findAllunauditCheck(
+			Porequestentry porequestentry) {
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.find.all.unaudit.check",porequestentry);
+	}
+
+	@Override
+	public List<Porequestentry> findPorequestentrytongdata(
+			Porequestentry porequestentry) {
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.findlist.porequestentryList.tongbu",porequestentry);
+	}
+
+	@Override
+	public List<Porequestentry> findItemcodeSum(PorequestentryQuery porequestentry) {
+		// TODO Auto-generated method stub
+		return this.getSqlMapClientTemplate().queryForList("Porequestentry.Itemcode.Sum",porequestentry);
+	}
+
+	
+	
+	
+}

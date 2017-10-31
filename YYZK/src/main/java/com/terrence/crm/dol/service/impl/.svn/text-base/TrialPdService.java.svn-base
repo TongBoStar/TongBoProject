@@ -1,0 +1,248 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdTrailTpl;
+import com.terrence.crm.dol.bean.TplTrailIn;
+import com.terrence.crm.dol.bean.TrailPdGroup;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.bean.TrailPdStepQualVar;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.bean.TrialPd;
+import com.terrence.crm.dol.query.TrailPdGroupQuery;
+import com.terrence.crm.dol.query.TrailPdStepQualVarQuery;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+import com.terrence.crm.dol.query.TrialPdQuery;
+import com.terrence.crm.dol.dao.IPdTrailTplDao;
+import com.terrence.crm.dol.dao.ITplTrailInDao;
+import com.terrence.crm.dol.dao.ITrailPdGroupDao;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.dao.ITrailPdStepQualVarDao;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.dao.ITrialPdDao;
+import com.terrence.crm.dol.service.ITrialPdService;
+
+@Service
+@Transactional
+public class TrialPdService extends BaseService implements ITrialPdService {
+	protected static Logger logger = LoggerFactory.getLogger(TrialPdService.class);
+	@Autowired
+	@Qualifier("trialPdDao")
+	private ITrialPdDao trialPdDao;
+	
+	@Autowired
+	@Qualifier("trailPdStepDao")
+	private ITrailPdStepDao trailPdStepDao;
+	
+	@Autowired
+	@Qualifier("trailPdStepQualVarDao")
+	private ITrailPdStepQualVarDao trailPdStepQualVarDao;
+	
+	@Autowired
+	@Qualifier("trailPdGroupDao")
+	private ITrailPdGroupDao trailPdGroupDao;
+	
+	@Autowired
+	@Qualifier("trailRecSetDao")
+	private ITrailRecSetDao trailRecSetDao;
+	
+	@Autowired
+	@Qualifier("pdTrailTplDao")
+	private IPdTrailTplDao pdTrailTplDao;
+	
+	@Autowired
+	@Qualifier("tplTrailInDao")
+	private ITplTrailInDao tplTrailInDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrialPd";
+	}
+	@Transactional(readOnly=true)
+	public TrialPd getById(java.lang.Long id) throws ServiceException
+	{
+		return trialPdDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrialPd entity) throws ServiceException
+	{
+		trialPdDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrialPd entity) throws ServiceException
+	{
+		Long adId = trialPdDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrialPd entity) throws ServiceException
+	{
+		Integer returnValue =  trialPdDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trialPdDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trialPdDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrialPdQuery query = new TrialPdQuery();
+		try {
+			return trialPdDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialPd> findPage(Page<TrialPd> page, TrialPdQuery query) throws ServiceException
+	{
+		return trialPdDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialPd> findPage(Page<TrialPd> page,String statement, TrialPdQuery query) throws ServiceException
+	{
+		return trialPdDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialPd> findList(TrialPdQuery query) throws ServiceException
+	{
+		return trialPdDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialPd> findList(TrialPdQuery query,Integer pageSize) throws ServiceException
+	{
+		return trialPdDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrialPd> findList(TrialPdQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trialPdDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialPd> findAllList() throws ServiceException
+	{
+		return trialPdDao.findAllList();
+	}
+
+	@Override
+	public TrialPd getModelDetail(Long trialPdId) throws ServiceException {
+
+		//System.out.println("===========enter==="+trialPdId);
+		TrialPd pdentity = trialPdDao.getById("TrialPd.getModelDetail", trialPdId);
+		
+		return pdentity;
+	}
+	@Override
+	public List<TrialPd> findTplByTrialId(TrialPdQuery trialPdQuery)
+			throws ServiceException {
+		return trialPdDao.findList(trialPdQuery);
+	}
+	@Override
+	public void saveCopyModel(TrialPdQuery trialPdQuery)
+			throws ServiceException {
+//		trialPdQuery.getTplid();//复制的模板id
+//		trialPdQuery.getTplname();//新模板名称
+//		trialPdQuery.getFdescription();//新模板描述
+		
+		TrialPd trialPd=new TrialPd();
+		trialPd.setTplid(trialPdQuery.getTplid());
+		trialPd.setTplname(trialPdQuery.getTplname());
+		trialPd.setFdescription(trialPdQuery.getFdescription());
+		
+		Long newtplid = trialPdDao.save(trialPd, "TrialPd.update.Copy");//模板复制
+		
+		TrailPdStepQuery trailPdStepQuery=new TrailPdStepQuery();
+		trailPdStepQuery.setTplid(trialPdQuery.getTplid());
+		
+		List<TrailPdStep> trailPdSteplist=new ArrayList<TrailPdStep>();
+		trailPdSteplist = trailPdStepDao.findList(trailPdStepQuery);
+		
+		for(TrailPdStep step:trailPdSteplist){
+			TrailPdStep trailPdStep=new TrailPdStep(); 
+			trailPdStep.setTplid(newtplid);
+			trailPdStep.setStepid(step.getStepid());
+			Long newtrailPdStepid = trailPdStepDao.save(trailPdStep,"TrailPdStep.update.Copy");//步骤复制
+			
+			TrailPdStepQualVar trailPdStepQualVar=new TrailPdStepQualVar();
+			trailPdStepQualVar.setStepid(step.getStepid());
+			trailPdStepQualVar.setNewstepid(newtrailPdStepid);
+			trailPdStepQualVarDao.save(trailPdStepQualVar, "TrailPdStepQualVar.update.copy");//合格变量复制
+			
+			
+//			---复制分组----
+			TrailPdGroupQuery groupQuery=new TrailPdGroupQuery();
+			groupQuery.setStepid(step.getStepid());
+			List<TrailPdGroup> grouplist=new ArrayList<TrailPdGroup>();
+			 grouplist = trailPdGroupDao.findList(groupQuery);
+			 for(TrailPdGroup group:grouplist){
+				 TrailPdGroup trailPdGroup=new TrailPdGroup();
+				 trailPdGroup.setStepid(newtrailPdStepid);
+				 trailPdGroup.setGid(group.getGid());
+				 Long newgid = trailPdGroupDao.save(trailPdGroup, "TrailPdGroup.update.Copy");//复制分组
+				 
+//				 t_trail_rec_set--trailRecSetDao
+				 TrailRecSet trailRecSet=new TrailRecSet();
+				 trailRecSet.setGid(group.getGid());
+				 trailRecSet.setNewgid(newgid);
+				 trailRecSet.setTplid(newtplid);
+				 trailRecSetDao.save(trailRecSet, "TrailRecSet.update.Copy");//复制分组详细
+				 
+			 }
+			
+		}
+		//----检测记录输出变量复制END
+		
+		//--复制绑定物料---newtplid-------------t_pd_Trail_Tpl
+		PdTrailTpl pdTrailTpl=new PdTrailTpl();
+		pdTrailTpl.setTplid(trialPdQuery.getTplid());
+		pdTrailTpl.setNewtplid(newtplid);
+		pdTrailTplDao.save(pdTrailTpl, "PdTrailTpl.update.copy");//复制绑定物料
+
+		//复制检测参数输入变量----
+		TplTrailIn tplTrailIn=new TplTrailIn();
+		tplTrailIn.setTplid(trialPdQuery.getTplid());
+		tplTrailIn.setNewtplid(newtplid);
+		tplTrailInDao.save(tplTrailIn, "TplTrailIn.update.copy");//复制检测参数输入变量----
+		
+	}
+	
+
+}

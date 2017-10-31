@@ -1,0 +1,192 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckItemResult;
+import com.terrence.crm.dol.bean.ExamineReport;
+import com.terrence.crm.dol.query.CheckItemResultQuery;
+import com.terrence.crm.dol.dao.ICheckItemResultDao;
+import com.terrence.crm.dol.dao.IExamineReportDao;
+import com.terrence.crm.dol.service.ICheckItemResultService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class CheckItemResultService extends BaseService implements ICheckItemResultService {
+	protected static Logger logger = LoggerFactory.getLogger(CheckItemResultService.class);
+	@Autowired
+	@Qualifier("checkItemResultDao")
+	private ICheckItemResultDao checkItemResultDao;
+	
+	@Autowired
+	@Qualifier("examineReportDao")
+	private IExamineReportDao examineReportDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CheckItemResult";
+	}
+	@Transactional(readOnly=true)
+	public CheckItemResult getById(java.lang.Long id) throws ServiceException
+	{
+		return checkItemResultDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CheckItemResult entity) throws ServiceException
+	{
+		checkItemResultDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CheckItemResult entity) throws ServiceException
+	{
+		Long adId = checkItemResultDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CheckItemResult entity) throws ServiceException
+	{
+		Integer returnValue =  checkItemResultDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = checkItemResultDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = checkItemResultDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CheckItemResultQuery query = new CheckItemResultQuery();
+		try {
+			return checkItemResultDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckItemResult> findPage(Page<CheckItemResult> page, CheckItemResultQuery query) throws ServiceException
+	{
+		return checkItemResultDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CheckItemResult> findPage(Page<CheckItemResult> page,String statement, CheckItemResultQuery query) throws ServiceException
+	{
+		return checkItemResultDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckItemResult> findList(CheckItemResultQuery query) throws ServiceException
+	{
+		return checkItemResultDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckItemResult> findList(CheckItemResultQuery query,Integer pageSize) throws ServiceException
+	{
+		return checkItemResultDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CheckItemResult> findList(CheckItemResultQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return checkItemResultDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CheckItemResult> findAllList() throws ServiceException
+	{
+		return checkItemResultDao.findAllList();
+	}
+	@Override
+	public void updateResult(CheckItemResult entity) throws ServiceException {
+		checkItemResultDao.update("CheckItemResult.update.data.new.result", entity);
+	}
+	@Override
+	public void saveNewData(CheckItemResult entity) throws ServiceException {
+		
+		ExamineReport er = new ExamineReport();
+		er.setExamineid(entity.getExamineid());
+		er.setCheckemp(SpringSecurityUtils.getCurrentUserId());
+		er.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		er.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		er.setCreateyear(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd").toString().substring(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy").toString().length()-4,DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy").toString().length()));
+		examineReportDao.update(er);
+		
+		List<Long> innerids = entity.getInnerids();
+		List<Integer> ispasss = entity.getIspasss();
+		for(int sq =0;sq<innerids.size();sq++){
+			CheckItemResult cir = new CheckItemResult();
+			if(innerids.get(sq)!=null && !innerids.get(sq).equals("")){
+				cir.setInnerid(innerids.get(sq));
+			}else{
+				break;
+			}
+			cir.setIspass(ispasss.get(sq));
+			
+			checkItemResultDao.update("CheckItemResult.update.data.new.result", cir);
+		}
+		
+		//============================出厂报告数据保存================================
+		List<Integer> ispaes = entity.getIspaes();
+		List<Long> tplids = entity.getTplids();
+		List<Long> inners = entity.getInners();
+		if(ispaes.size()>0){
+			for(int tt=0;tt<ispaes.size();tt++){
+				if(inners.size()>0 && inners.get(tt)!=null && !inners.get(tt).equals("") && !inners.get(tt).equals("null")){
+					
+						CheckItemResult ric = new CheckItemResult();
+						ric.setIspass(ispaes.get(tt));
+						ric.setInnerid(inners.get(tt));
+						checkItemResultDao.update(ric);
+				
+					
+				}else{
+					CheckItemResult ric = new CheckItemResult();
+					ric.setTplid(tplids.get(tt));
+					ric.setExamineid(entity.getExamineid());
+					ric.setIspass(ispaes.get(tt));
+					ric.setIsrecord(1);
+					ric.setFflag(1);
+					checkItemResultDao.save(ric, "CheckItemResult.insert.new.data.result");
+				}
+			
+			}
+		}
+		//===========================================================
+	
+		
+	}
+
+}

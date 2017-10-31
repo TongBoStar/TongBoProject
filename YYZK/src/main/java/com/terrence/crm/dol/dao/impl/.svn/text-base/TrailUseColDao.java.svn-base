@@ -1,0 +1,86 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+
+import org.springframework.stereotype.Repository;
+
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailUseCol;
+import com.terrence.crm.dol.dao.ITrailUseColDao;
+import com.terrence.crm.dol.query.TrailUseColQuery;
+
+@Repository
+public class TrailUseColDao extends BaseIbatisDao<TrailUseCol,java.lang.Long> implements ITrailUseColDao{
+
+		
+	public void saveOrUpdate(TrailUseCol entity) {
+		if(entity.getColid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailUseCol";
+	}
+	public TrailUseCol getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailUseCol)this.getSqlMapClientTemplate().queryForObject("TrailUseCol.getByProperty", map);		
+	}
+
+	@Override
+	public List<String> findColumn(String sql)  {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		List<String> heads = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+				rs = stmt.executeQuery(sql);
+				 heads=new ArrayList<String>();
+				ResultSetMetaData rsmd=rs.getMetaData();//rs为查询结果集
+				int count=rsmd.getColumnCount();
+				for(int i=1;i<=count;i++){
+					System.out.println(rsmd.getColumnName(i));
+					heads.add(rsmd.getColumnName(i));//把列名存入向量heads中
+				}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				rs.close();
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return heads;
+	}
+
+	@Override
+	public void deleteTrailUseCol(TrailUseColQuery trailUseCol) {
+		this.getSqlMapClientTemplate().delete("delete.deleteTrailUseCol.byDid", trailUseCol);
+	}
+}

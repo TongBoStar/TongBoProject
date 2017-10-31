@@ -1,0 +1,228 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailStepExpl;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.bean.TrialExpress;
+import com.terrence.crm.dol.query.TrailStepExplQuery;
+import com.terrence.crm.dol.query.TrailUseColQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.query.TrialExpressQuery;
+import com.terrence.crm.dol.dao.ITrailStepExplDao;
+import com.terrence.crm.dol.dao.ITrailUseColDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.dao.ITrialExpressDao;
+import com.terrence.crm.dol.service.ITrialDeviceService;
+
+@Service
+@Transactional
+public class TrialDeviceService extends BaseService implements ITrialDeviceService {
+	protected static Logger logger = LoggerFactory.getLogger(TrialDeviceService.class);
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	@Autowired
+	@Qualifier("trialExpressDao")
+	private ITrialExpressDao trialExpressDao;
+	
+	@Autowired
+	@Qualifier("trailStepExplDao")
+	private ITrailStepExplDao trailStepExplDao;
+	
+	@Autowired
+	@Qualifier("trailUseColDao")
+	private ITrailUseColDao trailUseColDao;
+	public String getIbatisSqlMapNamespace() {
+		return "TrialDevice";
+	}
+	@Transactional(readOnly=true)
+	public TrialDevice getById(java.lang.Long id) throws ServiceException
+	{
+		return trialDeviceDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrialDevice entity) throws ServiceException
+	{
+		trialDeviceDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrialDevice entity) throws ServiceException
+	{
+		Long adId = trialDeviceDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrialDevice entity) throws ServiceException
+	{
+		Integer returnValue =  trialDeviceDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trialDeviceDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trialDeviceDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrialDeviceQuery query = new TrialDeviceQuery();
+		try {
+			return trialDeviceDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialDevice> findPage(Page<TrialDevice> page, TrialDeviceQuery query) throws ServiceException
+	{
+		return trialDeviceDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrialDevice> findPage(Page<TrialDevice> page,String statement, TrialDeviceQuery query) throws ServiceException
+	{
+		return trialDeviceDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialDevice> findList(TrialDeviceQuery query) throws ServiceException
+	{
+		return trialDeviceDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialDevice> findList(TrialDeviceQuery query,Integer pageSize) throws ServiceException
+	{
+		return trialDeviceDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrialDevice> findList(TrialDeviceQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trialDeviceDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrialDevice> findAllList() throws ServiceException
+	{
+		return trialDeviceDao.findAllList();
+	}
+	@Override
+	public List<TrialDevice> findListAllDevice(TrialDeviceQuery trialDeviceQuery) {
+		return trialDeviceDao.findListAllDevice(trialDeviceQuery);
+	}
+	@Override
+	public void saveDeviceAndExpress(TrialDevice entity)
+			throws ServiceException {
+		TrialExpress trialExpress = new TrialExpress();
+		if(entity.getDid()!=null){//说明是修改
+			Integer oldType = this.getById(entity.getDid()).getDevicetype();
+			if (oldType==1||oldType==5||oldType==8) {
+				entity.setSwitch1(0.0);
+			}else if(oldType==3||oldType==4){
+				TrailUseColQuery trailUseCol = new TrailUseColQuery();
+				trailUseCol.setDid(entity.getDid());
+				trailUseColDao.deleteTrailUseCol(trailUseCol);
+			} 
+			trialExpress.setExpressid(entity.getExpressid());
+		}//保存
+			trialDeviceDao.saveOrUpdate(entity);
+			
+			trialExpress.setDid(entity.getDid());
+			trialExpress.setFexpression(entity.getFexpression());
+			trialExpress.setRemark(entity.getRemark());
+			trialExpressDao.saveOrUpdate(trialExpress);
+	}
+	private void deleteTrailUseCol(TrialDevice entity){
+		TrailUseColQuery trailUseCol = new TrailUseColQuery();
+		trailUseCol.setDid(entity.getDid());
+		trailUseColDao.deleteTrailUseCol(trailUseCol);
+	}
+	private void deleteExpressDataByDid(TrialDevice entity){
+		TrialExpressQuery trialExpressQuery = new TrialExpressQuery();
+		trialExpressQuery.setDid(entity.getDid());
+		trialExpressDao.deleteDataByDid(trialExpressQuery);
+	}
+	@Override
+	public void saveOrUpdateDeviceInfo(TrialDevice entity)
+			throws ServiceException {
+		//如果类型从开关变到检测项目
+		if(entity.getDid()!=null){//说明是修改
+			Integer Oldtype = this.getById(entity.getDid()).getDevicetype();
+		
+				if(Oldtype==1||Oldtype==5||Oldtype==8){
+					entity.setSwitch1(0.0);
+				}else if(Oldtype==3||Oldtype==4){
+					//说明从全局输出变量修改为开关，所以需要删除该绑定的字段数据
+					this.deleteTrailUseCol(entity);
+				}else if(Oldtype==6){
+					this.deleteExpressDataByDid(entity);
+				}
+		
+			this.update(entity);
+		}else {//说明是保存
+			this.saveOrUpdate(entity);
+			
+		}
+
+		
+	}
+	@Override
+	public TrialDevice getEditData(Long trialDeviceId) throws ServiceException {
+		if(trialDeviceId!=null){
+			TrialDeviceQuery query = new TrialDeviceQuery();
+			query.setDid(trialDeviceId);
+			return trialDeviceDao.getEditData(query);
+		}
+		return null;
+	}
+	@Override
+	public Map<Integer, String> findStepExp(Long trialDeviceId) {
+			Map<Integer, String> stepExpMap = new HashMap<Integer, String>();
+		TrialDeviceQuery trialDeviceQuery = new TrialDeviceQuery();
+		trialDeviceQuery.setDevicetype(5);
+		trialDeviceQuery.setTrialid(trialDeviceId);
+		TrailStepExplQuery trailStepExplQuery = new TrailStepExplQuery();
+		TrialDevice trialDevice = trialDeviceDao.getByEntity("TrialDevice.Entity", trialDeviceQuery);
+		trailStepExplQuery.setDid(trialDevice.getDid());
+		List<TrailStepExpl> trailStepExpls = trailStepExplDao.findList(trailStepExplQuery);
+		for (TrailStepExpl trailStepExpl : trailStepExpls) {
+			stepExpMap.put(trailStepExpl.getStepval(), trailStepExpl.getFexplain());
+		}
+		return stepExpMap;
+	}
+}

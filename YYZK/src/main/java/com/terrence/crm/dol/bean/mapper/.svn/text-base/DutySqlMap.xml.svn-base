@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Duty">
+
+        
+	<resultMap id="RM.Duty" class="com.terrence.crm.dol.bean.Duty">
+        <result property="dutyid" column="dutyid"/>
+        <result property="dutyname" column="dutyname"/>
+        <result property="dutylevel" column="dutylevel"/>
+        <result property="parentid" column="parentid"/>
+        <result property="dutydescription" column="dutydescription"/>
+        <result property="teamid" column="teamid"/>
+        <result property="dutydept" column="dutydept"/>
+        <result property="dutyorder" column="dutyorder"/>
+        <!-- 职务名键 -->
+        <result property="dutykey" column="dutykey"/>
+    </resultMap>
+    
+    <resultMap id="RM.Duty.list" class="com.terrence.crm.dol.bean.Duty">
+        <result property="dutyid" column="dutyid"/>
+        <result property="dutyname" column="dutyname"/>
+        <result property="dutylevel" column="dutylevel"/>
+        <result property="parentid" column="parentid"/>
+        <result property="dutydescription" column="dutydescription"/>
+        <result property="teamid" column="teamid"/>
+        <result property="dutydept" column="dutydept"/>
+        <result property="dutyorder" column="dutyorder"/>
+        <result property="duname" column="duname"/>
+         <result property="department" resultMap="RM.Department.name"/>
+         <!-- 职务名键 -->
+        <result property="dutykey" column="dutykey"/>
+    </resultMap>
+	
+	  <resultMap id="RM.Department.name" class="com.terrence.crm.dol.bean.Department">
+        <result property="teamname" column="teamname"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Duty.columns">
+	    <![CDATA[
+        	t_duty.dutyid ,
+        	t_duty.dutyname ,
+        	t_duty.dutylevel ,
+        	t_duty.parentid ,
+        	t_duty.dutydescription ,
+        	t_duty.teamid ,
+        	t_duty.dutydept ,
+        	t_duty.dutyorder ,
+        	t_duty.dutykey 
+	    ]]>
+	</sql>
+	
+   <insert id="Duty.insert" >
+   
+        INSERT INTO
+        t_duty (
+        	dutyname ,
+        	dutylevel ,
+        	parentid ,
+        	dutydescription 
+        	 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="teamid">
+        			teamid
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="dutyorder">
+        			dutyorder
+        		</isNotEmpty>
+        	</dynamic> 
+        ) VALUES (
+        	#dutyname# ,
+        	#dutylevel# ,
+        	#parentid# ,
+        	#dutydescription# 
+        	
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="teamid">
+        			#teamid#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="dutyorder">
+        			#dutyorder#
+        		</isNotEmpty>
+        		
+        	</dynamic>
+        )
+ 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="dutyid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Duty.update" parameterClass="com.terrence.crm.dol.bean.Duty">         
+        UPDATE t_duty 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="dutyname">
+	        	dutyname = #dutyname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dutylevel">
+	        	dutylevel = #dutylevel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dutydescription">
+	        	dutydescription = #dutydescription# 
+	        </isNotEmpty>
+	       
+	       <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dutydept">
+	        	dutydept = #dutydept# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dutyorder">
+	        	dutyorder = #dutyorder# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        dutyid = #dutyid# 
+    </update>
+    
+	<delete id="Duty.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_duty where
+       dutyid = #dutyid# 
+    ]]>
+    </delete>
+    
+    <delete id="Duty.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_duty 
+        WHERE
+       dutyid in ($dutyid$) 
+    ]]>
+    </delete>
+ 
+    <select id="Duty.getById" resultMap="RM.Duty.list">
+	    select <include refid="Duty.columns"/>, t.dutyname duname ,t_department.teamname   
+	        from t_duty left join t_duty t on t.dutyid = t_duty.parentid
+	        			left join t_department on t_department.teamid = t_duty.teamid
+		        where 
+		        t_duty.dutyid = #dutyid# 
+	    
+    </select>
+    
+	<select id="Duty.getByProperty" resultMap="RM.Duty">
+		select <include refid="Duty.columns"/> from t_duty where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Duty.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="dutyid">
+	             t_duty.dutyid = #dutyid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dutyname">
+	             t_duty.dutyname like ('%$dutyname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dutylevel">
+	             t_duty.dutylevel = #dutylevel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_duty.parentid = #parentid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dutydescription">
+	             t_duty.dutydescription = #dutydescription#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_duty.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dutydept">
+	             t_duty.dutydept = #dutydept#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="dutyorder">
+	             t_duty.dutyorder = #dutyorder#
+	       </isNotEmpty>
+	       <!-- 职务key -->
+	       <isNotEmpty prepend="AND" property="dutykeys">
+	             t_duty.dutykey in ($dutykeys$) 
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Duty.findPage.and">
+			<isNotEmpty prepend="AND" property="dutyid">
+	             t_duty.dutyid = #dutyid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutyname">
+	             t_duty.dutyname like ('%$dutyname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutylevel">
+	             t_duty.dutylevel = #dutylevel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_duty.parentid = #parentid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutydescription">
+	             t_duty.dutydescription = #dutydescription#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_duty.teamid = #teamid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutydept">
+	             t_duty.dutydept = #dutydept#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutyorder">
+	             t_duty.dutyorder = #dutyorder#
+	       </isNotEmpty>
+	</sql>
+    
+    <!-- 2013-8-26 -->
+    <select id="Duty.findDutyList" resultMap="RM.Duty">
+    	SELECT 
+    		<include refid="Duty.columns"/>
+    	FROM
+    		t_duty
+    	 <dynamic prepend="WHERE">
+    	 	<isNotEmpty prepend="AND" property="dutyname">
+    				t_duty.dutyname like ('%$dutyname$%')
+    		</isNotEmpty>
+    	 </dynamic>
+    	
+    </select>
+    
+    
+    <select id="Duty.findList" resultMap="RM.Duty">
+    	SELECT 
+    		<include refid="Duty.columns"/> 
+    	FROM 
+    		t_duty
+		<include refid="Duty.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Duty.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_duty
+    ]]>
+		<include refid="Duty.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Duty.findPage" resultMap="RM.Duty">
+    	select <include refid="Duty.columns"/>	    
+	        from t_duty 	   
+		<include refid="Duty.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Duty.findPage" resultMap="RM.Duty.list">
+    	select <include refid="Duty.columns"/>,t.dutyname duname ,t_department.teamname   
+	        from t_duty left join t_duty t on t.dutyid = t_duty.parentid
+	        			left join t_department on t_department.teamid = t_duty.teamid
+	        
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_duty.dutyid 
+	   not in(select $notTop$ 
+       t_duty.dutyid 
+	   from t_duty <include refid="Duty.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Duty.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

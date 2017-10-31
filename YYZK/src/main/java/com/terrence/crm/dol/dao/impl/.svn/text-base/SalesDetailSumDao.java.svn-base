@@ -1,0 +1,64 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.SalesDetailSum;
+import com.terrence.crm.dol.dao.ISalesDetailSumDao;
+import com.terrence.crm.dol.query.SalesDetailSumQuery;
+
+
+@Repository
+public class SalesDetailSumDao extends BaseIbatisDao<SalesDetailSum,java.lang.Long> implements ISalesDetailSumDao{
+
+		
+	public void saveOrUpdate(SalesDetailSum entity) {
+		if(entity.getSdetailid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "SalesDetailSum";
+	}
+	public SalesDetailSum getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (SalesDetailSum)this.getSqlMapClientTemplate().queryForObject("SalesDetailSum.getByProperty", map);		
+	}
+
+	@Override
+	public List<SalesDetailSum> findsaleSumList(
+			SalesDetailSumQuery salesDetailSumQuery) {
+		return this.getSqlMapClientTemplate().queryForList("SalesDetailSum.find.saleList", salesDetailSumQuery);
+	}
+
+	@Override
+	public void deleteData(SalesDetailSumQuery salesDetailSumQuery) {
+		this.getSqlMapClientTemplate().delete("SalesDetailSum.delete.for.danju.data",salesDetailSumQuery);
+	}
+
+	@Override
+	public SalesDetailSum findSDS(SalesDetailSum sds) {
+		return (SalesDetailSum) this.getSqlMapClientTemplate().queryForObject("SalesDetailSum.find.total.fqty.data", sds);
+	}
+
+	@Override
+	public SalesDetailSum findentity(SalesDetailSum sdetailsum) {
+		
+		return  (SalesDetailSum) this.getSqlMapClientTemplate().queryForObject("SalesDetailSum.entity.find.zong.fqty", sdetailsum);
+	}
+
+	@Override
+	public SalesDetailSum findDataEntity(SalesDetailSum sds) {
+		return (SalesDetailSum) this.getSqlMapClientTemplate().queryForObject("SalesDetailSum.find.old.fqty.data.select", sds);
+	}
+
+}

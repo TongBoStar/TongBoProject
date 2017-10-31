@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Module">
+
+<resultMap id="RM.Module" class="com.terrence.crm.dol.bean.Module">
+	<result property="id" column="id"/>
+	<result property="moduleName" column="moduleName"/>
+	<result property="moduleCode" column="moduleCode"/>
+	<result property="moduleLevel" column="moduleLevel"/>
+	<result property="moduleParentId" column="moduleParentId"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+	<result property="moduleDesc" column="moduleDesc"/>
+	<result property="moduleIcon" column="moduleIcon"/>
+	<result property="linkUrl" column="linkUrl"/>
+	<result property="module" resultMap="RM.Module.Module"/>
+</resultMap>
+<resultMap id="RM.Module.Module" class="com.terrence.crm.dol.bean.Module">
+	<result property="moduleName" column="parentName"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Module.columns">
+	<![CDATA[
+		t_module.id ,
+		t_module.moduleName ,
+		t_module.moduleCode,
+		t_module.moduleLevel ,
+		t_module.moduleParentId ,
+		t_module.createTime ,
+		t_module.modifyTime ,
+		t_module.moduleDesc,
+		t_module.moduleIcon,
+		t_module.linkUrl
+	]]>
+</sql>
+
+<insert id="Module.insert" >
+	<![CDATA[
+	INSERT INTO t_module (
+		moduleName,
+		moduleCode,
+		moduleLevel,
+		moduleParentId,
+		createTime,
+		modifyTime,
+		moduleDesc,
+		moduleIcon,
+		linkUrl
+	) VALUES (
+		#moduleName#,
+		#moduleCode#,
+		#moduleLevel#,
+		#moduleParentId#,
+		#createTime#,
+		#modifyTime#,
+		#moduleDesc#,
+		#moduleIcon#,
+		#linkUrl#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Module.update" parameterClass="com.terrence.crm.dol.bean.Module"> 
+	UPDATE t_module 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="moduleName">
+			moduleName = #moduleName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleCode">
+			moduleCode = #moduleCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleLevel">
+			moduleLevel = #moduleLevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleParentId">
+			moduleParentId = #moduleParentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleDesc">
+			moduleDesc = #moduleDesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="moduleIcon">
+			moduleIcon = #moduleIcon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="linkUrl">
+			linkUrl = #linkUrl# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Module.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_module.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleName">
+			t_module.moduleName = #moduleName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleCode">
+			t_module.moduleCode = #moduleCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleLevel">
+			t_module.moduleLevel = #moduleLevel# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleParentId">
+			t_module.moduleParentId = #moduleParentId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_module.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_module.modifyTime = #modifyTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="moduleDesc">
+			t_module.moduleDesc = #moduleDesc# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Module.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_module.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleName">
+		t_module.moduleName = #moduleName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleCode">
+		t_module.moduleCode = #moduleCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleLevel">
+		t_module.moduleLevel = #moduleLevel# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleParentId">
+		t_module.moduleParentId = #moduleParentId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_module.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_module.modifyTime = #modifyTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="moduleDesc">
+		t_module.moduleDesc = #moduleDesc# 
+	</isNotEmpty>
+</sql>
+
+<select id="Module.getById" resultMap="RM.Module">
+	select <include refid="Module.columns"/> ,tm2.moduleName parentName 
+		from t_module 
+		left join t_module tm2 on t_module.moduleParentId = tm2.id 
+		where t_module.id=#id#
+</select>
+
+<select id="Module.getByProperty" resultMap="RM.Module">
+	select <include refid="Module.columns"/> from t_module where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Module.delete">
+	<![CDATA[
+		DELETE FROM t_module WHERE id=#id#
+	]]>
+</delete>
+<delete id="Module.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_module WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Module.findPage.count" resultClass="long">
+	select count(*) from t_module <include refid="Module.findPage.where"/>
+</select>
+
+<select id="Module.findPage" resultMap="RM.Module">
+	select <include refid="Module.columns"/> ,tm2.moduleName parentName 
+		from t_module 
+		left join t_module tm2 on t_module.moduleParentId = tm2.id 
+	<include refid="Module.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Module.findList" resultMap="RM.Module">
+	SELECT <include refid="Module.columns"/> ,tm2.moduleName parentName 
+		from t_module 
+		left join t_module tm2 on t_module.moduleParentId = tm2.id
+	<include refid="Module.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

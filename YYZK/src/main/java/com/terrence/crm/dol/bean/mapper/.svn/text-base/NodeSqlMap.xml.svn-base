@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Node">
+
+        
+	<resultMap id="RM.Node" class="com.terrence.crm.dol.bean.Node">
+        <result property="nodeid" column="nodeid"/>
+        <result property="nodename" column="nodename"/>
+        <result property="describes" column="describes"/>
+    </resultMap>
+	
+	<resultMap id="RM.Node.Pd.Price" class="com.terrence.crm.dol.bean.Node">
+        <result property="nodeid" column="nodeid"/>
+        <result property="nodename" column="nodename"/>
+        <result property="nodePrice" resultMap="RM.NodePrice.Node"/>
+    </resultMap>  
+	<resultMap id="RM.NodePrice.Node" class="com.terrence.crm.dol.bean.NodePrice">
+        <result property="nodepriceid" column="nodepriceid"/>
+        <result property="priceval" column="priceval"/>
+    </resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Node.columns">
+	    <![CDATA[
+        	t_node.nodeid ,
+        	t_node.nodename ,
+        	t_node.describes 
+	    ]]>
+	</sql>
+	
+   <insert id="Node.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_node (
+        	nodename ,
+        	describes 
+        ) VALUES (
+        	#nodename# ,
+        	#describes# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="nodeid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Node.update" parameterClass="com.terrence.crm.dol.bean.Node">         
+        UPDATE t_node 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="nodename">
+	        	nodename = #nodename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="describes">
+	        	describes = #describes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        nodeid = #nodeid# 
+    </update>
+    
+	<delete id="Node.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_node where
+       nodeid = #nodeid# 
+    ]]>
+    </delete>
+    
+    <delete id="Node.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_node 
+        WHERE
+       nodeid in ($nodeid$) 
+    ]]>
+    </delete>
+    
+    <select id="Node.getById" resultMap="RM.Node">
+	    select <include refid="Node.columns"/>
+	    
+	        from t_node 
+	        where 
+		        nodeid = #nodeid# 
+	    
+    </select>
+    
+	<select id="Node.getByProperty" resultMap="RM.Node">
+		select <include refid="Node.columns"/> from t_node where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Node.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_node.nodeid = #nodeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="nodename">
+	             t_node.nodename = #nodename#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="describes">
+	             t_node.describes = #describes#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Node.findPage.and">
+			<isNotEmpty prepend="AND" property="nodeid">
+	             t_node.nodeid = #nodeid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="nodename">
+	             t_node.nodename = #nodename#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="describes">
+	             t_node.describes = #describes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemid">
+	             t_node_price.itemid = #itemid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Node.findList" resultMap="RM.Node.Pd.Price">
+    	select t_node.nodeid,t_node.nodename,t_node_price.nodepriceid,isnull(t_node_price.priceval,0) priceval
+ 		from t_node left join t_node_price on t_node.nodeid=t_node_price.nodeid 
+		<include refid="Node.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Node.findList.Template" resultMap="RM.Node">
+    	select <include refid="Node.columns"/>	from t_node 	
+		<include refid="Node.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Node.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_node
+    ]]>
+		<include refid="Node.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Node.findPage" resultMap="RM.Node">
+    	select <include refid="Node.columns"/>	    
+	        from t_node 	   
+		<include refid="Node.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.Node.findPage" resultMap="RM.Node">
+    	select <include refid="Node.columns"/>	    
+	        from t_node where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       nodeid 
+	   not in(select $notTop$ 
+       nodeid 
+	   from t_node <include refid="Node.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Node.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

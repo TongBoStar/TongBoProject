@@ -1,0 +1,137 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Supplier;
+import com.terrence.crm.dol.dao.ISupplierDao;
+import com.terrence.crm.dol.query.SupplierQuery;
+import com.terrence.crm.dol.service.ISupplierService;
+
+
+@Service
+@Transactional
+public class SupplierService extends BaseService implements ISupplierService{
+	protected static Logger logger = LoggerFactory.getLogger(SupplierService.class);
+	@Autowired
+	@Qualifier("supplierDao")
+	private ISupplierDao supplierDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Supplier";
+	}
+	@Transactional(readOnly=true)
+	public List<Supplier> findAllList() throws ServiceException
+	{
+		return supplierDao.findAllList();
+	}
+	
+	
+	public Supplier getById(java.lang.Long id) throws ServiceException
+	{
+		return supplierDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Supplier entity) throws ServiceException
+	{
+		supplierDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Supplier entity) throws ServiceException
+	{
+		Long adId = supplierDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Supplier entity) throws ServiceException
+	{
+		Integer returnValue =  supplierDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = supplierDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = supplierDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SupplierQuery query = new SupplierQuery();
+		try {
+			return supplierDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Supplier> findPage(Page<Supplier> page, SupplierQuery query) throws ServiceException
+	{
+		return supplierDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Supplier> findPage(Page<Supplier> page,String statement, SupplierQuery query) throws ServiceException
+	{
+		return supplierDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Supplier> findList(SupplierQuery query) throws ServiceException
+	{
+		return supplierDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Supplier> findList(SupplierQuery query,Integer pageSize) throws ServiceException
+	{
+		return supplierDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Supplier> findList(SupplierQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return supplierDao.findList(query,statement,pageSize);
+	}
+	
+	@Override
+	public List<Supplier> findlistToSupplierQuery(SupplierQuery supplierQuery)
+			throws ServiceException {
+		return supplierDao.findlistToSupplierQuery(supplierQuery);
+	}
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void syncSupplier() {
+		supplierDao.syncSupplier();
+		
+	}
+}

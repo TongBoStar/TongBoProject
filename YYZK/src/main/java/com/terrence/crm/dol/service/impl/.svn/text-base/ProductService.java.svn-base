@@ -1,0 +1,65 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.dao.IProductDao;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.service.IProductService;
+
+/**
+ * 订单业务处理实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-30 下午3:36:39
+ */
+@Service
+@Transactional
+public class ProductService extends BaseService implements IProductService {
+	@Autowired
+	private IProductDao productDao;
+
+	@Override
+	public Long save(Product product) {
+		return productDao.save(product);
+	}
+
+	@Override
+	public void update(Product product) {
+		productDao.update(product);
+	}
+
+	@Override
+	public void deleteProduct(Long id) {
+		productDao.deleteById(id);
+	}
+
+	@Override
+	public Product getById(Long id) {
+		return productDao.getById(id);
+	}
+
+	@Override
+	public List<Product> findList(ProductQuery productQuery) {
+		return productDao.findList(productQuery);
+	}
+
+	@Override
+	public List<Product> findListHistory(ProductQuery productQuery) {
+		return productDao.findList("Product.findList.History",productQuery);
+	}
+
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void saveBatch(List<Product> productList) throws SQLException {
+		// TODO Auto-generated method stub
+		productDao.saveBatch(productList);
+	}
+}

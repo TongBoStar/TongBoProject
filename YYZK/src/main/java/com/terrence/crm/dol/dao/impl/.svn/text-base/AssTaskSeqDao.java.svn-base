@@ -1,0 +1,70 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssTaskSeq;
+import com.terrence.crm.dol.dao.IAssTaskSeqDao;
+import com.terrence.crm.dol.query.AssTaskSeqQuery;
+
+@Repository
+public class AssTaskSeqDao extends BaseIbatisDao<AssTaskSeq,java.lang.Long> implements IAssTaskSeqDao{
+
+		
+	public void saveOrUpdate(AssTaskSeq entity) {
+		if(entity.getSeqid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssTaskSeq";
+	}
+	public AssTaskSeq getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssTaskSeq)this.getSqlMapClientTemplate().queryForObject("AssTaskSeq.getByProperty", map);		
+	}
+
+	@Override
+	public List<AssTaskSeq> findEntity(AssTaskSeqQuery assTaskSeqQuery) {
+		return this.getSqlMapClientTemplate().queryForList("AssTaskSeq.find.entry.list.data", assTaskSeqQuery);
+	}
+
+	@Override
+	public void updateSerialSum(HashMap paramMap) {
+		this.getSqlMapClientTemplate().queryForObject("AssTaskSeq.update.serial.sumData", paramMap);
+	}
+
+	@Override
+	public AssTaskSeq findEntityData(AssTaskSeq fuatlk) {
+		return (AssTaskSeq) this.getSqlMapClientTemplate().queryForObject("AssTaskSeq.entity.data", fuatlk);
+	}
+
+	@Override
+	public AssTaskSeq finddata(AssTaskSeq fuatlk) {
+		return (AssTaskSeq) this.getSqlMapClientTemplate().queryForObject("AssTaskSeq.find.data.factoryReport", fuatlk);
+	}
+
+	@Override
+	public Integer getMaxSeqno(String statement, Long taskid) {
+		return (Integer)this.getSqlMapClientTemplate().queryForObject(statement, taskid);
+	}
+
+	@Override
+	public List<AssTaskSeq> findDataSelect(AssTaskSeq atseq) {
+		return this.getSqlMapClientTemplate().queryForList("AssTaskSeq.find.list.select.data", atseq);
+	}
+
+
+}

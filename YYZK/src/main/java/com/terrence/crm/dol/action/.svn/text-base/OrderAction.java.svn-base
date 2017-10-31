@@ -1,0 +1,2635 @@
+package com.terrence.crm.dol.action;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.log4j.Logger;
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.json.annotations.JSON;
+import org.apache.velocity.runtime.parser.node.MathUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.terrence.core.dol.bean.Menu;
+import com.terrence.crm.common.util.ChineseCharToEn;
+import com.terrence.crm.common.util.PropertiesUtils;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.ApproveMsg;
+import com.terrence.crm.dol.bean.Checkorder;
+import com.terrence.crm.dol.bean.Duty;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.MailMsg;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.bean.Product;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.ApproveMsgQuery;
+import com.terrence.crm.dol.query.CheckorderQuery;
+import com.terrence.crm.dol.query.DutyQuery;
+import com.terrence.crm.dol.query.FileInfo;
+import com.terrence.crm.dol.query.FileType;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.MailMsgQuery;
+import com.terrence.crm.dol.query.OrderQuery;
+import com.terrence.crm.dol.query.ProductQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IApproveMsgService;
+import com.terrence.crm.dol.service.ICheckorderService;
+import com.terrence.crm.dol.service.IDutyService;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.service.IFileService;
+import com.terrence.crm.dol.service.IIcbillnoService;
+import com.terrence.crm.dol.service.IMailMsgService;
+import com.terrence.crm.dol.service.IOrderService;
+import com.terrence.crm.dol.service.IProductService;
+import com.terrence.crm.dol.service.ISysOrderService;
+import com.terrence.crm.dol.utils.ConstantInfo;
+import com.terrence.crm.dol.utils.DateUtil;
+import com.terrence.crm.dol.utils.EmailManager;
+import com.terrence.crm.dol.utils.MathUtil;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
+/**
+ * 设备控制类
+ * 
+ * @author wangtongbo E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-5-26 上午9:32:31
+ */
+@Scope("prototype")
+@Namespace("/order")
+public class OrderAction extends CrudActionSupport<Order> implements
+		ApplicationContextAware {
+	private static final Logger log = Logger.getLogger(OrderAction.class);
+	@Autowired
+	@Qualifier("icbillnoService")
+	private IIcbillnoService icbillnoService;
+	@Autowired
+	@Qualifier("mailMsgService")
+	private IMailMsgService mailMsgService;
+	@Autowired
+	@Qualifier("checkorderService")
+	private ICheckorderService checkorderService;
+	@Autowired
+	@Qualifier("approveMsgService")
+	private IApproveMsgService approveMsgService;
+	@Autowired
+	@Qualifier("fileService")
+	private IFileService fileService;
+	@Autowired
+	@Qualifier("emailService")
+	private IEmailService emailService;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+
+	private static final long serialVersionUID = 91391478824792731L;
+	@Autowired
+	@Qualifier("orderService")
+	private IOrderService orderService;
+	@Autowired
+	@Qualifier("dutyService")
+	private IDutyService dutyService;
+	@Autowired
+	@Qualifier("productService")
+	private IProductService productService;
+	@Autowired
+	@Qualifier("sysOrderService")
+	private ISysOrderService sysOrderService;
+
+	/** 管理员服务访问接口 */
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+
+	private Order orderEntity;
+	
+	private Order order;
+	private List<Product> productList;
+	
+	private OrderQuery orderQuery;
+	private Product product;
+	private String products;
+	private ProductQuery productQuery;
+	private Page<Order> page;
+	private ApplicationContext ctx;
+	private Long id;
+	private List<java.lang.Long> checkedIdList;
+	private List<Order> orderList;
+	private List<String> checkedCodeList;
+	private List<Menu> authorityList;
+	private Map<String, Object> map = new HashMap<String, Object>();
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+
+	private Integer adminType;
+	private Long adminDuty;
+	private Long adminId;
+	private String adminDutyName;
+	private String adminDutyKey;
+	private Integer asAreaSaleManager;
+
+	@Override
+	public Order getModel() {
+		return orderEntity;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext ctx)
+			throws BeansException {
+		this.ctx = ctx;
+	}
+
+	@Override
+	public String list() throws Exception {
+		log.debug("获取订单列表");
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("productId");
+			page.setOrder(Page.DESC);
+		}
+
+		if (orderQuery == null) {
+			orderQuery = new OrderQuery();
+		}
+		if (null != orderQuery.getOrderStatus()
+				&& "-1".equals(orderQuery.getOrderStatus() + "")) {
+			orderQuery.setOrderStatus(null);// 查询全部
+		}
+
+		try {
+			/*emailService.publishEmailEvent("", 
+					"liyuan.tian@terrence.com.cn".split(","),
+					"153@126.com".split(","), 
+					"",
+					"", 
+					"D:/01newterrencews20150520/.metadata/.me_tcat/webapps/files/pic/2015/158/7/标准订单.pdf", 
+					""
+					);*/
+            //emailService.say();
+			// 同时获取当前登录用户的权限信息
+			AdminSession adminSession = (AdminSession) SecurityContextHolder
+					.getContext().getAuthentication().getPrincipal();
+			authorityList = adminSession.getAdmin().getAuthorityList();
+			adminType = adminSession.getAdmin().getType();//
+			adminDuty = adminSession.getAdmin().getDutyid();
+			adminId = adminSession.getAdmin().getAdminId();
+			List<Admin> empSuperiorAreaManagerList=new ArrayList<Admin>();
+			List<Admin> empSuperiorSaleList=new ArrayList<Admin>();
+			/**
+			 * 根据角色查看订单
+			 */
+			Long dutyid = adminSession.getAdmin().getDutyid();// 19销售工程师 18销售经理
+			Duty duty = dutyService.getById(dutyid);
+			// 根据职位id 查找职位名
+			String dutyName = duty.getDutyname();
+			adminDutyName = dutyName;
+			String dutykey =duty.getDutykey();
+			adminDutyKey =dutykey;
+			// 01 a 19销售工程师
+			if (ConstantInfo.DUTY_XSGCS.equals(dutykey) ||ConstantInfo.DUTY_XSZLGCS.equals(dutykey)) {// 查看自己的
+																			// 新建的
+																			// 基本订单->新流程不变
+																			// (
+																			// 含用户类别中的经销商
+																			// )
+				//orderQuery.setUserId(adminSession.getAdmin().getAdminId());// 当前登陆人为
+																			// 销售工程师
+																			// /
+																			// 经销商
+				orderQuery.setUserIds(adminSession.getAdmin().getAdminId()+"");
+			}
+			// 01 b 经销商
+			if (ConstantInfo.DUTY_JXS.equals(dutykey)) {// 新流程 经销商 实际 还是 销售工程师 ,按销售工程师的权限做查询
+				//orderQuery.setUserId(adminSession.getAdmin().getAdminId());// 当前登陆人为经销商
+				orderQuery.setUserIds(adminSession.getAdmin().getAdminId()+"");// 当前登陆人为经销商
+			}
+			// 02 18销售经理
+			if (ConstantInfo.DUTY_XSJL.equals(dutykey)) {// 查看自己权限范围的基本订单->新流程销售经理只有查看权限
+				/*orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()
+						+ "");// 当前登陆人为销售经理
+						
+*/			
+				AdminQuery adminQuery = new AdminQuery();
+				adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());// 查询所有上级是当前登录的区域销售经理的下级
+				List<Admin> adminList = adminService.findList(adminQuery);// 查询的是销售经理列表
+				StringBuffer sb = new StringBuffer();
+				sb.append(adminSession.getAdmin().getAdminId() + "" + ",");
+				if(null!=adminList&&0<adminList.size()){//有直接下级
+					findBillUserIds(adminList, sb);
+				}else{//当前无直接下级
+					orderQuery.setUserIds(adminSession.getAdmin().getAdminId()+""); 
+				}
+			}
+			// 03 新流程 加入了 区域经理
+			boolean haveChildEmp=true;
+			if (ConstantInfo.DUTY_QYXSJL.equals(dutykey)) {// 查看自己权限范围的基本订单->新流程区域经理有查看自己下级的及
+											// 审核权限,新流程正常提交给区域销售经理
+				// orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为区域经理
+
+				AdminQuery adminQuery = new AdminQuery();
+
+				adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());// 查询所有上级是当前登录的区域销售经理的下级
+				List<Admin> adminList = adminService.findList(adminQuery);// 查询的是销售经理列表
+				StringBuffer sb = new StringBuffer();
+				sb.append(adminSession.getAdmin().getAdminId() + "" + ",");
+				if(null!=adminList&&0<adminList.size()){//有直接下级
+					findBillUserIds(adminList, sb);
+				}else{//当前无直接下级
+					/*String billUserIds = sb.toString();
+					billUserIds = billUserIds.substring(0, billUserIds.length() - 1);
+					orderQuery.setBillUserIds(billUserIds + "");// 当前登陆人为副总经理
+*/					 haveChildEmp=false;
+					orderQuery.setUserIds(adminSession.getAdmin().getAdminId()+""); 
+					/*AdminQuery adminQueryEmpSuperior = new AdminQuery();
+					adminQueryEmpSuperior.setAdminId(adminSession.getAdmin().getAdminId());
+					List<Admin> adminListEmpSuperior = adminService.findList(adminQueryEmpSuperior);
+					if(null!=adminListEmpSuperior&&0<adminListEmpSuperior.size()){
+						orderQuery.setUserId(adminSession.getAdmin().getAdminId());
+					}else{
+						resultInfo[0] = "-1";
+						resultInfo[1] = "查询列表失败,当前区域经理无上级,请先指定!";
+						return JSON;
+					}*/
+				}
+			}
+			// 05
+			if (ConstantInfo.DUTY_CWJL.equals(dutykey)) {// 查看自己权限范围的基本订单->新流程 财务经理 有查看 所有及
+											// 审核所有的 权限
+				// orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为财务经理
+			}
+			// 06 新流程 加入了 售后服务部经理
+			if (ConstantInfo.DUTY_SHFWBJL.equals(dutykey)) {// 查看自己权限范围的基本订单->新流程售后服务部经理有查看所有E类产品及
+												// 审核 E类产品权限
+				// orderQuery.setBillUserId(adminSession.getAdmin().getAdminId()+"");//当前登陆人为
+				// 售后服务部经理
+				// 查看基本订单中包含C类产品的
+				String propertyValue = PropertiesUtils
+						.getPropertyFileKeyValue("containProductType");
+				orderQuery.setContainProductType(propertyValue);
+			}
+			// 07 39副总经理
+			if (ConstantInfo.DUTY_FZJL.equals(dutykey)) {// 查看自己权限范围的基本订单->新流程不变
+				boolean isAreaSaleManager = false;
+				//所有副总兼职区域经理的情况
+//				Long amanagerid = adminSession.getAdmin()
+//					.getAmanagerid();// 查找当前登录副总经理的区域经理属性值
+				//通过adminid查找自身的区域经理id
+				/*Admin admininfo =adminService.getById(adminSession.getAdmin().getAdminId());
+				Long amanagerid =admininfo.getAmanagerid();
+				if ((null != amanagerid)
+						&& (adminSession.getAdmin().getAdminId().equals(amanagerid))) {
+					// 当前登录副总经理的区域经理即是自己兼职的
+					isAreaSaleManager = true;
+				}*/
+				
+				// 副总经理 查询所有下级
+				AdminQuery adminQuery = new AdminQuery();
+				adminQuery.setEmpSuperior(adminSession.getAdmin().getAdminId());// 查询所有上级是当前登录的副总的下级
+				List<Admin> adminList = adminService.findList(adminQuery);
+				
+				for (Admin admin : adminList) {//查找出所有的区域经理
+					Long dutyidLong=admin.getDutyid();
+					Duty dutyinfo=dutyService.getById(dutyidLong);
+					//if(ConstantInfo.DUTY_QYXSJL.equals(dutykey)){
+					if(ConstantInfo.DUTY_QYXSJL.equals(dutyinfo.getDutykey())){
+						empSuperiorAreaManagerList.add(admin);
+					}
+					/*if( ConstantInfo.DUTY_XSGCS.equals(dutykey) ||ConstantInfo.DUTY_XSZLGCS.equals(dutykey)
+							||ConstantInfo.DUTY_JXS.equals(dutykey)
+									){*/
+					/*if( ConstantInfo.DUTY_XSGCS.equals(dutyinfo.getDutykey()) ||ConstantInfo.DUTY_XSZLGCS.equals(dutyinfo.getDutykey())
+								||ConstantInfo.DUTY_JXS.equals(dutyinfo.getDutykey())
+										){*/
+					if( ConstantInfo.DUTY_XSGCS.equals(dutyinfo.getDutykey()) ||ConstantInfo.DUTY_XSZLGCS.equals(dutyinfo.getDutykey())
+								||ConstantInfo.DUTY_JXS.equals(dutyinfo.getDutykey())
+								||ConstantInfo.DUTY_XSJL.equals(dutyinfo.getDutykey())		){//增加销售经理可以添加单据权限
+						empSuperiorSaleList.add(admin);
+					}
+					//if( ConstantInfo.DUTY_XSJL.equals(dutykey) ){
+					if( ConstantInfo.DUTY_XSJL.equals(dutyinfo.getDutykey()) ){
+						AdminQuery adminQueryArea = new AdminQuery();
+						adminQueryArea.setEmpSuperior(admin.getAdminId());// 查询直接下级
+						List<Admin> adminListAreaEmpSuperior = adminService.findList(adminQueryArea);
+						if(null!=adminListAreaEmpSuperior && 0<adminListAreaEmpSuperior.size()){
+							for (Admin adminEmpSuperior : adminListAreaEmpSuperior) {
+								Long dutyidEmpSuperiorLong=adminEmpSuperior.getDutyid();
+								Duty dutyEmpSuperiorinfo=dutyService.getById(dutyidEmpSuperiorLong);
+								/*if(ConstantInfo.DUTY_XSGCS.equals(dutykey) ||ConstantInfo.DUTY_XSZLGCS.equals(dutykey)
+										||ConstantInfo.DUTY_JXS.equals(dutykey)){*/
+								if(ConstantInfo.DUTY_XSGCS.equals(dutyEmpSuperiorinfo.getDutykey()) 
+										||ConstantInfo.DUTY_XSZLGCS.equals(dutyEmpSuperiorinfo.getDutykey())
+											||ConstantInfo.DUTY_JXS.equals(dutyEmpSuperiorinfo.getDutykey())){
+									empSuperiorSaleList.add(adminEmpSuperior);
+								}
+							}
+						}
+					}
+				}
+				
+				for (Admin admin : adminList) {
+					long admindutyid = admin.getDutyid();
+					Duty adminduty = dutyService.getById(admindutyid);
+					String admindutyName = adminduty.getDutyname();
+					//if (ConstantInfo.DUTY_QYXSJL.equals(dutykey)) {
+					if (ConstantInfo.DUTY_QYXSJL.equals(adminduty.getDutykey())) {
+						// 副总底下有区域
+					} else {// 副总底下没有区域销售经理,即自己兼职
+						// 李总底下既有区域经理,又有兼职区域经理的情况,需要在用户维护界面加入兼职属性维护选项
+						/*Long amanagerid = adminSession.getAdmin()
+								.getAmanagerid();// 当前登录副总经理的区域经理属性值
+						 */						
+						Admin admininfo =adminService.getById(adminSession.getAdmin().getAdminId());
+						Long amanagerid =admininfo.getAmanagerid();
+						if ((null != amanagerid)
+								&& (adminSession.getAdmin().getAdminId().equals(amanagerid))) {
+							// 当前登录副总经理的区域经理即是自己兼职的
+							//查找当前单据的制单人的区域经理是当前登录副总经理自己吗
+							//orderService.
+							isAreaSaleManager = true;
+						}
+					}
+				}
+				if (isAreaSaleManager) {
+					asAreaSaleManager = 1;
+				} else {
+					asAreaSaleManager = 0;
+				}
+
+				StringBuffer sb = new StringBuffer();
+				// 新流程 基本订单 可能 直接推给副总,如经销商提交的基本订单,可能 是有正常流程区域经理推给的, 所以需要做查询
+				// 查询直接提交给副总的基本订单,或是 有正常流程区域经理推给的
+
+				sb.append(adminSession.getAdmin().getAdminId() + "" + ",");
+				findBillUserIds(adminList, sb);
+
+				/*
+				 * if(null!=adminList&&0<adminList.size()){//说明有值
+				 * 
+				 * for (Admin admin2 : adminList) {
+				 * sb.append(admin2.getAdminId()+","); } String
+				 * billUserIds=sb.toString();
+				 * billUserIds=billUserIds.substring(0, billUserIds.length()-1);
+				 * 
+				 * orderQuery.setBillUserIds( billUserIds+"" );//当前登陆人为副总经理 }
+				 */
+
+			}
+			// 38总经理/管理员查看所有->新流程不变
+
+			page = orderService.findPage(page, orderQuery);
+			
+			List<Order> pageResult=new ArrayList<Order>();
+			/*
+			if (ConstantInfo.DUTY_QYXSJL.equals(dutykey)&&haveChildEmp ) {//区域销售经理
+				OrderQuery  orderQuery =new OrderQuery();
+				orderQuery.setUserId(adminSession.getAdmin().getAdminId());//单据创建人是区域经理自己
+				List<Order> orderList = orderService.findListAll(orderQuery);
+				if(null!=orderList&&0<orderList.size()){
+					 for (Order order : orderList) {
+						 pageResult.add(order);
+					}
+				}
+				
+				page.setResult(pageResult);
+				
+			}*/
+			
+			
+			
+			if (ConstantInfo.DUTY_FZJL.equals(dutykey)) {
+				Admin admininfo =adminService.getById(adminSession.getAdmin().getAdminId());
+				Long amanagerid =admininfo.getAmanagerid();
+				
+				List<Order> orderList=page.getResult();
+	            for (Order order : orderList) {//遍历每个当前页面的订单
+	            	order.setOrderViceGeneralManagerFlag(0);
+	            	if(null!=empSuperiorSaleList&&0<empSuperiorSaleList.size()){
+	            		for (Admin admin : empSuperiorSaleList) {//遍历副总经理底下的销售工程师
+	        			    //if(  order.getBillUserId().equals(admin.getAdminId())  //当前遍历的单据中的制单人是副总经理底下的销售工程师
+	        			    //		&&admin.getAmanagerid().equals(amanagerid)){//且副总经理底下的销售工程师的区域经理等于副总
+	        			    if(  order.getUserId().equals(admin.getAdminId())  //当前遍历的单据中的制单人是副总经理底下的销售工程师
+		        			    		&&admin.getAmanagerid().equals(amanagerid)){
+	        			    	//即当前销售工程师的区域经理是副总.副总兼职这个销售工程师的区域经理
+	        			    	//当前订单有副总兼职区域经理审批
+	        			    	order.setOrderViceGeneralManagerFlag(1);
+	        			    }
+	        			    if(order.getUserId().equals(
+	        			    		adminSession.getAdmin().getAdminId())
+	        			    		&&  ConstantInfo.DUTY_FZJL.equals(dutykey)
+	        			    ){//当前订单的创建人是副总经理
+	        			    	order.setOrderViceGeneralManagerFlag(1);
+	        			    }
+	        			}
+	            	}
+	            	pageResult.add(order);
+				}
+	            page.setResult(pageResult);
+			}
+			
+			//Page<Order> returnPage = orderDao.findPage(page, orderQuery);
+			//returnPage.setResult(returnPage.getResult());
+			
+			/*for (int i = 0; i < 10; i++) {empSuperiorSaleList
+				producerService.sendMessage(destination, "你好，生产者！这是消息："
+						+ (i + 1));
+			}*/
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+
+	private void findBillUserIds(List<Admin> adminList, StringBuffer sb) {
+		
+		if (null != adminList && 0 < adminList.size()) {// 说明有值
+			for (Admin admin2 : adminList) {
+				/**
+				 * 根据角色查看订单
+				 */
+				Long dutyid = admin2.getDutyid();// 19销售工程师 18销售经理
+				Duty duty = dutyService.getById(dutyid);
+				// 根据职位id 查找职位名
+				String dutyName = duty.getDutyname();
+				//if ("销售经理".equals(dutyName)) {
+				if (ConstantInfo.DUTY_XSGCS.equals(duty.getDutykey())//当前区域经理管理底下的人员是销售工程师,销售助理工程师,经销商
+						||ConstantInfo.DUTY_XSZLGCS.equals(duty.getDutykey())
+						||ConstantInfo.DUTY_JXS.equals(duty.getDutykey())
+						) {
+					sb.append(admin2.getAdminId() + ",");
+				} else {//当前区域经理管理底下不是销售工程师,销售助理工程师,经销商,就是销售经理
+					if(ConstantInfo.DUTY_QYXSJL.equals(duty.getDutykey())){
+						sb.append(admin2.getAdminId() + ",");
+					}
+					if(ConstantInfo.DUTY_XSJL.equals(duty.getDutykey())){
+						sb.append(admin2.getAdminId() + ",");
+					}
+					AdminQuery query = new AdminQuery();
+					query.setEmpSuperior(admin2.getAdminId());// 查找销售经理下级
+					List<Admin> queryList = adminService.findList(query);//
+					findBillUserIds(queryList, sb);//再次遍历查找
+				}
+			}
+			String billUserIds = sb.toString();
+			billUserIds = billUserIds.substring(0, billUserIds.length() - 1);
+			//orderQuery.setBillUserIds(billUserIds + "");// 当前登陆人为副总经理
+			orderQuery.setUserIds(billUserIds + "");// 当前登陆人为副总经理
+		}
+		
+		/*else{//当前登录的区域经理底下还没指定销售经理等
+			orderQuery.setBillUserIds("-1");// 指定为-1
+		}*/
+	}
+	
+	/**
+	 * 查询订单
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String sendEmailOpt() throws Exception {
+		try {
+			AdminSession admin = (AdminSession) SecurityContextHolder
+					.getContext().getAuthentication().getPrincipal();
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			String content = "";
+			Template template = freemarkerConfiguration.getTemplate(
+					"template/examineEmailTemplate.ftl", "utf-8");
+			paramMap.put("userName", admin.getAdmin().getAdminName());
+			// ${billname}需要您进行${examtypename}
+			paramMap.put("billname", "标准订单");
+			paramMap.put("examtypename", "查看");
+			content = FreeMarkerTemplateUtils.processTemplateIntoString(
+					template, paramMap);
+			String subject = "标准订单已生效通知";
+
+			String webAppRootPath=getWebappRootPath();
+			String pdfFilePathURl = "";
+			if (null != orderEntity.getPdfFilePath()) {
+				pdfFilePathURl = webAppRootPath + orderEntity.getPdfFilePath();
+			}
+			emailService.sendEmailNotice(null, orderEntity.getRecipient()
+					.split(";"), orderEntity.getCcrecipient().split(";"),
+					subject, content, pdfFilePathURl);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "发送失败" + e.getMessage();
+		}
+		return JSON;
+	}
+
+	/**
+	 * 发送通知邮件
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String listToJson() throws Exception {
+		try {
+			list();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	@Override
+	public String input() throws Exception {
+		// 根据id获取订单
+		//Order    order = orderService.getById(id);
+		order = orderService.getById(id);
+		// 获取产品信息
+		if (null == productQuery)
+			productQuery = new ProductQuery();
+		productQuery.setOrderCode(orderEntity.getOrderCode());
+		//List<Product> productList = productService.findList(productQuery);
+		productList = productService.findList(productQuery);
+		//查看订单关联的审核人及最新的意见
+		//String orderChecker=orderEntity.getOrderChecker();
+		String orderChecker=order.getOrderChecker();
+		if(null!=orderChecker){
+			String[] orderCheckerArr=orderChecker.split(",");
+			/*if(null!=orderCheckerArr&&2==orderCheckerArr.length){
+				ApproveMsgQuery finmanagerquery=new ApproveMsgQuery();
+				finmanagerquery.setApprover(orderCheckerArr[0]);
+				finmanagerquery.setBillId(id);
+				finmanagerquery.setSortColumns("approverTime desc ");
+				
+				List<ApproveMsg> finmanagerapproveMsgList=approveMsgService.findList(finmanagerquery);
+				if(null!=finmanagerapproveMsgList&&0<finmanagerapproveMsgList.size()){
+					orderEntity.setFinmanagername(orderCheckerArr[0]);
+					orderEntity.setFinmanagerapprCotent( finmanagerapproveMsgList.get(0).getApproveCotent() );
+					order.setFinmanagername(orderCheckerArr[0]);
+					order.setFinmanagerapprCotent( finmanagerapproveMsgList.get(0).getApproveCotent() );
+				}
+				
+				ApproveMsgQuery areamanagerquery=new ApproveMsgQuery();
+				areamanagerquery.setApprover(orderCheckerArr[1]);
+				areamanagerquery.setBillId(id);
+				areamanagerquery.setSortColumns("approverTime desc ");
+				
+				List<ApproveMsg> areamanagerapproveMsgList=approveMsgService.findList(areamanagerquery);
+				if(null!=areamanagerapproveMsgList&&0<areamanagerapproveMsgList.size()){
+					orderEntity.setAreamanagername(orderCheckerArr[1]);
+					orderEntity.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+					
+					order.setAreamanagername(orderCheckerArr[1]);
+					order.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+				}
+			}*/
+			if(null!=orderCheckerArr&&1==orderCheckerArr.length){
+				ApproveMsgQuery finmanagerquery=new ApproveMsgQuery();
+				finmanagerquery.setApprover(orderCheckerArr[0]);
+				finmanagerquery.setBillId(id);
+				finmanagerquery.setSortColumns("approverTime desc ");
+				
+				List<ApproveMsg> finmanagerapproveMsgList=approveMsgService.findList(finmanagerquery);
+				if(null!=finmanagerapproveMsgList&&0<finmanagerapproveMsgList.size()){
+					/*orderEntity.setFinmanagername(orderCheckerArr[0]);
+					orderEntity.setFinmanagerapprCotent( finmanagerapproveMsgList.get(0).getApproveCotent() );*/
+					order.setFinmanagername(orderCheckerArr[0]);
+					order.setFinmanagerapprCotent( finmanagerapproveMsgList.get(0).getApproveCotent() );
+				}
+				
+				/*ApproveMsgQuery areamanagerquery=new ApproveMsgQuery();
+				areamanagerquery.setApprover(orderCheckerArr[1]);
+				areamanagerquery.setBillId(id);
+				areamanagerquery.setSortColumns("approverTime desc ");
+				
+				List<ApproveMsg> areamanagerapproveMsgList=approveMsgService.findList(areamanagerquery);
+				if(null!=areamanagerapproveMsgList&&0<areamanagerapproveMsgList.size()){
+					orderEntity.setAreamanagername(orderCheckerArr[1]);
+					orderEntity.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+					
+					order.setAreamanagername(orderCheckerArr[1]);
+					order.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+				}*/
+			}
+		}
+		String orderChecker2=order.getOrderChecker2();
+		if(null!=orderChecker2){
+			ApproveMsgQuery areamanagerquery=new ApproveMsgQuery();
+			areamanagerquery.setApprover(orderChecker2);
+			areamanagerquery.setBillId(id);
+			areamanagerquery.setSortColumns("approverTime desc ");
+			
+			List<ApproveMsg> areamanagerapproveMsgList=approveMsgService.findList(areamanagerquery);
+			if(null!=areamanagerapproveMsgList&&0<areamanagerapproveMsgList.size()){
+				orderEntity.setAreamanagername(orderChecker2);
+				orderEntity.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+				
+				order.setAreamanagername(orderChecker2);
+				order.setAreamanagerappCotent( areamanagerapproveMsgList.get(0).getApproveCotent() );
+			}
+		}
+		//查看订单关联的审批人及最新的意见
+		//String orderApprover=orderEntity.getOrderApprover();
+		String orderApprover=order.getOrderApprover();
+		if(null!=orderApprover){
+			String[] orderApproverArr=orderApprover.split(",");
+			if(null!=orderApproverArr&&2==orderApproverArr.length){
+				ApproveMsgQuery approverquery=new ApproveMsgQuery();
+				approverquery.setApprover(orderApproverArr[0]);
+				approverquery.setBillId(id);
+				approverquery.setSortColumns("approverTime desc ");//副总,总经理谁先审核或驳回了显示最新的意见
+				
+				String vicemanagerapprCotent="";
+				String vicemanagerapprCotenttime="";
+				List<ApproveMsg> approverMsgList=approveMsgService.findList(approverquery);
+				if(null!=approverMsgList&&0<approverMsgList.size()){
+					//orderEntity.setManagerapprCotent( approverMsgList.get(0).getApproveCotent() );
+					
+					vicemanagerapprCotent=approverMsgList.get(0).getApproveCotent();
+					vicemanagerapprCotenttime=approverMsgList.get(0).getApproverTimeString();
+				}
+				
+				ApproveMsgQuery managerapproverquery=new ApproveMsgQuery();
+				managerapproverquery.setApprover(orderApproverArr[1]);
+				managerapproverquery.setBillId(id);
+				managerapproverquery.setSortColumns("approverTime desc ");//副总,总经理谁先审核或驳回了显示最新的意见
+				
+				String managerapprCotent="";
+				String managerapprCotenttime="";
+				List<ApproveMsg> managerapproverMsgList=approveMsgService.findList(managerapproverquery);
+				if(null!=managerapproverMsgList&&0<managerapproverMsgList.size()){
+					//orderEntity.setManagerapprCotent( approverMsgList.get(0).getApproveCotent() );
+					
+					managerapprCotent=managerapproverMsgList.get(0).getApproveCotent();
+					managerapprCotenttime=managerapproverMsgList.get(0).getApproverTimeString();
+				}
+				if( managerapprCotenttime.compareTo(vicemanagerapprCotenttime)>0){
+					order.setManagerapprCotent( managerapproverMsgList.get(0).getApproveCotent() );
+				}else{
+					order.setManagerapprCotent( approverMsgList.get(0).getApproveCotent() );
+				}
+			}
+			if(null!=orderApproverArr&&1==orderApproverArr.length){
+				ApproveMsgQuery approverquery=new ApproveMsgQuery();
+				approverquery.setApprover(orderApproverArr[0]);
+				approverquery.setBillId(id);
+				approverquery.setSortColumns("approverTime desc ");
+				
+				List<ApproveMsg> approverMsgList=approveMsgService.findList(approverquery);
+				if(null!=approverMsgList&&0<approverMsgList.size()){
+					//orderEntity.setManagerapprCotent( approverMsgList.get(0).getApproveCotent() );
+					order.setManagerapprCotent( approverMsgList.get(0).getApproveCotent() );
+				}
+			}
+		}
+		
+		
+		// 页面回显数据
+		/*map.put("orderEntity", orderEntity);
+		map.put("order", order);
+		map.put("productList", productList);
+		Struts2Utils.renderJson(map);*/
+		
+		return JSON;
+		//return null;
+	}
+
+	/**
+	 * 发送邮件测试
+	 * 
+	 * @return
+	 * @throws ServiceException
+	 */
+	public int sendEmailTest() throws Exception {
+		try {
+			/*
+			 * String subject = "提醒"; Map<String, Object> paramMap = new
+			 * HashMap<String, Object>(); String content = "";
+			 * 
+			 * Template template =freemarkerConfiguration.getTemplate(
+			 * "template/examineEmailTemplate.ftl", "utf-8");
+			 * paramMap.put("userName", "12"); content =
+			 * FreeMarkerTemplateUtils.processTemplateIntoString(template,
+			 * paramMap); emailService.sendEmailComm("admin@terrence.com.cn",
+			 * "liyuan.tian@terrence.com.cn",
+			 * "liyuan.tian@terrence.com.cn",subject, content);
+			 */
+
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			String content = "";
+			Template template = freemarkerConfiguration.getTemplate(
+					"template/examineEmailTemplate.ftl", "utf-8");
+			paramMap.put("userName", "12");
+			content = FreeMarkerTemplateUtils.processTemplateIntoString(
+					template, paramMap);
+
+			String smtp = "mail.terrence.com.cn";
+			String username = "admin";
+			String password = "terrence";
+			String from = "admin@terrence.com.cn";
+
+			String[] to = { "liyuan.tian@terrence.com.cn" };// 可以多个
+
+			// String[] copyto = {"xxx@qq.com"};
+			String[] copyto = { "liyuan.tian@terrence.com.cn" };// 可以多个
+
+			String subject = "关于年会的通知2015";
+			// String content = "关于年会的通知2015";
+			String filename = "D:\\路线-车辆-桌次.xls";
+			EmailManager email = new EmailManager(smtp, username, password);
+
+			email.sendMail(from, to, copyto, subject, content, filename);
+
+			System.out.println("====发送完毕");
+
+			logger.info("邮件已发送至 ");
+			return 1;
+		} catch (Exception e) {
+			logger.error("发送邮件失败", e);
+			return -1;
+		}
+	}
+
+	@Override
+	public String save() throws Exception {
+		try {
+			String method = getRequest().getMethod();
+			if (!"post".equalsIgnoreCase(method)) {
+				logger.error("非法提交");
+				resultInfo[0] = "0";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			}
+			if (null == orderEntity.getOrderId()
+					|| "".equals(orderEntity.getOrderId())) {// 添加操作
+				setOrderCode();
+				Admin adminUserInfo =adminService.getById(orderEntity.getUserId());
+				// 根据职位id 查找职位名
+				Admin adminInfo = adminService.getById(adminUserInfo
+							.getEmpSuperior());// 查询负责人的上级
+					if (null != adminInfo) {
+						orderEntity.setBillUserId(adminInfo.getAdminId());// 审核上级
+						orderEntity.setBillUserName(adminInfo.getAdminName());
+						// 获取财务经理
+						orderService.saveTogather(orderEntity, products);// 保存
+						String financialManagerer = "";
+						if (null != orderEntity.getFinancialManagerer()) {
+							financialManagerer = orderEntity
+								.getFinancialManagerer();
+					    }
+						String areaManagerer = "";
+						if (null != orderEntity.getAreaManagerer()) {
+							areaManagerer = orderEntity.getAreaManagerer();
+						}
+						orderEntity.setOrderChecker(financialManagerer + ","
+								+ areaManagerer);
+					} else {
+						resultInfo[0] = "-1";
+						resultInfo[1] = "保存信息失败,当前单据负责人无上级,请先指定！";
+						return JSON;
+					}
+			} else {
+				setOrderCode();//更具负责人设置单据编号
+				Admin adminUserInfo =adminService.getById(orderEntity.getUserId());//根据负责人查找负责人上级
+				Admin adminInfo = adminService.getById(adminUserInfo
+						.getEmpSuperior());// 查询负责人的上级
+				if (null != adminInfo) {//根据负责人查找负责人上级,如果存在设置上级
+					orderEntity.setBillUserId(adminInfo.getAdminId());// 审核上级
+					orderEntity.setBillUserName(adminInfo.getAdminName());
+				    orderService.updateTogather(orderEntity, products);
+				} else {//根据负责人查找负责人上级,如果为空报错
+					resultInfo[0] = "-1";
+					resultInfo[1] = "保存信息失败,当前单据负责人无上级,请先指定！";
+					return JSON;
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功!";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "保存信息失败！"+e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "保存信息失败！"+e.getMessage();
+		}
+		return JSON;
+	}
+	public String saveOrUpdateOrderEntity() throws Exception {
+		try {
+			String method = getRequest().getMethod();
+			if (!"post".equalsIgnoreCase(method)) {
+				logger.error("非法提交");
+				resultInfo[0] = "0";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			}
+			orderService.saveOrUpdateOrderEntity(orderEntity,products);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功!";
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败！"+e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败！"+e.getMessage();
+		}
+		return JSON;
+	}
+	private void setOrderCode() {
+		//新需求改为单据负责人为可以指定的
+		//替换订单编号
+		//显示今天时间
+		Calendar a=Calendar.getInstance();
+		String nowFullYear=a.get(Calendar.YEAR)+"";//得到年
+		 				 
+		IcbillnoQuery icbillnoQuery=new IcbillnoQuery();
+		icbillnoQuery.setFpreletter("YX");
+		Icbillno entity = icbillnoService.findBillno(icbillnoQuery);
+		
+		ChineseCharToEn cte = new ChineseCharToEn();
+		String adminName=cte.getAllFirstLetter(orderEntity.getUserName());//单据负责人
+		String nowfbillno=entity.getNowfbillno()+"-"+adminName;
+		if(null!=orderEntity.getOrderCode()){//修改操作
+			String orderCode=orderEntity.getOrderCode();
+	        String[] orderCodeArr = orderCode.split("-");  
+	        if(null!=orderCodeArr&&2<orderCodeArr.length){
+	        	orderEntity.setOrderCode(orderCodeArr[0]+"-"+orderCodeArr[1]+"-"+adminName);//订单编号只改变人名
+	        }else{
+	        	orderEntity.setOrderCode(nowFullYear+"-"+nowfbillno);
+	        }
+		}else{
+			orderEntity.setOrderCode(nowFullYear+"-"+nowfbillno);//按指定的单据负责人生成的单据编号
+		}
+	}
+
+	@Override
+	public String saveToJson() throws Exception {
+		try {
+			save();
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 
+	 */
+	public String sendEmailOpt2() throws Exception {
+		// createPDFSWFile();
+		return JSON;
+	}
+
+	/**
+	 * 标准订单提交
+	 * 
+	 * @return
+	 */
+	private void createPDFSWFile(Order order) throws IOException, Exception,
+			FileNotFoundException {
+		// String appPath=ServletActionContext.getRequest().getRealPath("/");
+		/*
+		 * Properties prop = new Properties(); InputStream inputStream =
+		 * Thread.currentThread().
+		 * getContextClassLoader().getResourceAsStream("comm.properties");
+		 * prop.load(inputStream); String importPlmPath =
+		 * prop.getProperty("import.plm.file").trim(); String
+		 * fileString=appPath+importPlmPath+uploadFileName;
+		 */
+
+		//String uploadFileName = System.currentTimeMillis() + ".pdf";
+		Properties prop = new Properties();   
+		InputStream inputStream = Thread.currentThread().
+			getContextClassLoader().getResourceAsStream("application.properties");
+        prop.load(inputStream);
+     	String orderPDFName = prop.getProperty("orderPDFName").trim();
+     	
+		String uploadFileName = orderPDFName + ".pdf";//附件名为系统统一指定的名称
+		/*String filePath = "/files/pic/"
+				+ (new Date().getYear() + 1900)
+				+ "/"
+				+ DateUtils.getFragmentInDays(new Date(),
+						java.util.Calendar.YEAR)
+				+ "/"
+				+ DateUtils.getFragmentInDays(new Date(),
+						java.util.Calendar.MONTH);*/
+		String filePath = "/files/pic/"
+			+ (new Date().getYear() + 1900)
+			+ "/"
+			+ DateUtils.getFragmentInDays(new Date(),
+					java.util.Calendar.YEAR)
+			+ "/"
+			+ DateUtils.getFragmentInDays(new Date(),
+					java.util.Calendar.MONTH)
+		    + "/"
+			+System.currentTimeMillis();
+		String fileUrl = filePath + "/" + uploadFileName;
+
+		// 标准订单关闭后自动生成附件
+		// String uploadFileFileName=uploadFileName;//实际是动态设置地址保存到数据表中
+		// String appPath=ServletActionContext.getRequest().getRealPath("/");
+
+		// String fileUrl = getFileTypePath(fileType)+"/" + distFileName;
+
+		String webAppRootPath=getWebappRootPath();
+
+		File file = new File(webAppRootPath + fileUrl);
+		File parent = file.getParentFile();
+		if (parent != null && !parent.exists()) {
+			parent.mkdirs();
+		}
+		file.createNewFile();
+
+		// file.createNewFile();
+		// new PDFReport(file).generatePDF(); //将标准订单数据放到新建的PDF文件中
+		orderService.createOrderEmailFile(file, order);
+
+		System.out.println("33");
+		String temp = ServletActionContext.getServletContext().getRealPath("/");
+		System.out.println(temp);
+		InputStream in = null;
+		// if(uploadFileFileName != null &&file!=null) {
+		if (uploadFileName != null && file != null) {
+			// uploadFileName = uploadFileFileName;
+			in = new FileInputStream(file);
+		} else {
+			in = Struts2Utils.getRequest().getInputStream();
+		}
+		try {
+			order.setPdfFilePath(fileUrl);
+			FileInfo fileInfo = fileService.uploadFile(in, uploadFileName,
+					getFileType(null), order);
+			// success = "true";
+			// filename = fileInfo.getFileUrl();
+			// srcfilename=uploadFileFileName;
+		} catch (Exception e) {
+			// success = "false";
+			// filename = "";
+			System.out.println(e.getMessage());
+		}finally{
+			in.close();
+		}
+	}
+	/**
+	 * 审核标注订单
+	 * @return
+	 */
+	public String examineOrderInfo() {String method = getRequest().getMethod();
+		if (!"post".equalsIgnoreCase(method)) {
+			logger.error("非法提交");
+			resultInfo[0] = "-1";
+			resultInfo[1] = "非法提交！";
+			return JSON;
+		}
+		try {
+			orderService.examineOrderInfo(orderEntity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功!";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "保存失败，原因："+e.getMessage()+" 后台异常请重试!";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "保存失败，原因："+e.getMessage()+" 后台异常请重试!";
+		}
+		return JSON;
+	}
+	public String examineOrder() {
+		try {
+			String method = getRequest().getMethod();
+			if (!"post".equalsIgnoreCase(method)) {
+				logger.error("非法提交");
+				//Struts2Utils.renderJson("非法提交！");
+				resultInfo[0] = "-1";
+				resultInfo[1] = "非法提交！";
+				return JSON;
+			}
+			
+			// 0000
+			AdminSession adminSession = (AdminSession) SecurityContextHolder
+					.getContext().getAuthentication().getPrincipal();
+			// Integer adminType = adminSession.getAdmin().getType();//
+			Long dutyid = adminSession.getAdmin().getDutyid();// 0 待提交 1 待销售经理审核
+																// 2 销售经理驳回
+																// 3待副总经理审核4副总经理驳回5待总经理审核6总经理驳回7
+																// 已生效
+
+			Duty duty = dutyService.getById(dutyid);
+			String dutyName = duty.getDutyname();
+			String dutykey =duty.getDutykey();
+			// 新流程基本订单状态:0 待提交 1 区域经理和财务经理待审核 2 区域经理驳回 3财务经理驳回
+			// 4 售后服务部经理待审核5售后服务部经理驳回
+			// 6 副总经理及以上待审核 7 副总经理驳回8总经理驳回9 已生效 10 区域经理已审核 11 财务经理已审核
+
+			// 由于新流程中订单审核流程按照基本订单中包含产品类别来区分流程,需要系统做判断
+			// 根据订单ID查询订单中的产品列表
+			ProductQuery productQuery = new ProductQuery();
+			productQuery.setOrderCode(orderEntity.getOrderCode());
+			List<Product> productList = productService.findList(productQuery);
+			Double totalPriceTypeAB = 0d;
+			Double totalPriceTypeCD = 0d;
+			Double totalPriceTypeE = 0d;
+			String authOptStatus=orderEntity.getOrderStatus()+"";	
+			//查找流程中的分类:
+			CheckorderQuery checkorderQuery = new CheckorderQuery();
+			checkorderQuery.setBilltype(1);//标准订单
+			checkorderQuery.setIsyearlycontract(false);//非年度合同
+			List<Checkorder> CheckorderList =checkorderService.findList(checkorderQuery);
+			
+			if(null==CheckorderList ){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "标准订单流程还没设置！";
+				return JSON;
+			}
+				int size = CheckorderList.size();
+				String[] orderTypeArr = new String[size];
+				int i = 0;
+				for (Checkorder checkorder : CheckorderList) {
+					orderTypeArr[i]= checkorder.getPdtype();
+					i++;
+				}
+				
+				String[] orderTypeArrDistinct=MathUtil.array_unique(orderTypeArr);
+				 
+				Number[] orderTypeArrDistinctMoney=new Number[orderTypeArrDistinct.length];
+				 
+				for (int j = 0; j < orderTypeArrDistinct.length; j++) {//遍历标准订单中的每个流程类型
+						String orderType = orderTypeArrDistinct[j];
+					for (Product product : productList) {//当前的一个流程,从订单中的产品中去找
+						   String productType = product.getProductType();
+						
+						
+							if ( orderType.contains(productType) ) {//只要所有产品类型中属于当前找的类型
+								Double unitPrice = product.getUnitPrice();
+								Float productCount = product.getProductCount();
+								// Double multiResult =MathUtils.multiply(saleprice,
+								// productCount).doubleValue();
+								Double multiResult = MathUtils.multiply(unitPrice,
+										productCount).doubleValue();//符合要求的单价乘以数量
+								if(null==orderTypeArrDistinctMoney[j]){
+									orderTypeArrDistinctMoney[j]=0;
+								}
+								Double addResult = MathUtils.add(orderTypeArrDistinctMoney[j],
+										multiResult).doubleValue();//计算所有相加
+								
+								orderTypeArrDistinctMoney[j] = addResult;
+							}
+						
+						
+						
+						
+						
+						/*// 计算A/B产品
+						if ("A".equals(productType) || "B".equals(productType)) {
+							// Double saleprice=product.getSaleprice();
+							Double unitPrice = product.getUnitPrice();
+							Float productCount = product.getProductCount();
+							// Double multiResult =MathUtils.multiply(saleprice,
+							// productCount).doubleValue();
+							Double multiResult = MathUtils.multiply(unitPrice,
+									productCount).doubleValue();
+							Double addResult = MathUtils.add(totalPriceTypeAB,
+									multiResult).doubleValue();
+							totalPriceTypeAB = addResult;
+						}
+						// 计算C/D产品
+						if ("C".equals(productType) || "D".equals(productType)) {
+							// Double saleprice=product.getSaleprice();
+							Double unitPrice = product.getUnitPrice();
+							Float productCount = product.getProductCount();
+							// Double multiResult =MathUtils.multiply(saleprice,
+							// productCount).doubleValue();
+							Double multiResult = MathUtils.multiply(unitPrice,
+									productCount).doubleValue();
+							Double addResult = MathUtils.add(totalPriceTypeCD,
+									multiResult).doubleValue();
+							totalPriceTypeCD = addResult;
+						}
+						// 计算E产品
+						if ("E".equals(productType)) {
+							// Double saleprice=product.getSaleprice();
+							Double unitPrice = product.getUnitPrice();
+							Float productCount = product.getProductCount();
+							// Double multiResult =MathUtils.multiply(saleprice,
+							// productCount).doubleValue();
+							Double multiResult = MathUtils.multiply(unitPrice,
+									productCount).doubleValue();
+							Double addResult = MathUtils.add(totalPriceTypeE,
+									multiResult).doubleValue();
+							totalPriceTypeE = addResult;
+						}*/
+						
+	
+					}
+				}
+				boolean authWithManager = false;
+				boolean authE = false;
+				//判断流程中的产品类型
+				for (int j = 0; j < orderTypeArrDistinctMoney.length; j++) {
+					if(null!=orderTypeArrDistinctMoney[j]){
+						Number number = orderTypeArrDistinctMoney[j];
+					
+						for (Checkorder checkorder : CheckorderList) {//数据库中的流程
+							if(orderTypeArrDistinct[j].equals(checkorder.getPdtype())){//流程中的某个类型
+								if(checkorder.getFoperator().equals("大于")){
+									if ( (Double.valueOf(number+"")) > ( checkorder.getFmount()*10000)) {
+										authWithManager = true;
+										/*if(null!=checkorder.getDuty3()){//
+											orderEntity.setAuditProcessId(checkorder.getCheckid());
+											break;
+										}*/
+										
+									}
+								}
+								if(checkorder.getFoperator().equals("小于等于")){
+									if ( (Double.valueOf(number+"")) <= ( checkorder.getFmount()*10000)) {
+										if( null!=checkorder.getDuty2() || null!=checkorder.getDuty3() ){
+											authE = true;
+											//orderEntity.setAuditProcessId(checkorder.getCheckid());
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				
+			
+			
+			/*boolean authWithManager = false;
+			
+			// 判断AB类产品
+			if (0d < totalPriceTypeAB) {
+				if (0d < totalPriceTypeAB && totalPriceTypeAB <= 500000d) {
+
+				} else {
+					authWithManager = true;
+				}
+			}
+
+			// 判断CD类产品
+			if (0d < totalPriceTypeCD) {
+				if (0d < totalPriceTypeCD && totalPriceTypeCD <= 2000000d) {
+
+				} else {
+					authWithManager = true;
+				}
+			}
+			boolean authE = false;
+
+			// 判断E类产品
+			if (0d < totalPriceTypeE) {
+				if (0d < totalPriceTypeE && totalPriceTypeE <= 50000d) {
+					authE = true;
+				} else {
+					authWithManager = true;
+				}
+			}*/
+			
+			// 查询订单
+			Order orderOpt=orderService.getById(orderEntity.getOrderId());
+			//0,2,3,5,7,8,13
+			if("0".equals(orderOpt.getOrderStatus()+"")
+					||"2".equals(orderOpt.getOrderStatus()+"")
+					||"3".equals(orderOpt.getOrderStatus()+"")
+					||"5".equals(orderOpt.getOrderStatus()+"")
+					||"7".equals(orderOpt.getOrderStatus()+"")
+					||"8".equals(orderOpt.getOrderStatus()+"")
+					||"13".equals(orderOpt.getOrderStatus()+"")){//当前单据是未提交或被驳回状态,被提交操作
+			/*if (ConstantInfo.DUTY_XSGCS.equals(dutykey) ||ConstantInfo.DUTY_XSZLGCS.equals(dutykey)
+					||ConstantInfo.DUTY_JXS.equals(dutykey)
+					||ConstantInfo.DUTY_DDGLBJL.equals(dutykey)) {*/// 如果是供应商则只是类别设置为供应商
+				
+				//查找该订单是否设置了邮件
+				//先查询
+				MailMsgQuery query=new MailMsgQuery();
+				//query.setCreater(admin.getAdmin().getAdminName());//创建人
+				query.setBillType(1);//1标准订单
+				query.setBillid(orderEntity.getOrderId());//标准订单id
+				List<MailMsg> mailMsgList =  mailMsgService.findList(query);
+				if(null!=mailMsgList&&0<mailMsgList.size()){//说明有值
+				}else{
+					logger.error("还没设置通知邮件,请先设置!");
+					//Struts2Utils.renderJson("还没设置通知邮件,请先设置!");
+					resultInfo[0] = "-1";
+					resultInfo[1] = "还没设置通知邮件,请先设置!";
+					return JSON;
+				}
+				// 查询订单
+				Order order=orderService.getById(orderEntity.getOrderId());
+				
+				//Admin adminInfo = adminService.getById(order.getUserId());// 查询当前单据的负责人信息
+				// 查询当前工程师的上级,看是否有审核权限
+//				Admin adminInfoSuperior = adminService.getById(adminInfo
+//						.getEmpSuperior());// 查询当前工程师的上级
+				
+				/*// 查询当前工程师的上级,看是否有审核权限
+				Admin adminInfo = adminService.getById(adminSession.getAdmin()
+						.getEmpSuperior());// 查询当前工程师的上级
+*/				// 查询当前工程师的上级的职务ID
+				//Long adminDutyId = adminInfoSuperior.getDutyid();
+//				Long adminDutyId = adminInfo.getDutyid();
+				// 查询当前工程师的上级职务
+				//Duty adminDuty = dutyService.getById(adminDutyId);
+				// 查询当前工程师的上级的职务Name
+				//String adminDutyName = adminDuty.getDutyname();
+				
+                if(!order.isIsyearlycontract()){
+                	orderEntity.setOrderStatus(1);// 销售工程师提的都先走1状态
+                }else{
+                	//有年度合同
+                	orderEntity.setOrderStatus(12);
+                }  
+				
+
+				/*
+				 * if(authWithManager){//流程中有副总及以上审核 //if(
+				 * "销售经理".equals(adminDutyName) ){
+				 * orderEntity.setOrderStatus(1); //} //if(
+				 * "副总经理".equals(adminDutyName) ){
+				 * //orderEntity.setOrderStatus(6); //} }else{ //流程中没有副总及以上审核
+				 * if(authWithManager){//流程中有售后部经理审核 ///if(
+				 * "销售经理".equals(adminDutyName) ){
+				 * orderEntity.setOrderStatus(1); //} //if(
+				 * "副总经理".equals(adminDutyName) ){
+				 * //orderEntity.setOrderStatus(6); //} }else{ //if(
+				 * "销售经理".equals(adminDutyName) ){
+				 * orderEntity.setOrderStatus(1); //} //if(
+				 * "副总经理".equals(adminDutyName) ){ //
+				 * orderEntity.setOrderStatus(6); //} } }
+				 */
+
+			}else{//订单是非待提交或驳回状态,是待审核状态
+
+			if (ConstantInfo.DUTY_QYXSJL.equals(dutykey)) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				// 查询该订单目前的状态
+				Order order = orderService
+						.getById(orderEntity.getOrderId());
+				//
+				if(order.isIsyearlycontract()) {//有年度合同区域销售经理没有权限操作
+					logger.error("订单有年度合同区域销售经理没有权限操作！");
+					//Struts2Utils.renderJson("订单有年度合同区域销售经理没有权限操作！");
+					resultInfo[0] = "-1";
+					resultInfo[1] = "订单有年度合同区域销售经理没有权限操作！";
+					return JSON;
+				}
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+					// 需要看下 01自己是否有审核权限,就是供应商的上级
+					// 查询当前基本订单的状态,如果为财务经理已审核状态,再判断该订单流程是否有下一步流程
+					
+                    
+					if (   ("11".equals(order.getOrderStatus() + "")) ) {// 10 区域经理已审核
+																	// 11
+																	// 财务经理已审核
+						/*
+						 * //判断当前区域经理的上级 如果是总经理 就是 副总经理兼职 区域经理 //查询区域经理的上级,
+						 * Admin
+						 * adminInfo=adminService.getById(adminSession.getAdmin
+						 * ().getEmpSuperior());//查询当前区域经理的上级 //查询当前区域经理的上级的职务ID
+						 * Long adminDutyId =adminInfo.getDutyid();
+						 * //查询当前区域经理的上级职务 Duty adminDuty
+						 * =dutyService.getById(adminDutyId);
+						 * //查询当前区域经理的上级的职务Name String
+						 * adminDutyName=adminDuty.getDutyname(); if(
+						 * "副总经理".equals(adminDutyName) ){//副总经理 兼职 区域经理
+						 * orderEntity.setOrderStatus(9);//审核完直接关闭 }else{//区域经理
+						 * 不是 副总经理 //判断是否有后续流程 if(authWithManager){//流程中有副总及以上审核
+						 * orderEntity.setOrderStatus(6); }else{
+						 * if(authE){//流程中有售后服务部经理审核
+						 * orderEntity.setOrderStatus(4);//售后服务部待审核 }else{
+						 * orderEntity.setOrderStatus(9);//直接关闭 } } }
+						 */
+						if (authWithManager) {// 流程中有副总及以上审核
+							orderEntity.setOrderStatus(6);
+
+							/*
+							 * orderEmailNotify(adminSession,"标准订单","审批",
+							 * "标准订单审批通知","副总经理",true);
+							 * orderEmailNotify(adminSession,"标准订单","审批",
+							 * "标准订单审批通知","总经理",false);
+							 */
+
+							/*orderEmailNotifyMethod(adminSession, "标准订单", "审批",
+									"标准订单审批通知", "副总经理", true, order);
+							orderEmailNotifyMethod(adminSession, "标准订单", "审批",
+									"标准订单审批通知", "总经理", false, order);*/
+
+							String viceGeneralManager = "";
+							if (null != orderEntity.getViceGeneralManager()) {
+								viceGeneralManager = orderEntity
+										.getViceGeneralManager();
+							}
+							String generalManager = "";
+							if (null != orderEntity.getGeneralManager()) {
+								generalManager = orderEntity
+										.getGeneralManager();
+							}
+							/*orderEntity.setOrderApprover(generalManager + ","
+									+ viceGeneralManager);*/
+							
+							orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+
+						} else {
+							if (authE) {// 流程中有售后服务部经理审核
+								orderEntity.setOrderStatus(4);// 售后服务部待审核
+								/*
+								 * orderEmailNotify(adminSession,"标准订单","审批",
+								 * "标准订单审批通知","售后服务部经理",false);
+								 */
+
+								/*orderEmailNotifyMethod(adminSession, "标准订单",
+										"审批", "标准订单审批通知", "售后服务部经理", false,
+										order);*/
+
+								String saleOutManager = "";
+								if (null != orderEntity.getSaleOutManager()) {
+									saleOutManager = orderEntity
+											.getSaleOutManager();
+								}
+								orderEntity.setOrderApprover(saleOutManager);
+								orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+
+							} else {
+								orderEntity.setOrderStatus(9);// 直接关闭
+								// 设置订单关闭人ID
+								orderEntity.setOrderCloseUserId(adminSession
+										.getAdmin().getAdminId());
+								orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+								// 生产PDF且生成SWF
+								/*
+								 * Order orderInfo=new Order();
+								 * orderInfo.setOrderId
+								 * (orderEntity.getOrderId());
+								 */
+
+								// createPDFSWFile(orderInfo);
+								order.setOrderChecker2(adminSession.getAdmin().getAdminName());
+								createPDFSWFile(order);
+								doSendEmailOpt(adminSession, order);
+							}
+						}
+					} else {// 财务经理还没审核
+						orderEntity.setOrderStatus(10);// 设置 区域经理已审核
+						orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+					}
+				}
+
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(2);// 区域经理驳回
+					orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+				}
+			}
+
+			if (ConstantInfo.DUTY_CWJL.equals(dutykey)) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+					// 查询该订单目前的状态
+					Order order = orderService
+							.getById(orderEntity.getOrderId());
+					if ("14".equals(order.getOrderStatus() + "")) {//14 订单管理部经理已审核
+						orderEntity.setOrderStatus(9);// 直接关闭
+						// 设置订单关闭人ID
+						orderEntity
+								.setOrderCloseUserId(adminSession
+										.getAdmin().getAdminId());
+						orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+						// 生产PDF且生成SWF
+						/*
+						 * Order orderInfo=new Order();
+						 * orderInfo.setOrderId
+						 * (orderEntity.getOrderId());
+						 * createPDFSWFile(orderInfo);
+						 */
+						order.setOrderChecker(adminSession.getAdmin().getAdminName());
+						createPDFSWFile(order);
+						doSendEmailOpt(adminSession, order);
+					}
+					else if ("12".equals(order.getOrderStatus() + "")) {// 12 订单管理部经理和财务经理待审核
+						orderEntity.setOrderStatus(15);//15 财务经理已审核订单管理部经理待审核
+						orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+					}
+					else if ("10".equals(order.getOrderStatus() + "")) {// 10 区域经理已审核
+																	// 11
+																	// 财务经理已审核
+						Admin orderAdmininfo =adminService.getById( order.getUserId() );
+						Long orderDutyid = orderAdmininfo.getDutyid();//  
+						Duty orderDuty = dutyService.getById(orderDutyid);
+						if( ConstantInfo.DUTY_FZJL.equals(orderDuty.getDutykey() )   ){//当前单据是副总创建的
+							
+							//Admin adminInfo = adminService.getById(order.getUserId());
+							String amanagername=orderAdmininfo.getAdminName();//副总名
+							/*if(null==amanagername){
+								logger.error("当前订单的制单人的区域经理为空,请先指定！");
+								//Struts2Utils.renderJson("订单有年度合同区域销售经理没有权限操作！");
+								resultInfo[0] = "-1";
+								resultInfo[1] = "当前订单的制单人的区域经理为空,请先指定！";
+								return JSON;
+							}*/
+							boolean viceGeneralManagerAuth = isViceGeneralManagerAuth(
+									order, amanagername);
+							// 判断是否有后续流程 viceGeneralManagerAuth=true副总经理兼职区域经理审核过了
+							isHaveAfterProcess(adminSession, authWithManager,
+									authE, order, viceGeneralManagerAuth,false);
+							
+						}else{//当前单据不是副总创建的
+						
+							Admin adminInfo = adminService.getById(order.getBillUserId());
+							String amanagername=adminInfo.getAmanagername();
+							if(null==amanagername){
+								logger.error("当前订单的制单人的区域经理为空,请先指定！");
+								//Struts2Utils.renderJson("订单有年度合同区域销售经理没有权限操作！");
+								resultInfo[0] = "-1";
+								resultInfo[1] = "当前订单的制单人的区域经理为空,请先指定！";
+								return JSON;
+							}
+							boolean viceGeneralManagerAuth = isViceGeneralManagerAuth(
+									order, amanagername);
+							// 判断是否有后续流程
+							isHaveAfterProcess(adminSession, authWithManager,
+									authE, order, viceGeneralManagerAuth,false);
+						
+						}
+					} 
+					else 
+					{
+						// 判断如果是经销商提的上级直接是副总经理的情况
+						Admin admin = adminService.getById(order
+								.getBillUserId());
+						Duty dutyInfo = dutyService.getById(admin.getDutyid());
+						String adminDutyName = dutyInfo.getDutyname();
+						//加个判断条件,以下条件是要推到 下一步审批人或关闭状态了,也即区域经理已经审批过
+						//if (ConstantInfo.DUTY_FZJL.equals(dutykey)&& !"1".equals(order.getOrderStatus() + "")) {// 无上级是区域经理,直接是副总经理,跳过区域经理审核
+						if (ConstantInfo.DUTY_FZJL.equals(dutyInfo.getDutykey())&& !"1".equals(order.getOrderStatus() + "")) {// 无上级是区域经理,直接是副总经理,跳过区域经理审核
+									
+							
+							if (authWithManager) {// 流程中有副总及以上审核
+								orderEntity.setOrderStatus(6);
+
+								/*
+								 * orderEmailNotify(adminSession,"标准订单","审批",
+								 * "标准订单审批通知","副总经理",true);
+								 * 
+								 * orderEmailNotify(adminSession,"标准订单","审批",
+								 * "标准订单审批通知","总经理",false);
+								 */
+
+								/*orderEmailNotifyMethod(adminSession, "标准订单",
+										"审批", "标准订单审批通知", "副总经理", true, order);
+
+								orderEmailNotifyMethod(adminSession, "标准订单",
+										"审批", "标准订单审批通知", "总经理", false, order);*/
+								String viceGeneralManager = "";
+								if (null != orderEntity.getViceGeneralManager()) {
+									viceGeneralManager = orderEntity
+											.getViceGeneralManager();
+								}
+								String generalManager = "";
+								if (null != orderEntity.getGeneralManager()) {
+									generalManager = orderEntity
+											.getGeneralManager();
+								}
+								orderEntity.setOrderApprover(generalManager
+										+ "," + viceGeneralManager);
+
+							} else {
+								if (authE) {// 流程中有售后服务部经理审核
+									orderEntity.setOrderStatus(4);// 售后服务部经理待审核
+									/*
+									 * orderEmailNotify(adminSession,"标准订单","审批",
+									 * "标准订单审批通知","售后服务部经理",false);
+									 */
+
+									/*orderEmailNotifyMethod(adminSession,
+											"标准订单", "审批", "标准订单审批通知",
+											"售后服务部经理", false, order);*/
+									String saleOutManager = "";
+									if (null != orderEntity.getSaleOutManager()) {
+										saleOutManager = orderEntity
+												.getSaleOutManager();
+									}
+									orderEntity
+											.setOrderApprover(saleOutManager);
+								} else {
+									orderEntity.setOrderStatus(9);// 直接关闭
+									// 设置订单关闭人ID
+									orderEntity
+											.setOrderCloseUserId(adminSession
+													.getAdmin().getAdminId());
+									orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+									// 生产PDF且生成SWF
+									/*
+									 * Order orderInfo=new Order();
+									 * orderInfo.setOrderId
+									 * (orderEntity.getOrderId());
+									 * createPDFSWFile(orderInfo);
+									 */
+									order.setOrderChecker(adminSession.getAdmin().getAdminName());
+									createPDFSWFile(order);
+									doSendEmailOpt(adminSession, order);
+								}
+							}
+						} else {// 上级有区域经理,需要区域经理审核
+							orderEntity.setOrderStatus(11); // 财务经理已审核
+						}
+						orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+					}
+
+				}
+
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(3);// 财务经理驳回
+					orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+				}
+			}
+			
+			if (ConstantInfo.DUTY_DDGLBJL.equals(dutykey)) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+					// 查询该订单目前的状态
+					Order order = orderService
+							.getById(orderEntity.getOrderId());
+					
+					if ("15".equals(order.getOrderStatus() + "")) {//15财务经理已审核订单管理部经理待审核
+						orderEntity.setOrderStatus(9);// 直接关闭
+						// 设置订单关闭人ID
+						orderEntity
+								.setOrderCloseUserId(adminSession
+										.getAdmin().getAdminId());
+						orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+						// 生产PDF且生成SWF
+						/*
+						 * Order orderInfo=new Order();
+						 * orderInfo.setOrderId
+						 * (orderEntity.getOrderId());
+						 * createPDFSWFile(orderInfo);
+						 */
+						order.setOrderChecker2(adminSession.getAdmin().getAdminName());
+						createPDFSWFile(order);
+						doSendEmailOpt(adminSession, order);
+					}
+					if ("12".equals(order.getOrderStatus() + "")) {//12 订单管理部经理和财务经理待审核
+						orderEntity.setOrderStatus(14);//14订单管理部经理已审核财务经理待审核
+						orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+					}
+					
+				}
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(13);// 订单管理部经理驳回
+					orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+				}
+			}
+			
+			
+			if (ConstantInfo.DUTY_SHFWBJL.equals(dutykey) ) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+					// 查询该订单目前的状态
+					Order order = orderService
+							.getById(orderEntity.getOrderId());
+					orderEntity.setOrderStatus(9);// 直接关闭
+					// 设置订单关闭人ID
+					orderEntity.setOrderCloseUserId(adminSession.getAdmin()
+							.getAdminId());
+					orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+					// 生产PDF且生成SWF
+					/*
+					 * Order orderInfo=new Order();
+					 * orderInfo.setOrderId(orderEntity.getOrderId());
+					 * createPDFSWFile(orderInfo);
+					 */
+					order.setOrderApprover(adminSession.getAdmin().getAdminName());
+					createPDFSWFile(order);
+					doSendEmailOpt(adminSession, order);
+				}
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(5);// 售后服务部经理驳回
+					orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+				}
+			}
+			if (ConstantInfo.DUTY_FZJL.equals(dutykey)) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+
+					// 查询该订单目前的状态
+					Order order = orderService
+							.getById(orderEntity.getOrderId());
+					// 当前单据状态为1
+					// 判断
+					if ("1".equals(order.getOrderStatus() + "")) {
+						/**/Admin admin = adminService.getById(order
+								.getBillUserId());
+						Duty dutyInfo = dutyService.getById(admin.getDutyid());
+						String adminDutyName = dutyInfo.getDutyname();
+						//if (ConstantInfo.DUTY_XSJL.equals(dutykey)) {
+						if (ConstantInfo.DUTY_XSJL.equals(dutyInfo.getDutykey())) {
+							Admin adminEmpSuperior = adminService.getById(admin
+									.getEmpSuperior());// 当前销售经理的上级
+							Duty dutyInfoEmpSuperior = dutyService
+									.getById(adminEmpSuperior.getDutyid());
+							//if (ConstantInfo.DUTY_FZJL.equals(dutykey)) {// 当前销售经理的上级是副总经理,即副总兼职区域经理
+							if (ConstantInfo.DUTY_FZJL.equals(dutyInfoEmpSuperior.getDutykey())) {// 当前销售经理的上级是副总经理,即副总兼职区域经理
+								orderEntity.setOrderStatus(10);// 副总兼职区域经理,设置
+																// 区域经理已审核
+							}
+						}
+
+						orderEntity.setOrderStatus(10);// 副总兼职区域经理,设置 区域经理已审核
+						//orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+						orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());//当前订单是1状态,副总兼职区域经理现身,意见放到OrderChecker2里
+						
+					} else if ("11".equals(order.getOrderStatus() + "")) {// 财务经理已经审核
+						
+						Admin orderAdmininfo =adminService.getById( order.getUserId() );
+						Long orderDutyid = orderAdmininfo.getDutyid();//  
+						Duty orderDuty = dutyService.getById(orderDutyid);
+						if( ConstantInfo.DUTY_FZJL.equals(orderDuty.getDutykey() )   ){//当前单据是副总创建的
+							
+							//Admin adminInfo = adminService.getById(order.getUserId());
+							String amanagername=orderAdmininfo.getAdminName();//副总名
+							
+							boolean viceGeneralManagerAuth = isViceGeneralManagerAuth(
+									order, amanagername);
+							isHaveAfterProcess(adminSession, authWithManager,
+									authE, order, viceGeneralManagerAuth,true);
+						}
+						
+						
+						//if(adminSession.getAdmin().getAdminId().equals(order.getUserId())){//当前单据是副总创建的
+							
+							
+							/*orderEntity.setOrderStatus(9);// 直接关闭
+							// 设置订单关闭人ID
+							orderEntity.setOrderCloseUserId(adminSession.getAdmin()
+									.getAdminId());
+							orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+							// 生产PDF且生成SWF
+							
+							 * Order orderInfo=new Order();
+							 * orderInfo.setOrderId(orderEntity.getOrderId());
+							 * createPDFSWFile(orderInfo);
+							 
+							order.setOrderApprover(adminSession.getAdmin().getAdminName());
+							createPDFSWFile(order);
+							doSendEmailOpt(adminSession, order);*/
+							
+							
+						//}
+						
+						else{//当前单据不是副总创建的
+						/*if(adminInfo.getAmanagerid().equals(
+								adminSession.getAdmin().getAdminId())){//订单的区域经理
+						}*/
+							Admin adminInfo = adminService.getById(order.getBillUserId());
+							String amanagername=adminInfo.getAmanagername();
+							
+							if(null==amanagername  
+									){ 
+								logger.error("当前订单的制单人的区域经理为空,请先指定！");
+								//Struts2Utils.renderJson("订单有年度合同区域销售经理没有权限操作！");
+								resultInfo[0] = "-1";
+								resultInfo[1] = "当前订单的制单人的区域经理为空,请先指定！";
+								return JSON;
+							}
+						boolean viceGeneralManagerAuth = isViceGeneralManagerAuth(
+								order, amanagername);
+						isHaveAfterProcess(adminSession, authWithManager,
+								authE, order, viceGeneralManagerAuth,true);
+						
+						
+						}
+						
+						/*// 当前是副总兼职区域经理直接关闭
+						orderEntity.setOrderStatus(9);// 审核完直接关闭
+						// 设置订单关闭人ID
+						orderEntity.setOrderCloseUserId(adminSession.getAdmin()
+								.getAdminId());
+						orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+						createPDFSWFile(order);
+						doSendEmailOpt(adminSession, order);*/
+					} else {
+						orderEntity.setOrderStatus(9);// 直接关闭
+						// 设置订单关闭人ID
+						orderEntity.setOrderCloseUserId(adminSession.getAdmin()
+								.getAdminId());
+						orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+						// 生产PDF且生成SWF
+						/*
+						 * Order orderInfo=new Order();
+						 * orderInfo.setOrderId(orderEntity.getOrderId());
+						 * createPDFSWFile(orderInfo);
+						 */
+						order.setOrderApprover(adminSession.getAdmin().getAdminName());
+						createPDFSWFile(order);
+						doSendEmailOpt(adminSession, order);
+					}
+				}
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(7);// 副总经理驳回
+					orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+				}
+			}
+			if (ConstantInfo.DUTY_ZJL.equals(dutykey)) {
+				//同时保存审核意见
+				saveApproveMsg(adminSession, authOptStatus);
+				if ("21".equals(orderEntity.getOrderStatus() + "")) {// 审核操作
+					// 查询该订单目前的状态
+					Order order = orderService
+							.getById(orderEntity.getOrderId());
+					orderEntity.setOrderStatus(9);// 直接关闭
+					// 设置订单关闭人ID
+					orderEntity.setOrderCloseUserId(adminSession.getAdmin()
+							.getAdminId());
+					orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+					// 生产PDF且生成SWF
+					/*
+					 * Order orderInfo=new Order();
+					 * orderInfo.setOrderId(orderEntity.getOrderId());
+					 * createPDFSWFile(orderInfo);
+					 */
+					order.setOrderApprover(adminSession.getAdmin().getAdminName());
+					createPDFSWFile(order);
+					doSendEmailOpt(adminSession, order);
+				}
+				if ("22".equals(orderEntity.getOrderStatus() + "")) {// 驳回操作
+					orderEntity.setOrderStatus(8);// 副总经理驳回
+					orderEntity.setOrderApprover(adminSession.getAdmin().getAdminName());
+				}
+			}
+
+			/**
+			 * //19销售工程师做提交操作 if(19==dutyid){ //查询当前工程师的上级,看是否有审核权限 Admin
+			 * adminInfo
+			 * =adminService.getById(adminSession.getAdmin().getEmpSuperior
+			 * ());//查询当前工程师的上级 Integer adminType=adminInfo.getType();
+			 * 
+			 * if("11".equals(orderEntity.getOrderStatus()+"")){//销售工程师做提交操作 if(
+			 * "3".equals(adminType+"") ){//销售工程师上级 无审核权限
+			 * orderEntity.setOrderStatus(3);//基本订单状态直接跳到待副总经理审核 }else{
+			 * orderEntity.setOrderStatus(1);//当前销售工程师上级 有审核权限,基本订单状态走到待销售经理审核 }
+			 * 
+			 * } } //18销售经理 if(18==dutyid){
+			 * if("11".equals(orderEntity.getOrderStatus()+"")){//审核操作
+			 * orderEntity.setOrderStatus(3);//当前登陆人为销售经理 }
+			 * if("12".equals(orderEntity.getOrderStatus()+"")){//驳回操作
+			 * orderEntity.setOrderStatus(2);//当前登陆人为销售经理 }
+			 * 
+			 * } //35 --39副总经理 if(39==dutyid){
+			 * if("11".equals(orderEntity.getOrderStatus()+"")){//审核操作
+			 * orderEntity.setOrderStatus(5);//当前登陆人为副总经理 }
+			 * if("12".equals(orderEntity.getOrderStatus()+"")){//驳回操作
+			 * orderEntity.setOrderStatus(4);//当前登陆人为副总经理 } } // 38 总经理
+			 * if(38==dutyid){
+			 * if("11".equals(orderEntity.getOrderStatus()+"")){//审核操作
+			 * orderEntity.setOrderStatus(7);//当前登陆人为总经理 }
+			 * if("12".equals(orderEntity.getOrderStatus()+"")){//驳回操作
+			 * orderEntity.setOrderStatus(6);//当前登陆人为总经理 } }
+			 **/
+			}
+			// orderService.update(orderEntity);//更新单据
+
+			orderService.updateOrderStatus(orderEntity);// 更新单据
+			
+			// 查询订单
+			orderEntity = orderService.getById(orderEntity.getOrderId());// 跟新完基本订单后查询
+			/*
+			 * if(orderEntity.getOrderStatus().intValue()==7){//如果当前基本订单状态为总经理已经审核则往系统订单中插入数据
+			 * sysOrderService.saveSysOrder(orderEntity); }
+			 */
+
+			if (orderEntity.getOrderStatus().intValue() == 9) {// 如果当前基本订单状态为已生效,则往系统订单中插入数据
+				sysOrderService.saveSysOrder(orderEntity);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功!";
+			//Struts2Utils.renderJson(SUCCESS);
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			//Struts2Utils.renderJson(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			//Struts2Utils.renderJson("订单审核失败！");
+			resultInfo[0] = "-1";
+			resultInfo[1] = "订单审核失败！"+e.getMessage();
+		}
+		return JSON;
+	}
+	/**
+	 * 
+	 * @param order 当前订单
+	 * @param amanagername 管理员名称
+	 * @return
+	 */
+	private boolean isViceGeneralManagerAuth(Order order, String amanagername) {
+		boolean viceGeneralManagerAuth=false;//副总兼职区域经理审核过了
+		if( null!=order.getOrderApprover() && !"".equals(order.getOrderApprover()) ){
+			if(amanagername.equals( order.getOrderApprover() )){
+				//当前订单的制单人的区域经理与审核该单据的区域经理一样,即只有副总兼职的情况下才有
+				viceGeneralManagerAuth=true;
+			}
+		}
+		if( null!=order.getOrderChecker() && !"".equals(order.getOrderChecker()) ){
+			if(amanagername.equals( order.getOrderChecker() )){
+				//当前订单的制单人的区域经理与审核该单据的区域经理一样,即只有副总兼职的情况下才有
+				viceGeneralManagerAuth=true;
+			}
+		}
+		if( null!=order.getOrderChecker2() && !"".equals(order.getOrderChecker2()) ){
+			if(amanagername.equals( order.getOrderChecker2() )){
+				//当前订单的制单人的区域经理与审核该单据的区域经理一样,即只有副总兼职的情况下才有
+				viceGeneralManagerAuth=true;
+			}
+		}
+		return viceGeneralManagerAuth;
+	}
+    /**
+     * 
+     * @param adminSession 当前登陆人
+     * @param authWithManager 是否有副总经理及以上审核
+     * @param authE   是否有售后服务部经理对E类产品审核的
+     * @param order   当前数据库中的订单
+     * @param viceGeneralManagerAuth 是否副总经理担任区域经理已经审核过
+     * @param isviceGeneralManager 当前登陆人是否是副总经理
+     * @throws IOException
+     * @throws Exception
+     * @throws FileNotFoundException
+     * @throws TemplateException
+     */
+	private void isHaveAfterProcess(AdminSession adminSession,
+			boolean authWithManager, boolean authE, Order order,
+			boolean viceGeneralManagerAuth,boolean isviceGeneralManager) throws IOException, Exception,
+			FileNotFoundException, TemplateException {
+		// 判断是否有后续流程
+		if (authWithManager&!viceGeneralManagerAuth) {// 流程中有副总及以上审核但 副总兼职区域经理没有审核过
+			
+			if(isviceGeneralManager){//当前区域经理是副总经理
+				orderEntity.setOrderStatus(9);// 直接关闭
+				// 设置订单关闭人ID
+				orderEntity.setOrderCloseUserId(adminSession
+						.getAdmin().getAdminId());
+				
+				/*
+				orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+				order.setOrderChecker(adminSession.getAdmin().getAdminName());
+				*/
+				/**/
+				orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());//OrderChecker2存区域经理意见信息
+				order.setOrderChecker2(adminSession.getAdmin().getAdminName());
+				
+				
+				// 生产PDF且生成SWF
+				createPDFSWFile(order);
+				doSendEmailOpt(adminSession, order);
+			}else{//当前区域经理是不是副总经理
+			
+				//查找当前订单的制单人的区域经理
+				orderEntity.setOrderStatus(6);
+				/*orderEmailNotifyMethod(adminSession, "标准订单", "审批",
+						"标准订单审批通知", "副总经理", true, order);
+				orderEmailNotifyMethod(adminSession, "标准订单", "审批",
+						"标准订单审批通知", "总经理", false, order);*/
+	
+				String viceGeneralManager = "";
+				if (null != orderEntity.getViceGeneralManager()) {
+					viceGeneralManager = orderEntity
+							.getViceGeneralManager();
+				}
+				String generalManager = "";
+				if (null != orderEntity.getGeneralManager()) {
+					generalManager = orderEntity
+							.getGeneralManager();
+				}
+				/*orderEntity.setOrderApprover(generalManager + ","
+						+ viceGeneralManager);*/
+				orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+			}
+		}else 
+		if (authWithManager&viceGeneralManagerAuth) {//兼职区域经理已经审核过了,后面还有副总以上审核,直接关闭
+			orderEntity.setOrderStatus(9);// 直接关闭
+			// 设置订单关闭人ID
+			orderEntity.setOrderCloseUserId(adminSession
+					.getAdmin().getAdminId());
+			orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+			order.setOrderChecker(adminSession.getAdmin().getAdminName());
+			// 生产PDF且生成SWF
+			createPDFSWFile(order);
+			doSendEmailOpt(adminSession, order);
+		}
+		else {
+			if (authE) {//兼职区域经理已经审核过了,后面有售后服务部经理审核 流程中有售后服务部经理审核
+				orderEntity.setOrderStatus(4);// 售后服务部经理待审核
+				/*
+				 * orderEmailNotify(adminSession,"标准订单","审批",
+				 * "标准订单审批通知","售后服务部经理",false);
+				 */
+				/*orderEmailNotifyMethod(adminSession, "标准订单",
+						"审批", "标准订单审批通知", "售后服务部经理", false,
+						order);*/
+				String saleOutManager = "";
+				if (null != orderEntity.getSaleOutManager()) {
+					saleOutManager = orderEntity
+							.getSaleOutManager();
+				}
+				//orderEntity.setOrderApprover(saleOutManager);
+				//orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+				orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+			} 
+			else {
+				orderEntity.setOrderStatus(9);// 直接关闭
+				// 设置订单关闭人ID
+				orderEntity.setOrderCloseUserId(adminSession
+						.getAdmin().getAdminId());
+				
+				Long dutyid = adminSession.getAdmin().getDutyid(); 
+			    Duty duty = dutyService.getById(dutyid);
+			    String dutykey =duty.getDutykey();
+			    if(ConstantInfo.DUTY_CWJL.equals(dutykey)){//财务经理
+			    	orderEntity.setOrderChecker(adminSession.getAdmin().getAdminName());
+					order.setOrderChecker(adminSession.getAdmin().getAdminName()); 
+			    }else{
+			    	orderEntity.setOrderChecker2(adminSession.getAdmin().getAdminName());
+					order.setOrderChecker2(adminSession.getAdmin().getAdminName()); 
+			    }
+				// 生产PDF且生成SWF
+				  /*Order orderInfo=new Order();
+				  orderInfo.setOrderId
+				  (orderEntity.getOrderId());
+				  createPDFSWFile(orderInfo);*/
+				 
+				createPDFSWFile(order);
+				doSendEmailOpt(adminSession, order);
+			}
+		}
+	}
+
+	private void saveApproveMsg(AdminSession adminSession, String authOptStatus) {
+		ApproveMsg approveMsgentity=new ApproveMsg();
+		approveMsgentity.setApprover(adminSession.getAdmin().getAdminName());
+		approveMsgentity.setBillId(orderEntity.getOrderId());
+		approveMsgentity.setBillType(1);//1标准订单
+		if ("21".equals(authOptStatus + "")) {
+			approveMsgentity.setOptType(1);//审核
+		}
+		if ("22".equals(authOptStatus + "")) {
+			approveMsgentity.setOptType(2);//驳回
+		}
+		approveMsgentity.setApproverTime(
+				DateUtil.GetDate2(
+						DateUtil.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+		if ( null!=orderEntity.getApproveCotent() ) {
+			approveMsgentity.setApproveCotent(orderEntity.getApproveCotent());
+		}
+		
+		approveMsgService.saveOrUpdate(approveMsgentity);
+	}
+
+	private void doSendEmailOpt(AdminSession adminSession, Order order)
+			throws IOException, TemplateException {
+		//查找邮件
+		//先查询
+		MailMsgQuery query=new MailMsgQuery();
+		//query.setCreater(admin.getAdmin().getAdminName());//创建人
+		query.setBillType(1);//1标准订单
+		query.setBillid(order.getOrderId());//标准订单id
+		List<MailMsg> mailMsgList =  mailMsgService.findList(query);
+		if(null!=mailMsgList&&0<mailMsgList.size()){//说明有值
+			String webappRootPath= getWebappRootPath();
+			String mailAttachpath=mailMsgList.get(0).getAttachpath();
+			String mailFullAttachpath="";
+			if(null!=mailAttachpath&&!"".equals(mailAttachpath)){
+				mailFullAttachpath=webappRootPath+mailMsgList.get(0).getAttachpath();
+			}
+			//发布邮件事件
+			emailService.publishEmailEvent(mailMsgList.get(0).getEmailfrom(), 
+					mailMsgList.get(0).getEmailto().split(";"),
+					mailMsgList.get(0).getEmailcc().split(";"), 
+					mailMsgList.get(0).getEmailsubject(),
+					mailMsgList.get(0).getMainbody(), 
+					webappRootPath+order.getPdfFilePath(), 
+					mailFullAttachpath
+					);
+			
+			//之后发送邮件----->暂时关闭,已经测通
+			/*sendEmailNotifyMethod(mailMsgList.get(0).getEmailfrom(), 
+					mailMsgList.get(0).getEmailto().split(";"),
+					mailMsgList.get(0).getEmailcc().split(";"), 
+					mailMsgList.get(0).getEmailsubject(),
+					mailMsgList.get(0).getMainbody(), 
+					webappRootPath+order.getPdfFilePath(), 
+					webappRootPath+mailMsgList.get(0).getAttachpath());*/
+		}
+		//和更新邮件表
+		//先查询
+		MailMsgQuery mailMsgQuery=new MailMsgQuery();
+		//query.setCreater(admin.getAdmin().getAdminName());//创建人
+		mailMsgQuery.setBillType(1);//1标准订单
+		mailMsgQuery.setBillid(order.getOrderId());//标准订单id
+		List<MailMsg> mailMsgQueryList =  mailMsgService.findList(mailMsgQuery);
+		
+		if(null!=mailMsgQueryList&&0<mailMsgQueryList.size()){//说明有值
+			MailMsg entity=new MailMsg();
+			entity.setSender(adminSession.getAdmin().getAdminName());//发送人
+			entity.setSendertime(DateUtil.GetDate2(
+					DateUtil.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//发送时间
+			entity.setEmailstatus(2);//2已发送
+			
+			entity.setBillType(1);
+			entity.setBillid(order.getOrderId());
+			mailMsgService.updateByBillInfo(entity);
+		}
+	}
+
+	private String getWebappRootPath() throws IOException {
+		Properties prop = new Properties();
+		InputStream inputStream = Thread.currentThread()
+				.getContextClassLoader().getResourceAsStream(
+						"application.properties");
+		prop.load(inputStream);
+		String webAppRootPath = prop.getProperty("webapps.rootPath").trim();
+		return webAppRootPath;
+	}
+	/**
+	 *  String billname, 通知邮件单据名 String
+	 * examtypename,通知邮件单据审核名 String subjectname, 通知邮件标题 String dutyname
+	 * 通知邮件人员职务名
+	 **/
+	private void sendEmailNotifyMethod(
+			String fromEmail, String[] toEmails, String[] ccEmails, 
+			String subject, String content, String attachFileUrl,String attachFileUrl2
+			)
+			throws IOException, TemplateException {
+		
+		emailService.sendEmailNotice(fromEmail, toEmails, ccEmails,subject, 
+				content, attachFileUrl,attachFileUrl2);
+	}
+	/**
+	 * AdminSession adminSession,管理员 String billname, 通知邮件单据名 String
+	 * examtypename,通知邮件单据审核名 String subjectname, 通知邮件标题 String dutyname
+	 * 通知邮件人员职务名
+	 **/
+	private void orderEmailNotifyMethod(AdminSession adminSession,
+			String billname, String examtypename, String subjectname,
+			String dutyname, Boolean isViceManager, Order order)
+			throws IOException, TemplateException {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String content = "";
+		Template template = freemarkerConfiguration.getTemplate(
+				"template/examineEmailTemplate.ftl", "utf-8");
+		paramMap.put("userName", adminSession.getAdmin().getAdminName());
+		// ${billname}需要您进行${examtypename}
+		paramMap.put("billname", billname);// "标准订单"
+		paramMap.put("examtypename", examtypename);// "审批"
+		content = FreeMarkerTemplateUtils.processTemplateIntoString(template,
+				paramMap);
+
+		String subject = subjectname;// "标准订单审批通知"
+		String[] to = new String[] {};// {"liyuan.tian@terrence.com.cn"};//可以多个
+		if ("区域销售经理".equals(dutyname)) {// 给区域销售经理发通知邮件
+			// 给区域销售经理发通知邮件,代表当前人员为销售工程师或经销商
+			// 查找上级,可能存在 特殊情况
+
+			// 查询当前工程师的上级,
+			Admin adminInfo = adminService.getById(adminSession.getAdmin()
+					.getEmpSuperior());// 查询当前工程师的上级
+			// 查询当前工程师的上级的职务ID
+			Long adminDutyId = adminInfo.getDutyid();
+			// 查询当前工程师的上级职务
+			Duty adminDuty = dutyService.getById(adminDutyId);
+			// 查询当前工程师的上级的职务Name
+			String adminDutyName = adminDuty.getDutyname();
+			if ("副总经理".equals(adminDutyName)) {// 代表特殊情况经销商的上级直接是副总(李总底下的,顾总底下的有)
+				to = new String[1];
+				to[0] = new String(adminInfo.getEmail() + "");
+				order.setAreaManagerer(adminInfo.getAdminName());
+			}
+			// 1正常情况上级是销售经理,销售经理上级是区域经理,区域经理上级是副总
+			if ("销售经理".equals(adminDutyName)) {//
+				// 查询当前工程师的上级销售经理的上级,
+				Admin saleManagerSuperior = adminService.getById(adminSession
+						.getAdmin().getEmpSuperior());// 查询当前工程师的上级销售经理的上级
+				// 查询当前工程师的上级销售经理的上级的职务ID
+				Long saleManagerSuperiorDutyId = saleManagerSuperior
+						.getDutyid();
+				// 查询当前工程师的上级销售经理的上级职务
+				Duty saleManagerSuperiorDuty = dutyService
+						.getById(saleManagerSuperiorDutyId);
+				// 查询当前工程师的上级的职务Name
+				String saleManagerSuperiorDutyName = saleManagerSuperiorDuty
+						.getDutyname();
+				if ("区域销售经理".equals(saleManagerSuperiorDutyName)) {// 代表正常情况
+					to = new String[1];
+					to[0] = new String(saleManagerSuperior.getEmail() + "");
+					order.setAreaManagerer(saleManagerSuperior.getAdminName());
+				}
+				if ("副总经理".equals(saleManagerSuperiorDutyName)) {// 代表非正常情况,区域经理由副总兼职
+					to = new String[1];
+					to[0] = new String(saleManagerSuperior.getEmail() + "");
+					order.setAreaManagerer(saleManagerSuperior.getAdminName());
+				}
+			}
+
+		}
+		if ("财务经理".equals(dutyname) || "售后服务部经理".equals(dutyname)
+				|| "总经理".equals(dutyname)) {// 给财务/售后服务部经理/总经理发通知邮件
+			DutyQuery dutyQuery = new DutyQuery();
+			dutyQuery.setDutyname(dutyname);// "财务/售后服务部经理/总经理"
+			List<Duty> dutyList = dutyService.findDutyListInfo(dutyQuery);// 按照职位查找
+			if (null != dutyList && 0 < dutyList.size()) {
+				Duty dutyInfo = dutyList.get(0);
+				AdminQuery adminQuery = new AdminQuery();
+				adminQuery.setDutyid(dutyInfo.getDutyid());// 得到要查找的职位ID
+				List<Admin> adminList = adminService.findList(adminQuery);// 按照职位ID查找对应的人
+				if (null != adminList && 0 < adminList.size()) {
+					to = new String[1];
+					Admin adminEmailInfo = adminList.get(0);
+					to[0] = new String(adminEmailInfo.getEmail() + "");
+					if ("财务经理".equals(dutyname)) {
+						order.setFinancialManagerer(adminEmailInfo
+								.getAdminName());
+					}
+					if ("售后服务部经理".equals(dutyname)) {
+						order.setSaleOutManager(adminEmailInfo.getAdminName());
+					}
+					if ("总经理".equals(dutyname)) {
+						order.setGeneralManager(adminEmailInfo.getAdminName());
+					}
+				}
+			}
+		}
+		if ("副总经理".equals(dutyname)) {// 给副总经理发通知邮件
+			// 代表流程中有后续流程,是有财务经理或区域经理推过来的通知副总经理审批邮件
+			// 查找订单的提交人
+			Admin orderCreator = adminService.getById(order.getUserId());
+			Admin admininfoVice = findViceManagerInfo(orderCreator, dutyname);
+			to = new String[1];
+			to[0] = new String(admininfoVice.getEmail() + "");
+			order.setViceGeneralManager(admininfoVice.getAdminName());
+		}
+		// emailService.sendEmailNotice(null, to, null,subject, content, "");
+
+	}
+
+	/**
+	 * AdminSession adminSession,管理员 String billname, 通知邮件单据名 String
+	 * examtypename,通知邮件单据审核名 String subjectname, 通知邮件标题 String dutyname
+	 * 通知邮件人员职务名
+	 **/
+	private void orderEmailNotify(AdminSession adminSession, String billname,
+			String examtypename, String subjectname, String dutyname,
+			Boolean isViceManager) throws IOException, TemplateException {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String content = "";
+		Template template = freemarkerConfiguration.getTemplate(
+				"template/examineEmailTemplate.ftl", "utf-8");
+		paramMap.put("userName", adminSession.getAdmin().getAdminName());
+		// ${billname}需要您进行${examtypename}
+		paramMap.put("billname", billname);// "标准订单"
+		paramMap.put("examtypename", examtypename);// "审批"
+		content = FreeMarkerTemplateUtils.processTemplateIntoString(template,
+				paramMap);
+
+		String subject = subjectname;// "标准订单审批通知"
+		String[] to = new String[] {};// {"liyuan.tian@terrence.com.cn"};//可以多个
+		DutyQuery dutyQuery = new DutyQuery();
+		dutyQuery.setDutyname(dutyname);// "副总经理"
+
+		List<Duty> dutyList = dutyService.findDutyListInfo(dutyQuery);// 按照职位查找
+		if (null != dutyList && 0 < dutyList.size()) {
+			Duty dutyInfo = dutyList.get(0);
+			AdminQuery adminQuery = new AdminQuery();
+			adminQuery.setDutyid(dutyInfo.getDutyid());// 得到要查找的职位ID
+
+			List<Admin> adminList = adminService.findList(adminQuery);// 按照职位ID查找对应的人
+
+			if (isViceManager) {
+				Admin admininfoVice = findViceManager(adminSession, adminQuery,
+						dutyname);
+				if (null != adminList && 0 < adminList.size()) {
+					to = new String[adminList.size()];
+					for (int i = 0; i < adminList.size(); i++) {
+
+						/*if (adminList.get(i).getAdminId() == admininfoVice
+								.getAdminId()) {*/
+						if (adminList.get(i).getAdminId(). equals( admininfoVice
+								.getAdminId())) {
+							Admin adminEmailInfo = adminList.get(i);
+							to[i] = new String(adminEmailInfo.getEmail() + "");
+						}
+
+					}
+					// emailService.sendEmailNotice(null, to, null,
+					// subject, content, "");
+				}
+			} else {
+				if (null != adminList && 0 < adminList.size()) {
+					to = new String[adminList.size()];
+					for (int i = 0; i < adminList.size(); i++) {
+						Admin adminEmailInfo = adminList.get(i);
+						to[i] = new String(adminEmailInfo.getEmail() + "");
+
+					}
+					// emailService.sendEmailNotice(null, to, null,
+					// subject, content, "");
+				}
+			}
+
+		}
+
+	}
+
+	/**
+	 * 查找当前员工的所属副总信息
+	 * 
+	 * @param admin
+	 * @param dutyname
+	 * @return
+	 */
+	private Admin findViceManagerInfo(Admin admin, String dutyname) {
+		Admin admininfoVice = null;
+		// 查询当前提交单据的人员的所属副总信息
+		AdminQuery adminQueryVicemanager = new AdminQuery();
+		adminQueryVicemanager.setEmpSuperior(admin.getEmpSuperior());
+
+		List<Admin> adminListVicemanager = adminService
+				.findList(adminQueryVicemanager);
+		for (Admin admininfo : adminListVicemanager) {
+
+			Duty dutyInfoVicemanager = dutyService.getById(admininfo
+					.getDutyid());
+			String adminDutyName = dutyInfoVicemanager.getDutyname();
+			if (!dutyname.equals(adminDutyName)) {
+				findViceManagerInfo(admin, dutyname);
+			} else {
+				admininfoVice = admininfo;
+			}
+		}
+		return admininfoVice;
+	}
+
+	private Admin findViceManager(AdminSession adminSession,
+			AdminQuery adminQuery, String dutyname) {
+		Admin admininfoVice = null;
+		// 查询当前提交单据的人员的副总信息
+		AdminQuery adminQueryVicemanager = new AdminQuery();
+		adminQueryVicemanager.setEmpSuperior(adminSession.getAdmin()
+				.getEmpSuperior());
+		List<Admin> adminListVicemanager = adminService.findList(adminQuery);
+		for (Admin admininfo : adminListVicemanager) {
+
+			Duty dutyInfoVicemanager = dutyService.getById(admininfo
+					.getDutyid());
+			String adminDutyName = dutyInfoVicemanager.getDutyname();
+			if (!dutyname.equals(adminDutyName)) {
+				findViceManager(adminSession, adminQuery, dutyname);
+			} else {
+				admininfoVice = admininfo;
+			}
+		}
+		return admininfoVice;
+	}
+
+	@Override
+	public String delete() throws Exception {
+		String method = getRequest().getMethod();
+		if (!"post".equalsIgnoreCase(method)) {
+			logger.error("非法提交");
+			resultInfo[0] = "-1";
+			resultInfo[1] = "非法提交！";
+			// Struts2Utils.renderJson("非法提交！");
+			return JSON;
+		}
+		try {
+			if (null != checkedCodeList) {
+				// orderService.deleteByMultipleId(checkedIdList);
+				// 删除前先查询当前有待审核 或 已生效的基本订单 checkedIdList
+
+				// String orderCodes = StringUtils.join(checkedCodeList, ",");
+				String orderCodes = joinOrderCode(checkedCodeList, ",");
+
+				OrderQuery orderQuery = new OrderQuery();
+
+				orderQuery.setOrderCodes(orderCodes);
+
+				List<Order> orderList = orderService
+						.findListByOrderCodes(orderQuery);
+				if (null != orderList && 0 < orderList.size()) {
+					resultInfo[0] = "-1";
+					resultInfo[1] = "当前选择的单据中有待审核或已生效的基本订单,不允许删除！";
+					// Struts2Utils.renderJson("当前选择的单据中有待审核 或 已生效的基本订单,不允许删除！");
+					return JSON;
+				}
+				orderService.deleteByMultipleByOrderCode(checkedCodeList);
+			}
+			/**
+			 * else if(null==checkedIdList&&null!=id){
+			 * orderService.deleteOrder(id); }
+			 */
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			// Struts2Utils.renderJson("success");
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	private String joinOrderCode(List<String> checkedCodeList, String string) {
+		StringBuffer sb = new StringBuffer();
+		for (String temp : checkedCodeList) {
+			sb.append("\'" + temp + "\'").append(",");
+		}
+		sb = sb.deleteCharAt(sb.length() - 1);
+		return sb.toString();
+	}
+
+	@Override
+	public String deleteToJson() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String show() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String showToJson() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void prepareModel() throws Exception {
+		if (id != null) {
+			orderEntity = orderService.getById(id);
+		} else {
+			orderEntity = new Order();
+		}
+	}
+
+	/**
+	 * ------------------------------------------------------------------------
+	 * -------------------------------------------
+	 */
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+
+	public Order getOrderEntity() {
+		return orderEntity;
+	}
+
+	public void setOrderEntity(Order orderEntity) {
+		this.orderEntity = orderEntity;
+	}
+
+	public OrderQuery getOrderQuery() {
+		return orderQuery;
+	}
+
+	public void setOrderQuery(OrderQuery orderQuery) {
+		this.orderQuery = orderQuery;
+	}
+
+	public Page<Order> getPage() {
+		return page;
+	}
+
+	public void setPage(Page<Order> page) {
+		this.page = page;
+	}
+
+	public List<Order> getOrderList() {
+		return orderList;
+	}
+
+	public void setOrderList(List<Order> orderList) {
+		this.orderList = orderList;
+	}
+
+	public Map<String, Object> getMap() {
+		return map;
+	}
+
+	public void setMap(Map<String, Object> map) {
+		this.map = map;
+	}
+
+	public Product getProduct() {
+		return product;
+	}
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+
+	public ProductQuery getProductQuery() {
+		return productQuery;
+	}
+
+	public void setProductQuery(ProductQuery productQuery) {
+		this.productQuery = productQuery;
+	}
+
+	public String getProducts() {
+		return products;
+	}
+
+	public void setProducts(String products) {
+		this.products = products;
+	}
+
+	public List<String> getCheckedCodeList() {
+		return checkedCodeList;
+	}
+
+	public void setCheckedCodeList(List<String> checkedCodeList) {
+		this.checkedCodeList = checkedCodeList;
+	}
+
+	public List<Menu> getAuthorityList() {
+		return authorityList;
+	}
+
+	public void setAuthorityList(List<Menu> authorityList) {
+		this.authorityList = authorityList;
+	}
+
+	public Integer getAdminType() {
+		return adminType;
+	}
+
+	public void setAdminType(Integer adminType) {
+		this.adminType = adminType;
+	}
+
+	public Long getAdminDuty() {
+		return adminDuty;
+	}
+
+	public void setAdminDuty(Long adminDuty) {
+		this.adminDuty = adminDuty;
+	}
+
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+
+	public Integer getAsAreaSaleManager() {
+		return asAreaSaleManager;
+	}
+
+	public void setAsAreaSaleManager(Integer asAreaSaleManager) {
+		this.asAreaSaleManager = asAreaSaleManager;
+	}
+
+	public String getAdminDutyName() {
+		return adminDutyName;
+	}
+
+	public void setAdminDutyName(String adminDutyName) {
+		this.adminDutyName = adminDutyName;
+	}
+
+	public static void main(String[] args) {
+		Double saleprice = 1.000000001d;
+		Long unitPrice = 10l;
+		Double result = (Double) MathUtils.multiply(saleprice, unitPrice);
+		System.out.println(result);
+		Double result2 = MathUtils.multiply(saleprice, unitPrice).doubleValue();
+		System.out.println(result2);
+
+		Double totalPriceTypeAB = 3d;
+		Double result3 = MathUtils.add(totalPriceTypeAB, result2).doubleValue();
+
+		System.out.println(result3);
+
+		if (result3 > 10d) {
+			System.out.println(">10");
+		}
+		if (result3 < 10d) {
+			System.out.println("<10");
+		}
+	}
+
+	/**
+	 * 对应枚举类
+	 * 
+	 * @param type
+	 * @return
+	 */
+	@JSON(serialize = false)
+	private FileType getFileType(String type) {
+		FileType rnt = null;
+		if (type != null && !type.trim().equals("")) {
+			rnt = FileType.valueOf(type.toUpperCase());
+		}
+		return rnt;
+	}
+
+	public Long getAdminId() {
+		return adminId;
+	}
+
+	public void setAdminId(Long adminId) {
+		this.adminId = adminId;
+	}
+
+	public Order getOrder() {
+		return order;
+	}
+
+	public void setOrder(Order order) {
+		this.order = order;
+	}
+
+	public List<Product> getProductList() {
+		return productList;
+	}
+
+	public void setProductList(List<Product> productList) {
+		this.productList = productList;
+	}
+
+	public String getAdminDutyKey() {
+		return adminDutyKey;
+	}
+
+	public void setAdminDutyKey(String adminDutyKey) {
+		this.adminDutyKey = adminDutyKey;
+	}
+	
+	
+}

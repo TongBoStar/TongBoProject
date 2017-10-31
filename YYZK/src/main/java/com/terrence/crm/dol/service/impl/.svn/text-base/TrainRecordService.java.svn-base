@@ -1,0 +1,352 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ibatis.sqlmap.engine.mapping.sql.Sql;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CheckDataDetail;
+import com.terrence.crm.dol.bean.CheckStepRec;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.bean.TrainRecord;
+import com.terrence.crm.dol.query.CheckDataDetailQuery;
+import com.terrence.crm.dol.query.CheckStepRecQuery;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+import com.terrence.crm.dol.query.TrailRecSetQuery;
+import com.terrence.crm.dol.query.TrainRecordQuery;
+import com.terrence.crm.dol.dao.ICheckDataDetailDao;
+import com.terrence.crm.dol.dao.ICheckStepRecDao;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.dao.ITrainRecordDao;
+import com.terrence.crm.dol.service.ITrainRecordService;
+
+@Service
+@Transactional
+public class TrainRecordService extends BaseService implements ITrainRecordService {
+	protected static Logger logger = LoggerFactory.getLogger(TrainRecordService.class);
+	@Autowired
+	@Qualifier("trainRecordDao")
+	private ITrainRecordDao trainRecordDao;
+	
+	@Autowired
+	@Qualifier("trailRecSetDao")
+	private ITrailRecSetDao trailRecSetDao;
+	
+	@Autowired
+	@Qualifier("trailPdStepDao")
+	private ITrailPdStepDao trailPdStepDao;
+	
+	
+	@Autowired
+	@Qualifier("checkStepRecDao")
+	private ICheckStepRecDao checkStepRecDao;
+	
+	@Autowired
+	@Qualifier("checkDataDetailDao")
+	private ICheckDataDetailDao checkDataDetailDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrainRecord";
+	}
+	@Transactional(readOnly=true)
+	public TrainRecord getById(java.lang.Long id) throws ServiceException
+	{
+		return trainRecordDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrainRecord entity) throws ServiceException
+	{
+		trainRecordDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrainRecord entity) throws ServiceException
+	{
+		Long adId = trainRecordDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrainRecord entity) throws ServiceException
+	{
+		Integer returnValue =  trainRecordDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trainRecordDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trainRecordDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrainRecordQuery query = new TrainRecordQuery();
+		try {
+			return trainRecordDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrainRecord> findPage(Page<TrainRecord> page, TrainRecordQuery query) throws ServiceException
+	{
+		return trainRecordDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrainRecord> findPage(Page<TrainRecord> page,String statement, TrainRecordQuery query) throws ServiceException
+	{
+		return trainRecordDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrainRecord> findList(TrainRecordQuery query) throws ServiceException
+	{
+		return trainRecordDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrainRecord> findList(TrainRecordQuery query,Integer pageSize) throws ServiceException
+	{
+		return trainRecordDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrainRecord> findList(TrainRecordQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trainRecordDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrainRecord> findAllList() throws ServiceException
+	{
+		return trainRecordDao.findAllList();
+	}
+	/**
+	 * 取出最后一次检测记录
+	 */
+	public Map<String, Object> findTrainRecordByIdMax(TrainRecordQuery trainRecordQuery)
+			throws ServiceException {
+		String column = this.findColumnByTplid(trainRecordQuery.getTplid());
+		String sql = "select "+column+" ctime from t_train_record where recid = (select max(recid) from t_train_record where" +
+				" tplid= "+trainRecordQuery.getTplid()+" and seqno = '"+trainRecordQuery.getSeqno()+"' and itemcode ='"+trainRecordQuery.getItemcode()+"' )";
+		if(null==trainRecordQuery.getTplid()&&null!=trainRecordQuery.getItemcode()){
+			sql = "select *, ctime from t_train_record where recid = (select max(recid) from t_train_record where" +
+					" seqno = '"+trainRecordQuery.getSeqno()+"' and itemcode ='"+trainRecordQuery.getItemcode()+"' )";
+		}else if(null==trainRecordQuery.getTplid()&&null==trainRecordQuery.getItemcode()){
+			sql = "select *, ctime from t_train_record where recid = (select max(recid) from t_train_record where" +
+					" seqno = '"+trainRecordQuery.getSeqno()+"' )";
+		}else{
+			sql = "select "+column+" ctime from t_train_record where recid = (select max(recid) from t_train_record where" +
+					" tplid= "+trainRecordQuery.getTplid()+" and seqno = '"+trainRecordQuery.getSeqno()+"' )";
+		}
+		Map<String, Object> trainRecordMap = trainRecordDao.findTrainRecordByIdMax(sql);
+		Long tplidQuery = null==trainRecordMap.get("tplid")?trainRecordQuery.getTplid():(Long)trainRecordMap.get("tplid");
+		List<TrailPdStep> trailPdSteps = findTrailPdStepList(tplidQuery);
+		if (trailPdSteps.size()>0) {
+			int countt = 0;
+			for (TrailPdStep trailPdStep : trailPdSteps) {
+				Long checkid = findCheckIdForTrainRecord(trainRecordQuery.getSeqno(),trainRecordQuery.getItemcode(),trainRecordQuery.getTplid());
+			//	List<Integer> isPass = findCheckStepRecByStepId(trailPdStep.getStepid(),checkid);
+				List<Integer> isPass = findCheckStepRecByStepIdnew(trailPdStep.getStepid(),checkid,trainRecordQuery.getSeqno());
+				
+				if(null==isPass||isPass.size()==0){
+					for(int m=0;m<trailPdStep.getVarlist().size();m++){
+						if(trailPdStep.getVarlist().get(m).getVarname()==null||trailPdStep.getVarlist().get(m).getVarname().equals("null")){
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+countt, trailPdStep.getVarlist().get(m).getVarname());
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name"+countt, trailPdStep.getVarlist().get(m).getCnname());
+							countt++;
+						}else{
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname(), trailPdStep.getVarlist().get(m).getVarname());
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name", trailPdStep.getVarlist().get(m).getCnname());
+						}
+					}
+				}else{
+					int varsize = trailPdStep.getVarlist().size();
+					
+					for(int m=0;m<isPass.size()&&m<varsize;m++){
+						if(trailPdStep.getVarlist().get(m)!=null&&trailPdStep.getVarlist().get(m).getVarname().equals("null")){
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+countt, (isPass.get(m)!=null)&&(isPass.get(m).intValue()==1)?"合格":"不合格");
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name"+countt, trailPdStep.getVarlist().get(m).getCnname());
+							countt++;
+						}else{
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname(), isPass.get(m).intValue()==1?"合格":"不合格");
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name", trailPdStep.getVarlist().get(m).getCnname());
+						}
+					}	
+				}
+			}
+		}
+		return trainRecordMap;
+	}
+	/**
+	 *<p>根据物料号，序列号，模板取出检测次数<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-8-5上午9:54:36
+	 * @param seqno
+	 * @param itemcode
+	 * @param tplid
+	 * @return
+	 */
+	private Long findCheckIdForTrainRecord(String seqno, String itemcode,
+			Long tplid) {
+		String sql ="select checktimeid from t_train_record where tplid= "+tplid+" and itemcode='"+itemcode+"' and seqno = '"+seqno+"'";
+		return trainRecordDao.findCheckIdForTrainRecord(sql);
+	}
+	/**
+	 *<p>根据步骤ID，取出检测结果对象 0:表示不合格，1：表示合格<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-7-31下午5:01:11
+	 * @param stepid
+	 * @param checkid 
+	 * @return
+	 */
+	private List<Integer> findCheckStepRecByStepId(Long stepid, Long checkid) {
+		String sql = "select ispass from t_check_step_rec where stepid="+stepid +" and checktimeid="+checkid;
+		List<Integer> isPass = checkStepRecDao.findCheckStepRecByStepId(sql);
+		return isPass;
+	}
+	
+
+	/**
+		 *<p>新版根据步骤ID，取出检测结果对象 0:表示不合格，1：表示合格<p>.
+		 *Author:WangZongXiang
+		 *CreatDate:2015-04-10下午16:40
+		 * @param stepid
+		 * @param checkid 
+		 * @param seqno 
+		 * @return
+		 */
+		private List<Integer> findCheckStepRecByStepIdnew(Long stepid, Long checkid,String seqno) {
+			String sql = "select ispass from t_check_step_rec where stepid="+stepid +" and checktimeid=("+
+			"select max(checktimeid) from t_check_step_rec where stepid="+stepid+" and seqcode='"+seqno+"')";
+			List<Integer> isPass = checkStepRecDao.findCheckStepRecByStepId(sql);
+			return isPass;
+		}
+
+	
+	
+	/**
+	 *<p>根据模板Id取出检测步骤管理list<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-7-31下午4:48:29
+	 * @param tplid
+	 * @return
+	 */
+	private List<TrailPdStep> findTrailPdStepList(Long tplid) {
+		TrailPdStepQuery trailPdStepQuery = new TrailPdStepQuery();
+		trailPdStepQuery.setTplid(tplid);
+		return trailPdStepDao.findAllList(trailPdStepQuery);
+	}
+	/**
+	 *<p>取出该模板所有的列，然后根据该模板绑定的列查询数据<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-7-31上午10:40:53
+	 * @param tplid
+	 * @return
+	 */
+	private String findColumnByTplid(Long tplid) {
+		TrailRecSetQuery trailRecSetQuery = new TrailRecSetQuery();
+		trailRecSetQuery.setTplid(tplid);
+		List<TrailRecSet> trailRecSets = trailRecSetDao.findList(trailRecSetQuery);
+		String column = "";
+		for (int i = 0; i < trailRecSets.size(); i++) {
+				column +=trailRecSets.get(i).getColtitle()+",";
+		}
+		return column;
+	}
+	@Override
+	public Integer findRecordCount(TrainRecordQuery trainRecordQuery)
+			throws ServiceException {
+		String sql = "select COUNT(*) from t_trail_check_nums where itemseq= '"+
+			trainRecordQuery.getSeqno()+"' and itemcode ='"+trainRecordQuery.getItemcode()+"'"; 
+		return trainRecordDao.getRecordCount(sql);
+	}
+	@Override
+	public Map<String, Object> findTrainRecordByCheckId(
+			TrainRecordQuery trainRecordQuery) throws ServiceException {
+		String column = this.findColumnByTplid(trainRecordQuery.getTplid());
+		String sql = "select "+column+" ctime from t_train_record  where tplid= '"+trainRecordQuery.getTplid()+"'and checktimeid = "+trainRecordQuery.getChecktimeid();
+		Map<String, Object> trainRecordMap = trainRecordDao.findTrainRecordByIdMax(sql);
+		List<TrailPdStep> trailPdSteps = findTrailPdStepList(trainRecordQuery.getTplid());
+		if (trailPdSteps.size()>0) {
+			int countt = 0;
+			for (TrailPdStep trailPdStep : trailPdSteps) {
+				//Long checkid = findCheckIdForTrainRecord(trainRecordQuery.getSeqno(),trainRecordQuery.getItemcode(),trainRecordQuery.getTplid());
+				List<Integer> isPass = findCheckStepRecByStepId(trailPdStep.getStepid(),trainRecordQuery.getChecktimeid());
+				if(null==isPass||isPass.size()==0){
+					for(int m=0;m<trailPdStep.getVarlist().size();m++){
+						if(trailPdStep.getVarlist().get(m).getVarname().equals("null")){
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+countt, trailPdStep.getVarlist().get(m).getVarname());
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name"+countt, trailPdStep.getVarlist().get(m).getCnname());
+							countt++;
+						}else{
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname(), trailPdStep.getVarlist().get(m).getVarname());
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name", trailPdStep.getVarlist().get(m).getCnname());
+						}
+					}
+				}else{
+					for(int m=0;m<isPass.size()&&m<trailPdStep.getVarlist().size();m++){
+						if(trailPdStep.getVarlist().get(m).getVarname().equals("null")){
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+countt, isPass.get(m).intValue()==1?"合格":"不合格");
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name"+countt, trailPdStep.getVarlist().get(m).getCnname());
+							countt++;
+						}else{
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname(), isPass.get(m).intValue()==1?"合格":"不合格");
+							trainRecordMap.put(trailPdStep.getVarlist().get(m).getVarname()+"_name", trailPdStep.getVarlist().get(m).getCnname());
+						}
+					}	
+				}
+			}
+		}
+		return trainRecordMap;
+	}
+	@Override
+	public TrainRecord findTrainCheckId(TrainRecordQuery trainRecordQuery)
+			throws ServiceException {
+		
+		String sql = "select checktimeid,seqno,itemcode,tplid,trialid from t_train_record where recid=(select max(recid) from t_train_record where seqno= '"+
+		trainRecordQuery.getSeqno()+"' and itemcode ='"+trainRecordQuery.getItemcode()+"' group by seqno)"; 
+		
+		return trainRecordDao.findTrainCheckIdSql(sql);
+	}
+	@Override
+	public List<CheckDataDetail> findTrainRecordDataByIdMax(TrainRecordQuery trainRecordQuery){
+		Long checkid = findCheckIdForTrainRecord(trainRecordQuery.getSeqno(),trainRecordQuery.getItemcode(),trainRecordQuery.getTplid());
+		CheckDataDetailQuery query = new CheckDataDetailQuery();
+		query.setCheckid(checkid);
+		List<CheckDataDetail> queryList = checkDataDetailDao.findList(query);
+		return queryList;
+	}
+}

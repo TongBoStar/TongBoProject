@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckStepRec">
+
+        
+	<resultMap id="RM.CheckStepRec" class="com.terrence.crm.dol.bean.CheckStepRec">
+        <result property="recid" column="recid"/>
+        <result property="checktimeid" column="checktimeid"/>
+        <result property="seqcode" column="seqcode"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="stepid" column="stepid"/>
+        <result property="ispass" column="ispass"/>
+        <result property="createdate" column="createdate"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckStepRec.columns">
+	    <![CDATA[
+        	t_check_step_rec.recid ,
+        	t_check_step_rec.checktimeid ,
+        	t_check_step_rec.seqcode ,
+        	t_check_step_rec.itemcode ,
+        	t_check_step_rec.stepid ,
+        	t_check_step_rec.ispass ,
+        	t_check_step_rec.createdate 
+	    ]]>
+	</sql>
+	
+   <insert id="CheckStepRec.insert" >
+        INSERT INTO
+        t_check_step_rec (
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="" property="checktimeid">checktimeid</isNotEmpty>
+        		<isNotEmpty prepend="," property="seqcode">seqcode</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemcode">itemcode</isNotEmpty>
+        		<isNotEmpty prepend="," property="stepid">stepid</isNotEmpty>
+        		<isNotEmpty prepend="," property="ispass">ispass</isNotEmpty>
+        		<isNotEmpty prepend="," property="createdate">createdate</isNotEmpty>
+			</dynamic>
+        ) VALUES (
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="" property="checktimeid">#checktimeid#</isNotEmpty>
+        		<isNotEmpty prepend="," property="seqcode">#seqcode#</isNotEmpty>
+        		<isNotEmpty prepend="," property="itemcode">#itemcode#</isNotEmpty>
+        		<isNotEmpty prepend="," property="stepid">#stepid#</isNotEmpty>
+        		<isNotEmpty prepend="," property="ispass">#ispass#</isNotEmpty>
+        		<isNotEmpty prepend="," property="createdate">#createdate#</isNotEmpty>
+			</dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="recid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CheckStepRec.update" parameterClass="com.terrence.crm.dol.bean.CheckStepRec">         
+        UPDATE t_check_step_rec 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="checktimeid">
+	        	checktimeid = #checktimeid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seqcode">
+	        	seqcode = #seqcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="stepid">
+	        	stepid = #stepid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispass">
+	        	ispass = #ispass# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        recid = #recid# 
+    </update>
+    
+	<delete id="CheckStepRec.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_step_rec where
+       recid = #recid# 
+    ]]>
+    </delete>
+    
+    <delete id="CheckStepRec.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_check_step_rec 
+        WHERE
+       recid in ($recid$) 
+    ]]>
+    </delete>
+    
+    <select id="CheckStepRec.getById" resultMap="RM.CheckStepRec">
+	    select <include refid="CheckStepRec.columns"/>
+	    
+	        from t_check_step_rec 
+	        where 
+		        recid = #recid# 
+	    
+    </select>
+    
+	<select id="CheckStepRec.getByProperty" resultMap="RM.CheckStepRec">
+		select <include refid="CheckStepRec.columns"/> from t_check_step_rec where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CheckStepRec.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_check_step_rec.recid = #recid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="checktimeid">
+	             t_check_step_rec.checktimeid = #checktimeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqcode">
+	             t_check_step_rec.seqcode = #seqcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_check_step_rec.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_check_step_rec.stepid = #stepid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ispass">
+	             t_check_step_rec.ispass = #ispass#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_check_step_rec.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_check_step_rec.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CheckStepRec.findPage.and">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_check_step_rec.recid = #recid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="checktimeid">
+	             t_check_step_rec.checktimeid = #checktimeid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqcode">
+	             t_check_step_rec.seqcode = #seqcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_check_step_rec.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="stepid">
+	             t_check_step_rec.stepid = #stepid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ispass">
+	             t_check_step_rec.ispass = #ispass#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_check_step_rec.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_check_step_rec.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="CheckStepRec.Entity" resultMap="RM.CheckStepRec">
+    	SELECT 	<include refid="CheckStepRec.columns"/> FROM t_check_step_rec <include refid="CheckStepRec.findPage.where"/>
+    </select>
+    
+    <select id="CheckStepRec.findList" resultMap="RM.CheckStepRec">
+    	SELECT 
+    		<include refid="CheckStepRec.columns"/> 
+    	FROM 
+    		t_check_step_rec
+		<include refid="CheckStepRec.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CheckStepRec.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_check_step_rec
+    ]]>
+		<include refid="CheckStepRec.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    
+	<select id="CheckStepRec.findPage" resultMap="RM.CheckStepRec">
+    	select <include refid="CheckStepRec.columns"/>	    
+	        from t_check_step_rec where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       recid 
+	   not in(select $notTop$ 
+       recid 
+	   from t_check_step_rec <include refid="CheckStepRec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CheckStepRec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

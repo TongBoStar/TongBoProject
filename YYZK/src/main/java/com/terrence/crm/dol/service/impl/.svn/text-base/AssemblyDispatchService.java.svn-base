@@ -1,0 +1,531 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.AssTaskSeq;
+import com.terrence.crm.dol.bean.AssemblyDispatch;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyTaskFlow;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Bills;
+import com.terrence.crm.dol.bean.BillsDetail;
+import com.terrence.crm.dol.bean.CodeSeq;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.PdCategory;
+import com.terrence.crm.dol.bean.TemplateFlow;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAdttDao;
+import com.terrence.crm.dol.dao.IAssTaskSeqDao;
+import com.terrence.crm.dol.dao.IAssemblyDispatchDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IBillsDao;
+import com.terrence.crm.dol.dao.IBillsDetailDao;
+import com.terrence.crm.dol.dao.ICodeSeqDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IPdCategoryDao;
+import com.terrence.crm.dol.dao.ITemplateFlowDao;
+import com.terrence.crm.dol.query.AdttQuery;
+import com.terrence.crm.dol.query.AssTaskSeqQuery;
+import com.terrence.crm.dol.query.AssemblyDispatchQuery;
+import com.terrence.crm.dol.query.AssemblyTaskFlowQuery;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.BillsDetailQuery;
+import com.terrence.crm.dol.query.BillsQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.TemplateFlowQuery;
+import com.terrence.crm.dol.service.IAssemblyDispatchService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.StringCodeUtils;
+
+@Service
+@Transactional
+public class AssemblyDispatchService extends BaseService implements IAssemblyDispatchService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyDispatchService.class);
+	@Autowired
+	@Qualifier("assemblyDispatchDao")
+	private IAssemblyDispatchDao assemblyDispatchDao;
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("assTaskSeqDao")
+	private IAssTaskSeqDao assTaskSeqDao;
+	@Autowired
+	@Qualifier("pdCategoryDao")
+	private IPdCategoryDao pdCategoryDao;
+	@Autowired
+	@Qualifier("assemblyTaskFlowDao")
+	private IAssemblyTaskFlowDao assemblyTaskFlowDao;
+	@Autowired
+	@Qualifier("templateFlowDao")
+	private ITemplateFlowDao templateFlowDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("codeSeqDao")
+	private ICodeSeqDao codeSeqDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyDispatch";
+	}
+	@Autowired
+	@Qualifier("billsDao")
+	private IBillsDao billsDao;
+	@Autowired
+	@Qualifier("billsDetailDao")
+	private IBillsDetailDao billsDetailDao;
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	@Autowired
+	@Qualifier("adttDao")
+	private IAdttDao adttDao;
+	@Transactional(readOnly=true)
+	public AssemblyDispatch getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyDispatchDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyDispatch entity) throws ServiceException
+	{
+		assemblyDispatchDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyDispatch entity) throws ServiceException
+	{
+		Long adId = assemblyDispatchDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyDispatch entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyDispatchDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		AssemblyDispatch aDispatch=getById(id);
+		BillsQuery query=new BillsQuery();
+		query.setDispatchid(id);
+		List<Bills> list=billsDao.findList(query);
+		for(Bills bills:list)
+		{
+			if(bills.getStatus().intValue()!=TerrcnceConstants.ASSEMBLY_UNDO.intValue())
+			{
+				throw new ServiceException("投料单已配料，请联系管理员");
+			}
+			BillsDetailQuery bdQuery=new BillsDetailQuery();
+			bdQuery.setDispatchid(id);
+			billsDetailDao.deleteByWhere("BillsDetail.delete.where", bdQuery);
+			BillsQuery bQuery=new BillsQuery();
+			bQuery.setDispatchid(id);
+			billsDao.deleteByWhere("Bills.delete.where", bQuery);
+			AssTaskSeqQuery atsQuery=new AssTaskSeqQuery();
+			atsQuery.setDispatchid(id);
+			assTaskSeqDao.deleteByWhere("AssTaskSeq.delete.where", atsQuery);
+			AssemblyTaskFlowQuery abtfQuery=new AssemblyTaskFlowQuery();
+			abtfQuery.setDispatchid(id);
+			assemblyTaskFlowDao.deleteByWhere("AssemblyTaskFlow.delete.where", abtfQuery);
+			AdttQuery adttQuery=new AdttQuery();
+			adttQuery.setDispatchid(id);
+			adttDao.deleteByWhere("Adtt.delete.where", adttQuery);
+			AssemblyTask task=assemblyTaskDao.getById(aDispatch.getTaskid());
+			task.setWorkload(task.getWorkload()-aDispatch.getAmount());
+			assemblyTaskDao.update(task);
+		}
+		
+		Integer returnValue = assemblyDispatchDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyDispatchDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyDispatchQuery query = new AssemblyDispatchQuery();
+		try {
+			return assemblyDispatchDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyDispatch> findPage(Page<AssemblyDispatch> page, AssemblyDispatchQuery query) throws ServiceException
+	{
+		return assemblyDispatchDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyDispatch> findPage(Page<AssemblyDispatch> page,String statement, AssemblyDispatchQuery query) throws ServiceException
+	{
+		return assemblyDispatchDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDispatch> findList(AssemblyDispatchQuery query) throws ServiceException
+	{
+		return assemblyDispatchDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDispatch> findList(AssemblyDispatchQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyDispatchDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyDispatch> findList(AssemblyDispatchQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyDispatchDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyDispatch> findAllList() throws ServiceException
+	{
+		return assemblyDispatchDao.findAllList();
+	}
+	public String getSeqCode(String itemcode)throws ServiceException
+	{
+		String seqcode="";
+		return seqcode;
+	}
+	@Override
+	public Long saveToDsipatch(AssemblyDispatch entity) throws ServiceException {
+		AssemblyTask at = assemblyTaskDao.getById(entity.getTaskid());
+		/**
+		 * 更新物料表的在制品量
+		 */
+		updateBase(entity,1);//1、配工点确定时
+		
+		String[] seqs = null;
+		if(null!=at.getFseqnos()&&at.getFseqnos().length()>0){
+			seqs = at.getFseqnos().split(",");
+		}
+		if(entity.getDbno()==null)
+		{
+			throw new ServiceException("未选择标记，请联系管理员。","-1");
+		}
+		assemblyDispatchDao.save(entity);
+		String flag=entity.getFlag();
+		if(flag==null||flag.equals(""))flag="B";
+		AssemblyTask assemblyTask=assemblyTaskDao.getByColumn("AssemblyTask.getBaseItem", entity.getTaskid().toString());
+		if(assemblyTask.getDemand()<(assemblyTask.getWorkload()+entity.getAmount()))
+		{
+			throw new ServiceException("总配工量超出需求量","-1");
+		}
+		assemblyTask.setWorkload((assemblyTask.getWorkload()==null?0:assemblyTask.getWorkload())+entity.getAmount());
+		//assemblyTask.setDispatchstatus(1);
+		assemblyTaskDao.update(assemblyTask);
+		Bills bill=new Bills();
+		bill.setAmount(entity.getAmount().doubleValue());
+		bill.setCreatedate(DateConvertUtils.getCurrentDate());
+		bill.setDispatchid(entity.getDispatchid());
+		bill.setItemcode(entity.getItemcode());
+		bill.setItemname(assemblyTask.getItemname());
+		bill.setItemmode(assemblyTask.getBaseItem().getFormatno());
+		bill.setOrdercode(assemblyTask.getOrdercode());
+		bill.setStatus(0);
+		bill.setTaskid(entity.getTaskid());
+		bill.setPlanissuedate(entity.getWorkdateString());
+		bill.setUnit(assemblyTask.getBaseItem().getUnitname());
+		bill.setDbno(entity.getDbno());
+		if(null!=entity.getTemplateid()&&entity.getTemplateid().intValue()==3){
+			bill.setIsadd(1);
+		}else{
+			bill.setIsadd(null);
+		}
+		billsDao.save(bill);
+		OrderBomQuery bomquery=new OrderBomQuery();
+		bomquery.setItemcode(entity.getItemcode());
+		List<OrderBom> listbom=orderBomDao.findList("OrderBom.BaseItem.Bills.findList",bomquery);
+		if(null==listbom||listbom.size()<1)
+		{
+			throw new ServiceException("请先补录"+entity.getItemcode()+"的BOM清单","-1");
+		}
+		for(OrderBom bom:listbom)
+		{
+			BillsDetail billDetail=new BillsDetail();
+			billDetail.setBaseqty(entity.getAmount()*bom.getParentqty());
+			billDetail.setBillno(bill.getBillno());
+			billDetail.setFqty(bom.getParentqty());
+			billDetail.setIssureqty(entity.getAmount()*bom.getParentqty());
+			billDetail.setPlanqty(bom.getParentqty()*entity.getAmount());
+			billDetail.setUnit(bom.getParentunitname());
+			billDetail.setItemcode(bom.getParentcode());
+			billDetail.setItemname(bom.getParentname());
+			billDetail.setItemmode(bom.getBaseItem().getFormatno());
+			billDetail.setPlandate(entity.getWorkdateString());
+			billDetail.setFitemcode(bom.getParentcode());
+			billDetail.setFitemname(bom.getParentname());
+			billDetail.setFitemmode(billDetail.getItemmode());
+			billDetail.setDispatchid(entity.getDispatchid());
+			billDetail.setDbno(TerrcnceConstants.SYS_DB_3);/**缺省3帐套**/
+			//billDetail.setDbno(entity.getDbno());
+			/*if(null!=flag&&flag.equals(TerrcnceConstants.PD_SEQ_C))
+			{
+				billDetail.setDbno(TerrcnceConstants.SYS_DB_4);
+			}
+			else
+			{
+				billDetail.setDbno(TerrcnceConstants.SYS_DB_3);
+			}*/
+			billDetail.setIsbatch(bom.getBaseItem().getIsbatch());
+			billDetail.setIssn(bom.getBaseItem().getFissnmanager());
+			billsDetailDao.save(billDetail);
+		}
+		/***创建配工单流水序列任务**/
+		PdCategory category=pdCategoryDao.getByColumn("PdCategory.getCategoryCode", entity.getItemcode());
+		//SimpleDateFormat sdf = new SimpleDateFormat("yyMM"); 
+		CodeSeq codeseq=null;
+		String prefix="";Integer seqno=0,flen=6;Long curval=0l;
+		if(null!=category&&(null==category.getCategorycode()||!category.getCategorycode().equals("0")))
+		{
+			if(null==category.getCategorycode())
+			{
+				throw new ServiceException(entity.getItemcode()+"没有特征码");
+			}
+			codeseq=codeSeqDao.getByProperty("fcode", category.getCategorycode());
+			if(null==codeseq){throw new ServiceException(entity.getItemcode()+"特征码："+category.getCategorycode()+"未设置特征码序列值");}
+			
+			String yearLast = new SimpleDateFormat("yy",Locale.CHINESE).format(Calendar.getInstance().getTime());
+			prefix=flag+category.getCategorycode()+yearLast;
+		}
+		else
+		{
+			AssemblyTask aTask=assemblyTaskDao.getById(entity.getTaskid());
+			prefix=aTask.getTaskcode();
+			/**取任务单最大序列号**/
+			
+			seqno=assTaskSeqDao.getMaxSeqno("AssTaskSeq.getMaxSeqno", entity.getTaskid());
+		}
+		
+		
+		AssTaskSeqQuery atsquery=new AssTaskSeqQuery();
+		atsquery.setItemcode(entity.getItemcode());
+		atsquery.setPrefix(prefix);
+		//AssTaskSeq tasSeq=assTaskSeqDao.getByEntity("AssTaskSeq.GetMax.seqno", atsquery);
+		if(null!=codeseq)
+		{
+			seqno=codeseq.getFcurval().intValue();
+			curval=codeseq.getFcurval();
+			flen=codeseq.getFlen();
+		}
+		
+		TemplateFlowQuery tfQuery=new TemplateFlowQuery();
+		tfQuery.setTemplateid(entity.getTemplateid());
+		tfQuery.setSortColumns(" laststep asc ");
+		List<TemplateFlow> flows=templateFlowDao.findList(tfQuery);
+		/**配料，组装，检测**/
+		List<Adtt> adtts=new ArrayList<Adtt>();
+		for(TemplateFlow flow:flows)
+		{
+			Adtt adtt=new Adtt();
+			adtt.setAmount(entity.getAmount());
+			adtt.setItemcode(entity.getItemcode());
+			adtt.setDispatchid(entity.getDispatchid());
+			adtt.setPlanwokday(DateConvertUtils.addDays(entity.getWorkdate(),flow.getDaydiffer()));
+			adtt.setStatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+			adtt.setTaskid(entity.getTaskid());
+			adtt.setTeamid(flow.getTeamid());
+			adtt.setNodeid(flow.getNodeid());
+			adtt.setLaststep(flow.getLaststep());
+			adtt.setStepid(flow.getStepid());
+			adtt.setTemplateid(flow.getTemplateid());
+			adtt.setSeqno(flow.getSeqno());
+			adtt.setSeqtask(flow.getSeqtask());
+			adtt.setDaydiffer(flow.getDaydiffer());
+			adtt.setDbno(entity.getDbno());
+			adttDao.save(adtt);
+			if(flow.getSeqtask()==1)
+			{
+			adtts.add(adtt);
+			}
+		}
+		int i=1;
+		for(i=1;i<=entity.getAmount();i++)
+		{
+			
+		AssTaskSeq taskseq=new AssTaskSeq();
+		if(at.getIsauto()!=null&&at.getIsauto().intValue()==0){
+			//taskseq.setSeqcode(seqs[i-1].trim());//之前的
+			String codesqno = "";
+			for(int sq = 0;sq<seqs.length;sq++){
+				AssTaskSeq atseq = new AssTaskSeq();
+				atseq.setSeqcode(seqs[sq].trim());
+				atseq.setTaskid(entity.getTaskid());
+				List<AssTaskSeq> atsList = assTaskSeqDao.findDataSelect(atseq);
+				if(atsList.size()==0){
+					codesqno+=seqs[sq];
+					break;
+				}
+			}
+			
+			
+			taskseq.setSeqcode(codesqno.trim());
+			taskseq.setPrefix(null);
+			taskseq.setSeqno(seqno+i);
+		}else{
+			taskseq.setSeqcode(prefix+StringCodeUtils.generatorseq(seqno+i, flen));
+			taskseq.setPrefix(prefix);
+			taskseq.setSeqno(seqno+i);
+		}
+		
+		taskseq.setFinishstate(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+		taskseq.setDispatchid(entity.getDispatchid());
+		taskseq.setItemcode(entity.getItemcode());
+		taskseq.setTaskid(entity.getTaskid());
+		taskseq.setPlanstartdate(entity.getWorkdate());
+		taskseq.setAdttid(adtts.get(0).getAdttid());/***取组装任务id,检测任务id未取，暂质检需求不定**/
+		taskseq.setDbno(entity.getDbno());
+		assTaskSeqDao.save(taskseq);
+		
+		/***创建任务流程表***/
+			
+		for(Adtt adtt:adtts)
+		{
+			AssemblyTaskFlow taskFlow=new AssemblyTaskFlow();
+			taskFlow.setSeqid(taskseq.getSeqid());
+			taskFlow.setStepid(adtt.getStepid());
+			taskFlow.setNodeid(adtt.getNodeid());
+			taskFlow.setTeamid(adtt.getTeamid());
+			taskFlow.setTemplateid(entity.getTemplateid());
+			taskFlow.setSeqcode(taskseq.getSeqcode());
+			taskFlow.setStatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+			taskFlow.setItemcode(entity.getItemcode());
+			taskFlow.setTaskid(entity.getTaskid());
+			taskFlow.setPlanstartdate(DateConvertUtils.addDays(entity.getWorkdate(),adtt.getDaydiffer()));
+			taskFlow.setOnstatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+			taskFlow.setSeqno(adtt.getSeqno());
+			taskFlow.setSeqtask(adtt.getSeqtask());
+			taskFlow.setLaststep(adtt.getLaststep());
+			taskFlow.setDispatchid(entity.getDispatchid());
+			taskFlow.setAdttid(adtt.getAdttid());
+			taskFlow.setDbno(entity.getDbno());
+			assemblyTaskFlowDao.save(taskFlow);
+		}
+			/*for(TemplateFlow flow:flows)
+			{
+				if(flow.getSeqtask()==1)
+				{
+				AssemblyTaskFlow taskFlow=new AssemblyTaskFlow();
+				taskFlow.setSeqid(taskseq.getSeqid());
+				taskFlow.setStepid(flow.getStepid());
+				taskFlow.setNodeid(flow.getNodeid());
+				taskFlow.setTeamid(flow.getTeamid());
+				taskFlow.setTemplateid(entity.getTemplateid());
+				taskFlow.setSeqcode(taskseq.getSeqcode());
+				taskFlow.setStatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+				taskFlow.setItemcode(entity.getItemcode());
+				taskFlow.setTaskid(entity.getTaskid());
+				taskFlow.setPlanstartdate(DateConvertUtils.addDays(entity.getWorkdate(),flow.getDaydiffer()));
+				taskFlow.setOnstatus(TerrcnceConstants.ASSEMBLY_TASK_STATUS_NOWORK);
+				taskFlow.setSeqno(flow.getSeqno());
+				taskFlow.setSeqtask(flow.getSeqtask());
+				taskFlow.setLaststep(flow.getLaststep());
+				taskFlow.setDispatchid(entity.getDispatchid());
+				assemblyTaskFlowDao.save(taskFlow);
+				}
+			}*/
+		}
+		if(null!=codeseq)
+		{
+			codeseq.setFcurval(curval+i-1);
+			codeSeqDao.update(codeseq);
+		}
+		/***更新物料表，在制品量**/
+		/*AssemblyTask task=new AssemblyTask();
+		task.setId(entity.getTaskid());
+		task.setWorkload(entity.getAmount().doubleValue());
+		assemblyTaskDao.update("update.workload",task);*/
+		/***创建该产品BOM物料的占用量**/
+		
+		/**更新物料表中物料的总占用量***/
+		return entity.getDispatchid();
+	}
+	private void updateBase(AssemblyDispatch entity, int flage) {//1、配工确定时增加在制品量
+		AssemblyTask at = assemblyTaskDao.getById(entity.getTaskid());
+		
+		List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+		BaseItemQuery bQuery=new BaseItemQuery();
+		bQuery.setItemcode(entity.getItemcode());
+		baseitemList = baseItemDao.findEntityBase(bQuery);
+		
+		if(baseitemList.size()>0){
+			Double sumqty = 0D;
+			if(at.getDbno() == 4){
+				if(flage==1){
+					sumqty = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4()) + entity.getAmount();
+				}else if(flage==0){
+					sumqty = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4()) - entity.getAmount();
+				
+				}
+				
+			}else{
+				if(flage==1){
+					sumqty = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums()) + entity.getAmount();
+					
+				}else if(flage==0){
+					sumqty = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums()) - entity.getAmount();
+				}
+			}
+			
+			BaseItem bitem = new BaseItem();
+			bitem.setItemcode(entity.getItemcode());
+			bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+			if(at.getDbno() == 4){
+				bitem.setMakingnums4(sumqty<0?0:sumqty);
+			}else{
+				bitem.setMakingnums(sumqty<0?0:sumqty);
+			}
+			
+			baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+		}else{
+			throw new ServiceException("物料表中没有物料编码："+entity.getItemcode());
+		}
+		
+	}
+
+	@Transactional(readOnly=true)
+	public List<AssemblyDispatch> findList(AssemblyDispatchQuery query,String statement) throws ServiceException {
+		return assemblyDispatchDao.findList(statement, query);
+	}
+	
+}

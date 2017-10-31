@@ -1,0 +1,127 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Stock;
+import com.terrence.crm.dol.dao.IStockDao;
+import com.terrence.crm.dol.query.StockQuery;
+import com.terrence.crm.dol.service.IStockService;
+@Service
+@Transactional
+public class StockService extends BaseService implements IStockService{
+	protected static Logger logger = LoggerFactory.getLogger(StockService.class);
+	@Autowired
+	@Qualifier("stockDao")
+	private IStockDao stockDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Stock";
+	}
+	@Transactional(readOnly=true)
+	public Stock getById(java.lang.Long id) throws ServiceException
+	{
+		return stockDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Stock entity) throws ServiceException
+	{
+		stockDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Stock entity) throws ServiceException
+	{
+		Long adId = stockDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Stock entity) throws ServiceException
+	{
+		Integer returnValue =  stockDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = stockDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = stockDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		StockQuery query = new StockQuery();
+		try {
+			return stockDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Stock> findPage(Page<Stock> page, StockQuery query) throws ServiceException
+	{
+		return stockDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Stock> findPage(Page<Stock> page,String statement, StockQuery query) throws ServiceException
+	{
+		return stockDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Stock> findList(StockQuery query) throws ServiceException
+	{
+		return stockDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Stock> findList(StockQuery query,Integer pageSize) throws ServiceException
+	{
+		return stockDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Stock> findList(StockQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return stockDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Stock> findAllList() throws ServiceException
+	{
+		return stockDao.findAllList();
+	}
+	@Override
+	public List<Stock> findlistpoorder(StockQuery stockQuery)
+			throws ServiceException {
+		return stockDao.findlistpoorder(stockQuery);
+	}
+}

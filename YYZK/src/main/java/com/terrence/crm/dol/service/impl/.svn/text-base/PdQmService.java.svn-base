@@ -1,0 +1,818 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.AssemblyRecord;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyTaskFlow;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckItemResult;
+import com.terrence.crm.dol.bean.ExamineReport;
+import com.terrence.crm.dol.bean.FactoryReport;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.NameplateItem;
+import com.terrence.crm.dol.bean.PdCheckItem;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.bean.PdNameplate;
+import com.terrence.crm.dol.bean.PdPlateRec;
+import com.terrence.crm.dol.bean.PdQm;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.TrainRecord;
+import com.terrence.crm.dol.bean.ValveParts;
+import com.terrence.crm.dol.query.AssemblyRecordQuery;
+import com.terrence.crm.dol.query.AssemblyTaskFlowQuery;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+import com.terrence.crm.dol.query.FactoryReportQuery;
+import com.terrence.crm.dol.query.NameplateItemQuery;
+import com.terrence.crm.dol.query.PdNameplateQuery;
+import com.terrence.crm.dol.query.PdPlateRecQuery;
+import com.terrence.crm.dol.query.PdQmQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IAdttDao;
+import com.terrence.crm.dol.dao.IAssemblyRecordDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICheckItemResultDao;
+import com.terrence.crm.dol.dao.IExamineReportDao;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcitemDesignDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.INameplateItemDao;
+import com.terrence.crm.dol.dao.IPdCheckItemDao;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.dao.IPdNameplateDao;
+import com.terrence.crm.dol.dao.IPdPlateRecDao;
+import com.terrence.crm.dol.dao.IPdQmDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.ITrainRecordDao;
+import com.terrence.crm.dol.dao.IValvePartsDao;
+import com.terrence.crm.dol.service.IPdQmService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class PdQmService extends BaseService implements IPdQmService {
+	protected static Logger logger = LoggerFactory.getLogger(PdQmService.class);
+	@Autowired
+	@Qualifier("pdQmDao")
+	private IPdQmDao pdQmDao;
+	
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("assemblyTaskFlowDao")
+	private IAssemblyTaskFlowDao assemblyTaskFlowDao;
+	
+	@Autowired
+	@Qualifier("adttDao")
+	private IAdttDao adttDao;
+	
+	@Autowired
+	@Qualifier("examineReportDao")
+	private IExamineReportDao examineReportDao;
+	
+	@Autowired
+	@Qualifier("pdCheckItemDao")
+	private IPdCheckItemDao pdCheckItemDao;
+	
+	@Autowired
+	@Qualifier("assemblyRecordDao")
+	private IAssemblyRecordDao assemblyRecordDao;
+	
+	@Autowired
+	@Qualifier("trainRecordDao")
+	private ITrainRecordDao trainRecordDao;
+	
+	@Autowired
+	@Qualifier("checkItemResultDao")
+	private ICheckItemResultDao checkItemResultDao;
+	
+	@Autowired
+	@Qualifier("pdPlateRecDao")
+	private IPdPlateRecDao pdPlateRecDao;
+	
+	@Autowired
+	@Qualifier("pdNameplateDao")
+	private IPdNameplateDao pdNameplateDao;
+	
+	@Autowired
+	@Qualifier("nameplateItemDao")
+	private INameplateItemDao nameplateItemDao;
+	
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	@Autowired
+	@Qualifier("icitemDesignDao")
+	private IIcitemDesignDao icitemDesignDao;
+	
+	@Autowired
+	@Qualifier("adminDao")
+	private IAdminDao adminDao;
+	
+	@Autowired
+	@Qualifier("factoryReportDao")
+	private IFactoryReportDao factoryReportDao;
+	
+	@Autowired
+	@Qualifier("valvePartsDao")
+	private IValvePartsDao valvePartsDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdQm";
+	}
+	@Transactional(readOnly=true)
+	public PdQm getById(java.lang.Long id) throws ServiceException
+	{
+		return pdQmDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdQm entity) throws ServiceException
+	{
+		pdQmDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdQm entity) throws ServiceException
+	{
+		Long adId = pdQmDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdQm entity) throws ServiceException
+	{
+		Integer returnValue =  pdQmDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdQmDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdQmDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdQmQuery query = new PdQmQuery();
+		try {
+			return pdQmDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdQm> findPage(Page<PdQm> page, PdQmQuery query) throws ServiceException
+	{
+		return pdQmDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdQm> findPage(Page<PdQm> page,String statement, PdQmQuery query) throws ServiceException
+	{
+		return pdQmDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdQm> findList(PdQmQuery query) throws ServiceException
+	{
+		return pdQmDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdQm> findList(PdQmQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdQmDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdQm> findList(PdQmQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdQmDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdQm> findAllList() throws ServiceException
+	{
+		return pdQmDao.findAllList();
+	}
+	@Override
+	public Long saveNewData(PdQm entity) throws ServiceException {
+		
+//		Adtt addt = new Adtt();
+//		addt.setAdttid(entity.getAdttid());
+/*		Adtt addt = adttDao.getById(entity.getAdttid());
+		Double db = 0.0;
+		
+		Adtt aaddtt = new Adtt();
+		aaddtt.setAdttid(entity.getAdttid());
+		 if(addt.getFqtyed() != null){
+			 db = addt.getFqtyed() + entity.getFauxqty();
+			 aaddtt.setFqtyed(db);
+		 }else{
+			 db = entity.getFauxqty();
+			 aaddtt.setFqtyed(db);
+		 }
+		
+		 if((db - addt.getAmount()) == 0){
+			 aaddtt.setStatus(1);
+		 }
+		 adttDao.update(aaddtt);
+		*/
+		
+		AssemblyTaskFlow atf = assemblyTaskFlowDao.getById(entity.getFlowid());
+		
+		AssemblyTaskFlowQuery atfqdate = new AssemblyTaskFlowQuery();
+		atfqdate.setSeqid(atf.getSeqid());
+		atfqdate.setNodeid(2L);
+		atfqdate.setStatus(2);
+		atfqdate.setItemcode(atf.getItemcode());
+		atfqdate.setSeqcode(atf.getSeqcode());
+		
+		List<AssemblyTaskFlow> atfList = assemblyTaskFlowDao.findList("AssemblyTaskFlow.select.zhuangpei.status", atfqdate);//查询装配是否已经提交
+		
+		if(atfList.size()==0 && atf.getTemplateid() != 4){
+			throw new ServiceException("装配单未提交检测单不可提交");		
+		}
+		
+		Long id = null;
+		
+		PdQmQuery pdqm = new PdQmQuery();
+		pdqm.setFbillno(entity.getFbillno());
+		pdqm.setFstatus("4");
+		PdQm qm = pdQmDao.getByEntity("PdQm.find.query.data.pdqm", pdqm);
+		
+		
+		if(atf.getRejectnote()!=null && !atf.getRejectnote().equals("") && qm != null){//提交过的检验单不再做保存操作
+			
+			PdQm qmpd = new PdQm();//修改原来的检验单状态
+			qmpd.setQmid(qm.getQmid());
+			qmpd.setFstatus("0");
+			pdQmDao.update(qmpd);
+			
+			AssemblyTaskFlow taskFlow = new AssemblyTaskFlow();
+			taskFlow.setFlowid(entity.getFlowid());
+			taskFlow.setStatus(2);
+			taskFlow.setFbillno(entity.getFbillno());
+			assemblyTaskFlowDao.update("AssemblyTaskFlow.update.new.status.entity", taskFlow);
+		}else{
+			
+			id = pdQmDao.save(entity, "PdQm.newData.insert");
+			
+			AssemblyTaskFlow taskFlow = new AssemblyTaskFlow();
+			taskFlow.setFlowid(entity.getFlowid());
+			taskFlow.setStatus(2);
+			taskFlow.setFbillno(entity.getFbillno());
+			assemblyTaskFlowDao.update("AssemblyTaskFlow.update.new.status.entity", taskFlow);
+			
+		}
+		
+		
+		
+		
+//		Icbillno icbillno = new Icbillno();//因为FQC变换问题暂时屏蔽，添加了触发器
+//		icbillno.setFbillid(entity.getFbilid());
+//		icbillno.setFcurno(entity.getFcurno().intValue());
+//		icbillnoDao.updatefcurno(icbillno);//保存成功后更新当前编码
+		
+		
+		return id;
+		
+		
+	}
+	@Override
+	public void saveSubData(List<Long> checkedIdList) throws ServiceException {
+		
+		
+		
+		
+		String ids = StringUtils.join(checkedIdList, ",");
+		PdQmQuery query = new PdQmQuery();
+		query.setQmids(ids);
+		List<PdQm> list = pdQmDao.findList("PdQm.find.pdList", query);
+		
+		
+		PdQm pqdm = new PdQm();
+		pqdm.setQmids(ids);
+		pqdm.setFstatus("1");//已提交
+		pqdm.setFchecker(SpringSecurityUtils.getCurrentUserId());//审核人-----提交人
+		pqdm.setFcheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核日期----提交日期
+		pdQmDao.update("PdQm.update.new.status", pqdm);
+		
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		ProcessDetail processDetail = processDetails.get(0);
+		String handlers = "";
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		Putstorage putstorage=new Putstorage();
+		putstorage.setIsclose(0);//关闭标志
+		putstorage.setStatus(0);//审核标记
+		putstorage.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());//制单人,当前登录人
+		putstorage.setSrctype(85L);//原单类型
+		putstorage.setTeamid(214L);//交货部门---装配产品入库统一(K3,t_Department部门表取值213)
+		putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+		
+		String fbillno="";
+		Icbillno icbillno = icbillnoDao.getByProperty("fpreletter", "CINPC");
+		
+		icbillno.setFcurno(icbillno.getFcurno()+1);
+		icbillnoDao.update(icbillno);
+		
+		Integer icblength = icbillno.getFlength();
+		String fcurno = icbillno.getFcurno()+"";
+		if(fcurno.length()<icblength){
+			String head="";
+			for(int i=0;i<icblength-fcurno.length();i++){
+				head=head+"0";
+			}
+			fbillno=icbillno.getFpreletter()+head+fcurno;
+		}else{
+			fbillno=icbillno.getFpreletter()+fcurno;
+		}
+		putstorage.setFbillno(fbillno);//入库单号t_icbillno:(72	入库单	WIN	1697	6)
+		
+		Long putstorageid = putstorageDao.save(putstorage, "Putstorage.insert.fromCheck");//保存入库单
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(fbillno);
+		processHistask.setSourceId(putstorageid);
+		processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processExetask.setSourceCode(fbillno);
+		processExetask.setSourceId(putstorageid);
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+	
+		
+		for(int i = 0;i<list.size();i++){
+			
+			//findAssemblyTask
+			AssemblyTaskQuery assemblyTaskQuery = new AssemblyTaskQuery();
+			assemblyTaskQuery.setTaskcode(list.get(i).getFicmobillno());
+			AssemblyTask task = assemblyTaskDao.findAssemblyTask(assemblyTaskQuery);//查询，获取源单内码
+			
+			
+			Putstorageentity putstorageentity=new Putstorageentity();
+			putstorageentity.setFinterid(putstorageid);
+			putstorageentity.setItemcode(list.get(i).getFitemcode());
+			
+			if(list.get(i).getFitemcode().toString().substring(0, 3).equals("081")){
+				putstorageentity.setStorageid(372l);//收料仓库----装配半成品库 
+			}
+			
+
+			if(list.get(i).getFitemcode().toString().substring(0, 3).equals("080") || list.get(i).getFitemcode().toString().substring(0, 3).equals("082")){
+				putstorageentity.setStorageid(373l);//收料仓库----373-----装配成品库 
+			}
+			
+			//putstorageentity.setStorageid(list.get(i).getFstockid());//收料仓库
+			
+			
+			putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+			putstorageentity.setUnitid(baseItemDao.getByProperty("itemcode", list.get(i).getFitemcode()).getUnitid().longValue());
+			putstorageentity.setFqty(list.get(i).getFauxqty());//数量
+			putstorageentity.setFbatchno(list.get(i).getFseqno());//装配产品的序列号
+			//putstorageentity.setFsrcinterid(list.get(i).getQmid());//源单内码
+			putstorageentity.setFsrcinterid(task.getId());//源单内码
+			putstorageentity.setPoorderno(list.get(i).getFicmobillno());//源单编号
+			if(list.get(i).getDbno() != null){
+				putstorageentity.setFxmark(list.get(i).getDbno());//帐套
+			}
+			
+			putstorageentityDao.save(putstorageentity, "Putstorageentity.insert.in.poorderentry");
+			
+			
+			//=======================产品档案更改状态t_pd_file=========================铭牌的查看在铭牌数据完整后可看
+//			PdFile pfile = new PdFile();
+//			pfile.setSeqno(list.get(i).getFseqno());
+//			pfile.setIsf(1);//产品出厂资料
+//			pdFileDao.update("Pdfile.update.checkBaoBiao.data", pfile);
+			//===============================================================
+			//==================修改产品档案数据状态=======================品管质检完提交时
+			PdFile pdfile = new PdFile();
+//			pdfile.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测时间
+//			//SpringSecurityUtils.getCurrentUserId()
+//			Admin admin = adminDao.getById(SpringSecurityUtils.getCurrentUserId());
+//			pdfile.setCheckemp(admin.getAdminName());//检测人----取待检产品的制单人
+			pdfile.setIsc(1);//有记录了
+			pdfile.setSeqno(list.get(i).getFseqno());
+			pdFileDao.update("Pdfile.update.checkBaoBiao.data", pdfile);
+			//============================================================
+			
+			
+			//=========================装配记录的审核人员，审核日期===============
+			AssemblyRecord assembltrecord = new AssemblyRecord();
+			assembltrecord.setItemcode(list.get(i).getFitemcode());
+			assembltrecord.setItemseq(list.get(i).getFseqno());
+			assembltrecord.setWorkno(list.get(i).getFicmobillno());
+			assembltrecord.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核日期
+			assembltrecord.setCheckemp(SpringSecurityUtils.getCurrentUserId());//审核人
+			assembltrecord.setStatus(1);//1、审核 2、装配的提交
+			assemblyRecordDao.update("AssemblyRecord.update.checkdate.emp.data", assembltrecord);
+			//================================================================
+			
+			//======================更新出厂报告主要部件清单的审核人===============================
+			FactoryReportQuery frport = new FactoryReportQuery();
+			frport.setSerial(list.get(i).getFseqno());
+			FactoryReport ref = factoryReportDao.findDataEntity(frport);
+			if(ref != null){
+				
+				ValveParts vp = new ValveParts();
+				vp.setReportid(ref.getReportid());
+				vp.setCheckname(SpringSecurityUtils.getCurrentRealName());
+				valvePartsDao.update("ValveParts.update.checkname.data", vp);
+			}
+			
+		//============================保存序列号=======================================	
+/*		BaseItem baseitem = new BaseItem();
+			baseitem.setItemcode(list.get(i).getFitemcode());
+			BaseItem bitem = baseItemDao.findbitem(baseitem);
+			Long fitemid = bitem.getFitemid();//原物料内码
+			Integer fid = fitemid.intValue();
+			
+			Icserial icserial = new Icserial();
+			icserial.setFserialnum(list.get(i).getFseqno());//序列号
+			
+			icserial.setFstatus(0);//0、出库 1、在库
+			icserial.setFvalid(1);//0、无效 1、有效
+			icserial.setItemcode(list.get(i).getFitemcode());
+			icserial.setFitemid(fid);
+			icserial.setLockstatus(0);
+			icserial.setDb(3);
+			//icserial.setFstockid(list.get(i).getFstockid().intValue());//仓库
+			icserialDao.saveSerial(icserial);*/
+		//========================================================================
+			
+		}
+		
+	
+	}
+	@Override
+	public void deletePdQm(List<Long> checkedIdList) throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		//pdQmDao.deleteByMultipleId(delIds);
+		
+		PdQm pdqm = new PdQm();
+		pdqm.setQmids(delIds);
+		
+		List<PdQm> pdqmList = new ArrayList<PdQm>();
+		pdqmList = pdQmDao.findListPdQm(pdqm);
+		
+		if(pdqmList.size()>0){
+			for(int i = 0;i<pdqmList.size();i++){
+				AssemblyTaskFlow taskFlow = new AssemblyTaskFlow();
+				taskFlow.setStatus(0);
+				taskFlow.setFlowid(pdqmList.get(i).getFlowid());
+				assemblyTaskFlowDao.update("AssemblyTaskFlow.update.new.status.entity", taskFlow);
+				
+				if(pdqmList.get(i).getExamineid()!=null && !pdqmList.get(i).getExamineid().equals("")){
+					
+					PdPlateRec pprc = new PdPlateRec();
+					pprc.setExamineid(pdqmList.get(i).getExamineid());
+					pdPlateRecDao.deleteData(pprc);	//删除产品铭牌记录
+					
+					CheckItemResult cir = new CheckItemResult();
+					cir.setExamineid(pdqmList.get(i).getExamineid());
+					checkItemResultDao.deleteforData(cir);//删除产品检测项结果
+					
+					examineReportDao.deleteById(pdqmList.get(i).getExamineid());//删除检验报告数据
+					
+				}
+				
+			}
+			
+		}
+		
+			
+		pdQmDao.deleteByMultipleId(delIds);
+		
+	}
+	@Override
+	public PdQm findPdQmEntity(PdQmQuery pdQmQuery) throws ServiceException {
+		
+		return pdQmDao.findPdQmEntity(pdQmQuery);
+	}
+	@Override
+	public PdQm findEntity(PdQmQuery pdQmQuery) throws ServiceException {
+		return pdQmDao.findEntity(pdQmQuery);
+	}
+	@Override
+	public PdQm saveCheck(PdQmQuery pdQmQuery) throws ServiceException {
+		PdQm pq = pdQmDao.getById(pdQmQuery.getQmid());
+		
+		if(pq != null){
+			Long id=0L;
+			if(pq.getExamineid()==null || pq.getExamineid().equals("") || pq.getExamineid().equals("null")  || pq.getExamineid().equals("NULL")){
+				
+				AssemblyRecordQuery arq = new AssemblyRecordQuery();
+				arq.setItemseq(pq.getFseqno());
+				arq.setItemcode(pq.getFitemcode());
+				arq.setWorkno(pq.getFicmobillno());
+				AssemblyRecord ar = assemblyRecordDao.findRecordData(arq);
+				
+				
+				//============检测报告查询,查询最后一次的检测记录========================
+				String sql = "select checktimeid,seqno,itemcode,tplid,trialid from t_train_record where recid=(select max(recid) from t_train_record where seqno= '"+
+				pq.getFseqno()+"' and itemcode ='"+pq.getFitemcode()+"' group by seqno)"; 
+				
+				TrainRecord tr = trainRecordDao.findTrainCheckIdSql(sql);
+				//====================================
+				
+				ExamineReport er = new ExamineReport();
+				er.setItemcode(pq.getFitemcode());
+				er.setItemmode(pq.getFitemmodel());
+				er.setItemname(pq.getFitemname());
+				er.setCheckno(pq.getFbillno());
+				er.setSeqno(pq.getFseqno());
+				er.setReportno(pq.getFbillno());
+				er.setTestemp(pq.getFusername());
+				er.setTestdate(pq.getFbilldate());//创建日期为装配检测日期
+				er.setWorkno(pq.getFicmobillno());
+				id = examineReportDao.save(er,"ExamineReport.save.new.data");
+				
+				//dm.setExamineid(id);
+				
+				PdQm pdqm = new PdQm();
+				pdqm.setQmid(pq.getQmid());
+				pdqm.setExamineid(id);
+				pdQmDao.update("PdQm.update.check.examineid", pdqm);
+				
+				List<PdCheckItem>  pciList = pdCheckItemDao.findAllList();
+				if(pciList.size()==0){
+					throw new ServiceException("请先维护产品检验项目","-1");
+				}else{
+					for(int tt=0;tt<pciList.size();tt++){
+						CheckItemResult cir = new CheckItemResult();
+						cir.setPcitemid(pciList.get(tt).getPcitemid());
+						cir.setExamineid(id);
+						if(pciList.get(tt).getCheckitem().equals("产品装配") && ar != null){
+							cir.setIsrecord(1);
+						}else if(pciList.get(tt).getCheckitem().equals("产品测试") && tr.getChecktimeid() != null && tr.getSeqno()!=null &&  !tr.getSeqno().equals("")){
+							cir.setIsrecord(1);
+						}else if(pciList.get(tt).getCheckitem().equals("产品装配材料清单")){
+							cir.setIsrecord(1);
+						}else if(pciList.get(tt).getCheckitem().equals("技术参数")){
+							cir.setIsrecord(1);
+						}
+						else{
+							cir.setIsrecord(0);
+						}
+						checkItemResultDao.save(cir, "CheckItemResult.insert.new.data.result");
+					}
+				}
+				
+			}
+			
+			//==========================保存铭牌记录============================
+			PdPlateRecQuery ppQ = new PdPlateRecQuery();
+			if(id>0){
+				ppQ.setExamineid(id);
+			}else{
+				PdQm mm = pdQmDao.getById(pdQmQuery.getQmid());
+				ppQ.setExamineid(mm.getExamineid());
+			}
+			List<PdPlateRec> listppr = pdPlateRecDao.findList(ppQ);//查询产品铭牌记录
+			if(listppr.size()==0){
+				BaseItem btem = baseItemDao.getBaseByColumn("itemcode",pq.getFitemcode());
+				PdNameplateQuery pnpq = new PdNameplateQuery(); 
+				pnpq.setBaseitemid(btem.getBaseitemid());
+				pnpq.setItemcode(pq.getFitemcode());
+				pnpq.setFxmark(pq.getDbno());//t_pq_qm中的帐套标记
+				List<PdNameplate> pdpList = pdNameplateDao.findListPD(pnpq);
+//				if(pdpList.size()==0){//暂时屏蔽，不是所有的产品都有铭牌
+//					throw new ServiceException("此物料未绑定铭牌（未在铭牌记录关系表中维护）或者物料绑定的模板标记与物料帐套不一致，请先检查物料绑定的模板","-1");
+//				}
+				if(pdpList.size()>1){//判断条件，暂时是每条物料绑定模板时只能绑定一条A标记和一条B标记的
+					throw new ServiceException("此物料绑定的多个铭牌模板中有多个A标记的或多个B标记的，请检查绑定的模板","-1");
+				}
+				
+				if(pdpList.size() != 0){//有铭牌、绑定铭牌的走，没铭牌的不走
+					NameplateItemQuery nQ = new NameplateItemQuery();
+					nQ.setPlateid(pdpList.get(0).getPlateid());
+					List<NameplateItem> npitemList = nameplateItemDao.findList(nQ);
+					
+					if(npitemList.size()==0){
+						throw new ServiceException("铭牌属性数据为空，请维护铭牌属性","-1");
+					}
+					for(int fk2 =0;fk2<npitemList.size();fk2++){//=========================
+						PdPlateRec pdr = new PdPlateRec();
+						pdr.setItemid(npitemList.get(fk2).getItemid());
+						if(id>0){
+							pdr.setExamineid(id);
+						}else{
+							PdQm mm = pdQmDao.getById(pdQmQuery.getQmid());
+							if(mm.getExamineid()==null || mm.getExamineid().equals("")){
+								throw new ServiceException("单据列表t_pd_qm缺少检验报告id","-1");
+							}else{
+								pdr.setExamineid(mm.getExamineid());
+							}
+						}
+						//=======================查询物料设计资料=========================
+						IcitemDesign itemdes = icitemDesignDao.getById(btem.getBaseitemid());
+						//================================================
+//						npitemList.get(fk2).setDefval("天然气");
+//						npitemList.get(fk2).setIsitemattr(null);
+
+						if(npitemList.get(fk2).getDefval()!=null && !npitemList.get(fk2).getDefval().equals("") && (npitemList.get(fk2).getIsitemattr()==null||npitemList.get(fk2).getIsitemattr()==1)){
+							pdr.setItemval(npitemList.get(fk2).getDefval());
+						}else if(null!=npitemList.get(fk2).getIsitemattr()&&npitemList.get(fk2).getIsitemattr() == 2 && itemdes != null){//判断物料设计资料表是否有值，并且判断模板属性来源Isitemattr 1、自定义2、物料属性
+							IcitemDesign designItem = new IcitemDesign();
+							designItem.setCover(npitemList.get(fk2).getCnattrname());
+							designItem.setBaseitemid(btem.getBaseitemid());
+							IcitemDesign ides = icitemDesignDao.findentity(designItem);//查询物料设计资料的值
+							if(ides.getCover()!=null && !ides.getCover().equals("")){
+								pdr.setItemval(ides.getCover());
+							}
+							
+						}
+						pdPlateRecDao.save(pdr, "PdPlateRec.insert.new.in.pdqm");
+					}//=====================
+				}			
+			}
+				
+			//=================================================================
+			
+		}else{
+			throw new ServiceException("查询检验单据不存在","-1");
+		}
+		
+		PdQm dm = pdQmDao.getById(pdQmQuery.getQmid());
+		
+		return dm;
+		
+		
+	}
+	@Override
+	public void updateStatus(PdQmQuery pdQmQuery) throws ServiceException {
+		PdQm pq =  pdQmDao.getById(pdQmQuery.getQmid());
+		
+		Putstorageentity putentity = new Putstorageentity();
+		putentity.setFbatchno(pq.getFseqno());
+		Putstorageentity put = putstorageentityDao.findonly(putentity);
+		
+		if(put != null){
+			throw new ServiceException("入库单中已有包含此序列号的物料，请先删除，不可反提交","-1");
+		}
+		
+		PdQm pdqm = new PdQm();
+		pdqm.setQmid(pdQmQuery.getQmid());
+		pdqm.setFstatus("0");
+		pdQmDao.update("PdQm.update", pdqm);
+	}
+	@Override
+	public void updatePdQm(PdQm entity, List<Long> checkedIdList)
+			throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");		
+		PdQm pdqm = new PdQm();
+		pdqm.setQmids(delIds);
+		
+		List<PdQm> pdqmList = new ArrayList<PdQm>();
+		pdqmList = pdQmDao.findListPdQm(pdqm);
+		if(pdqmList.size()>0){
+			for(int i = 0;i<pdqmList.size();i++){
+				AssemblyTaskFlow taskFlow = new AssemblyTaskFlow();
+				//taskFlow.setStatus(0);
+				taskFlow.setStatus(4);//驳回状态
+				taskFlow.setFlowid(pdqmList.get(i).getFlowid());
+				taskFlow.setRejectnote(entity.getRejectnote());//驳回原因
+				assemblyTaskFlowDao.update("AssemblyTaskFlow.update.new.status.entity", taskFlow);
+				
+				AssemblyTaskFlow atf = assemblyTaskFlowDao.getById(pdqmList.get(i).getFlowid());
+				Adtt adtt = new Adtt();
+				adtt.setTaskid(atf.getTaskid());
+				adtt.setNodeid(3L);
+				adtt.setStatus(1);
+				adtt.setDispatchid(atf.getDispatchid());
+				adttDao.update("adtt.update.data.for.status.zhuangtai", adtt);
+				
+			/*	Adtt att = new Adtt();
+				att.setTaskid(atf.getTaskid());
+				att.setNodeid(3L);
+				att.setDispatchid(atf.getDispatchid());
+				Adtt ttda = adttDao.findAdtt(att);
+				if(ttda != null){
+					if(ttda.getFqtyed()==0){//如果全部驳回，则将状态改为0未开始
+						Adtt adtt2 = new Adtt();
+						adtt2.setTaskid(atf.getTaskid());
+						adtt2.setNodeid(3L);
+						adtt2.setStatus(0);
+						adtt2.setDispatchid(atf.getDispatchid());
+						adttDao.update("adtt.update.data.for.status.zhuangtai.two", adtt2);
+					}
+				}*/
+				
+				//=================修改产品档案状态==================================
+				PdFile pfile = new PdFile();
+				pfile.setSeqno(pdqmList.get(i).getFseqno());
+				pfile.setIsf(0);//产品出厂资料
+				pdFileDao.update("Pdfile.update.checkBaoBiao.data", pfile);
+				//==================================================================
+				
+				PdQm qmpd = new PdQm();
+				qmpd.setFstatus("4");//驳回状态
+				qmpd.setQmid(pdqmList.get(i).getQmid());
+				pdQmDao.update(qmpd);
+				
+			}
+		}
+	}
+
+}

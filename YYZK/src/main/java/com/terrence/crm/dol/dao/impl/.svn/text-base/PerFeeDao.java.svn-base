@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PerFee;
+import com.terrence.crm.dol.dao.IPerFeeDao;
+
+@Repository
+public class PerFeeDao extends BaseIbatisDao<PerFee,java.lang.Long> implements IPerFeeDao{
+
+		
+	public void saveOrUpdate(PerFee entity) {
+		if(entity.getPerid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PerFee";
+	}
+	public PerFee getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PerFee)this.getSqlMapClientTemplate().queryForObject("PerFee.getByProperty", map);		
+	}
+	/**
+	 * 删除应收款及关联的业绩奖明细
+	 */ 
+	public Integer deleteByMultipleByBillid(String delIds) {
+		
+		return getSqlMapClientTemplate().delete("PerFee.deleteMultipleByfbillid",delIds);
+	}
+
+}

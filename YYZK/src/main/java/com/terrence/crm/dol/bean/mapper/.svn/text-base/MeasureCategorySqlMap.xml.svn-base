@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MeasureCategory">
+
+        
+	<resultMap id="RM.MeasureCategory" class="com.terrence.crm.dol.bean.MeasureCategory">
+        <result property="categoryid" column="categoryid"/>
+        <result property="categoryname" column="categoryname"/>
+        <result property="categorycode" column="categorycode"/>
+        <result property="parentcode" column="parentcode"/>
+        <result property="shortcode" column="shortcode"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="MeasureCategory.columns">
+	    <![CDATA[
+        	t_measure_category.categoryid ,
+        	t_measure_category.categoryname ,
+        	t_measure_category.categorycode ,
+        	t_measure_category.parentcode ,
+        	t_measure_category.shortcode 
+	    ]]>
+	</sql>
+	
+   <insert id="MeasureCategory.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_measure_category (
+        	categoryname ,
+        	categorycode ,
+        	parentcode ,
+        	shortcode 
+        ) VALUES (
+        	#categoryname# ,
+        	#categorycode# ,
+        	#parentcode# ,
+        	#shortcode# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="categoryid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="MeasureCategory.update" parameterClass="com.terrence.crm.dol.bean.MeasureCategory">         
+        UPDATE t_measure_category 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="categoryname">
+	        	categoryname = #categoryname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="categorycode">
+	        	categorycode = #categorycode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentcode">
+	        	parentcode = #parentcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="shortcode">
+	        	shortcode = #shortcode# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        categoryid = #categoryid# 
+    </update>
+    
+	<delete id="MeasureCategory.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_measure_category where
+       categoryid = #categoryid# 
+    ]]>
+    </delete>
+    
+    <delete id="MeasureCategory.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_measure_category 
+        WHERE
+       categoryid in ($categoryid$) 
+    ]]>
+    </delete>
+    
+    <select id="MeasureCategory.getById" resultMap="RM.MeasureCategory">
+	    select <include refid="MeasureCategory.columns"/>
+	    
+	        from t_measure_category 
+	        where 
+		        categoryid = #categoryid# 
+	    
+    </select>
+    
+	<select id="MeasureCategory.getByProperty" resultMap="RM.MeasureCategory">
+		select <include refid="MeasureCategory.columns"/> from t_measure_category where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="MeasureCategory.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_measure_category.categoryid = #categoryid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="categoryname">
+	             t_measure_category.categoryname like ('%$categoryname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="categorycode">
+	             t_measure_category.categorycode = #categorycode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_measure_category.parentcode = #parentcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="shortcode">
+	             t_measure_category.shortcode = #shortcode#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="MeasureCategory.findPage.and">
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_measure_category.categoryid = #categoryid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryname">
+	             t_measure_category.categoryname = #categoryname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="categorycode">
+	             t_measure_category.categorycode = #categorycode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_measure_category.parentcode = #parentcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="shortcode">
+	             t_measure_category.shortcode = #shortcode#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="MeasureCategory.findList" resultMap="RM.MeasureCategory">
+    	SELECT 
+    		<include refid="MeasureCategory.columns"/> 
+    	FROM 
+    		t_measure_category
+		<include refid="MeasureCategory.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="MeasureCategory.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_measure_category
+    ]]>
+		<include refid="MeasureCategory.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="MeasureCategory.findPage" resultMap="RM.MeasureCategory">
+    	select <include refid="MeasureCategory.columns"/>	    
+	        from t_measure_category 	   
+		<include refid="MeasureCategory.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.MeasureCategory.findPage" resultMap="RM.MeasureCategory">
+    	select <include refid="MeasureCategory.columns"/>	    
+	        from t_measure_category where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       categoryid 
+	   not in(select $notTop$ 
+       categoryid 
+	   from t_measure_category <include refid="MeasureCategory.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="MeasureCategory.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	
+	<!-- 模糊查询用，每次查10条 -->
+	 <select id="MeasureCategory.find.Category.list" resultMap="RM.MeasureCategory">
+    	SELECT  top 10
+    		<include refid="MeasureCategory.columns"/> 
+    	FROM 
+    		t_measure_category
+		<include refid="MeasureCategory.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+</sqlMap>

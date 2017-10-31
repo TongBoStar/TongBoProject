@@ -1,0 +1,130 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.HisPrepareEmp;
+import com.terrence.crm.dol.query.HisPrepareEmpQuery;
+import com.terrence.crm.dol.dao.IHisPrepareEmpDao;
+import com.terrence.crm.dol.service.IHisPrepareEmpService;
+
+@Service
+@Transactional
+public class HisPrepareEmpService extends BaseService implements IHisPrepareEmpService {
+	protected static Logger logger = LoggerFactory.getLogger(HisPrepareEmpService.class);
+	@Autowired
+	@Qualifier("hisPrepareEmpDao")
+	private IHisPrepareEmpDao hisPrepareEmpDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "HisPrepareEmp";
+	}
+	@Transactional(readOnly=true)
+	public HisPrepareEmp getById(java.lang.Long id) throws ServiceException
+	{
+		return hisPrepareEmpDao.getById(id);
+	}
+	
+	public void saveOrUpdate(HisPrepareEmp entity) throws ServiceException
+	{
+		hisPrepareEmpDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(HisPrepareEmp entity) throws ServiceException
+	{
+		Long adId = hisPrepareEmpDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(HisPrepareEmp entity) throws ServiceException
+	{
+		Integer returnValue =  hisPrepareEmpDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = hisPrepareEmpDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = hisPrepareEmpDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		HisPrepareEmpQuery query = new HisPrepareEmpQuery();
+		try {
+			return hisPrepareEmpDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<HisPrepareEmp> findPage(Page<HisPrepareEmp> page, HisPrepareEmpQuery query) throws ServiceException
+	{
+		return hisPrepareEmpDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<HisPrepareEmp> findPage(Page<HisPrepareEmp> page,String statement, HisPrepareEmpQuery query) throws ServiceException
+	{
+		return hisPrepareEmpDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisPrepareEmp> findList(HisPrepareEmpQuery query) throws ServiceException
+	{
+		return hisPrepareEmpDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisPrepareEmp> findList(HisPrepareEmpQuery query,Integer pageSize) throws ServiceException
+	{
+		return hisPrepareEmpDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<HisPrepareEmp> findList(HisPrepareEmpQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return hisPrepareEmpDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HisPrepareEmp> findAllList() throws ServiceException
+	{
+		return hisPrepareEmpDao.findAllList();
+	}
+	@Override
+	public List<HisPrepareEmp> findList(String statement,
+			HisPrepareEmpQuery hisPrepareEmpQuery) throws ServiceException {
+
+		return hisPrepareEmpDao.findList(statement, hisPrepareEmpQuery);
+	}
+
+}

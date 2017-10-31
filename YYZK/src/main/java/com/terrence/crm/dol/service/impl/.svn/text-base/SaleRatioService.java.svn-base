@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.SaleRatio;
+import com.terrence.crm.dol.query.SaleRatioQuery;
+import com.terrence.crm.dol.dao.ISaleRatioDao;
+import com.terrence.crm.dol.service.ISaleRatioService;
+
+@Service
+@Transactional
+public class SaleRatioService extends BaseService implements ISaleRatioService {
+	protected static Logger logger = LoggerFactory.getLogger(SaleRatioService.class);
+	@Autowired
+	@Qualifier("saleRatioDao")
+	private ISaleRatioDao saleRatioDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "SaleRatio";
+	}
+	@Transactional(readOnly=true)
+	public SaleRatio getById(java.lang.Long id) throws ServiceException
+	{
+		return saleRatioDao.getById(id);
+	}
+	
+	public void saveOrUpdate(SaleRatio entity) throws ServiceException
+	{
+		saleRatioDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(SaleRatio entity) throws ServiceException
+	{
+		Long adId = saleRatioDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(SaleRatio entity) throws ServiceException
+	{
+		Integer returnValue =  saleRatioDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = saleRatioDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = saleRatioDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SaleRatioQuery query = new SaleRatioQuery();
+		try {
+			return saleRatioDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<SaleRatio> findPage(Page<SaleRatio> page, SaleRatioQuery query) throws ServiceException
+	{
+		return saleRatioDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<SaleRatio> findPage(Page<SaleRatio> page,String statement, SaleRatioQuery query) throws ServiceException
+	{
+		return saleRatioDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<SaleRatio> findList(SaleRatioQuery query) throws ServiceException
+	{
+		return saleRatioDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<SaleRatio> findList(SaleRatioQuery query,Integer pageSize) throws ServiceException
+	{
+		return saleRatioDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<SaleRatio> findList(SaleRatioQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return saleRatioDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<SaleRatio> findAllList() throws ServiceException
+	{
+		return saleRatioDao.findAllList();
+	}
+
+}

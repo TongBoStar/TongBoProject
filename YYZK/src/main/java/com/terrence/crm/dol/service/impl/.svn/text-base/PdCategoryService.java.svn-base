@@ -1,0 +1,161 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdCategory;
+import com.terrence.crm.dol.query.PdCategoryQuery;
+import com.terrence.crm.dol.dao.IPdCategoryDao;
+import com.terrence.crm.dol.service.IPdCategoryService;
+
+@Service
+@Transactional
+public class PdCategoryService extends BaseService implements IPdCategoryService {
+	protected static Logger logger = LoggerFactory.getLogger(PdCategoryService.class);
+	@Autowired
+	@Qualifier("pdCategoryDao")
+	private IPdCategoryDao pdCategoryDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdCategory";
+	}
+	@Transactional(readOnly=true)
+	public PdCategory getById(java.lang.Long id) throws ServiceException
+	{
+		return pdCategoryDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdCategory entity) throws ServiceException
+	{
+		pdCategoryDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdCategory entity) throws ServiceException
+	{
+		Long adId = pdCategoryDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdCategory entity) throws ServiceException
+	{
+		Integer returnValue =  pdCategoryDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdCategoryDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		pdCategoryDao.deleteByMultipleId("PdCategory.deleteMultiple.parentid", delIds);
+		Integer returnValue = pdCategoryDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdCategoryQuery query = new PdCategoryQuery();
+		try {
+			return pdCategoryDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdCategory> findPage(Page<PdCategory> page, PdCategoryQuery query) throws ServiceException
+	{
+		return pdCategoryDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdCategory> findPage(Page<PdCategory> page,String statement, PdCategoryQuery query) throws ServiceException
+	{
+		return pdCategoryDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdCategory> findList(PdCategoryQuery query) throws ServiceException
+	{
+		return pdCategoryDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdCategory> findList(PdCategoryQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdCategoryDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdCategory> findList(PdCategoryQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdCategoryDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdCategory> findAllList() throws ServiceException
+	{
+		return pdCategoryDao.findAllList();
+	}
+	@Override
+	public String findSubNode(Long categoryid) throws ServiceException {
+		PdCategoryQuery query=new PdCategoryQuery();
+		query.setParentid(categoryid);
+		List<PdCategory> list=pdCategoryDao.findList(query);
+		String categoryids="";
+		for(PdCategory category:list)
+		{
+			categoryids+=","+category.getCategoryid()+findSubNode(category.getCategoryid());
+		}
+		return categoryids;
+	}
+	@Override
+	public List<PdCategory> findList(PdCategoryQuery query, String statement)
+			throws ServiceException {
+		return pdCategoryDao.findList(statement, query);
+	}
+	@Override
+	public String findRecursive(Long categoryid) throws ServiceException {
+		PdCategory category=pdCategoryDao.getById(categoryid);
+		String fullname="";
+		if(category!=null)
+		{
+			fullname=findRecursive(category.getParentid());
+			if(!fullname.equals(""))
+			{
+				fullname+="->"+category.getCategory();
+			}
+			else
+			{
+				fullname+=category.getCategory();
+			}
+		}
+		
+		return fullname;
+	}
+
+}

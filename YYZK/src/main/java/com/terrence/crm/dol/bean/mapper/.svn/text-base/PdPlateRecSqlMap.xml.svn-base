@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PdPlateRec">
+
+        
+	<resultMap id="RM.PdPlateRec" class="com.terrence.crm.dol.bean.PdPlateRec">
+        <result property="recid" column="recid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="examineid" column="examineid"/>
+        <result property="itemval" column="itemval"/>
+        <result property="isok" column="isok"/>
+    </resultMap>
+    
+         
+	<resultMap id="PdPlateRec.find.list.nameplateItem.select" class="com.terrence.crm.dol.bean.PdPlateRec">
+        <result property="recid" column="recid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="examineid" column="examineid"/>
+        <result property="itemval" column="itemval"/>
+        <result property="isok" column="isok"/>
+        <result property="npitem" resultMap="RM.NameplateItem.data.in.PdPlateRec.select"/>
+    </resultMap>
+	
+	 <resultMap id="RM.NameplateItem.data.in.PdPlateRec.select" class="com.terrence.crm.dol.bean.NameplateItem">
+        <result property="itemid" column="itemid"/>
+        <result property="plateid" column="plateid"/>
+        <result property="attrname" column="attrname"/>
+        <result property="defval" column="defval"/>
+        <result property="frow" column="frow"/>
+        <result property="fcol" column="fcol"/>
+    </resultMap>
+    
+    
+    <resultMap id="PdPlateRec.RM.find.pageData" class="com.terrence.crm.dol.bean.PdPlateRec">
+       
+        <result property="examineid" column="examineid"/>
+        
+        <result property="pprlist" column="{examineid=examineid}" select="in.PdPlateRec.select.data.teamid"/>
+        <result property="exreportList" column="{examineid=examineid}" select="exreportList.data.in.PdPlateRec.select"/>
+        
+    </resultMap>
+    <resultMap id="PdPlateRec.RM.nameplateItem.data" class="com.terrence.crm.dol.bean.PdPlateRec">
+        <result property="recid" column="recid"/>
+        <result property="itemid" column="itemid"/>
+        <result property="examineid" column="examineid"/>
+        <result property="itemval" column="itemval"/>
+        <result property="isok" column="isok"/>
+        
+        <result property="nplitemlist" column="{itemid=itemid}" select="select.data.for.namepalte.in.ppr"/>
+    </resultMap>
+    
+        <resultMap id="ppr.for.npitem.data" class="com.terrence.crm.dol.bean.NameplateItem">
+        <result property="plateid" column="plateid"/>
+        <result property="attrname" column="attrname"/>
+        <result property="defval" column="defval"/>
+        <result property="platename" column="platename"/>
+    </resultMap>
+    
+    <resultMap id="exreport.data.show.in.ppr" class="com.terrence.crm.dol.bean.ExamineReport">
+        <result property="examineid" column="examineid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="itembase" column="itembase"/>
+        <result property="checkno" column="checkno"/>
+        <result property="seqno" column="seqno"/>
+        <result property="reportno" column="reportno"/>
+        <result property="testemp" column="testemp"/>
+        <result property="testdate" column="testdate"/>
+        <result property="checkemp" column="checkemp"/>
+        <result property="checkdate" column="checkdate"/>
+        <result property="platepath" column="platepath"/>
+        <result property="createdate" column="createdate"/>
+        <result property="createyear" column="createyear"/>
+        <result property="workno" column="workno"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="PdPlateRec.columns">
+	    <![CDATA[
+        	t_pd_plate_rec.recid ,
+        	t_pd_plate_rec.itemid ,
+        	t_pd_plate_rec.examineid ,
+        	t_pd_plate_rec.itemval,
+        	t_pd_plate_rec.isok 
+	    ]]>
+	</sql>
+	
+   <insert id="PdPlateRec.insert" >
+   
+        INSERT INTO
+        t_pd_plate_rec (
+        	
+	        	itemid
+	        
+	        <isNotEmpty prepend="," property="examineid">
+	        	examineid 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemval">
+	        	itemval
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isok">
+	        	isok
+	        </isNotEmpty>
+        ) VALUES (
+        	
+	        	#itemid# 
+	       
+	        <isNotEmpty prepend="," property="examineid">
+	        	#examineid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemval">
+	        	#itemval# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isok">
+	        	#isok#
+	        </isNotEmpty>
+        )
+ 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="recid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    
+    
+    <insert id="PdPlateRec.insert.new.in.pdqm" ><!-- 保存新数据 -->
+   
+        INSERT INTO
+        t_pd_plate_rec (
+        	
+	        	itemid
+	        
+	        <isNotEmpty prepend="," property="examineid">
+	        	examineid 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemval">
+	        	itemval
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isok">
+	        	isok
+	        </isNotEmpty>
+        ) VALUES (
+        	
+	        	#itemid# 
+	       
+	        <isNotEmpty prepend="," property="examineid">
+	        	#examineid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemval">
+	        	#itemval# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isok">
+	        	#isok#
+	        </isNotEmpty>
+        )
+ 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="recid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="PdPlateRec.update" parameterClass="com.terrence.crm.dol.bean.PdPlateRec">         
+        UPDATE t_pd_plate_rec 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemid">
+	        	itemid = #itemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="examineid">
+	        	examineid = #examineid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemval">
+	        	itemval = #itemval# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="isok">
+	        	isok=#isok#
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        recid = #recid# 
+    </update>
+    
+    
+    <update id="PdPlateRec.updaterec.dat.isok" parameterClass="com.terrence.crm.dol.bean.PdPlateRec"><!--  -->        
+        UPDATE t_pd_plate_rec 
+      		set isok = #isok#
+        WHERE 
+	        examineid = #examineid# 
+    </update>
+    
+	<delete id="PdPlateRec.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_pd_plate_rec where
+       recid = #recid# 
+    ]]>
+    </delete>
+    
+    <delete id="PdPlateRec.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_plate_rec 
+        WHERE
+       recid in ($recid$) 
+    ]]>
+    </delete>
+    
+    
+    <delete id="PdPlateRec.delete.data.jilu"><!-- 删除记录 -->
+    <![CDATA[
+        DELETE FROM 
+        	t_pd_plate_rec 
+        WHERE
+       examineid=#examineid#
+    ]]>
+    </delete>
+    
+    <select id="PdPlateRec.getById" resultMap="RM.PdPlateRec">
+	    select <include refid="PdPlateRec.columns"/>
+	    
+	        from t_pd_plate_rec 
+	        where 
+		        recid = #recid# 
+	    
+    </select>
+    
+	<select id="PdPlateRec.getByProperty" resultMap="RM.PdPlateRec">
+		select <include refid="PdPlateRec.columns"/> from t_pd_plate_rec where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="PdPlateRec.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_pd_plate_rec.recid = #recid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_plate_rec.itemid = #itemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="examineid">
+	             t_pd_plate_rec.examineid = #examineid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemval">
+	             t_pd_plate_rec.itemval = #itemval#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="itemcode">
+	             t_examine_report.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemname">
+	             t_examine_report.itemname  like ('%$itemname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="seqno">
+	             t_examine_report.seqno = #seqno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="reportno">
+	             t_examine_report.reportno = #reportno#
+	       </isNotEmpty>
+	       
+	       
+	       <isNotEmpty prepend="AND" property="isok">
+	             t_pd_plate_rec.isok = #isok#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="PdPlateRec.findPage.and">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_pd_plate_rec.recid = #recid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_plate_rec.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="examineid">
+	             t_pd_plate_rec.examineid = #examineid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemval">
+	             t_pd_plate_rec.itemval = #itemval#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="itemcode">
+	             t_examine_report.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemname">
+	             t_examine_report.itemname  like ('%$itemname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="seqno">
+	             t_examine_report.seqno = #seqno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="reportno">
+	             t_examine_report.reportno = #reportno#
+	       </isNotEmpty>
+	       
+	         <isNotEmpty prepend="AND" property="isok">
+	             t_pd_plate_rec.isok = #isok#
+	       </isNotEmpty>
+	</sql>
+	
+	
+	<sql id="PdPlateRec.findPage.paplate">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_pd_plate_rec.recid = #recid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemid">
+	             t_pd_plate_rec.itemid = #itemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="examineid">
+	             t_pd_plate_rec.examineid = #examineid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemval">
+	             t_pd_plate_rec.itemval = #itemval#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="itemcode">
+	             t_examine_report.itemcode like ('%$itemcode$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemname">
+	             t_examine_report.itemname  like ('%$itemname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="seqno">
+	             t_examine_report.seqno = #seqno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="reportno">
+	             t_examine_report.reportno = #reportno#
+	       </isNotEmpty>
+	       
+	         <isNotEmpty prepend="AND" property="isok">
+	             a.isok = #isok#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="PdPlateRec.Entity" resultMap="RM.PdPlateRec">
+    	SELECT 	<include refid="PdPlateRec.columns"/> FROM t_pd_plate_rec <include refid="PdPlateRec.findPage.where"/>
+    </select>
+    
+    <select id="PdPlateRec.findList" resultMap="RM.PdPlateRec">
+    	SELECT 
+    		<include refid="PdPlateRec.columns"/> 
+    	FROM 
+    		t_pd_plate_rec
+		<include refid="PdPlateRec.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdPlateRec.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_pd_plate_rec
+    ]]>
+		<include refid="PdPlateRec.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.PdPlateRec.findPage" resultMap="RM.PdPlateRec">
+    	select <include refid="PdPlateRec.columns"/>	    
+	        from t_pd_plate_rec 	   
+		<include refid="PdPlateRec.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="PdPlateRec.findPage" resultMap="RM.PdPlateRec">
+    	select <include refid="PdPlateRec.columns"/>	    
+	        from t_pd_plate_rec where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       recid 
+	   not in(select $notTop$ 
+       recid 
+	   from t_pd_plate_rec <include refid="PdPlateRec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdPlateRec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="PdPlateRec.find.list.date.rec" resultMap="PdPlateRec.find.list.nameplateItem.select"><!--查询  -->
+    	SELECT 
+    		<include refid="PdPlateRec.columns"/> ,
+    		t_nameplate_item.itemid ,
+        	t_nameplate_item.plateid ,
+        	t_nameplate_item.attrname ,
+        	t_nameplate_item.defval ,
+        	t_nameplate_item.frow ,
+        	t_nameplate_item.fcol 
+    	FROM 
+    		t_pd_plate_rec
+    		left join t_nameplate_item on t_pd_plate_rec.itemid = t_nameplate_item.itemid
+		<include refid="PdPlateRec.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <select id="PdPlateRec.find.page.data.ppri.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from (select t_pd_plate_rec.examineid,t_pd_plate_rec.isok from t_pd_plate_rec group by t_pd_plate_rec.examineid,t_pd_plate_rec.isok) as a
+        left join t_examine_report on a.examineid = t_examine_report.examineid
+    ]]>
+		where 1=1 
+		<include refid="PdPlateRec.findPage.paplate"/>    
+    </select>
+    <select id="PdPlateRec.find.page.data.ppri" resultMap="PdPlateRec.RM.find.pageData"><!-- 铭牌列表查询 -->
+    	select t_pd_plate_rec.examineid	    
+	        from t_pd_plate_rec 
+	       left join t_examine_report on t_pd_plate_rec.examineid = t_examine_report.examineid
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       t_pd_plate_rec.examineid 
+	   not in(select $notTop$ 
+       t_pd_plate_rec.examineid 
+	   from t_pd_plate_rec
+	   left join t_examine_report on t_pd_plate_rec.examineid = t_examine_report.examineid
+	    <include refid="PdPlateRec.findPage.where"/>
+	   	group by t_pd_plate_rec.examineid
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="PdPlateRec.findPage.and"/>
+	   	group by t_pd_plate_rec.examineid
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+	<select id="in.PdPlateRec.select.data.teamid" resultMap="PdPlateRec.RM.nameplateItem.data"><!--查询  -->
+    	SELECT top 1 
+    		<include refid="PdPlateRec.columns"/>
+    	FROM 
+    		t_pd_plate_rec where examineid=#examineid#
+    </select>
+    
+    <select id="select.data.for.namepalte.in.ppr" resultMap="ppr.for.npitem.data"><!-- 查铭牌表 -->
+		select t_nameplate_item.plateid
+		,attrname
+		,defval 
+		,t_nameplate.platename  platename 
+    	from 
+    	t_nameplate_item left join t_nameplate on  t_nameplate_item.plateid = t_nameplate.plateid
+    	where itemid =#itemid#
+    </select>
+    
+    <select id="exreportList.data.in.PdPlateRec.select" resultMap="exreport.data.show.in.ppr"><!--查询 检验报告 -->
+    	SELECT 	t_examine_report.examineid ,
+        	t_examine_report.itemcode ,
+        	t_examine_report.itemname ,
+        	t_examine_report.itemmode ,
+        	t_examine_report.itembase ,
+        	t_examine_report.checkno ,
+        	t_examine_report.seqno ,
+        	t_examine_report.reportno ,
+        	t_examine_report.testemp ,
+        	t_examine_report.testdate ,
+        	t_examine_report.checkemp ,
+        	t_examine_report.checkdate ,
+        	t_examine_report.platepath ,
+        	t_examine_report.createdate ,
+        	t_examine_report.createyear ,
+        	t_examine_report.workno 
+    		
+    	FROM 
+    		t_examine_report where examineid=#examineid#
+    </select>
+</sqlMap>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yiyunupdate">
+
+<resultMap id="RM.Yiyunupdate" class="com.terrence.crm.dol.bean.Yiyunupdate">
+	<result property="id" column="id"/>
+	<result property="ftable" column="ftable"/>
+	<result property="fid" column="fid"/>
+	<result property="createrId" column="createrId"/>
+	<result property="createTime" column="createTime"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yiyunupdate.columns">
+	<![CDATA[
+		t_yiyunupdate.id ,
+		t_yiyunupdate.ftable ,
+		t_yiyunupdate.fid ,
+		t_yiyunupdate.createrId ,
+		t_yiyunupdate.createTime
+	]]>
+</sql>
+
+<insert id="Yiyunupdate.insert" >
+	<![CDATA[
+	INSERT INTO t_yiyunupdate (
+		ftable,
+		fid,
+		createrId,
+		createTime
+	) VALUES (
+		#ftable#,
+		#fid#,
+		#createrId#,
+		#createTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yiyunupdate.update" parameterClass="com.terrence.crm.dol.bean.Yiyunupdate"> 
+	UPDATE t_yiyunupdate 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="ftable">
+			ftable = #ftable# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fid">
+			fid = #fid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrId">
+			createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yiyunupdate.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yiyunupdate.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="ftable">
+			t_yiyunupdate.ftable = #ftable# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fid">
+			t_yiyunupdate.fid = #fid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrId">
+			t_yiyunupdate.createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_yiyunupdate.createTime = #createTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yiyunupdate.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yiyunupdate.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="ftable">
+		t_yiyunupdate.ftable = #ftable# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fid">
+		t_yiyunupdate.fid = #fid# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrId">
+		t_yiyunupdate.createrId = #createrId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_yiyunupdate.createTime = #createTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yiyunupdate.getById" resultMap="RM.Yiyunupdate">
+	select <include refid="Yiyunupdate.columns"/> from t_yiyunupdate where id=#id#
+</select>
+
+<select id="Yiyunupdate.getByProperty" resultMap="RM.Yiyunupdate">
+	select <include refid="Yiyunupdate.columns"/> from t_yiyunupdate where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yiyunupdate.delete">
+	<![CDATA[
+		DELETE FROM t_yiyunupdate WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yiyunupdate.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yiyunupdate WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yiyunupdate.findPage.count" resultClass="long">
+	select count(*) from t_yiyunupdate <include refid="Yiyunupdate.findPage.where"/>
+</select>
+
+<select id="Yiyunupdate.findPage" resultMap="RM.Yiyunupdate">
+	select <include refid="Yiyunupdate.columns"/> 
+		from t_yiyunupdate 
+	<include refid="Yiyunupdate.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yiyunupdate.findList" resultMap="RM.Yiyunupdate">
+	SELECT <include refid="Yiyunupdate.columns"/> FROM t_yiyunupdate
+	<include refid="Yiyunupdate.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Yiyunupdate.find.unsync.android" resultMap="RM.Yiyunupdate">
+	SELECT <include refid="Yiyunupdate.columns"/> FROM t_yiyunupdate where id>#id#
+</select>
+</sqlMap>

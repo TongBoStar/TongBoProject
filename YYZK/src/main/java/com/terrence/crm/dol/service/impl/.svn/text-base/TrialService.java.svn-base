@@ -1,0 +1,199 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdTrailTpl;
+import com.terrence.crm.dol.bean.Trial;
+import com.terrence.crm.dol.query.PdTrailTplQuery;
+import com.terrence.crm.dol.query.TrialQuery;
+import com.terrence.crm.dol.dao.IPdTrailTplDao;
+import com.terrence.crm.dol.dao.ITrialDao;
+import com.terrence.crm.dol.service.ITrialService;
+
+@Service
+@Transactional
+public class TrialService extends BaseService implements ITrialService {
+	protected static Logger logger = LoggerFactory.getLogger(TrialService.class);
+	@Autowired
+	@Qualifier("trialDao")
+	private ITrialDao trialDao;
+	
+	@Autowired
+	@Qualifier("pdTrailTplDao")
+	private IPdTrailTplDao pdTrailTplDao;
+	
+	private String macPath;
+	
+	public String getMacPath() {
+		return macPath;
+	}
+	public void setMacPath(String macPath) {
+		this.macPath = macPath;
+	}
+	public String getIbatisSqlMapNamespace() {
+		return "Trial";
+	}
+	@Transactional(readOnly=true)
+	public Trial getById(java.lang.Long id) throws ServiceException
+	{
+		return trialDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Trial entity) throws ServiceException
+	{
+		trialDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Trial entity) throws ServiceException
+	{
+		Long adId = trialDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Trial entity) throws ServiceException
+	{
+		Integer returnValue =  trialDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trialDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trialDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrialQuery query = new TrialQuery();
+		try {
+			return trialDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Trial> findPage(Page<Trial> page, TrialQuery query) throws ServiceException
+	{
+		return trialDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Trial> findPage(Page<Trial> page,String statement, TrialQuery query) throws ServiceException
+	{
+		return trialDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Trial> findList(TrialQuery query) throws ServiceException
+	{
+		return trialDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Trial> findList(TrialQuery query,Integer pageSize) throws ServiceException
+	{
+		return trialDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Trial> findList(TrialQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trialDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Trial> findAllList() throws ServiceException
+	{
+		return trialDao.findAllList();
+	}
+	public String findMACAddress(String ip)throws ServiceException{
+		   String str = "";
+		   String macAddress = "";
+		   try {
+			   Process p = Runtime.getRuntime().exec(macPath +" "+ ip);
+		        InputStreamReader ir = new InputStreamReader(p.getInputStream(),"gbk");
+		        LineNumberReader input = new LineNumberReader(ir);
+		        for (int i = 1; i < 100; i++) {
+		             str = input.readLine();
+		             if (str != null) {
+		            	 //System.out.println(str);
+		                 if (str.indexOf("MAC 地址") > 1) {
+		                     macAddress = str.substring(str.indexOf("MAC 地址") + 9, str.length());
+		                     break;
+		                 }
+		                 if (str.indexOf("MAC Address") > 1) {
+		                     macAddress = str.substring(str.indexOf("MAC Address") + 14, str.length());
+		                     break;
+		                 }
+		             }
+		        }
+		   } catch (IOException e) {
+		        e.printStackTrace(System.out);
+		   }
+		   return macAddress;
+		}
+	@Override
+	public List<Trial> findTrailByItemCode(String itemcode)
+			throws ServiceException {
+		List<Trial> trialList = new ArrayList<Trial>();
+		List<Long> trailIdList = getTrailIdByItemcode(itemcode);
+		if (trailIdList.size()>0) {
+			for (Long trailId : trailIdList) {
+				trialList.add(this.getById(trailId));
+			}
+		}
+		return trialList;
+	}
+	/**
+	 *<p>从模板设备物料关系表中根据物料编码取出设备ID<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-8-1下午2:13:30
+	 * @param itemcode
+	 * @return
+	 */
+	private List<Long> getTrailIdByItemcode(String itemcode) {
+		List<Long> trailIdList = new ArrayList<Long>();
+		PdTrailTplQuery pdTrailTplQuery = new PdTrailTplQuery();
+		pdTrailTplQuery.setItemcode(itemcode);
+		List<PdTrailTpl> pdTrailTpls =pdTrailTplDao.findList(pdTrailTplQuery);
+		for (PdTrailTpl pdTrailTpl : pdTrailTpls) {
+			if (!trailIdList.contains(pdTrailTpl.getTrialid())) {
+				trailIdList.add(pdTrailTpl.getTrialid());
+			}
+		}
+		return trailIdList;
+	}
+}

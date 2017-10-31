@@ -1,0 +1,158 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.NameplateItem;
+import com.terrence.crm.dol.contasnt.ICItemDesign;
+import com.terrence.crm.dol.query.NameplateItemQuery;
+import com.terrence.crm.dol.dao.INameplateItemDao;
+import com.terrence.crm.dol.service.INameplateItemService;
+
+@Service
+@Transactional
+public class NameplateItemService extends BaseService implements INameplateItemService {
+	protected static Logger logger = LoggerFactory.getLogger(NameplateItemService.class);
+	@Autowired
+	@Qualifier("nameplateItemDao")
+	private INameplateItemDao nameplateItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "NameplateItem";
+	}
+	@Transactional(readOnly=true)
+	public NameplateItem getById(java.lang.Long id) throws ServiceException
+	{
+		return nameplateItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(NameplateItem entity) throws ServiceException
+	{
+		nameplateItemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(NameplateItem entity) throws ServiceException
+	{
+		Long adId = nameplateItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(NameplateItem entity) throws ServiceException
+	{
+		Integer returnValue =  nameplateItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = nameplateItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = nameplateItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		NameplateItemQuery query = new NameplateItemQuery();
+		try {
+			return nameplateItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<NameplateItem> findPage(Page<NameplateItem> page, NameplateItemQuery query) throws ServiceException
+	{
+		return nameplateItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<NameplateItem> findPage(Page<NameplateItem> page,String statement, NameplateItemQuery query) throws ServiceException
+	{
+		return nameplateItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<NameplateItem> findList(NameplateItemQuery query) throws ServiceException
+	{
+		return nameplateItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<NameplateItem> findList(NameplateItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return nameplateItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<NameplateItem> findList(NameplateItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return nameplateItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<NameplateItem> findAllList() throws ServiceException
+	{
+		return nameplateItemDao.findAllList();
+	}
+	@Override
+	public List<NameplateItem> listToPlate(NameplateItemQuery nameplateItemQuery)
+			throws ServiceException {
+	
+		
+		return nameplateItemDao.findList("NameplateItemQuery.find.allList.data", nameplateItemQuery);
+	}
+	@Override
+	public List<NameplateItem> listDesign() throws ServiceException {
+		List<NameplateItem> list = new ArrayList<NameplateItem>();
+		NameplateItem	npi = new NameplateItem();
+		NameplateItem	newnpi = new NameplateItem();
+		
+		
+		for(ICItemDesign icidesign:ICItemDesign.values()){
+			newnpi = new NameplateItem();
+			newnpi.setName(icidesign.getName());
+			newnpi.setIndex(icidesign.getIndex());
+			list.add(newnpi);
+			//list.add(new  NameplateItem(icidesign.getName(),icidesign.getIndex()));
+		}
+		
+		npi.setDeslist(list);
+		
+		
+		for(int i=0;i<npi.getDeslist().size();i++){
+			System.out.println(npi.getDeslist().get(i).getName());
+		}
+		
+		
+		return list;
+	}
+
+}

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Orggrantgroup">
+
+        
+	<resultMap id="RM.Orggrantgroup" class="com.terrence.crm.dol.bean.Orggrantgroup">
+        <result property="groupid" column="groupid"/>
+        <result property="groupname" column="groupname"/>
+        <result property="notes" column="notes"/>
+    </resultMap>
+    
+    <resultMap id="RM.Orggrantgroup.List" class="com.terrence.crm.dol.bean.Orggrantgroup">
+        <result property="groupid" column="groupid"/>
+        <result property="groupname" column="groupname"/>
+        <result property="notes" column="notes"/>
+        <result property="province"  resultMap="Province.model"/>
+    </resultMap>
+	
+	<resultMap id="Province.model" class="com.terrence.crm.dol.bean.Province">
+        <result property="provinceid" column="provinceid"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Orggrantgroup.columns">
+	    <![CDATA[
+        	t_orggrantgroup.groupid ,
+        	t_orggrantgroup.groupname ,
+        	t_orggrantgroup.notes 
+	    ]]>
+	</sql>
+	
+   <insert id="Orggrantgroup.insert" >
+        INSERT INTO
+       t_orggrantgroup (
+         <dynamic prepend="">
+	        <isNotEmpty prepend="" property="groupname">
+	        	groupname 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes
+	        </isNotEmpty>
+	     </dynamic>
+        
+        ) VALUES (
+        <dynamic prepend="">
+	        <isNotEmpty prepend="" property="groupname">
+	        	#groupname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	#notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="groupid" >
+            select IDENT_CURRENT ('t_orggrantgroup') as id
+        </selectKey>
+    </insert>
+
+
+ <insert id="Orggrantgroup.insert.ALL" >
+    
+        INSERT INTO
+        t_orggrantgroup (
+         <dynamic prepend="">
+	        <isNotEmpty prepend="" property="groupname">
+	        	groupname 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes
+	        </isNotEmpty>
+	     </dynamic>
+        
+        ) VALUES (
+        <dynamic prepend="">
+	        <isNotEmpty prepend="" property="groupname">
+	        	#groupname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	#notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        )
+   
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="groupid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+	<update id="Orggrantgroup.update" parameterClass="com.terrence.crm.dol.bean.Orggrantgroup">         
+        UPDATE t_orggrantgroup 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="groupname">
+	        	groupname = #groupname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        groupid = #groupid# 
+    </update>
+    
+    
+    <update id="orggrantgroup.updateAll" parameterClass="com.terrence.crm.dol.query.OrggrantgroupQuery">         
+        UPDATE t_orggrantgroup 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="groupname">
+	        	groupname = #groupname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        groupid = #groupid# 
+    </update>
+    
+	<delete id="Orggrantgroup.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_orggrantgroup where
+       groupid = #groupid# 
+    ]]>
+    </delete>
+    
+    <delete id="Orggrantgroup.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_orggrantgroup 
+        WHERE
+       groupid in ($groupid$) 
+    ]]>
+    </delete>
+    
+    <select id="Orggrantgroup.getById" resultMap="RM.Orggrantgroup">
+	    select <include refid="Orggrantgroup.columns"/>
+	    
+	        from t_orggrantgroup 
+	        where 
+		        groupid = #groupid# 
+	    
+    </select>
+    
+      <select id="orggrantgroup.findModel" resultMap="RM.Orggrantgroup.List">
+	    select <include refid="Orggrantgroup.columns"/>,t_province.provinceid
+	    
+	        from t_orggrantgroup left join t_province on t_orggrantgroup.groupid=t_province.groupid
+	        where 
+		        t_orggrantgroup.groupid = #groupid# 
+	    
+    </select>
+    
+	<select id="Orggrantgroup.getByProperty" resultMap="RM.Orggrantgroup">
+		select <include refid="Orggrantgroup.columns"/> from t_orggrantgroup where $propertyName$=#propertyValue#
+	</select>
+	<select id="Orggrantgroup.getByUnique" resultMap="RM.Orggrantgroup">
+		select <include refid="Orggrantgroup.columns"/> from t_orggrantgroup where groupname=#groupname# and groupid!=#groupid#
+	</select>
+	<sql id="Orggrantgroup.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="groupid">
+	             t_orggrantgroup.groupid = #groupid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="groupname">
+	             t_orggrantgroup.groupname like ('%$groupname$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="groupnames">
+	             t_orggrantgroup.groupname = #groupnames#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_orggrantgroup.notes = #notes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="s">
+	             t_orggrantgroup.groupid not in ($s$) 
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Orggrantgroup.findPage.and">
+			<isNotEmpty prepend="AND" property="groupid">
+	             t_orggrantgroup.groupid = #groupid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="groupname">
+	            t_orggrantgroup.groupname like ('%$groupname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_orggrantgroup.notes = #notes#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="groupnames">
+	             t_orggrantgroup.groupname = #groupnames#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="s">
+	             t_orggrantgroup.groupid not in ($s$) 
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Orggrantgroup.findList" resultMap="RM.Orggrantgroup">
+    	SELECT 
+    		<include refid="Orggrantgroup.columns"/> 
+    	FROM 
+    		t_orggrantgroup
+		<include refid="Orggrantgroup.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Orggrantgroup.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_orggrantgroup
+   			 where  groupid not in 
+   			 (select groupid from t_admin_orggroup where adminId = #s#)   ]]>
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Orggrantgroup.findPage" resultMap="RM.Orggrantgroup">
+    	select <include refid="Orggrantgroup.columns"/>	    
+	        from t_orggrantgroup where 1=1
+	        <isNotEmpty property="notTop">
+	         and groupid not in (
+	          select $notTop$ groupid from t_orggrantgroup
+			<include refid="Orggrantgroup.findPage.where"/>		
+			<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty> )
+		</isNotEmpty>
+		<include refid="Orggrantgroup.findPage.and"/>
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+    </select>
+    <select id="Sql.Orggrantgroup.findPage.count" resultClass="long">
+	        <![CDATA[
+       select count(*)    
+	        from t_orggrantgroup 	
+    ]]>
+		<include refid="Orggrantgroup.findPage.where"/>		
+    </select>
+    
+	<select id="Orggrantgroup.findPage" resultMap="RM.Orggrantgroup">
+	   select <include refid="Orggrantgroup.columns"/>
+	    from t_orggrantgroup 
+		  where  1=1
+		  <isNotEmpty property="notTop"> 
+		   and   t_orggrantgroup.groupid  not in(
+		  select $notTop$   t_orggrantgroup.groupid from t_orggrantgroup 
+		  where   t_orggrantgroup.groupid not in(
+            select groupid  from  t_admin_orggroup  where adminId = #s# 
+        ) 
+		 <isNotEmpty property="sortColumns">	ORDER BY $sortColumns$	</isNotEmpty>
+		  ) 
+		</isNotEmpty>
+		 and
+		  t_orggrantgroup.groupid not in(
+            select groupid  from  t_admin_orggroup  where adminId = #s# 
+        ) 
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+</sqlMap>

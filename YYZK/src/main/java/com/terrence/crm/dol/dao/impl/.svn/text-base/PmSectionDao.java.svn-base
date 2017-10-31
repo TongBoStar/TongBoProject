@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PmSection;
+import com.terrence.crm.dol.dao.IPmSectionDao;
+
+@Repository
+public class PmSectionDao extends BaseIbatisDao<PmSection,java.lang.Long> implements IPmSectionDao{
+
+		
+	public void saveOrUpdate(PmSection entity) {
+		if(entity.getSectionid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PmSection";
+	}
+	public PmSection getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PmSection)this.getSqlMapClientTemplate().queryForObject("PmSection.getByProperty", map);		
+	}
+
+	@Override
+	public Integer deleteByPmId(Long pmId) {
+		return this.getSqlMapClientTemplate().delete("PmSection.deleteByPmId", pmId);
+	}
+
+}

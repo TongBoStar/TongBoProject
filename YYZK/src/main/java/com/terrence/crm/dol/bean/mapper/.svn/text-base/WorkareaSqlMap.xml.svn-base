@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Workarea">
+
+        
+	<resultMap id="RM.Team.Workarea" class="com.terrence.crm.dol.bean.Workarea">
+        <result property="areaid" column="areaid"/>
+        <result property="teamid" column="teamid"/>
+        <result property="areaname" column="areaname"/>
+        <result property="ipaddr" column="ipaddr"/>
+        <result property="team" resultMap="RM.Area.Team"/>
+    </resultMap>
+	<resultMap id="RM.Area.Team" class="com.terrence.crm.dol.bean.Team">
+        <result property="teamname" column="teamname"/>
+    </resultMap>
+	<resultMap id="RM.Workarea" class="com.terrence.crm.dol.bean.Workarea">
+        <result property="areaid" column="areaid"/>
+        <result property="teamid" column="teamid"/>
+        <result property="areaname" column="areaname"/>
+        
+         <result property="ipaddr" column="ipaddr"/>
+    </resultMap>  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Workarea.columns">
+	    <![CDATA[
+        	t_workarea.areaid ,
+        	t_workarea.teamid ,
+        	t_workarea.areaname ,
+        	t_workarea.ipaddr
+	    ]]>
+	</sql>
+	
+   <insert id="Workarea.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_workarea (
+        	teamid ,
+        	areaname ,
+        	ipaddr
+        ) VALUES (
+        	#teamid# ,
+        	#areaname# ,
+        	#ipaddr#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="areaid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Workarea.update" parameterClass="com.terrence.crm.dol.bean.Workarea">         
+        UPDATE t_workarea 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="areaname">
+	        	areaname = #areaname# 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="ipaddr">
+	        	ipaddr = #ipaddr# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        areaid = #areaid# 
+    </update>
+    
+	<delete id="Workarea.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_workarea where
+       areaid = #areaid# 
+    ]]>
+    </delete>
+    
+    <delete id="Workarea.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_workarea 
+        WHERE
+       areaid in ($areaid$) 
+    ]]>
+    </delete>
+    
+    <select id="Workarea.getById" resultMap="RM.Workarea">
+	    select <include refid="Workarea.columns"/>
+	    
+	        from t_workarea 
+	        where 
+		        areaid = #areaid# 
+	    
+    </select>
+    
+	<select id="Workarea.getByProperty" resultMap="RM.Workarea">
+		select <include refid="Workarea.columns"/> from t_workarea where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Workarea.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_workarea.areaid = #areaid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_workarea.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="areaname">
+	             t_workarea.areaname = #areaname#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="ipaddr">
+	             t_workarea.ipaddr = #ipaddr#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Workarea.findPage.and">
+			<isNotEmpty prepend="AND" property="areaid">
+	             t_workarea.areaid = #areaid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="teamid">
+	             t_workarea.teamid = #teamid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaname">
+	             t_workarea.areaname = #areaname#
+	       </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="ipaddr">
+	             t_workarea.ipaddr = #ipaddr#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Workarea.findList" resultMap="RM.Workarea">
+    	SELECT 
+    		<include refid="Workarea.columns"/> 
+    	FROM 
+    		t_workarea
+		<include refid="Workarea.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Workarea.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_workarea
+    ]]>
+		<include refid="Workarea.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Workarea.findPage" resultMap="RM.Workarea">
+    	select <include refid="Workarea.columns"/>	    
+	        from t_workarea 	   
+		<include refid="Workarea.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Workarea.findPage" resultMap="RM.Team.Workarea">
+    	select <include refid="Workarea.columns"/>,t_teams.teamname	    
+	        from t_workarea,t_teams where t_workarea.teamid=t_teams.teamid
+	   <isNotEmpty property="notTop">  and 
+       areaid 
+	   not in(select $notTop$ 
+       areaid 
+	   from t_workarea <include refid="Workarea.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Workarea.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Workarea.find.data.for.entity" resultMap="RM.Workarea">
+	    select <include refid="Workarea.columns"/>
+	    
+	        from t_workarea 
+	        <include refid="Workarea.findPage.where"/>
+	    
+    </select>
+    
+    <select id="Workarea.find.wk.for.data" resultMap="RM.Workarea">
+	    select <include refid="Workarea.columns"/>
+	    
+	        from t_workarea 
+			where 1=1 and ipaddr =#ipaddr#
+    </select>
+	
+	
+</sqlMap>

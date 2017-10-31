@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailRecSet;
+import com.terrence.crm.dol.query.TrailRecSetQuery;
+import com.terrence.crm.dol.dao.ITrailRecSetDao;
+import com.terrence.crm.dol.service.ITrailRecSetService;
+
+@Service
+@Transactional
+public class TrailRecSetService extends BaseService implements ITrailRecSetService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailRecSetService.class);
+	@Autowired
+	@Qualifier("trailRecSetDao")
+	private ITrailRecSetDao trailRecSetDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailRecSet";
+	}
+	@Transactional(readOnly=true)
+	public TrailRecSet getById(java.lang.Long id) throws ServiceException
+	{
+		return trailRecSetDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailRecSet entity) throws ServiceException
+	{
+		trailRecSetDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailRecSet entity) throws ServiceException
+	{
+		Long adId = trailRecSetDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailRecSet entity) throws ServiceException
+	{
+		Integer returnValue =  trailRecSetDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailRecSetDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailRecSetDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailRecSetQuery query = new TrailRecSetQuery();
+		try {
+			return trailRecSetDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailRecSet> findPage(Page<TrailRecSet> page, TrailRecSetQuery query) throws ServiceException
+	{
+		return trailRecSetDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailRecSet> findPage(Page<TrailRecSet> page,String statement, TrailRecSetQuery query) throws ServiceException
+	{
+		return trailRecSetDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailRecSet> findList(TrailRecSetQuery query) throws ServiceException
+	{
+		return trailRecSetDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailRecSet> findList(TrailRecSetQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailRecSetDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailRecSet> findList(TrailRecSetQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailRecSetDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailRecSet> findAllList() throws ServiceException
+	{
+		return trailRecSetDao.findAllList();
+	}
+
+}

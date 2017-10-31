@@ -1,0 +1,159 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessHandleDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.query.ProcessHistaskQuery;
+import com.terrence.crm.dol.query.ProcessTaskQuery;
+import com.terrence.crm.dol.service.IProcessDetailService;
+@Service
+@Transactional
+public class ProcessDetailService implements IProcessDetailService {
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHandleDao")
+	private IProcessHandleDao processHandleDao;
+	@Override
+	public ProcessDetail getById(Long id) throws ServiceException {
+		return processDetailDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ProcessDetail entity) throws ServiceException {
+		if(null==entity.getId()){
+			ProcessDetailQuery query = new ProcessDetailQuery();
+			query.setProcessId(entity.getProcessId());
+			List<ProcessDetail> list = processDetailDao.findList(query);
+			if(null!=list&&list.size()>0){
+				int currentSeq = entity.getNodeSeq().intValue();
+				if(currentSeq<=list.size()){//从中间插入的节点
+					for(ProcessDetail pd:list){
+						if(pd.getNodeSeq().intValue()>=currentSeq){
+							pd.setNodeSeq(pd.getNodeSeq().intValue()+1);
+						}
+						processDetailDao.update(pd);
+					}
+				}
+			}
+		}
+		Long processId = null;
+		if(null!=entity.getId()){
+			processHandleDao.deleteByMultipleId("ProcessHandle.deleteByNodeId", entity.getId()+"");
+			processDetailDao.update(entity);
+			processId = entity.getId();
+		}else{
+			processId = processDetailDao.save(entity);
+		}
+		String handlers = entity.getHandlers();
+		String dispatchdeps = entity.getDispatchdeps();
+		if(null!=handlers){
+			ProcessHandle ph = null;
+			String[] handlerArray = handlers.split(",");
+			for(String handler:handlerArray){
+				ph = new ProcessHandle();
+				ph.setHandler(Long.valueOf(handler.trim()));
+				ph.setNodeId(processId);
+				processHandleDao.save(ph);
+			}
+		}
+		if(null!=dispatchdeps){
+			ProcessHandle ph = null;
+			String[] dispatchdepArray = dispatchdeps.split(",");
+			for(String dispatchdep:dispatchdepArray){
+				ph = new ProcessHandle();
+				ph.setDispatchdep(Long.valueOf(dispatchdep.trim()));
+				ph.setNodeId(processId);
+				processHandleDao.save(ph);
+			}
+		}
+	}
+	@Override
+	public Long save(ProcessDetail entity) throws ServiceException {
+		return processDetailDao.save(entity);
+	}
+	@Override
+	public Integer update(ProcessDetail entity) throws ServiceException {
+		return processDetailDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id,Long processId) throws ServiceException {
+		processHandleDao.deleteByMultipleId("ProcessHandle.deleteByNodeId", id+"");
+		ProcessDetailQuery query = new ProcessDetailQuery();
+		query.setProcessId(processId);
+		List<ProcessDetail> list = processDetailDao.findList(query);
+		ProcessDetail entity = processDetailDao.getById(id);
+		if(null!=list&&list.size()>0){
+			int currentSeq = entity.getNodeSeq().intValue();
+			if(currentSeq<=list.size()){//从中间删除的节点
+				for(ProcessDetail pd:list){
+					if(pd.getNodeSeq().intValue()>=currentSeq){
+						pd.setNodeSeq(pd.getNodeSeq().intValue()-1);
+						processDetailDao.update(pd);
+					}
+				}
+			}
+		}
+		return processDetailDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = processDetailDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessDetail> findPage(Page<ProcessDetail> page, ProcessDetailQuery query) throws ServiceException{
+		return processDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ProcessDetail> findPage(Page<ProcessDetail> page,String statement, ProcessDetailQuery query) throws ServiceException{
+		return processDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDetail> findList(ProcessDetailQuery query) throws ServiceException{
+		return processDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDetail> findList(ProcessDetailQuery query,Integer pageSize) throws ServiceException{
+		return processDetailDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDetail> findList(ProcessDetailQuery query,String statement,Integer pageSize) throws ServiceException{
+		return processDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ProcessDetail> findAllList() throws ServiceException{
+		return processDetailDao.findAllList();
+	}
+	@Override
+	public List<ProcessDetail> findByCode(ProcessDetailQuery processDetailQuery)
+			throws Exception {
+		ProcessTaskQuery query = new ProcessTaskQuery();
+		query.setTaskCode(processDetailQuery.getProcessCode());
+		List<ProcessTask> pts = processTaskDao.findList(query);
+		if(null!=pts&&pts.size()==1){
+			processDetailQuery.setProcessId(pts.get(0).getProcessIds());
+		}
+		return processDetailDao.findList(processDetailQuery);
+	}
+	@Override
+	public List<ProcessDetail> findListByTaskCode(
+			ProcessHistaskQuery processHistaskQuery) throws Exception {
+		return processDetailDao.findList("ProcessDetail.findByTaskCode", processHistaskQuery);
+	}
+}

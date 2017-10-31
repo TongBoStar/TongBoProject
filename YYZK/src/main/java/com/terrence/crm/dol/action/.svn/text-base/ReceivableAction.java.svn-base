@@ -1,0 +1,627 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.service.IForderinstockService;
+import com.terrence.crm.dol.service.IForderinvoiceService;
+import com.terrence.crm.dol.service.IForderrefundService;
+import com.terrence.crm.dol.service.IFordersendService;
+import com.terrence.crm.dol.service.IRecePlService;
+import com.terrence.crm.dol.service.IReceivableService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.crm.dol.bean.Forderinstock;
+import com.terrence.crm.dol.bean.Forderinvoice;
+import com.terrence.crm.dol.bean.Forderrefund;
+import com.terrence.crm.dol.bean.Fordersend;
+import com.terrence.crm.dol.bean.PerformanceDetail;
+import com.terrence.crm.dol.bean.RecePl;
+import com.terrence.crm.dol.bean.Receivable;
+import com.terrence.crm.dol.dao.IForderinstockDao;
+import com.terrence.crm.dol.dao.IForderinvoiceDao;
+import com.terrence.crm.dol.dao.IForderrefundDao;
+import com.terrence.crm.dol.dao.IFordersendDao;
+import com.terrence.crm.dol.dao.IRecePlDao;
+import com.terrence.crm.dol.query.ForderinstockQuery;
+import com.terrence.crm.dol.query.ForderinvoiceQuery;
+import com.terrence.crm.dol.query.ForderrefundQuery;
+import com.terrence.crm.dol.query.FordersendQuery;
+import com.terrence.crm.dol.query.PerformanceDetailQuery;
+import com.terrence.crm.dol.query.RecePlQuery;
+import com.terrence.crm.dol.query.ReceivableQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/receivable")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "receivable." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ReceivableAction extends CrudActionSupport<Receivable>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("receivableService")
+	private IReceivableService receivableService;
+	@Autowired
+	@Qualifier("recePlService")
+	private IRecePlService recePlService;
+	@Autowired
+	@Qualifier("fordersendService")
+	private IFordersendService fordersendService;
+	@Autowired
+	@Qualifier("forderinvoiceService")
+	private IForderinvoiceService forderinvoiceService;
+	@Autowired
+	@Qualifier("forderrefundService")
+	private IForderrefundService forderrefundService;
+	@Autowired
+	@Qualifier("forderinstockService")
+	private IForderinstockService forderinstockService;
+	
+	private Receivable entity;
+
+	private ReceivableQuery receivableQuery;
+	private PerformanceDetailQuery performanceDetailQuery;
+	
+	private java.lang.Long receivableId;
+	
+	/** 分页器 */
+	private Page<Receivable> page = new Page<Receivable>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	private Map<String, Object> map = new HashMap<String, Object>();
+	
+	private ApplicationContext ctx;
+	private String filepath;
+	private List<Receivable> receivableList;
+	private List<RecePl> receplList;
+	private List<Fordersend> fordersendList;
+	private List<Forderinstock> forderinstockList;
+	private List<Forderinvoice> forderinvoiceList;
+	private List<Forderrefund> forderrefundList;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (receivableId != null ) {
+			entity = receivableService.getById(receivableId);
+		} else {
+			entity = new Receivable();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			receivableService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(receivableQuery == null) {
+			receivableQuery = new ReceivableQuery();
+		}
+		
+		try {
+			receivableList = receivableService.findList(receivableQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("receivableId");
+			page.setOrder(Page.DESC);
+		}
+		if(receivableQuery == null) {
+			receivableQuery = new ReceivableQuery();
+		}
+		
+		try {
+			Boolean flag = false;
+			for (Iterator iterator2 = SpringSecurityUtils.getCurrentUser().getAuthorities().iterator(); iterator2.hasNext();) {
+				if("ROLE_GATHER_STATISTIC".equals(iterator2.next().toString())){
+					flag = true;
+				}
+			}
+			if(!flag){
+				receivableQuery.setSaler(SpringSecurityUtils.getCurrentUserName());
+			}
+			page = receivableService.findPage(page, receivableQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		try {
+			System.out.println(entity+""+receplList+""+fordersendList+""+forderinstockList+""+forderinvoiceList+""+forderrefundList);
+			//receivableService.saveOrUpdate(entity);
+			receivableService.saveAll(entity,receplList,fordersendList,forderinstockList,forderinvoiceList,forderrefundList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = receivableService.getById(receivableId);
+			RecePlQuery recePlQuery = new RecePlQuery();
+			recePlQuery.setReceivableid(receivableId);
+			receplList = recePlService.findList(recePlQuery);
+			FordersendQuery fordersendQuery = new FordersendQuery();
+			fordersendQuery.setReceivableid(receivableId);
+			fordersendList = fordersendService.findList(fordersendQuery);
+			ForderinstockQuery forderinstockQuery = new ForderinstockQuery();
+			forderinstockQuery.setReceivableid(receivableId);
+			forderinstockList = forderinstockService.findList(forderinstockQuery);
+			ForderinvoiceQuery forderinvoiceQuery = new ForderinvoiceQuery();
+			forderinvoiceQuery.setReceivableid(receivableId);
+			forderinvoiceList = forderinvoiceService.findList(forderinvoiceQuery);
+			ForderrefundQuery forderrefundQuery = new ForderrefundQuery();
+			forderrefundQuery.setReceivableid(receivableId);
+			forderrefundList = forderrefundService.findList(forderrefundQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			receivableList = receivableService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	public String savelngpre() throws Exception {
+		try{
+			receivableService.savelngpre(receivableList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	/**
+	 * 从erp中获取入库发货开票数据
+	 * @return
+	 */
+	public String findrkhfkp(){
+		entity = receivableService.findrkhfkp(receivableQuery);
+		return JSON;
+	}
+	public String balanceRewardsByQuarter(){
+		try {
+			receivableService.balanceRewardsByQuarter(performanceDetailQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		return JSON;
+	}
+	public String parseXlsx(){
+		try {
+			receivableService.findAllList();
+			receivableService.parseXlsx(filepath);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			//logger.error(e.getMessage());
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		return JSON;
+	}
+	public String exportExcel2007(){
+		try {
+			HttpServletResponse response = ServletActionContext.getResponse();
+			setResponseHeader(response, "台账.xlsx");
+			List<Receivable> receivables = receivableService.findAllList();
+			receivableService.exportExcel2007(response,receivables);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			//logger.error(e.getMessage());
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		}
+		return null;
+	}
+	/** 设置响应头 */
+	public void setResponseHeader(HttpServletResponse response, String fileName) {
+		try {
+			response.setContentType("application/msexcel;charset=UTF-8");
+			//两种方法都可以
+			//response.setContentType("application/octet-stream;charset=iso-8859-1");
+			response.setHeader("Content-Disposition", "attachment;filename="
+					+ new String(fileName.getBytes("UTF-8"),"iso-8859-1"));
+			// 客户端不缓存
+			response.addHeader("Pargam", "no-cache");
+			response.addHeader("Cache-Control", "no-cache");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Receivable getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ReceivableQuery getReceivableQuery() {
+		return receivableQuery;
+	}
+
+	
+	public void setReceivableQuery(ReceivableQuery receivableQuery) {
+		this.receivableQuery = receivableQuery;
+	}
+
+	public void setReceivableId(java.lang.Long receivableId) {
+		this.receivableId = receivableId;
+	}
+	
+	
+	public java.lang.Long getReceivableId() {
+		return this.receivableId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Receivable> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Receivable> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Receivable> getReceivableList() {
+		return receivableList;
+	}
+
+	public List<RecePl> getReceplList() {
+		return receplList;
+	}
+
+	public void setReceplList(List<RecePl> receplList) {
+		this.receplList = receplList;
+	}
+
+	public List<Fordersend> getFordersendList() {
+		return fordersendList;
+	}
+
+	public void setFordersendList(List<Fordersend> fordersendList) {
+		this.fordersendList = fordersendList;
+	}
+
+	public void setReceivableList(List<Receivable> receivableList) {
+		this.receivableList = receivableList;
+	}
+
+	public List<Forderinstock> getForderinstockList() {
+		return forderinstockList;
+	}
+
+	public void setForderinstockList(List<Forderinstock> forderinstockList) {
+		this.forderinstockList = forderinstockList;
+	}
+
+	public List<Forderinvoice> getForderinvoiceList() {
+		return forderinvoiceList;
+	}
+
+	public void setForderinvoiceList(List<Forderinvoice> forderinvoiceList) {
+		this.forderinvoiceList = forderinvoiceList;
+	}
+
+	public List<Forderrefund> getForderrefundList() {
+		return forderrefundList;
+	}
+
+	public void setForderrefundList(List<Forderrefund> forderrefundList) {
+		this.forderrefundList = forderrefundList;
+	}
+
+	public Receivable getEntity() {
+		return entity;
+	}
+
+	public void setEntity(Receivable entity) {
+		this.entity = entity;
+	}
+
+	public Map<String, Object> getMap() {
+		return map;
+	}
+
+	public void setMap(Map<String, Object> map) {
+		this.map = map;
+	}
+
+	public PerformanceDetailQuery getPerformanceDetailQuery() {
+		return performanceDetailQuery;
+	}
+
+	public void setPerformanceDetailQuery(
+			PerformanceDetailQuery performanceDetailQuery) {
+		this.performanceDetailQuery = performanceDetailQuery;
+	}
+
+	public String getFilepath() {
+		return filepath;
+	}
+
+	public void setFilepath(String filepath) {
+		this.filepath = filepath;
+	}
+	
+	
+}

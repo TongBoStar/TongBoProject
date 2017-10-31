@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AssemblyDetail">
+
+        
+	<resultMap id="RM.AssemblyDetail" class="com.terrence.crm.dol.bean.AssemblyDetail">
+        <result property="assemblyid" column="assemblyid"/>
+        <result property="seqid" column="seqid"/>
+        <result property="serial" column="serial"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="status" column="status"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="unit" column="unit"/>
+        <result property="fqty" column="fqty"/>
+        <result property="detailno" column="detailno"/>
+        <result property="dbno" column="dbno"/>
+        <result property="empid" column="empid"/>
+        <result property="fstockid" column="fstockid"/>
+    </resultMap>
+    
+    
+    <resultMap id="RM.AssemblyDetail.for.baseitem" class="com.terrence.crm.dol.bean.AssemblyDetail">
+        <result property="assemblyid" column="assemblyid"/>
+        <result property="seqid" column="seqid"/>
+        <result property="serial" column="serial"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="status" column="status"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="unit" column="unit"/>
+        <result property="fqty" column="fqty"/>
+        <result property="detailno" column="detailno"/>
+        <result property="dbno" column="dbno"/>
+        <result property="empid" column="empid"/>
+        <result property="fstockid" column="fstockid"/>
+       <result property="issn" column="issn"/>
+    </resultMap>
+	
+	  
+	  <resultMap id="assemblyDetail.data.select.mingxi" class="com.terrence.crm.dol.bean.AssemblyDetail">
+        <result property="assemblyid" column="assemblyid"/>
+        <result property="seqid" column="seqid"/>
+        <result property="serial" column="serial"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="status" column="status"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="factorymode" column="factorymode"/>
+        
+        <result property="unit" column="unit"/>
+        <result property="fqty" column="fqty"/>
+        <result property="detailno" column="detailno"/>
+        <result property="dbno" column="dbno"/>
+        <result property="empid" column="empid"/>
+        <result property="fstockid" column="fstockid"/>
+        <result property="issn" column="issn"/>
+        <result property="categoryid" column="categoryid"/>
+        <result property="ftype" column="ftype"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="AssemblyDetail.columns">
+	    <![CDATA[
+        	t_assembly_detail.assemblyid ,
+        	t_assembly_detail.seqid ,
+        	t_assembly_detail.serial ,
+        	t_assembly_detail.itemcode ,
+        	t_assembly_detail.status ,
+        	t_assembly_detail.itemname ,
+        	t_assembly_detail.itemmode ,
+        	t_assembly_detail.unit ,
+        	t_assembly_detail.fqty ,
+        	t_assembly_detail.detailno ,
+        	t_assembly_detail.dbno,
+        	t_assembly_detail.empid,
+        	t_assembly_detail.fstockid
+	    ]]>
+	</sql>
+	
+   <insert id="AssemblyDetail.insert" >
+        INSERT INTO
+        t_assembly_detail (
+        	seqid ,
+        	itemcode ,
+        	fqty ,
+        	detailno ,
+        	dbno,
+        	empid
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="status">
+		        	status
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="itemname">
+		        	itemname
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="itemmode">
+		        	itemmode
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="unit">
+		        	unit
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="serial">
+		        	serial
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="fqtyed">
+		        	fqtyed
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="fstockid">
+		        	fstockid
+		        </isNotEmpty>
+	        </dynamic>
+        ) VALUES (
+        	#seqid# ,
+        	#itemcode# ,
+        	#fqty# ,
+        	#detailno# ,
+        	#dbno#,
+        	#empid#
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="status">
+		        	#status#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="itemname">
+		        	#itemname#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="itemmode">
+		        	#itemmode#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="unit">
+		        	#unit#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="serial">
+		        	#serial#
+		        </isNotEmpty>
+		         <isNotEmpty prepend="," property="fqtyed">
+		        	#fqtyed#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="," property="fstockid">
+		        	#fstockid#
+		        </isNotEmpty>
+	        </dynamic>
+        )
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="assemblyid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="AssemblyDetail.update" parameterClass="com.terrence.crm.dol.bean.AssemblyDetail">         
+        UPDATE t_assembly_detail 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seqid">
+	        	seqid = #seqid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="serial">
+	        	serial = #serial# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unit">
+	        	unit = #unit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqty">
+	        	fqty = #fqty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="detailno">
+	        	detailno = #detailno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="dbno">
+	        	dbno = #dbno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid=#empid#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqtyed">
+		        	fqtyed=#fqtyed#
+		     </isNotEmpty>
+		     <isNotEmpty prepend="," property="fstockid">
+		        	fstockid=#fstockid#
+		     </isNotEmpty>
+		     
+		    		     
+	    </dynamic>
+        WHERE 
+	        assemblyid = #assemblyid# 
+    </update>
+    
+	<delete id="AssemblyDetail.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_assembly_detail where
+       assemblyid = #assemblyid# 
+    ]]>
+    </delete>
+    
+    <delete id="AssemblyDetail.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_detail 
+        WHERE
+       assemblyid in ($assemblyid$) 
+    ]]>
+    </delete>
+    <delete id="AssemblyDetail.deleteMultiple.detailno">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_detail 
+        WHERE
+       detailno in ($assemblyid$) 
+    ]]>
+    </delete>
+    
+    
+    <delete id="AssemblyDetail.delDataFor.data">
+    <![CDATA[
+        DELETE FROM 
+        	t_assembly_detail 
+        WHERE
+       detailno in ($detailnodatas$) and seqid = #seqid# 
+    ]]>
+    </delete>
+    
+    
+    <select id="AssemblyDetail.getById" resultMap="RM.AssemblyDetail">
+	    select <include refid="AssemblyDetail.columns"/>
+	    
+	        from t_assembly_detail 
+	        where 
+		        assemblyid = #assemblyid# 
+	    
+    </select>
+    
+	<select id="AssemblyDetail.getByProperty" resultMap="RM.AssemblyDetail">
+		select <include refid="AssemblyDetail.columns"/> from t_assembly_detail where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="AssemblyDetail.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="assemblyid">
+	             t_assembly_detail.assemblyid = #assemblyid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqid">
+	             t_assembly_detail.seqid = #seqid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="serial">
+	             t_assembly_detail.serial = #serial#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_detail.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_assembly_detail.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_assembly_detail.itemname = #itemname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_assembly_detail.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="unit">
+	             t_assembly_detail.unit = #unit#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_assembly_detail.fqty = #fqty#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="detailno">
+	             t_assembly_detail.detailno = #detailno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_assembly_detail.dbno = #dbno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="empid">
+	             t_assembly_detail.empid = #empid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="AssemblyDetail.findPage.and">
+			<isNotEmpty prepend="AND" property="assemblyid">
+	             t_assembly_detail.assemblyid = #assemblyid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqid">
+	             t_assembly_detail.seqid = #seqid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="serial">
+	             t_assembly_detail.serial = #serial#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_assembly_detail.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_assembly_detail.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_assembly_detail.itemname = #itemname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_assembly_detail.itemmode = #itemmode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="unit">
+	             t_assembly_detail.unit = #unit#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fqty">
+	             t_assembly_detail.fqty = #fqty#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="detailno">
+	             t_assembly_detail.detailno = #detailno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="dbno">
+	             t_assembly_detail.dbno = #dbno#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="empid">
+	             t_assembly_detail.empid = #empid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="AssemblyDetail.Entity" resultMap="RM.AssemblyDetail">
+    	SELECT 	<include refid="AssemblyDetail.columns"/> FROM t_assembly_detail <include refid="AssemblyDetail.findPage.where"/>
+    </select>
+    
+    <select id="AssemblyDetail.findList" resultMap="RM.AssemblyDetail">
+    	SELECT 
+    		<include refid="AssemblyDetail.columns"/> 
+    	FROM 
+    		t_assembly_detail
+		<include refid="AssemblyDetail.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="AssemblyDetail.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_assembly_detail
+    ]]>
+		<include refid="AssemblyDetail.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.AssemblyDetail.findPage" resultMap="RM.AssemblyDetail">
+    	select <include refid="AssemblyDetail.columns"/>	    
+	        from t_assembly_detail 	   
+		<include refid="AssemblyDetail.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="AssemblyDetail.findPage" resultMap="RM.AssemblyDetail">
+    	select <include refid="AssemblyDetail.columns"/>	    
+	        from t_assembly_detail where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       assemblyid 
+	   not in(select $notTop$ 
+       assemblyid 
+	   from t_assembly_detail <include refid="AssemblyDetail.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="AssemblyDetail.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+	 <select id="AssemblyDetail.find.list.for.detail" resultMap="RM.AssemblyDetail.for.baseitem">
+	    select t_assembly_detail.assemblyid ,
+        	t_assembly_detail.seqid ,
+        	t_assembly_detail.serial ,
+        	t_assembly_detail.itemcode ,
+        	t_assembly_detail.status ,
+        	t_assembly_detail.unit ,
+        	t_assembly_detail.fqty ,
+        	t_assembly_detail.detailno ,
+        	t_assembly_detail.dbno,
+        	t_assembly_detail.empid,
+        	t_assembly_detail.fstockid,t_base_item.itemname itemname ,t_base_item.formatno itemmode,t_base_item.fissnmanager issn
+	    
+	        from t_assembly_detail
+	        left join t_base_item on t_assembly_detail.itemcode = t_base_item.itemcode 
+	     
+		       <include refid="AssemblyDetail.findPage.where"/>
+	    
+    </select>
+	
+	
+	<select id="AssemblyDetail.find.assemblyList.data" resultMap="RM.AssemblyDetail"><!--  -->
+    	select <include refid="AssemblyDetail.columns"/>	    
+	        from t_assembly_detail where 1=1 and seqid=#seqid#
+    </select>
+    
+    
+    <select id="AssemblyDetail.find.assdetial.list.data" resultMap="assemblyDetail.data.select.mingxi">
+    	SELECT 
+    		<include refid="AssemblyDetail.columns"/> ,t_base_item.fissnmanager issn,
+    		t_base_item.itemname itemname,t_base_item.formatno factorymode,t_base_item.categoryid categoryid,t_pd_category.ftype ftype
+    	FROM 
+    		t_assembly_detail
+    		left join t_base_item on t_assembly_detail.itemcode = t_base_item.itemcode
+    		left join 	t_pd_category on t_base_item.categoryid = t_pd_category.categoryid
+		<include refid="AssemblyDetail.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    <select id="AssemblyDetail.find.list.data.forCheck" resultMap="RM.AssemblyDetail">
+    	select <include refid="AssemblyDetail.columns"/>	    
+	        from t_assembly_detail where 1=1 and detailno=#detailno#
+    </select>
+</sqlMap>

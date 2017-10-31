@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.RpExchange;
+import com.terrence.crm.dol.query.RpExchangeQuery;
+import com.terrence.crm.dol.dao.IRpExchangeDao;
+import com.terrence.crm.dol.service.IRpExchangeService;
+
+@Service
+@Transactional
+public class RpExchangeService extends BaseService implements IRpExchangeService {
+	protected static Logger logger = LoggerFactory.getLogger(RpExchangeService.class);
+	@Autowired
+	@Qualifier("rpExchangeDao")
+	private IRpExchangeDao rpExchangeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "RpExchange";
+	}
+	@Transactional(readOnly=true)
+	public RpExchange getById(java.lang.Long id) throws ServiceException
+	{
+		return rpExchangeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(RpExchange entity) throws ServiceException
+	{
+		rpExchangeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(RpExchange entity) throws ServiceException
+	{
+		Long adId = rpExchangeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(RpExchange entity) throws ServiceException
+	{
+		Integer returnValue =  rpExchangeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = rpExchangeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = rpExchangeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		RpExchangeQuery query = new RpExchangeQuery();
+		try {
+			return rpExchangeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<RpExchange> findPage(Page<RpExchange> page, RpExchangeQuery query) throws ServiceException
+	{
+		return rpExchangeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<RpExchange> findPage(Page<RpExchange> page,String statement, RpExchangeQuery query) throws ServiceException
+	{
+		return rpExchangeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<RpExchange> findList(RpExchangeQuery query) throws ServiceException
+	{
+		return rpExchangeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<RpExchange> findList(RpExchangeQuery query,Integer pageSize) throws ServiceException
+	{
+		return rpExchangeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<RpExchange> findList(RpExchangeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return rpExchangeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<RpExchange> findAllList() throws ServiceException
+	{
+		return rpExchangeDao.findAllList();
+	}
+
+}

@@ -1,0 +1,61 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdQm;
+import com.terrence.crm.dol.dao.IPdQmDao;
+import com.terrence.crm.dol.query.PdQmQuery;
+
+@Repository
+public class PdQmDao extends BaseIbatisDao<PdQm,java.lang.Long> implements IPdQmDao{
+
+		
+	public void saveOrUpdate(PdQm entity) {
+		if(entity.getQmid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdQm";
+	}
+	public PdQm getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdQm)this.getSqlMapClientTemplate().queryForObject("PdQm.getByProperty", map);		
+	}
+
+	@Override
+	public void updateStatusData(PdQm pdqm) {
+		this.getSqlMapClientTemplate().update("PdQm.update.updateData.status", pdqm);
+		
+	}
+
+	@Override
+	public List<PdQm> findListPdQm(PdQm pdqm) {
+		return this.getSqlMapClientTemplate().queryForList("PdQm.find.list.PdQm", pdqm);
+	}
+
+	@Override
+	public PdQm findPdQmEntity(PdQmQuery pdQmQuery) {
+		
+		return (PdQm) this.getSqlMapClientTemplate().queryForObject("PdQm.findPdQmEntity", pdQmQuery);
+	}
+
+	@Override
+	public PdQm findEntity(PdQmQuery pdQmQuery) {
+		return (PdQm) this.getSqlMapClientTemplate().queryForObject("PdQm.find.entityfordata", pdQmQuery);
+	}
+
+}

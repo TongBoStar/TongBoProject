@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.IcmoWorkplan;
+import com.terrence.crm.dol.dao.IIcmoWorkplanDao;
+
+@Repository
+public class IcmoWorkplanDao extends BaseIbatisDao<IcmoWorkplan,java.lang.Long> implements IIcmoWorkplanDao{
+
+		
+	public void saveOrUpdate(IcmoWorkplan entity) {
+		if(entity.getIcmoworkid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "IcmoWorkplan";
+	}
+	public IcmoWorkplan getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (IcmoWorkplan)this.getSqlMapClientTemplate().queryForObject("IcmoWorkplan.getByProperty", map);		
+	}
+
+}

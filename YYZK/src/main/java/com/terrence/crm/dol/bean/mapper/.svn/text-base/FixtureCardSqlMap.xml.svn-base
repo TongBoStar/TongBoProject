@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="FixtureCard">
+
+        
+	<resultMap id="RM.FixtureCard" class="com.terrence.crm.dol.bean.FixtureCard">
+        <result property="id" column="id"/>
+        <result property="fixtureid" column="fixtureid"/>
+        <result property="itemprocessid" column="itemprocessid"/>
+        <result property="fixture" resultMap="RM.FixtureCard.Fixture"/>
+        
+    </resultMap>
+    
+	<resultMap id="RM.FixtureCard.Fixture" class="com.terrence.crm.dol.bean.Fixture">
+        <result property="fixtureid" column="fixtureid"/>
+        <result property="fixturename" column="fixturename"/>
+        <result property="fixtruecode" column="fixtruecode"/>
+        <result property="parentid" column="parentid"/>
+        <result property="lcode" column="lcode"/>
+        
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="FixtureCard.columns">
+	    <![CDATA[
+        	t_fixture_card.id ,
+        	t_fixture_card.fixtureid ,
+        	t_fixture_card.itemprocessid 
+	    ]]>
+	</sql>
+	
+   <insert id="FixtureCard.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_fixture_card (
+        	fixtureid ,
+        	itemprocessid 
+        ) VALUES (
+        	#fixtureid# ,
+        	#itemprocessid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="FixtureCard.update" parameterClass="com.terrence.crm.dol.bean.FixtureCard">         
+        UPDATE t_fixture_card 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fixtureid">
+	        	fixtureid = #fixtureid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemprocessid">
+	        	itemprocessid = #itemprocessid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    
+	<delete id="FixtureCard.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_fixture_card where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="FixtureCard.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_fixture_card 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="FixtureCard.getById" resultMap="RM.FixtureCard">
+	    select <include refid="FixtureCard.columns"/>
+	    
+	        from t_fixture_card 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="FixtureCard.getByProperty" resultMap="RM.FixtureCard">
+		select <include refid="FixtureCard.columns"/> from t_fixture_card where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="FixtureCard.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_fixture_card.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fixtureid">
+	             t_fixture_card.fixtureid = #fixtureid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_fixture_card.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="FixtureCard.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_fixture_card.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fixtureid">
+	             t_fixture_card.fixtureid = #fixtureid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemprocessid">
+	             t_fixture_card.itemprocessid = #itemprocessid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="FixtureCard.findList" resultMap="RM.FixtureCard">
+    	SELECT 
+    		<include refid="FixtureCard.columns"/> ,t_fixture.lcode,	t_fixture.fixturename ,      	t_fixture.fixtruecode ,       	t_fixture.parentid 
+    	FROM 
+    		t_fixture_card left join t_fixture on t_fixture_card.fixtureid=t_fixture.fixtureid
+		<include refid="FixtureCard.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="FixtureCard.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_fixture_card
+    ]]>
+		<include refid="FixtureCard.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="FixtureCard.findPage" resultMap="RM.FixtureCard">
+    	select <include refid="FixtureCard.columns"/>	    
+	        from t_fixture_card 	   
+		<include refid="FixtureCard.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.FixtureCard.findPage" resultMap="RM.FixtureCard">
+    	select <include refid="FixtureCard.columns"/>	    
+	        from t_fixture_card where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_fixture_card <include refid="FixtureCard.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="FixtureCard.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

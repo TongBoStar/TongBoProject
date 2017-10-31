@@ -1,0 +1,251 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IFactoryReportDao;
+import com.terrence.crm.dol.dao.IIcitemDesignDao;
+import com.terrence.crm.dol.query.IcitemDesignQuery;
+import com.terrence.crm.dol.service.IIcitemDesignService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+
+@Service
+@Transactional
+public class IcitemDesignService extends BaseService implements IIcitemDesignService {
+	protected static Logger logger = LoggerFactory.getLogger(IcitemDesignService.class);
+	@Autowired
+	@Qualifier("icitemDesignDao")
+	private IIcitemDesignDao icitemDesignDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("factoryReportDao")
+	private IFactoryReportDao factoryReportDao;
+	public String getIbatisSqlMapNamespace() {
+		return "IcitemDesign";
+	}
+	@Transactional(readOnly=true)
+	public IcitemDesign getById(java.lang.Long id) throws ServiceException
+	{
+		return icitemDesignDao.getById(id);
+	}
+	
+	public void saveOrUpdate(IcitemDesign entity) throws ServiceException
+	{
+		icitemDesignDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(IcitemDesign entity) throws ServiceException
+	{
+		Long adId = icitemDesignDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(IcitemDesign entity) throws ServiceException
+	{
+		Integer returnValue =  icitemDesignDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = icitemDesignDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = icitemDesignDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		IcitemDesignQuery query = new IcitemDesignQuery();
+		try {
+			return icitemDesignDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<IcitemDesign> findPage(Page<IcitemDesign> page, IcitemDesignQuery query) throws ServiceException
+	{
+		return icitemDesignDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<IcitemDesign> findPage(Page<IcitemDesign> page,String statement, IcitemDesignQuery query) throws ServiceException
+	{
+		return icitemDesignDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<IcitemDesign> findList(IcitemDesignQuery query) throws ServiceException
+	{
+		return icitemDesignDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<IcitemDesign> findList(IcitemDesignQuery query,Integer pageSize) throws ServiceException
+	{
+		return icitemDesignDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<IcitemDesign> findList(IcitemDesignQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return icitemDesignDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<IcitemDesign> findAllList() throws ServiceException
+	{
+		return icitemDesignDao.findAllList();
+	}
+	@Override
+	public void saveUpdate(IcitemDesign entity,List<Long> checkedIdList) throws ServiceException {
+		/**List<FactoryReport> reportnos = factoryReportDao.findList("select_maxreportno.in.FactoryReport", null);
+		System.out.println(reportnos.get(0));
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR)-2000;
+		String month = cal.get(Calendar.MONTH)+1>10?cal.get(Calendar.MONTH)+1+"":"0"+(cal.get(Calendar.MONTH)+1)+"";
+		if(null!=reportnos.get(0)&&null!=reportnos.get(0).getReportno()&&!reportnos.get(0).getReportno().equals("")){
+			String reportno = reportnos.get(0).getReportno();
+			if(!reportno.substring(4, 6).equals(month)){
+				System.out.println("TC"+year+""+month+"0001");
+			}else{
+				reportno = reportno.substring(6, reportno.length());
+				int tmp = Integer.valueOf(reportno)+1;
+				if(tmp<10){
+					reportno = "000"+tmp;
+				}else if(tmp<100){
+					reportno = "00"+tmp;
+				}else if(tmp<1000){
+					reportno = "0"+tmp;
+				}else{
+					reportno = tmp+"";
+				}
+				System.out.println("TC"+year+""+month+""+reportno);
+			}
+		}else{
+			System.out.println("TC"+year+""+month+"0001");
+		}*/
+		if(checkedIdList == null || checkedIdList.size()==0){//单个修改
+			IcitemDesign icite = icitemDesignDao.getById(entity.getBaseitemid());
+			if(icite == null){
+				icitemDesignDao.save(entity);
+
+			}else{
+				//icitemDesignDao.update(entity);
+				icitemDesignDao. updateinfo(entity);
+			}
+			//修改物料属性
+			BaseItem bitem =null; 
+			bitem =entity.getBitem();
+			if(checkbitem(bitem)){
+			bitem.setBaseitemid(entity.getBaseitemid());
+			baseItemDao.update(bitem);
+			}
+			
+		}else{//批量修改
+			for(int sq=0;sq<checkedIdList.size();sq++){
+				IcitemDesign icite = icitemDesignDao.getById(checkedIdList.get(sq));
+				if(icite == null){
+					entity.setBaseitemid(checkedIdList.get(sq));
+					icitemDesignDao.save(entity);
+				}else{
+					entity.setBaseitemid(checkedIdList.get(sq));
+					//icitemDesignDao.update(entity);
+					icitemDesignDao. updateinfo(entity);
+				}
+				//修改物料属性
+				BaseItem bitem =null; 
+				bitem =entity.getBitem();
+				if(checkbitem(bitem)){
+					bitem.setBaseitemid(checkedIdList.get(sq));
+					baseItemDao.update(bitem);
+						
+				}
+				
+			}
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_ARBORESCENCE,ConfigTerrence.OPT_EDIT, "主键为:"+entity.getBaseitemid()+"物料设计资料");
+
+	}
+	private boolean checkbitem(BaseItem bitem) {
+
+		int isok=0;
+		if(bitem.getMaintainpartdiagram()!=null&&!bitem.getMaintainpartdiagram().equals("")){
+			isok=1;
+		}
+		if(bitem.getInstalldiagram()!=null&&!bitem.getInstalldiagram().equals("")){
+			isok=1;
+		}
+		if(bitem.getF107()!=null&&!bitem.getF107().equals("")){
+			isok=1;
+		}
+		if(bitem.getF106()!=null&&!bitem.getF106().equals("")){
+			isok=1;
+		}
+		if(bitem.getF108()!=null&&!bitem.getF108().equals("")){
+			isok=1;
+		}
+		if(bitem.getF116()!=null&&!bitem.getF116().equals("")){
+			isok=1;
+		}
+		if(bitem.getF119()!=null&&!bitem.getF119().equals("")){
+			isok=1;
+		}
+		if(isok==1){
+			return true;	
+		}else{
+			return false;
+		}
+		
+	}
+	@Override
+	public IcitemDesign getByIdIncludeBaseitem(String statement,
+			Long icitemDesignId) throws ServiceException {
+
+		return	icitemDesignDao.getById(statement, icitemDesignId);
+		 
+	}
+	@Override
+	public List<IcitemDesign> getByCheckedIdListIncludeBaseitem(
+			String statement, List<Long> checkedIdList) {
+		IcitemDesignQuery query = new IcitemDesignQuery();
+		String checkids = StringUtils.join(checkedIdList, ",");
+		query.setCheckids(checkids);
+		return icitemDesignDao.findList("IcitemDesign.findicitemDesign.IncludeBaseitem", query);
+	}
+
+}

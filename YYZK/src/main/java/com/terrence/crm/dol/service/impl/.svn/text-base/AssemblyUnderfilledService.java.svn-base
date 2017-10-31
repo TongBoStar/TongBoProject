@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyUnderfilled;
+import com.terrence.crm.dol.query.AssemblyUnderfilledQuery;
+import com.terrence.crm.dol.dao.IAssemblyUnderfilledDao;
+import com.terrence.crm.dol.service.IAssemblyUnderfilledService;
+
+@Service
+@Transactional
+public class AssemblyUnderfilledService extends BaseService implements IAssemblyUnderfilledService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyUnderfilledService.class);
+	@Autowired
+	@Qualifier("assemblyUnderfilledDao")
+	private IAssemblyUnderfilledDao assemblyUnderfilledDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyUnderfilled";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyUnderfilled getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyUnderfilledDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyUnderfilled entity) throws ServiceException
+	{
+		assemblyUnderfilledDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyUnderfilled entity) throws ServiceException
+	{
+		Long adId = assemblyUnderfilledDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyUnderfilled entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyUnderfilledDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyUnderfilledDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyUnderfilledDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyUnderfilledQuery query = new AssemblyUnderfilledQuery();
+		try {
+			return assemblyUnderfilledDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyUnderfilled> findPage(Page<AssemblyUnderfilled> page, AssemblyUnderfilledQuery query) throws ServiceException
+	{
+		return assemblyUnderfilledDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyUnderfilled> findPage(Page<AssemblyUnderfilled> page,String statement, AssemblyUnderfilledQuery query) throws ServiceException
+	{
+		return assemblyUnderfilledDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyUnderfilled> findList(AssemblyUnderfilledQuery query) throws ServiceException
+	{
+		return assemblyUnderfilledDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyUnderfilled> findList(AssemblyUnderfilledQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyUnderfilledDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyUnderfilled> findList(AssemblyUnderfilledQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyUnderfilledDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyUnderfilled> findAllList() throws ServiceException
+	{
+		return assemblyUnderfilledDao.findAllList();
+	}
+
+}

@@ -1,0 +1,59 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Item;
+import com.terrence.crm.dol.bean.Order;
+import com.terrence.crm.dol.dao.IItemDao;
+import com.terrence.crm.dol.query.ItemQuery;
+import com.terrence.crm.dol.query.OrderQuery;
+
+@Repository
+public class ItemDao extends BaseIbatisDao<Item,java.lang.Long> implements IItemDao{
+
+		
+	public void saveOrUpdate(Item entity) {
+		if(entity.getFitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Item";
+	}
+	public Item getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Item)this.getSqlMapClientTemplate().queryForObject("Item.getByProperty", map);		
+	}
+	
+	/**
+	 * 查询物料带单位名称
+	 * @param query
+	 * @return
+	 * @throws ServiceException
+	 */
+	public List<Item> listItemInfo(ItemQuery query ) {
+		return (List<Item>)this.getSqlMapClientTemplate().queryForList("Item.findListInfo", query);
+	}
+
+	@Override
+	public void findErp() {
+		this.getSqlMapClientTemplate().queryForObject("Item.find.ERP.data.all");
+	}
+
+}

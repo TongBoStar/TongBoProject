@@ -1,0 +1,984 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.bean.AssemblyDispatch;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.bean.AssemblyUnderfilled;
+import com.terrence.crm.dol.bean.AssignedSerial;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Bills;
+import com.terrence.crm.dol.bean.BillsDetail;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.OrdersProduct;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.bean.PdQm;
+import com.terrence.crm.dol.bean.Picking;
+import com.terrence.crm.dol.bean.ProdPlan;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.SaleOutbound;
+import com.terrence.crm.dol.bean.SalesDetail;
+import com.terrence.crm.dol.bean.SalesDetailSum;
+import com.terrence.crm.dol.bean.Shortage;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IAdttDao;
+import com.terrence.crm.dol.dao.IAssTaskSeqDao;
+import com.terrence.crm.dol.dao.IAssemblyDetailDao;
+import com.terrence.crm.dol.dao.IAssemblyDispatchDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.dao.IAssemblyTaskFlowDao;
+import com.terrence.crm.dol.dao.IAssemblyUnderfilledDao;
+import com.terrence.crm.dol.dao.IAssignedSerialDao;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IBillsDao;
+import com.terrence.crm.dol.dao.IBillsDetailDao;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.INodeDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IOrdersProductDao;
+import com.terrence.crm.dol.dao.IPdFileDao;
+import com.terrence.crm.dol.dao.IPdQmDao;
+import com.terrence.crm.dol.dao.IPickingDao;
+import com.terrence.crm.dol.dao.IProdPlanDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.ISaleOutboundDao;
+import com.terrence.crm.dol.dao.ISalesDetailDao;
+import com.terrence.crm.dol.dao.ISalesDetailSumDao;
+import com.terrence.crm.dol.dao.ISeqDao;
+import com.terrence.crm.dol.dao.IShortageDao;
+import com.terrence.crm.dol.query.AssemblyDispatchQuery;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+import com.terrence.crm.dol.query.AssemblyUnderfilledQuery;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.BillsDetailQuery;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.PickingQuery;
+import com.terrence.crm.dol.query.PutstorageQuery;
+import com.terrence.crm.dol.query.PutstorageentityQuery;
+import com.terrence.crm.dol.query.SalesDetailQuery;
+import com.terrence.crm.dol.query.SalesDetailSumQuery;
+import com.terrence.crm.dol.service.IAssemblyTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+
+@Service
+@Transactional
+public class AssemblyTaskService extends BaseService implements IAssemblyTaskService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyTaskService.class);
+	@Autowired
+	@Qualifier("assemblyTaskDao")
+	private IAssemblyTaskDao assemblyTaskDao;
+	@Autowired
+	@Qualifier("ordersProductDao")
+	private IOrdersProductDao ordersProductDao;
+	@Autowired
+	@Qualifier("seqDao")
+	private ISeqDao seqDao;
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	
+	@Autowired
+	@Qualifier("pickingDao")
+	private IPickingDao pickingDao;
+	
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	
+	@Autowired
+	@Qualifier("assemblyDispatchDao")
+	private IAssemblyDispatchDao assemblyDispatchDao;
+	
+	@Autowired
+	@Qualifier("billsDao")
+	private IBillsDao billsDao;
+	@Autowired
+	@Qualifier("billsDetailDao")
+	private IBillsDetailDao billsDetailDao;
+	
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+		
+	@Autowired
+	@Qualifier("adttDao")
+	private IAdttDao adttDao;
+	
+		
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("icserialDao")
+	private IIcserialDao icserialDao;
+	
+	@Autowired
+	@Qualifier("assignedSerialDao")
+	private IAssignedSerialDao assignedSerialDao;
+	
+	@Autowired
+	@Qualifier("prodPlanDao")
+	private IProdPlanDao prodPlanDao;
+	
+	@Autowired
+	@Qualifier("salesDetailDao")
+	private ISalesDetailDao salesDetailDao;
+	
+	@Autowired
+	@Qualifier("saleOutboundDao")
+	private ISaleOutboundDao saleOutboundDao;
+	
+	@Autowired
+	@Qualifier("pdQmDao")
+	private IPdQmDao pdQmDao;
+	
+	@Autowired
+	@Qualifier("pdFileDao")
+	private IPdFileDao pdFileDao;
+	
+	@Autowired
+	@Qualifier("salesDetailSumDao")
+	private ISalesDetailSumDao salesDetailSumDao;
+		
+	@Autowired
+	@Qualifier("shortageDao")
+	private IShortageDao shortageDao;
+	
+	@Autowired
+	@Qualifier("assemblyUnderfilledDao")
+	private IAssemblyUnderfilledDao assemblyUnderfilledDao;
+	
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyTask";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyTask getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyTaskDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyTask entity) throws ServiceException
+	{
+		entity.setCreatedate(DateConvertUtils.getCurrentDate());
+		assemblyTaskDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyTask entity) throws ServiceException
+	{
+		String taskcode=seqDao.getCurSeq(TerrcnceConstants.ASSEMBLY_BILL_PREFIX,6);
+		entity.setTaskcode(taskcode);
+		entity.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+		entity.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+		entity.setCreatedate(DateConvertUtils.getCurrentDate());
+		//检查是否缺料 0不缺料 1缺料
+		int isless = checkIsLess(entity);
+		entity.setIsLess(isless);
+		
+		Long adId = assemblyTaskDao.save(entity);
+		
+		return adId;
+	}
+	/**
+	 * 查看此任务单中的物料是否缺料
+	 * @param entity 任务单
+	 * @return 是否缺料 0不缺料 1缺料
+	 */
+	public int checkIsLess(AssemblyTask entity){
+		int flag = 0;
+		//查询此物料是否缺料
+		AssemblyUnderfilledQuery query = new AssemblyUnderfilledQuery();
+		query.setId(entity.getId());
+		query.setItemcode(entity.getItemcode());
+		query.setFqty(entity.getDemand());
+		List<AssemblyUnderfilled> tempList = assemblyUnderfilledDao.findList("AssemblyUnderfilled.checkdifference", query);
+		if(null!=tempList&&tempList.size()>0){
+			BaseItem baseItem = null;
+			for(AssemblyUnderfilled temp:tempList){
+				if(temp.getFsqty()<0){//如果缺料则记录缺料明细
+					flag = 1;
+					temp.setTaskcode(entity.getTaskcode());
+					temp.setFsqty(Math.abs(temp.getFsqty()));
+					temp.setCreatedate(new Date());
+					assemblyUnderfilledDao.save(temp);
+					//更新基础物料表中的已有需求量
+					baseItem = baseItemDao.getByColumn("BaseItem.getByItemCode", temp.getParentcode());
+					baseItem.setExistdemand((null==baseItem.getExistdemand()?0:baseItem.getExistdemand())+(null==temp.getFqty()?0:temp.getFqty()));
+					baseItemDao.update(baseItem);
+				}
+			}
+		}
+		return flag;
+	}
+	public Integer update(AssemblyTask entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyTaskDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyTaskDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyTaskDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyTaskQuery query = new AssemblyTaskQuery();
+		try {
+			return assemblyTaskDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyTask> findPage(Page<AssemblyTask> page, AssemblyTaskQuery query) throws ServiceException
+	{
+//		Page<AssemblyTask> resultPage = assemblyTaskDao.findPage(page, query);
+//		List<AssemblyTask> resultList = resultPage.getResult();;
+//		List<AssemblyTask> tempList = null;
+//		AssemblyTask at = null;
+//		
+//		for(int i=0;i<resultList.size();i++){
+//			at = resultList.get(i);
+//			query = new AssemblyTaskQuery();
+//			query.setId(at.getId());
+//			query.setItemcode(at.getItemcode());
+//			tempList = assemblyTaskDao.findList("AssemblyTask.checkdifference", query);
+//			if(null!=tempList&&tempList.size()>0){
+//				for(AssemblyTask temp:tempList){
+//					if(temp.getAmount()<0){
+//						resultList.get(i).setIsLess(1);
+//						break;
+//					}
+//				}
+//			}else{
+//				resultList.get(i).setIsLess(2);
+//			}
+//		}
+//		resultPage.setResult(resultList);
+		return assemblyTaskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyTask> findPage(Page<AssemblyTask> page,String statement, AssemblyTaskQuery query) throws ServiceException
+	{
+		return assemblyTaskDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyTask> findList(AssemblyTaskQuery query) throws ServiceException
+	{
+		return assemblyTaskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyTask> findNotEnoughDetail(AssemblyTaskQuery query) throws ServiceException
+	{
+		return assemblyTaskDao.findList("AssemblyTask.enoughDetail",query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyTask> findList(AssemblyTaskQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyTaskDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyTask> findList(AssemblyTaskQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyTaskDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyTask> findAllList() throws ServiceException
+	{
+		return assemblyTaskDao.findAllList();
+	}
+	@Override
+	public Long savepush(AssemblyTask entity) throws ServiceException {
+		AssemblyTask assemblytask=new AssemblyTask();
+		AssemblyTaskQuery query=new AssemblyTaskQuery();
+		query.setProductid(entity.getProductid());
+		List list=assemblyTaskDao.findList(query);
+		
+		if(list!=null&&list.size()==0)
+		{
+			OrdersProduct ordersProduct=ordersProductDao.getById(entity.getProductid());
+			String taskcode=seqDao.getCurSeq(TerrcnceConstants.ASSEMBLY_BILL_PREFIX,6);
+			assemblytask.setItemcode(ordersProduct.getItemcode());
+			assemblytask.setItemname(ordersProduct.getItemname());
+			assemblytask.setOrderid(ordersProduct.getOrderid());
+			assemblytask.setTaskcode(taskcode);
+			assemblytask.setTaskstatus(0);
+			assemblytask.setStatus(0);
+			assemblytask.setDispatchstatus(0);
+			assemblytask.setDemand(ordersProduct.getAmount());
+			assemblytask.setProductid(ordersProduct.getId());
+			assemblytask.setTaskstatus(0);
+			assemblytask.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+			assemblytask.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+			assemblytask.setCreatedate(DateConvertUtils.getCurrentDate());
+			assemblyTaskDao.save(assemblytask);
+			OrderBomQuery bomQuery=new OrderBomQuery();
+			bomQuery.setItemcode(assemblytask.getItemcode());
+			bomQuery.setAssigned(ordersProduct.getAmount());
+			savepushdown(ordersProduct, bomQuery);
+			return assemblytask.getId();
+		}
+		else
+		{
+			return -1l;
+		}
+	}
+	public void savepushdown(OrdersProduct ordersProduct, OrderBomQuery bomQuery) {
+		String taskcode;
+		List<OrderBom> listbom=orderBomDao.findList("OrdersProduct.Bom.Inventory.findList",bomQuery);
+		for(OrderBom bom:listbom)
+		{
+			if(bom.getParentcode().startsWith("081"))
+			{
+				AssemblyTask task=new AssemblyTask();
+				task.setItemcode(bom.getParentcode());
+				task.setItemname(bom.getParentname());
+				task.setOrderid(ordersProduct.getOrderid());
+				taskcode=seqDao.getCurSeq(TerrcnceConstants.ASSEMBLY_BILL_PREFIX,6);
+				task.setTaskcode(taskcode);
+				task.setTaskstatus(0);
+				task.setStatus(0);
+				task.setDispatchstatus(0);
+				task.setDemand(bom.getParentqty());
+				task.setProductid(ordersProduct.getId());
+				task.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+				task.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+				task.setCreatedate(DateConvertUtils.getCurrentDate());
+				assemblyTaskDao.save(task);
+			}
+			else if(bom.getItemproperty().intValue()==2)/**自制**/
+			{
+				Shortage shortage=new Shortage();
+				
+				if(bom.getParentqty()>0&&bom.getParentqty()>(bom.getInventory().getFqty()+bom.getInventory().getFqty2()))
+				{
+					shortage.setItemcode(bom.getParentcode());
+					shortage.setItemname(bom.getParentname());
+					shortage.setItemmode(bom.getInventory().getItemmode());
+					if(shortage.getItemmode()==null)shortage.setItemmode("");
+					shortage.setOrderid(ordersProduct.getOrderid());
+					shortage.setDemand(bom.getParentqty());
+					shortage.setItemproperty(bom.getItemproperty());
+					shortage.setDeliverdate(ordersProduct.getDeleverydate());
+					shortage.setStatus(0);
+					shortage.setProductid(ordersProduct.getId());
+					shortageDao.save(shortage);
+				}
+			}
+			else if(bom.getItemproperty().intValue()==1)/**外购**/
+			{
+				System.out.println("外购件，生成采购单");
+			}
+			OrderBomQuery orderbomQuery=new OrderBomQuery();
+			orderbomQuery.setItemcode(bom.getParentcode());
+			orderbomQuery.setAssigned(bom.getParentqty());
+			savepushdown(ordersProduct, orderbomQuery);
+		}
+	}
+	@Override
+	public Long saveEntity(AssemblyTask entity) throws ServiceException {
+		entity.setWorkload(0d);
+		entity.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+		entity.setFconveyerid(SpringSecurityUtils.getCurrentUserId());
+		entity.setCreatedate(DateConvertUtils.getCurrentDate());
+		Long adId = assemblyTaskDao.save(entity,"AssemblyTask.insert.manual");
+		
+		return adId;
+	}
+	@Override
+	public AssemblyTask findAssemblyTask(AssemblyTaskQuery assemblyTaskQuery) {
+		return assemblyTaskDao.findAssemblyTask(assemblyTaskQuery);
+	}
+	@Override
+	public void updateVoid(List<String> checkedcode)
+			throws ServiceException {
+		if(checkedcode.size()>0){
+			for(int tt =0;tt<checkedcode.size();tt++){
+			
+				/**
+				 * 修改在制品量
+				 */
+				updateBaseitem(checkedcode.get(tt));
+				
+//===================================待审入库单、待检产品列表=====================================================	
+				
+				PutstorageQuery put = new PutstorageQuery();
+				put.setSourceNo(checkedcode.get(tt));
+				List<Putstorage> putlist = new ArrayList<Putstorage>();
+				putlist = putstorageDao.findList("Putstorage.findlist.in.assTask", put);
+				if(putlist.size()>0){
+					List<String> sl = new ArrayList<String>();
+					for(int t3=0;t3<putlist.size();t3++){
+						if(putlist.get(t3).getStatus()==100){//判断入库单是否审核
+							sl.add(putlist.get(t3).getFbillno());
+						}
+					}
+					if(sl.size()>0){
+						String s2="";
+						for(int t4 = 0;t4<sl.size();t4++){
+							s2+=sl.get(t4) + "  ";
+						}
+						
+						throw new ServiceException("相关的待入库单"+s2+"已审核入库，请先反审核入库单，再进行作废操作","-1");
+					}else{
+					
+						PutstorageentityQuery  pquery = new PutstorageentityQuery();
+						pquery.setPoorderno(checkedcode.get(tt));
+						List<Putstorageentity> listPut = putstorageentityDao.findList("Putstorageentity.find.tovoid.listData", pquery); 				
+						if(listPut.size()>0){
+							for(int t10=0;t10<listPut.size();t10++){
+								Putstorageentity pp = new Putstorageentity();
+								pp.setEntityid(listPut.get(t10).getEntityid());
+								pp.setTovoid(1);//作废
+								putstorageentityDao.update(pp);//入库单明细作废
+							}
+						}
+						
+						for(int sq1=0;sq1<putlist.size();sq1++){
+							
+							PutstorageentityQuery putQ = new PutstorageentityQuery();
+							putQ.setFinterid(putlist.get(sq1).getFinterid());
+							List<Putstorageentity> listp = putstorageentityDao.findList("Putstorageentity.find.mingix.tovoid.data", putQ);
+							
+							if(listp.size()==0){
+								Putstorage pg = new Putstorage();
+								pg.setFinterid(putlist.get(sq1).getFinterid());
+								pg.setStatus(3);//作废
+								putstorageDao.update(pg);
+							}
+							
+						}
+					}
+				}
+				
+				PdQm pdqm = new PdQm();
+				pdqm.setFicmobillno(checkedcode.get(tt));
+				pdqm.setFstatus("3");//作废
+				pdQmDao.update("PdQm.update.for.void", pdqm);//待检产品作废
+				
+//===============================出库单===================================================				
+				PickingQuery pickingq = new PickingQuery();
+				pickingq.setFsourcebillno(checkedcode.get(tt));
+				List<Picking> pl = pickingDao.findentity(pickingq);
+				if(pl.size()>0){//判断是否有出库单审核
+					List<String> l1 = new ArrayList<String>();
+					for(int sq =0;sq<pl.size();sq++){
+						if(pl.get(sq).getFstatus()==1){
+							l1.add(pl.get(sq).getFsourcebillno());
+						}
+					}
+					
+					if(l1.size()>0){
+						String s = "";
+						for(int t1=0;t1<l1.size();t1++){
+							s+=l1.get(t1)+"  ";
+						}
+						throw new ServiceException("任务单号"+s+"已出库审核，请先反审核，再作废","-1");
+					}else{
+						for(int t2=0;t2<pl.size();t2++){//更改出库单状态
+							Picking pick = new Picking();
+							pick.setPickingid(pl.get(t2).getPickingid());
+							pick.setFstatus(3);//作废
+							pickingDao.update(pick);
+						}
+					}
+				}
+
+				
+				
+//==========================================销售出库单====================================================
+				SalesDetailQuery sdQ = new SalesDetailQuery();
+				sdQ.setFicmobillno(checkedcode.get(tt));
+				List<SalesDetail> sdList = salesDetailDao.findList("SalesDetail.find.void.list.data",sdQ);
+				
+				if(sdList.size()>0){
+					for(int sq3=0;sq3<sdList.size();sq3++){//判断是否生成销售出库单
+						if(sdList.get(sq3).getSalecode() != null && !sdList.get(sq3).getSalecode().equals("")){
+							SaleOutbound bos = saleOutboundDao.getByProperty("fbillno",sdList.get(sq3).getSalecode());
+							if(bos.getFstatus()==1){
+								throw new ServiceException("生产任务单号"+checkedcode.get(tt)+"生成的销售出库单"+sdList.get(sq3).getSalecode()+"已审核，请先反审销售出库单，再作废生产任务单","-1");
+							}else{
+								SalesDetailSumQuery sdsq = new SalesDetailSumQuery();
+								sdsq.setSaleid(bos.getSaleid());
+								List<SalesDetailSum> sumlist = salesDetailSumDao.findList(sdsq);
+								
+								if(sumlist.size()>0){
+									for(int sq1 = 0;sq1<sumlist.size();sq1++){//将涉及的销售待出库单明细中的数据状态isout改为0，还可重新提交
+										SalesDetail salesDetail = new SalesDetail(); 
+										salesDetail.setSdetailid(sumlist.get(sq1).getSdetailid());
+										salesDetailDao.update("SalesDetail.update.status.for.details", salesDetail);
+														
+									}
+								}
+								
+								SaleOutbound sob = new SaleOutbound(); 
+								sob.setSaleid(bos.getSaleid());
+								sob.setFstatus(3);//作废销售出库单
+								saleOutboundDao.update(sob);
+							}
+							
+						}
+					}
+				}
+				
+				List<SalesDetail> salesDetialList = salesDetailDao.findList("SalesDetail.find.list.for.void", sdQ);
+				if(salesDetialList.size()>0){
+					for(int sq5=0;sq5<salesDetialList.size();sq5++){//将销售待出库单明细表中与作废的生产任务单有关的数据作废
+						SalesDetail salesDt = new SalesDetail();
+						salesDt.setDetailid(salesDetialList.get(sq5).getDetailid());
+						salesDt.setIsout(3);//作废
+						salesDetailDao.update(salesDt);
+					}
+				}
+				
+//==========================================配工列表所用数据查询===========================================		
+				AssemblyTask ast = assemblyTaskDao.getByProperty("taskcode",checkedcode.get(tt));
+				AssemblyDispatchQuery adpth = new AssemblyDispatchQuery();
+				adpth.setTaskid(ast.getId());
+				List<AssemblyDispatch> adlist= assemblyDispatchDao.findList("AssemblyDispatch.find.list.in.ataskVoid",adpth);//得到dispatchid
+				
+				if(adlist.size()>0){
+					
+					/*for(int t5=0;t5<adlist.size();t5++){//装配单
+						AdttQuery addtQ = new AdttQuery();
+						addtQ.setDispatchid(adlist.get(t5).getDispatchid());
+						addtQ.setTaskid(adlist.get(t5).getTaskid());
+						
+						Node node = nodeDao.getByProperty("nodename", "组装");
+						
+						addtQ.setNodeid(node.getNodeid());
+						
+						//List<Adtt> adtlist = adttDao.findList(addtQ);//查询t_adtt，查询出的adttid 是一个，所以后面用adtlist[0] 用下面查询
+						Adtt adt = adttDao.getByEntity("Adtt.find.entity.data", addtQ);
+						
+						AssTaskSeqQuery  atsQ = new AssTaskSeqQuery();
+						atsQ.setAdttid(adt.getAdttid());
+						atsQ.setDispatchid(adlist.get(t5).getDispatchid());
+						atsQ.setTaskid(adlist.get(t5).getTaskid());
+						
+						List<AssTaskSeq> atsList = assTaskSeqDao.findList(atsQ);
+						
+						if(atsList.size()>0){
+							for(int t6=0;t6<atsList.size();t6++){//得到seqid
+								AssemblyTaskFlowQuery atfQ = new AssemblyTaskFlowQuery();
+								atfQ.setAdttid(adt.getAdttid());
+								atfQ.setDispatchid(adlist.get(t5).getDispatchid());
+								atfQ.setTaskid(adlist.get(t5).getTaskid());
+								atfQ.setSeqid(atsList.get(t6).getSeqid());
+								atfQ.setNodeid(node.getNodeid());
+								
+								AssemblyTaskFlow atf = assemblyTaskFlowDao.getByEntity("AssemblyTaskFlow.find.atf.new.data", atfQ);//得到flowid
+								AssemblyTaskFlow atf2 = new AssemblyTaskFlow();
+								atf2.setFlowid(atf.getFlowid());
+								atf2.setStatus(3);//作废
+								assemblyTaskFlowDao.update(atf2);//更新状态为作废
+								
+								AssemblyDetailQuery adQ = new AssemblyDetailQuery();
+								adQ.setSeqid(atsList.get(t6).getSeqid());
+								
+								List<AssemblyDetail> adList = assemblyDetailDao.findList(adQ);//查询装配单明细
+								
+							}
+						}
+					}*/
+					
+					for(int t5=0;t5<adlist.size();t5++){//配料单
+						
+//						AdttQuery addtQ = new AdttQuery();
+//						addtQ.setDispatchid(adlist.get(t5).getDispatchid());
+//						addtQ.setTaskid(adlist.get(t5).getTaskid());
+						
+						//Node node = nodeDao.getByProperty("nodename", "配料");
+						
+						//addtQ.setNodeid(node.getNodeid());
+						
+						//Adtt adt = adttDao.getByEntity("Adtt.find.entity.data", addtQ);
+						
+						
+						
+						
+						Adtt  attd = new Adtt();
+						attd.setDispatchid(adlist.get(t5).getDispatchid());
+						
+						if(adlist.get(t5).getDbno()==null){
+							throw new  ServiceException("表t_assembly_dispatch中的标记为null","-1");
+						}else{
+							attd.setDbno(adlist.get(t5).getDbno());
+						}
+						
+						attd.setTaskid(adlist.get(t5).getTaskid());
+						attd.setStatus(4);//作废
+					//	attd.setAdttid(adt.getAdttid());
+						adttDao.update("Adtt.update.void.shuju", attd);
+						
+						
+						Bills bill = new Bills();
+						bill.setDispatchid(adlist.get(t5).getDispatchid());
+						bill.setTaskid(adlist.get(t5).getTaskid());
+						bill.setDbno(adlist.get(t5).getDbno());
+						
+						bill.setStatus(1);//已配料
+						
+						Bills bi = billsDao.getEntity(bill);//获得投料单Id
+						
+						if(bi != null){
+							BillsDetailQuery bdq = new BillsDetailQuery();
+							bdq.setBillno(bi.getBillno());
+							
+							List<BillsDetail> listbd = billsDetailDao.findList("BillsDetail.find.data.for.voidd",bdq);//取得投料单明细
+							if(listbd.size()>0){
+								for(int t7=0;t7<listbd.size();t7++){
+//									/Fbatchno、Fitemcode、配料单保存时锁库planqty、Fstockid、dbno、Isbatch、Issn
+									if(listbd.get(t7).getIsbatch()==1){//批次管理
+										InventoryBatchQuery ibQ = new InventoryBatchQuery();
+										ibQ.setBatchno(listbd.get(t7).getFbatchno());
+										ibQ.setItemcode(listbd.get(t7).getFitemcode());
+										
+										if(listbd.get(t7).getFstockid()==null){
+											throw new ServiceException("配料单明细中物料"+listbd.get(t7).getFitemcode()+"的仓库id为空或者数据库中不存在此条明细");
+										}
+										
+										ibQ.setFitemid(listbd.get(t7).getFstockid().intValue());
+										ibQ.setDbno(listbd.get(t7).getDbno());
+										
+										InventoryBatch ib = inventoryBatchDao.getByEntity("InventoryBatch.find.data.in.void", ibQ);
+										if(ib==null){
+											throw new ServiceException("不存在帐套是"+listbd.get(t7).getDbno()+"批次号是"+listbd.get(t7).getFbatchno()+"仓库是"+listbd.get(t7).getFstockid().intValue()+"的物料"+listbd.get(t7).getFitemcode(),"-1");
+										}
+										
+										if((ib.getFqtylock().doubleValue()-listbd.get(t7).getPlanqty().doubleValue())<0){
+											throw new ServiceException("物料"+listbd.get(t7).getFitemcode()+"作废时的锁库数小于要解锁的数量","-1");
+										}
+										
+																		
+										InventoryBatch ibb = new InventoryBatch();
+										ibb.setBatchid(ib.getBatchid());
+										ibb.setFqtylock(ib.getFqtylock()-listbd.get(t7).getDosing());
+										inventoryBatchDao.update("InventoryBatch.update.data.for.void", ibb);//更新锁库数
+										
+									}else if(listbd.get(t7).getIssn()==1){//序列号管理
+										 String str=listbd.get(t7).getFbatchno();
+										 String sns[]=str.split(",");
+										 for(String sn:sns)
+										 {
+											 if(!sn.equals(""))
+											 {
+												 Icserial icserial=new Icserial();
+												 icserial.setFserialnum(sn);
+												 icserial.setLockstatus(TerrcnceConstants.SERIAL_UNLOCK);//1:锁库,0:未锁
+												 icserial.setFstatus(1);
+												 icserial.setFvalid(1);
+												 icserial.setItemcode(listbd.get(t7).getFitemcode());
+												 if(listbd.get(t7).getFstockid()!=null){
+													 icserial.setFstockid(listbd.get(t7).getFstockid().intValue()); 
+												 }
+												 
+												// icserialDao.update("Icserial.Lock.Stock.for.void", icserial);//更新序列号为未锁库
+												 icserialDao.update("Icserial.update.serialnum.itemcode", icserial);//更新序列号为未锁库
+												 
+												 
+												 
+												 AssignedSerial aSerial=new AssignedSerial();
+												 aSerial.setItemcode(listbd.get(t7).getFitemcode());
+												 aSerial.setDispatchid(adlist.get(t5).getDispatchid());
+												 aSerial.setFserialnum(sn);
+												 assignedSerialDao.deleteAssigned(aSerial);//装配已分配物料序列表t_assigned_serial 序列号删除
+//												 aSerial.setUsestatus(2);//作废
+//												 assignedSerialDao.update("AssignedSerial.update.void.data", aSerial);//装配已分配物料序列表t_assigned_serial 序列号作废
+											 } 
+										  }
+									}else{//非批次号、非序列号
+										InventoryBatchQuery ibQ2 = new InventoryBatchQuery();
+										ibQ2.setItemcode(listbd.get(t7).getFitemcode());
+										ibQ2.setFitemid(listbd.get(t7).getFstockid().intValue());
+										ibQ2.setDbno(listbd.get(t7).getDbno());
+										
+										InventoryBatch ib = inventoryBatchDao.getByEntity("InventoryBatch.find.data.in.void", ibQ2);
+										if(ib==null){
+											throw new ServiceException("不存在帐套是"+listbd.get(t7).getDbno()+"仓库是"+listbd.get(t7).getFstockid().intValue()+"的物料"+listbd.get(t7).getFitemcode(),"-1");
+										}
+										
+										if(ib.getFqtylock()-listbd.get(t7).getPlanqty()<0){
+											throw new ServiceException("物料"+listbd.get(t7).getFitemcode()+"作废时的锁库数小于要解锁的数量","-1");
+										}
+										
+																		
+										InventoryBatch ibb2 = new InventoryBatch();
+										ibb2.setBatchid(ib.getBatchid());
+										ibb2.setFqtylock(ib.getFqtylock()-listbd.get(t7).getDosing());
+										inventoryBatchDao.update("InventoryBatch.update.data.for.void", ibb2);//更新锁库数
+										
+									}
+								}
+							}
+						}
+						
+						
+					}
+					
+				}
+				
+//=======================================================生产任务单、计划单 单据状态修改===================================================
+				//taskstatus   checkedcode.get(tt)
+				AssemblyTask taskAss = assemblyTaskDao.getByProperty("taskcode",checkedcode.get(tt));
+				
+				if(taskAss != null){
+					AssemblyTask tassem = new AssemblyTask();
+					tassem.setVoidpeople(SpringSecurityUtils.getCurrentUserId());//作废操作人
+					tassem.setVoiddate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//作废时间
+					tassem.setTaskstatus(3);//生产任务单作废
+					tassem.setId(taskAss.getId());
+					
+					assemblyTaskDao.update(tassem);
+				}
+				
+				
+				ProdPlan pp = prodPlanDao.getByProperty("plancode",taskAss.getOrdercode());
+				if(pp != null){
+					ProdPlan prodp = new ProdPlan();
+					prodp.setPlanid(pp.getPlanid());
+					//prodp.setCheckstatus(3);//计划单作废
+					prodp.setPushstatus4(0);//未下推
+					prodPlanDao.update(prodp);
+				}
+				
+				
+//============================================产品档案 ===========================================================================================
+				
+				PdFile pdfile = new PdFile();
+				pdfile.setWorkno(checkedcode.get(tt));
+				pdfile.setFstatus(1);//作废
+				pdFileDao.update("PdFile.update.for.void.data", pdfile);
+			}
+		}
+	}
+	/**
+	 * 
+	* <p>Description: </p>
+	* <p>Company: </p> 
+	* @author: yjb
+	* @date 2015-9-14下午05:00:57
+	 */
+	private void updateBaseitem(String taskcode) {
+		AssemblyTask at = assemblyTaskDao.getByProperty("taskcode",taskcode);
+	
+		List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+		BaseItemQuery bQuery=new BaseItemQuery();
+		bQuery.setItemcode(at.getItemcode());
+		baseitemList = baseItemDao.findEntityBase(bQuery);
+		
+		if(baseitemList.size()>0){
+			Double sumqty = 0D;
+			if(at.getDbno() == 4){
+					sumqty = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4()) - at.getDemand();
+			}else{
+					sumqty = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums()) - at.getDemand();
+			}
+			
+			BaseItem bitem = new BaseItem();
+			bitem.setItemcode(at.getItemcode());
+			bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+			if(at.getDbno() == 4){
+				bitem.setMakingnums4(sumqty<0?0:sumqty);
+			}else{
+				bitem.setMakingnums(sumqty<0?0:sumqty);
+			}
+			
+			baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+		}else{
+			throw new ServiceException("物料表中没有物料编码："+at.getItemcode());
+		}
+	}
+	@Override
+	public void delupdate(List<Long> checkedIdList) throws ServiceException {
+		AssemblyTask at = new AssemblyTask();
+		at.setId(checkedIdList.get(0));
+		at.setTaskstatus(3);//作废
+		assemblyTaskDao.update(at);
+		
+		AssemblyTask atask = assemblyTaskDao.getById(checkedIdList.get(0));
+		
+		ProdPlan pp = prodPlanDao.getByProperty("plancode",atask.getOrdercode());
+		ProdPlan prodp = new ProdPlan();
+		prodp.setPlanid(pp.getPlanid());
+		prodp.setPushstatus4(0);//未下推
+		prodPlanDao.update(prodp);
+	}
+	@Override
+	public AssemblyTask findAssemblyTaskNew(AssemblyTaskQuery assemblyTaskQuery)
+			throws ServiceException {
+		return assemblyTaskDao.findAssemblyTaskNew(assemblyTaskQuery);
+	}
+	@Override
+	public AssemblyTask findOrderData(AssemblyTaskQuery assemblyTaskQuery)
+			throws ServiceException {
+		return assemblyTaskDao.findOrderData(assemblyTaskQuery);
+	}
+	@Override
+	public void updateIsOvaer(AssemblyTask entity) throws ServiceException {
+		
+		/**
+		 * 更新物料表的在制品量
+		 */
+		updateItemBase(entity);
+		
+		
+		entity.setTaskstatus(1);//更新为完成状态
+		assemblyTaskDao.update("AssemblyTask.update.isover.status",entity);
+		
+		
+		//======================更改K3状态===============================
+		if(entity.getDbno()==3){
+			JSONObject jsontask=new JSONObject();
+			if(entity.getJobno()!=null && !entity.getJobno().equals("")){
+				jsontask.put("taskcode",entity.getJobno());
+			}else{
+				jsontask.put("taskcode",entity.getTaskcode());
+			}
+			
+			jsontask.put("overempid",SpringSecurityUtils.getCurrentUserId());
+			jsontask.put("overstatus", 3);
+			jsontask.put("overdate", DateUtils.GetDateTime());
+			jsontask.put("overempname", SpringSecurityUtils.getCurrentRealName());
+			TREReturn ret=new K3ServiceProxy().saveIsOver(jsontask);//更新K3结案状态
+			if( ret.getnCode() == -1){
+				throw new ServiceException(ret.getStrText(),"-1");
+			}	
+			
+		}
+		
+		//================================================================
+			
+		
+	}
+	
+	/**
+	* <p>Description:更新物料表的已有计划数 、已有需求数</p>
+	* @author yjb
+	* @date 2015-9-14下午05:09:12
+	 */
+	private void updateItemBase(AssemblyTask entity) {
+		
+		AssemblyTask at = assemblyTaskDao.getByProperty("taskcode",entity.getTaskcode());
+		
+		if((at.getDemand().doubleValue() - at.getWorkload().doubleValue())>0){//配工数比计划数少
+			Double sq = at.getDemand().doubleValue() - at.getWorkload().doubleValue();
+			List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+			BaseItemQuery bQuery=new BaseItemQuery();
+			bQuery.setItemcode(at.getItemcode());
+			baseitemList = baseItemDao.findEntityBase(bQuery);
+			if(baseitemList.size()>0){
+				Double sumqty = 0D;
+				Double exsum = 0D;
+				if(at.getDbno() == 4){
+					sumqty = (baseitemList.get(0).getPlanfqty4()==null?0D:baseitemList.get(0).getPlanfqty4()) - sq;
+					exsum = (baseitemList.get(0).getExistdemand4()==null?0D:baseitemList.get(0).getExistdemand4()) - sq;
+				}else{
+					sumqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) - sq;
+					exsum = (baseitemList.get(0).getExistdemand()==null?0D:baseitemList.get(0).getExistdemand()) - sq;
+				}
+				
+				BaseItem bitem = new BaseItem();
+				bitem.setItemcode(at.getItemcode());
+				bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+				if(at.getDbno() == 4){
+					bitem.setPlanfqty4(sumqty<0?0:sumqty);
+					bitem.setExistdemand4(exsum<0?0:exsum);
+				}else{
+					bitem.setPlanfqty(sumqty<0?0:sumqty);//已有计划
+					bitem.setExistdemand(exsum<0?0:exsum);//已有需求
+				}
+				
+				baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				
+				OrderBomQuery query=new OrderBomQuery();
+				query.setItemcode(at.getItemcode());
+				List<OrderBom> list=orderBomDao.findList(query);
+				if(list.size()>0){
+					for(int tt=0;tt<list.size();tt++){
+						BaseItem baseItem=baseItemDao.getByProperty("itemcode",list.get(tt).getParentcode());
+						
+						if(baseItem==null){
+							throw new ServiceException("物料表中没有物料编码："+ list.get(tt).getParentcode());
+						}
+						Double mendsum = 0D;
+						if(at.getDbno()==4){
+							mendsum = (baseItem.getExistdemand4()==null?0:baseItem.getExistdemand4()) -  sq*(list.get(tt).getParentqty());//每条物料减去数量*用量
+						}else{
+							mendsum = (baseItem.getExistdemand()==null?0:baseItem.getExistdemand()) -  sq*(list.get(tt).getParentqty());//每条物料减去数量*用量	
+						}
+						
+						if(at.getDbno()==4){
+							baseItem.setExistdemand4(mendsum<0?0:mendsum);
+						}else{
+							baseItem.setExistdemand(mendsum<0?0:mendsum);
+						}
+						
+						baseItemDao.update("BaseItem.update.makingnums.data.select4", baseItem);
+					}
+				}
+				
+				
+			}else{
+				throw new ServiceException("物料表中没有物料编码："+at.getItemcode());
+			}
+		}
+		
+	}
+
+	
+}

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yqt">
+
+<resultMap id="RM.Yqt" class="com.terrence.crm.dol.bean.Yqt">
+	<result property="id" column="id"/>
+	<result property="fname" column="fname"/>
+	<result property="ftype" column="ftype"/>
+	<result property="times" column="times"/>
+	<result property="resIcon" column="resIcon"/>
+	<result property="resourceUrl" column="resourceUrl"/>
+	<result property="fdesc" column="fdesc"/>
+	<result property="createrId" column="createrId"/>
+	<result property="createDate" column="createDate"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yqt.columns">
+	<![CDATA[
+		t_yqt.id ,
+		t_yqt.fname ,
+		t_yqt.ftype ,
+		t_yqt.times ,
+		t_yqt.resIcon ,
+		t_yqt.resourceUrl ,
+		t_yqt.fdesc ,
+		t_yqt.createrId ,
+		t_yqt.createDate
+	]]>
+</sql>
+
+<insert id="Yqt.insert" >
+	<![CDATA[
+	INSERT INTO t_yqt (
+		fname,
+		ftype,
+		times,
+		resIcon,
+		resourceUrl,
+		fdesc,
+		createrId,
+		createDate
+	) VALUES (
+		#fname#,
+		#ftype#,
+		#times#,
+		#resIcon#,
+		#resourceUrl#,
+		#fdesc#,
+		#createrId#,
+		#createDate#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yqt.update" parameterClass="com.terrence.crm.dol.bean.Yqt"> 
+	UPDATE t_yqt 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="fname">
+			fname = #fname# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="ftype">
+			ftype = #ftype# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="times">
+			times = #times# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="resIcon">
+			resIcon = #resIcon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="resourceUrl">
+			resourceUrl = #resourceUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fdesc">
+			fdesc = #fdesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrId">
+			createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createDate">
+			createDate = #createDate# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yqt.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yqt.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fname">
+			t_yqt.fname = #fname# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="ftype">
+			t_yqt.ftype = #ftype# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="times">
+			t_yqt.times = #times# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resIcon">
+			t_yqt.resIcon = #resIcon# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resourceUrl">
+			t_yqt.resourceUrl = #resourceUrl# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fdesc">
+			t_yqt.fdesc = #fdesc# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrId">
+			t_yqt.createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createDate">
+			t_yqt.createDate = #createDate# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yqt.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yqt.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fname">
+		t_yqt.fname = #fname# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="ftype">
+		t_yqt.ftype = #ftype# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="times">
+		t_yqt.times = #times# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="resIcon">
+		t_yqt.resIcon = #resIcon# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="resourceUrl">
+		t_yqt.resourceUrl = #resourceUrl# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fdesc">
+		t_yqt.fdesc = #fdesc# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrId">
+		t_yqt.createrId = #createrId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createDate">
+		t_yqt.createDate = #createDate# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yqt.getById" resultMap="RM.Yqt">
+	select <include refid="Yqt.columns"/> from t_yqt where id=#id#
+</select>
+
+<select id="Yqt.getByProperty" resultMap="RM.Yqt">
+	select <include refid="Yqt.columns"/> from t_yqt where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yqt.delete">
+	<![CDATA[
+		DELETE FROM t_yqt WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yqt.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yqt WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yqt.findPage.count" resultClass="long">
+	select count(*) from t_yqt <include refid="Yqt.findPage.where"/>
+</select>
+
+<select id="Yqt.findPage" resultMap="RM.Yqt">
+	select <include refid="Yqt.columns"/> 
+		from t_yqt 
+	<include refid="Yqt.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yqt.findList" resultMap="RM.Yqt">
+	SELECT <include refid="Yqt.columns"/> FROM t_yqt
+	<include refid="Yqt.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<select id="Yqt.find.unsync.android" resultMap="RM.Yqt">
+	SELECT <include refid="Yqt.columns"/> FROM t_yqt where id>#id#
+</select>
+<select id="Yqt.findList.ids" resultMap="RM.Yqt">
+	SELECT <include refid="Yqt.columns"/> FROM t_yqt where id in ($fname$)
+</select>
+</sqlMap>

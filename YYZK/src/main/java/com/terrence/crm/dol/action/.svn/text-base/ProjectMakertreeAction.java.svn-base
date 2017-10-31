@@ -1,0 +1,540 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.service.IProjectMakertreeService;
+import com.terrence.crm.dol.bean.ProjectMakertree;
+import com.terrence.crm.dol.query.ProjectMakertreeQuery;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/projectMakertree")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "projectMakertree." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ProjectMakertreeAction extends CrudActionSupport<ProjectMakertree>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("projectMakertreeService")
+	private IProjectMakertreeService projectMakertreeService;
+	
+	
+	private ProjectMakertree entity;
+
+	private ProjectMakertreeQuery projectMakertreeQuery;
+	
+	
+	private java.lang.Long projectMakertreeId;
+	
+	/** 分页器 */
+	private Page<ProjectMakertree> page = new Page<ProjectMakertree>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ProjectMakertree> projectMakertreeList;
+	
+	private String tree="";
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (projectMakertreeId != null ) {
+			entity = projectMakertreeService.getById(projectMakertreeId);
+		} else {
+			entity = new ProjectMakertree();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			projectMakertreeService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(projectMakertreeQuery == null) {
+			projectMakertreeQuery = new ProjectMakertreeQuery();
+		}
+		
+		try {
+			projectMakertreeList = projectMakertreeService.findList(projectMakertreeQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("ProjectMakertreeId");
+			page.setOrder(Page.DESC);
+		}
+		if(projectMakertreeQuery == null) {
+			projectMakertreeQuery = new ProjectMakertreeQuery();
+		}
+		
+		try {
+			page = projectMakertreeService.findPage(page, projectMakertreeQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			ProjectMakertreeQuery query = new ProjectMakertreeQuery();
+			query.setFname(entity.getFname());
+			List<ProjectMakertree> list = new ArrayList<ProjectMakertree>();
+			list = projectMakertreeService.findList(query);
+			boolean flag = false;
+			if(entity.getId()!=null&&entity.getId().toString().trim().length()!=0){
+				if(list!=null&&list.size()>0){
+					for(int i=0;i<list.size();i++){
+						if(list.get(i)!=null&&!list.get(i).getId().toString().equals(entity.getId().toString())&&list.get(i).getFname()!=null&&list.get(i).getFname().equals(entity.getFname())){
+							flag = true;
+						}
+					}
+				}
+			}else{
+				if(list!=null&&list.size()>0){
+					flag = true;
+				}
+			}
+			if(flag){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "厂商名称重复！";
+				addActionMessage("操作失败");
+			}else{
+				projectMakertreeService.saveOrUpdate(entity);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				
+				addActionMessage("操作成功");
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = projectMakertreeService.getById(projectMakertreeId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+
+	public String listToTree()throws Exception
+	{
+		try
+		{
+			tree="";
+			tree = createTree();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询树成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询树失败";
+		}
+		return JSON;
+	}
+	
+	public String createTree(){
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("<li>");
+		sbuf.append("<span ref='0' class=\"folder\"  id='li0' pid='-1' ><a href=\"javascript:\"\";\">厂家</a></span>");
+		ProjectMakertreeQuery query = new ProjectMakertreeQuery();
+		query.setSortColumns("fparentid");
+		List<ProjectMakertree> list = new ArrayList<ProjectMakertree>();
+		list = projectMakertreeService.findList(query);
+		if(list!=null&&list.size()>0){
+			Map<String, List<ProjectMakertree>> map = new HashMap<String, List<ProjectMakertree>>();
+			map = listToMap(list);
+			if(map!=null&&map.size()>0){
+				sbuf.append(loop(map,0l));
+			}
+		}
+		sbuf.append("</li>");
+		return sbuf.toString();
+	}
+	public String loop(Map<String, List<ProjectMakertree>> map,Long id){
+		List<ProjectMakertree> list =new ArrayList<ProjectMakertree>();
+		StringBuffer sbuf = new StringBuffer();
+		list = map.get(Long.toString(id));
+		if(list!=null&&list.size()>0){
+			sbuf.append("<ul>");
+			for(ProjectMakertree item:list){
+				if(item.getId()!=null){
+					if(map.get(Long.toString(item.getId()))!=null&&map.get(Long.toString(item.getId())).size()>0){
+						sbuf.append("<li><span class=\"folder\" ref="+item.getId()+" id=li"+item.getId()+" pid="+item.getFparentid()+" name="+item.getFname()+"><a href=\"javascript:searchlist('"+item.getFname()+"');\">"+item.getFname()+"</a></span>"+loop(map,item.getId())+"</li>");
+					}else{
+						sbuf.append("<li><span class=\"file\" ref="+item.getId()+" id=li"+item.getId()+" pid="+item.getFparentid()+" name="+item.getFname()+" ><a href=\"javascript:searchlist('"+item.getFname()+"');\">"+item.getFname()+"</a></span></li>");
+					}
+				}
+				
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	//将集合转成map
+	public Map<String, List<ProjectMakertree>> listToMap(List<ProjectMakertree> list){
+		long pid=0;
+		List<ProjectMakertree> listb = new ArrayList<ProjectMakertree>();
+		Map<String, List<ProjectMakertree>> mapb = new HashMap<String, List<ProjectMakertree>>();
+		for(ProjectMakertree bitem:list){
+			if(bitem!=null&&bitem.getFparentid()!=null&&bitem.getFparentid()==pid){
+				listb.add(bitem);
+			}else if(bitem!=null&&bitem.getFparentid()!=null&&bitem.getFparentid()!=pid){
+				if(listb!=null&&listb.size()>0){
+					mapb.put(Long.toString(pid), listb);
+				}
+				listb = new ArrayList<ProjectMakertree>();
+				pid = bitem.getFparentid();
+				listb.add(bitem);
+			}
+		}
+		if(mapb!=null&&listb!=null&&listb.size()>0&&mapb.get(Long.toString(pid))==null){
+			mapb.put(Long.toString(pid), listb);
+		}
+		return mapb;
+	}
+	
+	
+	//----------自定义方法：删除节点以及子节点
+		public String deleteAlone() throws Exception {
+			try 
+			{
+				if(this.projectMakertreeId!=null){
+					Integer result = this.projectMakertreeService.deleteAlone(projectMakertreeId);
+					if(result!=0){
+						resultInfo[0] = "0";
+						resultInfo[1] = "删除成功";
+						createTree();
+					}else{
+						resultInfo[0] = "-1";
+						resultInfo[1] = "删除失败";
+					}
+					
+				}else{
+					resultInfo[0] = "-1";
+					resultInfo[1] = "没有要删除的数据！";
+				}
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败"+"系统错误!";
+			
+			}
+			return JSON;
+		}
+	public String listAll() throws Exception {
+		try{
+			projectMakertreeList = projectMakertreeService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ProjectMakertree getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ProjectMakertreeQuery getProjectMakertreeQuery() {
+		return projectMakertreeQuery;
+	}
+
+	
+	public void setProjectMakertreeQuery(ProjectMakertreeQuery projectMakertreeQuery) {
+		this.projectMakertreeQuery = projectMakertreeQuery;
+	}
+
+	public void setProjectMakertreeId(java.lang.Long projectMakertreeId) {
+		this.projectMakertreeId = projectMakertreeId;
+	}
+	
+	
+	public java.lang.Long getProjectMakertreeId() {
+		return this.projectMakertreeId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ProjectMakertree> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ProjectMakertree> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ProjectMakertree> getProjectMakertreeList() {
+		return projectMakertreeList;
+	}
+
+	public String getTree() {
+		return tree;
+	}
+
+	public void setTree(String tree) {
+		this.tree = tree;
+	}
+	
+	
+}

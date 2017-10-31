@@ -1,0 +1,140 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailTabRecord;
+import com.terrence.crm.dol.dao.ITrailTabRecordDao;
+
+@Repository
+public class TrailTabRecordDao extends BaseIbatisDao<TrailTabRecord,java.lang.Long> implements ITrailTabRecordDao{
+
+		
+	public void saveOrUpdate(TrailTabRecord entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailTabRecord";
+	}
+	public TrailTabRecord getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailTabRecord)this.getSqlMapClientTemplate().queryForObject("TrailTabRecord.getByProperty", map);		
+	}
+
+	@Override
+	public List<TrailTabRecord> findTraliTabRecordList(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		List<TrailTabRecord> tabRecords = new ArrayList<TrailTabRecord>();
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				TrailTabRecord tabRecord = new TrailTabRecord();
+				tabRecord.setFrec1(rs.getDouble(1));
+				tabRecord.setFrec2(rs.getDouble(2));
+				tabRecord.setFrec3(rs.getDouble(3));
+				tabRecord.setCreatedate(rs.getTimestamp(4));
+				tabRecords.add(tabRecord);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return tabRecords;
+	}
+
+	@Override
+	public List<Integer> findTabRecordMaxValue(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		List<Integer> maxValues = new ArrayList<Integer>();
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			Integer columnCount = rs.getMetaData().getColumnCount();
+			while (rs.next()) {
+				for (int i = 1; i <= columnCount; i++) {
+					maxValues.add(rs.getInt(i));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return maxValues;
+	}
+
+	@Override
+	public Long findQueryForResultSet(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Long longTime = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				longTime  = rs.getLong(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return longTime;
+	}
+
+
+}

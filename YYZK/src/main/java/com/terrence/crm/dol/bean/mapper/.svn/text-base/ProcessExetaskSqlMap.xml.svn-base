@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProcessExetask">
+
+<resultMap id="RM.ProcessExetask" class="com.terrence.crm.dol.bean.ProcessExetask">
+	<result property="id" column="id"/>
+	<result property="taskCode" column="taskCode"/>
+	<result property="nodeName" column="nodeName"/>
+	<result property="nodeSeq" column="nodeSeq"/>
+	<result property="sourceCode" column="sourceCode"/>
+	<result property="sourceId" column="sourceId"/>
+	<result property="handlers" column="handlers"/>
+	<result property="examineStatus" column="examineStatus"/>
+	<result property="fmark" column="fmark"/>
+	<result property="isreback" column="isreback"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ProcessExetask.columns">
+	<![CDATA[
+		t_process_exetask.id ,
+		t_process_exetask.taskCode ,
+		t_process_exetask.nodeName ,
+		t_process_exetask.nodeSeq ,
+		t_process_exetask.sourceCode,
+		t_process_exetask.sourceId,
+		t_process_exetask.handlers,
+		t_process_exetask.examineStatus,
+		t_process_exetask.fmark,
+		t_process_exetask.isreback
+	]]>
+</sql>
+
+<insert id="ProcessExetask.insert" >
+	<![CDATA[
+	INSERT INTO t_process_exetask (
+		taskCode,
+		nodeName,
+		nodeSeq,
+		sourceCode,
+		sourceId,
+		handlers,
+		examineStatus,
+		fmark,
+		isreback
+	) VALUES (
+		#taskCode#,
+		#nodeName#,
+		#nodeSeq#,
+		#sourceCode#,
+		#sourceId#,
+		#handlers#,
+		#examineStatus#,
+		#fmark#,
+		#isreback#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ProcessExetask.update" parameterClass="com.terrence.crm.dol.bean.ProcessExetask"> 
+	UPDATE t_process_exetask 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="taskCode">
+			taskCode = #taskCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="nodeName">
+			nodeName = #nodeName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="nodeSeq">
+			nodeSeq = #nodeSeq# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sourceCode">
+			sourceCode = #sourceCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sourceId">
+			sourceId = #sourceId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="handlers">
+			handlers = #handlers# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="examineStatus">
+			examineStatus = #examineStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fmark">
+			fmark = #fmark# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="isreback">
+			isreback = #isreback# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ProcessExetask.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_process_exetask.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="taskCode">
+			t_process_exetask.taskCode = #taskCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeName">
+			t_process_exetask.nodeName = #nodeName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="nodeSeq">
+			t_process_exetask.nodeSeq = #nodeSeq# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sourceCode">
+			t_process_exetask.sourceCode = #sourceCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="sourceId">
+			t_process_exetask.sourceId = #sourceId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="examineStatus">
+			t_process_exetask.examineStatus = #examineStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fmark">
+			t_process_exetask.fmark = #fmark# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ProcessExetask.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_process_exetask.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="taskCode">
+		t_process_exetask.taskCode = #taskCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeName">
+		t_process_exetask.nodeName = #nodeName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="nodeSeq">
+		t_process_exetask.nodeSeq = #nodeSeq# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sourceCode">
+		t_process_exetask.sourceCode = #sourceCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="sourceId">
+		t_process_exetask.sourceId = #sourceId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="examineStatus">
+		t_process_exetask.examineStatus = #examineStatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fmark">
+		t_process_exetask.fmark = #fmark# 
+	</isNotEmpty>
+</sql>
+
+<select id="ProcessExetask.getById" resultMap="RM.ProcessExetask">
+	select <include refid="ProcessExetask.columns"/> from t_process_exetask where id=#id#
+</select>
+
+<select id="ProcessExetask.getByProperty" resultMap="RM.ProcessExetask">
+	select <include refid="ProcessExetask.columns"/> from t_process_exetask where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ProcessExetask.delete">
+	<![CDATA[
+		DELETE FROM t_process_exetask WHERE id=#id#
+	]]>
+</delete>
+<delete id="ProcessExetask.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_process_exetask WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ProcessExetask.findPage.count" resultClass="long">
+	select count(*) from t_process_exetask <include refid="ProcessExetask.findPage.where"/>
+</select>
+
+<select id="ProcessExetask.findPage" resultMap="RM.ProcessExetask">
+	select <include refid="ProcessExetask.columns"/> 
+		from t_process_exetask 
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_process_exetask <include refid="ProcessExetask.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="ProcessExetask.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ProcessExetask.findList" resultMap="RM.ProcessExetask">
+	SELECT <include refid="ProcessExetask.columns"/> FROM t_process_exetask
+	<include refid="ProcessExetask.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

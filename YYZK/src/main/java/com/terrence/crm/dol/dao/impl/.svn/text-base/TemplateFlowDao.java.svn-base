@@ -1,0 +1,44 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TemplateFlow;
+import com.terrence.crm.dol.dao.ITemplateFlowDao;
+
+@Repository
+public class TemplateFlowDao extends BaseIbatisDao<TemplateFlow,java.lang.Long> implements ITemplateFlowDao{
+
+		
+	public void saveOrUpdate(TemplateFlow entity) {
+		if(entity.getStepid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TemplateFlow";
+	}
+	public TemplateFlow getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TemplateFlow)this.getSqlMapClientTemplate().queryForObject("TemplateFlow.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByTemplate(String templates) {
+		this.getSqlMapClientTemplate().delete("TemplateFlow.deleteByTemplate", templates);
+	}
+
+}

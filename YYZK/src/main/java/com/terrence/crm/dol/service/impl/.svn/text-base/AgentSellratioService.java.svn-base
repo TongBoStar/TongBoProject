@@ -1,0 +1,82 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgentSellratio;
+import com.terrence.crm.dol.dao.IAgentSellratioDao;
+import com.terrence.crm.dol.query.AgentSellratioQuery;
+import com.terrence.crm.dol.service.IAgentSellratioService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+@Service
+@Transactional
+public class AgentSellratioService extends BaseService implements IAgentSellratioService {
+	@Autowired
+	@Qualifier("agentSellratioDao")
+	private IAgentSellratioDao agentSellratioDao;
+	@Override
+	public AgentSellratio getById(Long id) throws ServiceException {
+		return agentSellratioDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(AgentSellratio entity) throws ServiceException {
+		agentSellratioDao.update("AgentSellRatio.update.receivable.blanceproject",entity);
+		if(null==entity.getId()){
+			Long id = agentSellratioDao.save(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_FINANCE_AGENT,ConfigTerrence.OPT_ADD, "添加经销商:"+entity.getAgentName()+",ID:"+id);
+		}else{
+			agentSellratioDao.update(entity);
+			operationLogDao.save(ConfigTerrence.MODEL_FINANCE_AGENT,ConfigTerrence.OPT_EDIT, "修改经销商:"+entity.getAgentName()+",ID:"+entity.getId());
+		}
+	}
+	@Override
+	public Long save(AgentSellratio entity) throws ServiceException {
+		return agentSellratioDao.save(entity);
+	}
+	@Override
+	public Integer update(AgentSellratio entity) throws ServiceException {
+		return agentSellratioDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		operationLogDao.save(ConfigTerrence.MODEL_FINANCE_AGENT,ConfigTerrence.OPT_DEL, "删除经销商:ID:"+id);
+		return agentSellratioDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = agentSellratioDao.deleteByMultipleId(delIds);
+		operationLogDao.save(ConfigTerrence.MODEL_FINANCE_AGENT,ConfigTerrence.OPT_DEL, "删除经销商:ID:"+delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<AgentSellratio> findPage(Page<AgentSellratio> page, AgentSellratioQuery query) throws ServiceException{
+		return agentSellratioDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AgentSellratio> findPage(Page<AgentSellratio> page,String statement, AgentSellratioQuery query) throws ServiceException{
+		return agentSellratioDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgentSellratio> findList(AgentSellratioQuery query) throws ServiceException{
+		return agentSellratioDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgentSellratio> findList(AgentSellratioQuery query,Integer pageSize) throws ServiceException{
+		return agentSellratioDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgentSellratio> findList(AgentSellratioQuery query,String statement,Integer pageSize) throws ServiceException{
+		return agentSellratioDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgentSellratio> findAllList() throws ServiceException{
+		return agentSellratioDao.findAllList();
+	}
+}

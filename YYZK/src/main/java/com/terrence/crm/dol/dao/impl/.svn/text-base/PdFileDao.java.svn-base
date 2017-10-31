@@ -1,0 +1,42 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.PdFile;
+import com.terrence.crm.dol.dao.IPdFileDao;
+
+@Repository
+public class PdFileDao extends BaseIbatisDao<PdFile,java.lang.Long> implements IPdFileDao{
+
+		
+	public void saveOrUpdate(PdFile entity) {
+		if(entity.getFileid() == null) 
+			save(entity);
+		else {
+			if(null!=entity.getReportStatus()&&entity.getReportStatus().intValue()==1){
+				entity.setReportDate(new Date());
+			}
+			update(entity);
+		}
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "PdFile";
+	}
+	public PdFile getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (PdFile)this.getSqlMapClientTemplate().queryForObject("PdFile.getByProperty", map);		
+	}
+
+}

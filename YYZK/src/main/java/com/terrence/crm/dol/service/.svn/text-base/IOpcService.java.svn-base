@@ -1,0 +1,123 @@
+package com.terrence.crm.dol.service;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailTabRecord;
+import com.terrence.crm.dol.bean.Trial;
+
+import javafish.clients.opc.browser.JOpcBrowser;
+import javafish.clients.opc.exception.ComponentNotFoundException;
+import javafish.clients.opc.exception.ConnectivityException;
+import javafish.clients.opc.exception.HostException;
+import javafish.clients.opc.exception.NotFoundServersException;
+import javafish.clients.opc.exception.SynchReadException;
+import javafish.clients.opc.exception.SynchWriteException;
+import javafish.clients.opc.exception.UnableAddGroupException;
+import javafish.clients.opc.exception.UnableAddItemException;
+import javafish.clients.opc.exception.UnableBrowseBranchException;
+import javafish.clients.opc.exception.UnableBrowseLeafException;
+import javafish.clients.opc.exception.UnableIBrowseException;
+import javafish.clients.opc.exception.UnableRemoveGroupException;
+import javafish.clients.opc.exception.UnableRemoveItemException;
+
+public interface IOpcService {
+
+
+
+
+
+
+
+	String[] read(String itemTag, String itemGroupName, Trial trial,JOpcBrowser jbrowser)
+			throws UnableBrowseLeafException, UnableIBrowseException,
+			UnableAddGroupException, UnableAddItemException, HostException,
+			NotFoundServersException, UnableBrowseBranchException,
+			ConnectivityException, IOException, ServiceException;
+
+
+	void write(String value, String itemTag, String itemGroupName, Long deviceId)
+			throws ComponentNotFoundException, UnableAddGroupException,
+			UnableAddItemException, SynchReadException, SynchWriteException,
+			UnableRemoveItemException, UnableRemoveGroupException,
+			ConnectivityException, IOException, ServiceException;
+
+
+	Long saveCheckRecord(String itemcode, String serialNumber)throws ServiceException;
+
+	void cleanProjectData(Long deviceId,Long tplid, String groupName) throws ComponentNotFoundException, UnableAddGroupException, UnableAddItemException, SynchReadException, SynchWriteException, UnableRemoveItemException, UnableRemoveGroupException, UnableBrowseLeafException, UnableIBrowseException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, ServiceException, IOException;
+
+	Long numsMaxId(String itemcode, String serialNumber)throws ServiceException;
+
+	List<TrailTabRecord> findTraliTabRecordList(String itemcode,
+			String serialNumber, Long deviceId)throws ServiceException;
+
+	List<TrailTabRecord> findTraliTabRecordHighChar(Long checkid, Long deviceId)throws ServiceException ;
+
+	java.util.Map<String, String> readdeviceinfo(Long deviceId, Integer isfirst)
+			throws Exception;
+
+
+	void saveGlobalData(Long deviceId, Integer isDo, Long checkid, Long tplid, String serialNumber, String itemcode) throws Exception;
+
+
+	void updateDeviceStatus(String value, String fename, String groupName,
+			Long deviceId) throws ComponentNotFoundException,
+			UnableAddGroupException, UnableAddItemException,
+			SynchReadException, SynchWriteException, UnableRemoveItemException,
+			UnableRemoveGroupException, ConnectivityException,
+			ServiceException, IOException, UnableBrowseLeafException,
+			UnableIBrowseException, HostException, NotFoundServersException,
+			UnableBrowseBranchException;
+
+
+	void saveProjectData(Long deviceId, Long tplid, String groupName)
+			throws ServiceException, ComponentNotFoundException,
+			UnableAddGroupException, UnableAddItemException,
+			SynchReadException, SynchWriteException, UnableRemoveItemException,
+			UnableRemoveGroupException, UnableBrowseLeafException,
+			UnableIBrowseException, HostException, NotFoundServersException,
+			UnableBrowseBranchException, ConnectivityException, IOException;
+
+
+	Integer loadAllDeviceDetail(Long deviceId) throws ServiceException, UnableBrowseLeafException, UnableIBrowseException, UnableAddGroupException, UnableAddItemException, HostException, NotFoundServersException, UnableBrowseBranchException, ConnectivityException, IOException;
+
+
+	Integer findTabRecordMaxValue(String itemcode, String serialNumber,
+			Long deviceId)throws ServiceException;
+
+
+	String findLongTime(String itemcode, String serialNumber, Long deviceId)throws ServiceException, SQLException;
+
+
+	void saveXlsInfo(Long deviceId, Long checkid, Long tplid,
+			String serialNumber, String itemcode, List<String> list,Map<String,List<String>> sqlMap);
+
+
+	List<String> readXls(String xlsPath,Long deviceId) throws Exception ;
+
+
+	Map<String,List<String>> readFlowXls(String xlsPath,Long tplid,String serialNumber) throws Exception;
+
+
+	Map<String, Object> findChartColumns(Long modelid);
+
+
+	/**
+	 * 重新处理装配系统上传表格
+	 * @param xlsPath
+	 * @param deviceId
+	 * @param tplid
+	 * @param serialNumber
+	 * @param itemcode
+	 * @throws ServiceException
+	 */
+	void saveAndDealXls(String xlsPath,Long deviceId,Long tplid,String serialNumber,
+			String itemcode)throws Exception;
+
+
+}

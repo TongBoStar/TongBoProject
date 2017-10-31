@@ -1,0 +1,123 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Task;
+import com.terrence.crm.dol.query.TaskQuery;
+import com.terrence.crm.dol.dao.IJobDao;
+import com.terrence.crm.dol.dao.ITaskDao;
+import com.terrence.crm.dol.service.ITaskService;
+
+@Service
+@Transactional
+public class TaskService extends BaseService implements ITaskService {
+	protected static Logger logger = LoggerFactory.getLogger(TaskService.class);
+	@Autowired
+	@Qualifier("taskDao")
+	private ITaskDao taskDao;
+	
+	@Autowired
+	@Qualifier("jobDao")
+	private IJobDao jobDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Task";
+	}
+	@Transactional(readOnly=true)
+	public Task getById(java.lang.Long id) throws ServiceException
+	{
+		return taskDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Task entity) throws ServiceException
+	{
+		taskDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Task entity) throws ServiceException
+	{
+		Long adId = taskDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Task entity) throws ServiceException
+	{
+		Integer returnValue =  taskDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		//System.out.println("id:=="+id);
+		Integer returnValue = taskDao.deleteById(id);
+		//--------------------
+		//删除job里对应的任务
+		jobDao.deleteByTaskId(id.longValue());
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = taskDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TaskQuery query = new TaskQuery();
+		try {
+			return taskDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Task> findPage(Page<Task> page, TaskQuery query) throws ServiceException
+	{
+		return taskDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Task> findList(TaskQuery query) throws ServiceException
+	{
+		return taskDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Task> findList(TaskQuery query,Integer pageSize) throws ServiceException
+	{
+		return taskDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Task> findAllList() throws ServiceException
+	{
+		return taskDao.findAllList();
+	}
+
+}

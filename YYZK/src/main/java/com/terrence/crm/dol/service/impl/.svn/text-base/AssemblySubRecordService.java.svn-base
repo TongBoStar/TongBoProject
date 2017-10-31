@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblySubRecord;
+import com.terrence.crm.dol.query.AssemblySubRecordQuery;
+import com.terrence.crm.dol.dao.IAssemblySubRecordDao;
+import com.terrence.crm.dol.service.IAssemblySubRecordService;
+
+@Service
+@Transactional
+public class AssemblySubRecordService extends BaseService implements IAssemblySubRecordService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblySubRecordService.class);
+	@Autowired
+	@Qualifier("assemblySubRecordDao")
+	private IAssemblySubRecordDao assemblySubRecordDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblySubRecord";
+	}
+	@Transactional(readOnly=true)
+	public AssemblySubRecord getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblySubRecordDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblySubRecord entity) throws ServiceException
+	{
+		assemblySubRecordDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblySubRecord entity) throws ServiceException
+	{
+		Long adId = assemblySubRecordDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblySubRecord entity) throws ServiceException
+	{
+		Integer returnValue =  assemblySubRecordDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblySubRecordDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblySubRecordDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblySubRecordQuery query = new AssemblySubRecordQuery();
+		try {
+			return assemblySubRecordDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblySubRecord> findPage(Page<AssemblySubRecord> page, AssemblySubRecordQuery query) throws ServiceException
+	{
+		return assemblySubRecordDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblySubRecord> findPage(Page<AssemblySubRecord> page,String statement, AssemblySubRecordQuery query) throws ServiceException
+	{
+		return assemblySubRecordDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblySubRecord> findList(AssemblySubRecordQuery query) throws ServiceException
+	{
+		return assemblySubRecordDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblySubRecord> findList(AssemblySubRecordQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblySubRecordDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblySubRecord> findList(AssemblySubRecordQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblySubRecordDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblySubRecord> findAllList() throws ServiceException
+	{
+		return assemblySubRecordDao.findAllList();
+	}
+
+}

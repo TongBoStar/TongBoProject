@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Forderinstock">
+
+        
+	<resultMap id="RM.Forderinstock" class="com.terrence.crm.dol.bean.Forderinstock">
+        <result property="fentryid" column="fentryid"/>
+        <result property="receivableid" column="receivableid"/>
+        <result property="forderno" column="forderno"/>
+        <result property="fdate" column="fdate"/>
+        <result property="fnum" column="fnum"/>
+    </resultMap>
+	<resultMap id="RM.Forderinstock.findDataFromK3" class="com.terrence.crm.dol.bean.Forderinstock">
+        <result property="fdate" column="fdate"/>
+        <result property="fnum" column="fnum"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Forderinstock.columns">
+	    <![CDATA[
+        	t_forderinstock.fentryid ,
+        	t_forderinstock.receivableid ,
+        	t_forderinstock.forderno ,
+        	t_forderinstock.fdate ,
+        	t_forderinstock.fnum 
+	    ]]>
+	</sql>
+	
+   <insert id="Forderinstock.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_forderinstock (
+        	receivableid ,
+        	forderno ,
+        	fdate ,
+        	fnum 
+        ) VALUES (
+        	#receivableid# ,
+        	#forderno# ,
+        	#fdate# ,
+        	#fnum# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="fentryid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Forderinstock.update" parameterClass="com.terrence.crm.dol.bean.Forderinstock">         
+        UPDATE t_forderinstock 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="receivableid">
+	        	receivableid = #receivableid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="forderno">
+	        	forderno = #forderno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fdate">
+	        	fdate = #fdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fnum">
+	        	fnum = #fnum# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        fentryid = #fentryid# 
+    </update>
+    
+	<delete id="Forderinstock.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_forderinstock where
+       fentryid = #fentryid# 
+    ]]>
+    </delete>
+    
+    <delete id="Forderinstock.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_forderinstock 
+        WHERE
+       fentryid in ($fentryid$) 
+    ]]>
+    </delete>
+    
+    <select id="Forderinstock.getById" resultMap="RM.Forderinstock">
+	    select <include refid="Forderinstock.columns"/>
+	    
+	        from t_forderinstock 
+	        where 
+		        fentryid = #fentryid# 
+	    
+    </select>
+    
+	<select id="Forderinstock.getByProperty" resultMap="RM.Forderinstock">
+		select <include refid="Forderinstock.columns"/> from t_forderinstock where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Forderinstock.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="fentryid">
+	             t_forderinstock.fentryid = #fentryid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderinstock.receivableid = #receivableid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderinstock.forderno = #forderno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderinstock.fdate = #fdate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnum">
+	             t_forderinstock.fnum = #fnum#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Forderinstock.findPage.and">
+			<isNotEmpty prepend="AND" property="fentryid">
+	             t_forderinstock.fentryid = #fentryid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="receivableid">
+	             t_forderinstock.receivableid = #receivableid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="forderno">
+	             t_forderinstock.forderno = #forderno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fdate">
+	             t_forderinstock.fdate = #fdate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnum">
+	             t_forderinstock.fnum = #fnum#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Forderinstock.Entity" resultMap="RM.Forderinstock">
+    	SELECT 	<include refid="Forderinstock.columns"/> FROM t_forderinstock <include refid="Forderinstock.findPage.where"/>
+    </select>
+    
+    <select id="Forderinstock.findList" resultMap="RM.Forderinstock">
+    	SELECT 
+    		<include refid="Forderinstock.columns"/> 
+    	FROM 
+    		t_forderinstock
+		<include refid="Forderinstock.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Forderinstock.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_forderinstock
+    ]]>
+		<include refid="Forderinstock.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Forderinstock.findPage" resultMap="RM.Forderinstock">
+    	select <include refid="Forderinstock.columns"/>	    
+	        from t_forderinstock 	   
+		<include refid="Forderinstock.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Forderinstock.findPage" resultMap="RM.Forderinstock">
+    	select <include refid="Forderinstock.columns"/>	    
+	        from t_forderinstock where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       fentryid 
+	   not in(select $notTop$ 
+       fentryid 
+	   from t_forderinstock <include refid="Forderinstock.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Forderinstock.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	<select id="Forderinstock.findDataFromK3" resultMap="RM.Forderinstock.findDataFromK3">
+    	select 
+			t.FDate fdate,
+			t1.Fauxqty fnum,
+			t1.FEntrySelfA0241 
+		 from K33.AIS20120813194456.dbo.ICStockBill t
+		 INNER JOIN 
+		 K33.AIS20120813194456.dbo.ICStockBillEntry t1 ON t1.FInterID = t.FInterID
+		 where t.FTranType=2 and t1.FEntrySelfA0241 = #forderno#
+    </select>
+    <select id="Forderinstock.findByMakeNumberCode" resultMap="RM.Forderinstock.findDataFromK3">
+    	<![CDATA[
+    	select 
+			t.FDate fdate,
+			t1.Fauxqty fnum,
+			t1.FEntrySelfA0241 
+		 from AIS20120813194456.dbo.ICStockBill t
+		 INNER JOIN 
+		 AIS20120813194456.dbo.ICStockBillEntry t1 ON t1.FInterID = t.FInterID
+		 where t.FTranType=2 and 
+		 (  t1.FEntrySelfA0241 >= '$startCode$' 
+			and t1.FEntrySelfA0241 <= '$endCode$' or t1.FEntrySelfA0241 = '$makeNumberCode$')
+			and t1.Fauxqty>0
+		  ]]>
+    </select>
+</sqlMap>

@@ -1,0 +1,356 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.CrmContact;
+import com.terrence.crm.dol.bean.CustomerScore;
+import com.terrence.crm.dol.bean.GradeWight;
+import com.terrence.crm.dol.bean.OrgOrggorup;
+import com.terrence.crm.dol.bean.Organization;
+import com.terrence.crm.dol.bean.Orggrantgroup;
+import com.terrence.crm.dol.bean.Surveys;
+import com.terrence.crm.dol.bean.SurveysEntry;
+import com.terrence.crm.dol.query.OrganizationQuery;
+import com.terrence.crm.dol.query.OrggrantgroupQuery;
+import com.terrence.crm.dol.dao.ICrmContactDao;
+import com.terrence.crm.dol.dao.ICustomerScoreDao;
+import com.terrence.crm.dol.dao.IGradeWightDao;
+import com.terrence.crm.dol.dao.IOrgOrggorupDao;
+import com.terrence.crm.dol.dao.IOrganizationDao;
+import com.terrence.crm.dol.dao.IOrggrantgroupDao;
+import com.terrence.crm.dol.dao.ISurveysDao;
+import com.terrence.crm.dol.dao.ISurveysEntryDao;
+import com.terrence.crm.dol.service.IOrganizationService;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class OrganizationService extends BaseService implements IOrganizationService {
+	protected static Logger logger = LoggerFactory.getLogger(OrganizationService.class);
+	@Autowired
+	@Qualifier("organizationDao")
+	private IOrganizationDao organizationDao;
+	@Autowired
+	@Qualifier("crmContactDao")
+	private ICrmContactDao crmContactDao;
+	
+	@Autowired
+	@Qualifier("orggrantgroupDao")
+	private IOrggrantgroupDao orggrantgroupDao;
+	
+	@Autowired
+	@Qualifier("orgOrggorupDao")
+	private IOrgOrggorupDao orgOrggorupDao;
+	@Autowired
+	@Qualifier("surveysDao")
+	private ISurveysDao surveysDao;
+	@Autowired
+	@Qualifier("surveysEntryDao")
+	private ISurveysEntryDao surveysEntryDao;
+	@Autowired
+	@Qualifier("gradeWightDao")
+	private IGradeWightDao gradeWightDao;
+	@Autowired
+	@Qualifier("customerScoreDao")
+	private ICustomerScoreDao customerScoreDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Organization";
+	}
+	@Transactional(readOnly=true)
+	public Organization getById(java.lang.Long id) throws ServiceException
+	{
+		return organizationDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Organization entity) throws ServiceException
+	{
+		Long finnerid =null,adminId=null;
+		Organization organization = new Organization();
+		organization.setFinnerid(entity.getFinnerid());
+		organization.setFname(entity.getFname());
+		organization.setAreaid(entity.getAreaid());
+		organization.setProvinceid(entity.getProvinceid());
+		organization.setBlocid(entity.getBlocid());
+		organization.setNotes(entity.getNotes());
+		organization.setCondition(entity.getCondition());	
+		organization.setContracts(entity.getContracts());
+		adminId = SpringSecurityUtils.getCurrentUserId();
+		if(entity.getAdminId()==null){
+			organization.setAdminId(adminId);
+		}else{
+			organization.setAdminId(entity.getAdminId());
+		}
+		//organizationDao.saveOrUpdate(organization);
+		String loginname = SpringSecurityUtils.getCurrentUserName();
+		OrggrantgroupQuery orggrantgroupQuery =new OrggrantgroupQuery();
+		orggrantgroupQuery.setGroupname(loginname);
+		List<Orggrantgroup>  orggrantgrouplist =  orggrantgroupDao.findList(orggrantgroupQuery);
+		if(entity.getFinnerid() == null) 
+		{
+			if(orggrantgrouplist.isEmpty()){
+				finnerid = organizationDao.saveAll(organization);
+				Long  groupid =saveOrggrantgroup();
+				saveOrgorggroup(finnerid,groupid);
+			}else{
+				finnerid = organizationDao.saveAll(organization);
+				Long groupid =orggrantgrouplist.get(0).getGroupid();
+				saveOrgorggroup(finnerid,groupid);
+			}
+		}else{
+			organizationDao.update(organization);
+		}
+		
+		 List<Long> contactids = entity.getContactids();
+		 List<Long> finnerids = entity.getFinnerids();
+		 List<String> contactnames = entity.getContactnames();
+		 List<String> telphones = entity.getTelphones();
+		 List<String> mobiles = entity.getMobiles();
+		 List<String> emails = entity.getEmails();
+		 List<Long> departids = entity.getDepartids();
+		 for(int i=0;i<contactnames.size();i++){
+			 CrmContact contact = new CrmContact();
+			 if((contactnames.get(i)==null || contactnames.get(i)=="")){ break; }else{ System.out.println("3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333");}
+			 if((contactnames.get(i)==null || contactnames.get(i)=="")&&(telphones.get(i)==null || telphones.get(i)=="")&&
+					 (mobiles.get(i)==null || mobiles.get(i)=="")&&(emails.get(i)==null || emails.get(i)==""))
+			 {  break; }
+			 if(finnerid==null){
+				 finnerid = finnerids.get(i);
+			 }
+			 contact.setContactid(contactids.get(i));
+			 contact.setFinnerid(finnerid);
+			 contact.setContactname(contactnames.get(i));
+			 contact.setTelphone(telphones.get(i));
+			 contact.setMobile(mobiles.get(i));
+			 contact.setEmail(emails.get(i));
+			 contact.setDepartid(departids.get(i));
+			 crmContactDao.saveOrUpdate(contact);
+		 }
+	}
+	
+	public java.lang.Long save(Organization entity) throws ServiceException
+	{
+		Long adId = organizationDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Organization entity) throws ServiceException
+	{
+		Integer returnValue =  organizationDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = organizationDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		orgOrggorupDao.deleteByMultipleId("OrgOrggorup.deleteByFinnerid", delIds);
+		crmContactDao.deleteByMultipleId("CrmContact.deleteByFinnerid", delIds);
+		Integer returnValue = organizationDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OrganizationQuery query = new OrganizationQuery();
+		try {
+			return organizationDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Organization> findPage(Page<Organization> page, OrganizationQuery query) throws ServiceException
+	{
+		return organizationDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Organization> findPage(Page<Organization> page,String statement, OrganizationQuery query) throws ServiceException
+	{
+		return organizationDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Organization> findList(OrganizationQuery query) throws ServiceException
+	{
+		return organizationDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Organization> findList(OrganizationQuery query,Integer pageSize) throws ServiceException
+	{
+		return organizationDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Organization> findList(OrganizationQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return organizationDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Organization> findAllList() throws ServiceException
+	{
+		return organizationDao.findAllList();
+	}
+	@Override
+	public Integer updateContract(OrganizationQuery organizationQuery)
+			throws ServiceException {
+		Integer returnValue = organizationDao.updateContract(organizationQuery);
+		
+		return returnValue;
+		
+	}
+	@Override
+	public List<Organization> findList(OrganizationQuery organizationQuery,
+			String statement) throws ServiceException {
+		return organizationDao.findList(statement, organizationQuery);
+	}
+	@Override
+	public void updateTochoose(List<Long> checkedIdList,
+			OrganizationQuery organizationQuery) throws ServiceException {
+		Long blocid =null;
+		Long provinceid = null;
+		Long areaid =null;
+		blocid=	organizationQuery.getBlocid();
+		provinceid=	organizationQuery.getProvinceid();
+		areaid= organizationQuery.getAreaid();
+		
+		for(Long cc:checkedIdList){
+			Organization organization=new Organization();
+			organization.setFinnerid(cc);
+			organization.setBlocid(blocid);
+			organization.setProvinceid(provinceid);
+			organization.setAreaid(areaid);
+			
+			organizationDao.update(organization);
+		}
+	}
+	public Long saveOrggrantgroup(){
+		
+		String loginname = SpringSecurityUtils.getCurrentUserName();
+		Orggrantgroup orggrantgroup =new Orggrantgroup();
+		orggrantgroup.setGroupname(loginname);
+		return (Long)orggrantgroupDao.save(orggrantgroup);
+	 }
+	
+	
+	public void saveOrgorggroup(Long finnerid,Long groupid){
+		
+		OrgOrggorup orgOrggroup =new OrgOrggorup();
+		orgOrggroup.setGroupid(groupid);
+		orgOrggroup.setFinnerid(finnerid);
+		orgOrggorupDao.save(orgOrggroup);
+	}
+	@Override
+	public void saveSelectedCustomer(String selectcs) {
+		Surveys surveys = null;
+		SurveysEntry surveysEntry = null;
+		CustomerScore customerScore = null;
+		Long id = null;
+		Calendar a = Calendar.getInstance();
+		List<Long> clist = surveysDao.findFinnerIdByYear(a.get(Calendar.YEAR));
+		List<GradeWight> gwList = gradeWightDao.findAllList();
+		if(null!=selectcs){//手动选择
+			if(selectcs.length()>0){
+				String[] cs = selectcs.split(",");
+				for(String s:cs){
+					if(!clist.contains(Long.valueOf(s))){//过滤已经存在的要评分的客户
+						surveys = new Surveys();
+						surveys.setFinnerid(Long.valueOf(s));
+						surveys.setFyear(String.valueOf(a.get(Calendar.YEAR)));
+						id = surveysDao.save(surveys);
+						customerScore = new CustomerScore();
+						customerScore.setFinnerid(Long.valueOf(s));
+						customerScore.setFyear(String.valueOf(a.get(Calendar.YEAR)));
+						customerScoreDao.save(customerScore);
+						for(GradeWight gw:gwList){
+							surveysEntry = new SurveysEntry();
+							surveysEntry.setFinnerid(Long.valueOf(s));
+							surveysEntry.setSurveysid(id);
+							surveysEntry.setFyear(String.valueOf(a.get(Calendar.YEAR)));
+							surveysEntry.setNotes(gw.getNotes());
+							surveysEntry.setGwval(gw.getWeight().longValue());
+							surveysEntry.setGwid(gw.getGwid());
+							surveysEntryDao.save(surveysEntry);
+						}
+					}else{
+						clist.remove(Long.valueOf(s));
+					}
+				}
+			}
+			if(null!=clist&&clist.size()>0){//删除的要评分的客户
+				String ids = StringUtils.join(clist, ",");
+				List<Long> delList = surveysDao.findByFinnerIdAndYear(ids,a.get(Calendar.YEAR));
+				List<Long> cdelList = customerScoreDao.findByFinnerIdAndYear(ids,a.get(Calendar.YEAR));
+				if(null!=delList&&delList.size()>0){
+					ids = StringUtils.join(delList, ",");
+					surveysEntryDao.deleteByMultipleId("SurveysEntry.deleteMultipleBySid",ids);
+				}
+				if(null!=cdelList&&cdelList.size()>0){
+					String cids = StringUtils.join(cdelList,",");
+					customerScoreDao.deleteByMultipleId("CustomerScore.deleteMultipleByfid", cids);
+				}
+				surveysDao.deleteByMultipleId(ids);
+			}
+		}else{//全选
+			List<Organization> orList = organizationDao.findAllList();
+			for(Organization or:orList){
+				if(!clist.contains(or.getFinnerid())){
+					surveys = new Surveys();
+					surveys.setFinnerid(or.getFinnerid());
+					surveys.setFyear(String.valueOf(a.get(Calendar.YEAR)));
+					id = surveysDao.save(surveys);
+					for(GradeWight gw:gwList){
+						surveysEntry = new SurveysEntry();
+						surveysEntry.setFinnerid(or.getFinnerid());
+						surveysEntry.setSurveysid(id);
+						surveysEntry.setFyear(String.valueOf(a.get(Calendar.YEAR)));
+						surveysEntry.setNotes(gw.getNotes());
+						surveysEntry.setGwval(gw.getWeight().longValue());
+						surveysEntry.setGwid(gw.getGwid());
+						surveysEntryDao.save(surveysEntry);
+					}
+				}
+			}
+		}
+	}
+	@Override
+	public void syncERPData() {
+		organizationDao.syncERPData();
+	}
+	@Override
+	public List<Organization> findlistdate(OrganizationQuery organizationQuery)
+			throws ServiceException {
+		return organizationDao.findlistdate(organizationQuery);
+	}
+}

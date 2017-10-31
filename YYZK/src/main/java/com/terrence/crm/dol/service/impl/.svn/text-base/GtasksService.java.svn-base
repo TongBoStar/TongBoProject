@@ -1,0 +1,573 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.BillnoCheck;
+import com.terrence.crm.dol.bean.Gtasks;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Team;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.query.GtasksQuery;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.dao.IAdminDao;
+import com.terrence.crm.dol.dao.IBillnoCheckDao;
+import com.terrence.crm.dol.dao.IGtasksDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.event.WorkFlowEvent;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.service.IGtasksService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
+@Service
+@Transactional
+public class GtasksService extends BaseService implements IGtasksService {
+	protected static Logger logger = LoggerFactory.getLogger(GtasksService.class);
+	@Autowired
+	@Qualifier("gtasksDao")
+	private IGtasksDao gtasksDao;
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	@Autowired
+	@Qualifier("teamDao")
+	private ITeamDao teamDao;
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	@Autowired
+	@Qualifier("billnoCheckDao")
+	private IBillnoCheckDao billnoCheckDao;
+	
+	@Autowired
+	@Qualifier("emailService")
+	private IEmailService emailService;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Gtasks";
+	}
+	@Transactional(readOnly=true)
+	public Gtasks getById(java.lang.Long id) throws ServiceException
+	{
+		return gtasksDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Gtasks entity) throws ServiceException
+	{
+		gtasksDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Gtasks entity) throws ServiceException
+	{
+		Long adId = gtasksDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Gtasks entity) throws ServiceException
+	{
+		Integer returnValue =  gtasksDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = gtasksDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = gtasksDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		GtasksQuery query = new GtasksQuery();
+		try {
+			return gtasksDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Gtasks> findPage(Page<Gtasks> page, GtasksQuery query) throws ServiceException
+	{
+		return gtasksDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Gtasks> findPage(Page<Gtasks> page,String statement, GtasksQuery query) throws ServiceException
+	{
+		return gtasksDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Gtasks> findList(GtasksQuery query) throws ServiceException
+	{
+		return gtasksDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Gtasks> findList(GtasksQuery query,Integer pageSize) throws ServiceException
+	{
+		return gtasksDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Gtasks> findList(GtasksQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return gtasksDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Gtasks> findAllList() throws ServiceException
+	{
+		return gtasksDao.findAllList();
+	}
+	@Override
+	public Gtasks saveNewTask(Gtasks entity) throws ServiceException {
+	
+		//porequest.setFbillerid(SpringSecurityUtils.getCurrentUserId());
+		Team team = new Team();
+		Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+		team.setTeamid(teamid);
+		Team tem = teamDao.findParentid(team);//查询部门负责人
+		
+		if(tem==null){
+			Gtasks tasks = new Gtasks();
+			tasks.setMark2(-1);//无班组
+			return tasks;
+		}else{
+			if(tem.getAdminid() == null){
+				Gtasks task = new Gtasks();
+				task.setMark2(-2);//无部门负责人
+				return task;
+			}else{
+				
+				if(entity.getTaskid() != -1){
+					Gtasks task = new Gtasks();
+					task.setTaskid(entity.getTaskid());
+					task.setStatus(2);
+					gtasksDao.update(task);
+				}
+				
+				//============================
+				List<Gtasks> listgtasks = new ArrayList<Gtasks>();
+				GtasksQuery gtasksQuery = new GtasksQuery();
+				gtasksQuery.setFbillno(entity.getFbillno());
+					listgtasks = gtasksDao.findlistgtasks(gtasksQuery);
+					if(listgtasks.size()>0){
+						for(int gt = 0;gt<listgtasks.size();gt++){
+
+							Gtasks tasksg = new Gtasks();
+							tasksg.setTaskid(listgtasks.get(gt).getTaskid());
+							tasksg.setStatus(2);
+							gtasksDao.update("Gtasks.update.tijiao.liebiao", tasksg);
+						}
+						
+					}
+				
+				//============================
+				
+				Gtasks tg = new Gtasks();
+				tg.setStatus(1);
+				tg.setFbillno(entity.getFbillno());
+				tg.setFbillid(entity.getFbillid());
+				tg.setTaskname("采购申请单待审核");
+				tg.setMark(1);
+				tg.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd"));//当前系统日期，创建日期
+				tg.setEmpid(tem.getAdminid());
+//				if(tem == null){
+//					tg.setEmpid(SpringSecurityUtils.getCurrentUserId());
+//				}else{
+//					tg.setEmpid(tem.getAdminid());
+//				}
+				
+				
+				gtasksDao.saveNewTask(tg);
+				
+				Porequest porequest = new Porequest();
+				porequest.setFstatus(2);
+				porequest.setFinterid(entity.getFhid());
+				if(tem == null){
+					porequest.setCheckid(SpringSecurityUtils.getCurrentUserId());
+				}else{
+					porequest.setCheckid(tem.getAdminid());
+				}
+				
+				porequestDao.updateCheck(porequest);
+				
+				Gtasks t = new Gtasks();
+				t.setMark2(1);
+				return t;
+				
+			}
+			
+		}
+		
+	}
+	@Override
+	public void saveTasksPoor(Gtasks entity) throws ServiceException {
+		if(entity.getTaskid() != -1){
+			Gtasks gtsk = new Gtasks();
+			gtsk.setTaskid(entity.getTaskid());
+			gtsk.setStatus(2);
+			gtasksDao.update(gtsk);
+		}
+		
+		//============================
+		List<Gtasks> listgtasks = new ArrayList<Gtasks>();
+		GtasksQuery gtasksQuery = new GtasksQuery();
+		gtasksQuery.setFbillno(entity.getFbillno());
+			listgtasks = gtasksDao.findlistgtasks(gtasksQuery);
+			if(listgtasks.size()>0){
+				for(int gt = 0;gt<listgtasks.size();gt++){
+
+					Gtasks tasksg = new Gtasks();
+					tasksg.setTaskid(listgtasks.get(gt).getTaskid());
+					tasksg.setStatus(2);
+					gtasksDao.update("Gtasks.update.tijiao.liebiao", tasksg);
+				}
+				
+			}
+		
+		//============================
+		
+		/*Team team = new Team();//采购订单提交后给部门领导创建任务，不用了吗，应该给采购部张工创建任务
+		Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+		team.setTeamid(teamid);
+		Team tem = teamDao.findParentid(team);
+		entity.setEmpid(tem.getAdminid());*/
+		entity.setEmpid(60l);//定为张工的id
+		entity.setTaskname("采购订单待审");
+		Long id  = gtasksDao.saveTasksPoor(entity);//待办事项的创建
+		
+//		Gtasks  tsk = new Gtasks();
+//		tsk.setFbillno(entity.getFbillno());
+//		tsk.setStatus(1);//未做的
+//		Gtasks t = gtasksDao.findtaskid(tsk);//=============查询当前订单编号在待办任务中未完成的任务
+		Poorder poo = new Poorder();
+		poo.setFinterid(entity.getFhid());
+		Poorder p = poorderDao.findppoorder(poo);//查询订单
+		
+		Poorder poorder = new Poorder();
+		poorder.setFstatus(2);//待审核
+		poorder.setFinterid(entity.getFhid());
+		poorder.setNodeIndex(id);//创建任务后的任务id
+		
+		BillnoCheck billno = new BillnoCheck();
+		billno.setTemplateid(1L);
+		List<BillnoCheck> billList = billnoCheckDao.findbilllist(billno);
+		
+				if(billList.get(0).getAmount()<p.getFtotalcostfor()){
+					poorder.setFcheckerid(billList.get(1).getEmpid());
+				}else{
+					poorder.setFcheckerid(billList.get(0).getEmpid());
+				}
+	
+//				Integer re = sendpoorderEmail();
+//				if(re == 1){
+//					//throw new ServiceException();
+//					poorderDao.updatePoorder(poorder);
+//				}else{
+//					throw new ServiceException();
+//				}
+		
+				poorderDao.updatePoorder(poorder);
+		
+		//===========================
+		
+//		Poorder po = new Poorder();
+//		po.setFinterid(entity.getFhid());
+//		Poorder poo = poorderDao.findtemplate(po);
+		
+	
+		
+		/*此工作流不用了
+		 WorkFlowEvent event = new WorkFlowEvent("");
+		event.setFbillno(poo.getFbillno());
+		event.setFbillid(entity.getFbillid());
+		event.setTaskid(t.getTaskid());
+		//entity.getFbillid()//单据类型id
+		if(poo.getTemplateid()!=null){
+			event.setTemplateid(poo.getTemplateid());
+		}
+		if(poo.getNodeIndex()!=null){
+			event.setNodeIndex(poo.getNodeIndex());
+		}
+		event.setEmpid(SpringSecurityUtils.getCurrentUserId());//登录人ID
+		//event.setTaskid(id);
+		this.publishEvent(event);
+		*/
+		
+		
+		
+	}
+	@Override
+	public Gtasks saveNewTaskAll(List<Long> checkedIdList, Gtasks entity)
+			throws ServiceException {
+		
+	
+		
+		Team team = new Team();
+		Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+		team.setTeamid(teamid);
+		Team tem = teamDao.findParentid(team);//查询部门负责人
+		
+		
+		
+		
+		if(tem==null){
+			Gtasks tasks = new Gtasks();
+			tasks.setMark2(-1);//无班组
+			return tasks;
+		}else{
+			
+			if(tem.getAdminid() == null){
+				Gtasks task = new Gtasks();
+				task.setMark2(-2);//无部门负责人
+				return task;
+			}else{
+				String ss = "POREQ";
+				IcbillnoQuery icbillnoQuery = new IcbillnoQuery();
+				icbillnoQuery.setFpreletter(ss);
+				Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);//查询单据类型的ID
+				
+				String delIds = StringUtils.join(checkedIdList, ",");
+				Porequest ppp = new Porequest();
+				ppp.setFinterids(delIds);
+				List<Porequest> poreList = porequestDao.findAllIntasks(ppp);//查询申请单
+				
+				
+				if(poreList.size()>0){
+					for(int i = 0;i<poreList.size();i++){
+						
+						//============================
+						List<Gtasks> listgtasks = new ArrayList<Gtasks>();
+						GtasksQuery gtasksQuery = new GtasksQuery();
+						gtasksQuery.setFbillno(poreList.get(i).getFbillno());
+							listgtasks = gtasksDao.findlistgtasks(gtasksQuery);
+							if(listgtasks.size()>0){
+								for(int gt = 0;gt<listgtasks.size();gt++){
+
+									Gtasks tasksg = new Gtasks();
+									tasksg.setTaskid(listgtasks.get(gt).getTaskid());
+									tasksg.setStatus(2);
+									gtasksDao.update("Gtasks.update.tijiao.liebiao", tasksg);
+								}
+								
+							}
+						
+						//============================	
+						
+						
+						
+						
+						
+						
+						entity.setFbillid(icbillno.getFbillid());
+//						if(tem == null){
+//							entity.setEmpid(SpringSecurityUtils.getCurrentUserId());
+//						}else{
+//							entity.setEmpid(tem.getAdminid());
+//						}
+						entity.setEmpid(tem.getAdminid());
+						entity.setFbillno(poreList.get(i).getFbillno());
+						entity.setTaskname("采购申请单待审核");
+						gtasksDao.saveNewTask(entity);
+						
+						Porequest porequest = new Porequest();
+						porequest.setFstatus(2);
+						porequest.setFinterid(poreList.get(i).getFinterid());
+						if(tem == null){
+							porequest.setCheckid(SpringSecurityUtils.getCurrentUserId());
+						}else{
+							porequest.setCheckid(tem.getAdminid());
+						}
+						
+						porequestDao.updateCheck(porequest);
+						
+						Gtasks t = new Gtasks();
+						t.setMark2(1);
+						return t;
+					}
+				}
+			}
+		}
+		
+		
+		
+		return entity;
+		
+	}
+	@Override
+	public void saveTasksPoorBatch(List<Long> checkedIdList)//批量提交
+			throws ServiceException {
+		String delIds = StringUtils.join(checkedIdList, ",");
+		
+		
+		
+		String ss = "POORD";
+		IcbillnoQuery icbillnoQuery = new IcbillnoQuery();
+		icbillnoQuery.setFpreletter(ss);
+		Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);//查询单据类型的ID
+		
+		
+		Poorder poorder = new Poorder();
+		poorder.setFinterids(delIds);
+		List<Poorder> poorList = poorderDao.findAllPoorderBatch(poorder);//查询要提交的订单
+		if(poorList.size()>0){
+			for(int i = 0;i<poorList.size();i++){
+				
+				List<Gtasks> listgtasks = new ArrayList<Gtasks>();
+				GtasksQuery gtasksQuery = new GtasksQuery();
+				gtasksQuery.setFbillno(poorList.get(i).getFbillno());
+ 				listgtasks = gtasksDao.findlistgtasks(gtasksQuery);
+ 				if(listgtasks.size()>0){
+ 					for(int gt = 0;gt<listgtasks.size();gt++){
+
+ 	 					Gtasks tasksg = new Gtasks();
+ 	 					tasksg.setTaskid(listgtasks.get(gt).getTaskid());
+ 	 					tasksg.setStatus(2);
+ 	 					gtasksDao.update("Gtasks.update.tijiao.liebiao", tasksg);
+ 					}
+ 					
+ 				}
+				
+				
+				
+				Team team = new Team();
+				Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+				team.setTeamid(teamid);
+				Team tem = teamDao.findParentid(team);
+				
+				Gtasks  tsk = new Gtasks();
+				//tsk.setEmpid(tem.getAdminid());
+				tsk.setEmpid(60L);//定死是张振莹
+				tsk.setTaskname("采购订单待审");
+				tsk.setFbillno(poorList.get(i).getFbillno());
+				tsk.setFbillid(icbillno.getFbillid());//单据类型id
+				tsk.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//当前系统日期，创建日期
+				tsk.setStatus(1);//任务状态：1、未做 2、已做
+				Long id  = gtasksDao.saveTasksPoor(tsk);//待办事项的创建
+				
+				Poorder poor = new Poorder();
+				poor.setFstatus(2);//待审核
+				poor.setFinterid(poorList.get(i).getFinterid());
+				poor.setNodeIndex(id);//创建任务后，保存任务id
+				
+				BillnoCheck billno = new BillnoCheck();
+				billno.setTemplateid(1L);
+				List<BillnoCheck> billList = billnoCheckDao.findbilllist(billno);
+							
+				
+				if(billList.get(0).getAmount()<poorList.get(i).getFtotalcostfor()){
+					poor.setFcheckerid(billList.get(1).getEmpid());
+					
+				}else{
+					poor.setFcheckerid(billList.get(0).getEmpid());
+				}
+				
+				poorderDao.updatePoorder(poor);
+				
+				
+//				Gtasks  tsk = new Gtasks();
+//				tsk.setFbillno(poorList.get(i).getFbillno());
+//				tsk.setStatus(1);//未做的
+//				Gtasks t = gtasksDao.findtaskid(tsk);//=============查询当前订单编号在待办任务中未完成的任务
+				
+			
+//				WorkFlowEvent event = new WorkFlowEvent("");//原来工作流不用了
+//				event.setFbillno(poorList.get(i).getFbillno());
+//				event.setFbillid(icbillno.getFbillid());//单据类型id
+//				event.setTaskid(t.getTaskid());
+//				if(poorList.get(i).getTemplateid()!=null){
+//					event.setTemplateid(poorList.get(i).getTemplateid());
+//				}
+//				if(poorList.get(i).getNodeIndex()!=null){
+//					event.setNodeIndex(poorList.get(i).getNodeIndex());
+//				}
+//				event.setEmpid(SpringSecurityUtils.getCurrentUserId());//登录人ID
+//				this.publishEvent(event);
+				
+			}
+		}
+		
+		
+	}
+
+	
+
+	public int sendpoorderEmail(){
+
+		String subject = "采购信息待办任务提醒";
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String content = "";
+		String email = "frank.zhai@terrence.com.cn";
+		try {
+		
+				Template template = freemarkerConfiguration.getTemplate("template/applyandprocurementTemplate.ftl", "utf-8");
+				paramMap.put("userName", "翟");
+				paramMap.put("listItemDoc", "有新的待办任务，请及时处理！");
+				content = FreeMarkerTemplateUtils.processTemplateIntoString(template, paramMap);
+				if(emailService.sendEmail("", "", subject, content)==1)
+				{
+					System.out.println("====待办任务发送完毕");
+				}
+			
+		} catch (Exception e) {
+			logger.error("构造邮件失败",e);
+			return 0;
+		}
+		return 1;
+
+
+	}
+	
+	
+}

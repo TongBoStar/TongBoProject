@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrailCheckNums;
+import com.terrence.crm.dol.dao.ITrailCheckNumsDao;
+import com.terrence.crm.dol.query.TrailCheckNumsQuery;
+
+@Repository
+public class TrailCheckNumsDao extends BaseIbatisDao<TrailCheckNums,java.lang.Long> implements ITrailCheckNumsDao{
+
+		
+	public void saveOrUpdate(TrailCheckNums entity) {
+		if(entity.getChecktimeid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrailCheckNums";
+	}
+	public TrailCheckNums getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrailCheckNums)this.getSqlMapClientTemplate().queryForObject("TrailCheckNums.getByProperty", map);		
+	}
+
+	@Override
+	public Long getMaxCountId(TrailCheckNumsQuery trailCheckNumsQuery) {
+		return  (Long) this.getSqlMapClientTemplate().queryForObject("TrailCheckNums.getMaxCountId", trailCheckNumsQuery);
+		
+	}
+
+
+}

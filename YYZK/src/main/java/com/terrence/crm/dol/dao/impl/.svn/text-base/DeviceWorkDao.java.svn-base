@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.DeviceWork;
+import com.terrence.crm.dol.dao.IDeviceWorkDao;
+
+@Repository
+public class DeviceWorkDao extends BaseIbatisDao<DeviceWork,java.lang.Long> implements IDeviceWorkDao{
+
+		
+	public void saveOrUpdate(DeviceWork entity) {
+		if(entity.getWorkid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "DeviceWork";
+	}
+	public DeviceWork getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (DeviceWork)this.getSqlMapClientTemplate().queryForObject("DeviceWork.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByemptaskid(Long employeetaskid) {
+		this.getSqlMapClientTemplate().delete("DeviceWork.deleteByemptaskid", employeetaskid);
+		
+	}
+
+}

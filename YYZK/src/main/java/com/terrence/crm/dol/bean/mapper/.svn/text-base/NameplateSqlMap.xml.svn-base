@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Nameplate">
+
+        
+	<resultMap id="RM.Nameplate" class="com.terrence.crm.dol.bean.Nameplate">
+        <result property="plateid" column="plateid"/>
+        <result property="platename" column="platename"/>
+        <result property="notes" column="notes"/>
+        <result property="flag" column="flag"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Nameplate.columns">
+	    <![CDATA[
+        	t_nameplate.plateid ,
+        	t_nameplate.platename ,
+        	t_nameplate.notes ,
+        	t_nameplate.flag
+	    ]]>
+	</sql>
+	
+   <insert id="Nameplate.insert" >
+    
+        INSERT INTO
+        t_nameplate (
+        	
+	        	platename,flag
+	       
+	        <isNotEmpty prepend="," property="notes">
+	        	notes
+	        </isNotEmpty>
+        ) VALUES (
+        	
+	        	#platename# ,#flag#
+	        
+	        <isNotEmpty prepend="," property="notes">
+	        	#notes# 
+	        </isNotEmpty>
+        )
+   
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="plateid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Nameplate.update" parameterClass="com.terrence.crm.dol.bean.Nameplate">         
+        UPDATE t_nameplate 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="platename">
+	        	platename = #platename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="flag">
+	        	flag = #flag# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        plateid = #plateid# 
+    </update>
+    
+	<delete id="Nameplate.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_nameplate where
+       plateid = #plateid# 
+    ]]>
+    </delete>
+    
+    <delete id="Nameplate.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_nameplate 
+        WHERE
+       plateid in ($plateid$) 
+    ]]>
+    </delete>
+    
+    <select id="Nameplate.getById" resultMap="RM.Nameplate">
+	    select <include refid="Nameplate.columns"/>
+	    
+	        from t_nameplate 
+	        where 
+		        plateid = #plateid# 
+	    
+    </select>
+    
+	<select id="Nameplate.getByProperty" resultMap="RM.Nameplate">
+		select <include refid="Nameplate.columns"/> from t_nameplate where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Nameplate.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="plateid">
+	             t_nameplate.plateid = #plateid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="platename">
+	             t_nameplate.platename like ('%$platename$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_nameplate.notes = #notes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flag">
+	             t_nameplate.flag = #flag#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Nameplate.findPage.and">
+			<isNotEmpty prepend="AND" property="plateid">
+	             t_nameplate.plateid = #plateid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="platename">
+	             t_nameplate.platename like ('%$platename$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_nameplate.notes = #notes#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="flag">
+	             t_nameplate.flag = #flag#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Nameplate.Entity" resultMap="RM.Nameplate">
+    	SELECT 	<include refid="Nameplate.columns"/> FROM t_nameplate <include refid="Nameplate.findPage.where"/>
+    </select>
+    
+    <select id="Nameplate.findList" resultMap="RM.Nameplate">
+    	SELECT 
+    		<include refid="Nameplate.columns"/> 
+    	FROM 
+    		t_nameplate
+		<include refid="Nameplate.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Nameplate.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_nameplate
+    ]]>
+		<include refid="Nameplate.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Nameplate.findPage" resultMap="RM.Nameplate">
+    	select <include refid="Nameplate.columns"/>	    
+	        from t_nameplate 	   
+		<include refid="Nameplate.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Nameplate.findPage" resultMap="RM.Nameplate">
+    	select <include refid="Nameplate.columns"/>	    
+	        from t_nameplate where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       plateid 
+	   not in(select $notTop$ 
+       plateid 
+	   from t_nameplate <include refid="Nameplate.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Nameplate.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+</sqlMap>

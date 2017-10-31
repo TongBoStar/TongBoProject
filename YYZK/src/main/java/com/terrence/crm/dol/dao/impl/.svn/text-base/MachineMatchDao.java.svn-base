@@ -1,0 +1,52 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.MachineMatch;
+import com.terrence.crm.dol.dao.IMachineMatchDao;
+import com.terrence.crm.dol.query.MachineMatchQuery;
+
+@Repository
+public class MachineMatchDao extends BaseIbatisDao<MachineMatch,java.lang.Long> implements IMachineMatchDao{
+
+		
+	public void saveOrUpdate(MachineMatch entity) {
+		if(entity.getFmatchid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "MachineMatch";
+	}
+	public MachineMatch getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (MachineMatch)this.getSqlMapClientTemplate().queryForObject("MachineMatch.getByProperty", map);		
+	}
+
+	@Override
+	public void deleteByworkplanid(String statement, Long workplanid) {
+		this.getSqlMapClientTemplate().delete("MachineMatch.deleteByworkplanid", workplanid);
+		
+		
+	}
+
+	@Override
+	public MachineMatch getByFbillno(String statement,
+			MachineMatchQuery machineMatchQuery) {
+		return (MachineMatch)this.getSqlMapClientTemplate().queryForObject(statement, machineMatchQuery.getFbillno());
+		
+	}
+
+}

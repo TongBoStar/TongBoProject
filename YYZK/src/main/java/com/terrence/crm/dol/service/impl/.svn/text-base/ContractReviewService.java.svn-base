@@ -1,0 +1,221 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CReviewExamineInfo;
+import com.terrence.crm.dol.bean.ContractReview;
+import com.terrence.crm.dol.bean.QuestionAndReply;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.ICReviewExamineInfoDao;
+import com.terrence.crm.dol.dao.IContractReviewDao;
+import com.terrence.crm.dol.dao.IQuestionAndReplyDao;
+import com.terrence.crm.dol.query.CReviewExamineInfoQuery;
+import com.terrence.crm.dol.query.ContractReviewQuery;
+import com.terrence.crm.dol.query.QuestionAndReplyQuery;
+import com.terrence.crm.dol.service.IContractReviewService;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
+/**
+ * 合同评审业务实现类
+ * @author wangtongbo 
+ * E-mail:tongbo.wang@terrence.com.cn
+ * @version 创建时间：2014-7-18 下午4:29:51
+ */
+@Service
+@Transactional
+public class ContractReviewService extends BaseService implements
+		IContractReviewService {
+	@Autowired
+	private IContractReviewDao contractReviewDao;
+	@Autowired
+	private IQuestionAndReplyDao questionAndReplyDao;
+	@Autowired 
+	private ICReviewExamineInfoDao cReviewExamineInfoDao;
+	
+	@Override
+	public ContractReview getById(Long id) throws ServiceException {
+		return contractReviewDao.getById(id);
+	}
+
+	@Override
+	public void saveOrUpdate(ContractReview entity) throws ServiceException {
+		contractReviewDao.saveOrUpdate(entity);
+	}
+
+	@Override
+	public Long save(ContractReview entity) throws ServiceException {
+		return contractReviewDao.save(entity);
+	}
+
+	@Override
+	public Integer update(ContractReview entity) throws ServiceException {
+		return contractReviewDao.update(entity);
+	}
+
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return contractReviewDao.deleteById(id);
+	}
+
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList)
+			throws ServiceException {
+		String ids = StringUtils.join(idList, ",");
+		cReviewExamineInfoDao.deleteByMultipleId("CReviewExamineInfo.deleteCInfoByReviewId",ids);
+		questionAndReplyDao.deleteByMultipleId("QuestionAndReply.deleteQAByReviewId", ids);
+		Integer result = contractReviewDao.deleteByMultipleId(ids);
+		operationLogDao.save(ConfigTerrence.MODEL_CONTRACTREVIEW, ConfigTerrence.OPT_DEL, "主键为："+ids+"的合同评审单删除成功");
+		return result;
+	}
+
+	@Override
+	public Page<ContractReview> findPage(Page<ContractReview> page,
+			ContractReviewQuery query) throws ServiceException {
+		Page<ContractReview> returnPage = contractReviewDao.findPage(page, query);
+		returnPage.setResult(returnPage.getResult());
+		return returnPage;
+	}
+
+	@Override
+	public List<ContractReview> findList(ContractReviewQuery query)
+			throws ServiceException {
+		return contractReviewDao.findList(query);
+	}
+
+	@Override
+	public List<ContractReview> findAllList() throws ServiceException {
+		return contractReviewDao.findAllList();
+	}
+
+	@Override
+	public void saveOrUpdate(ContractReview contractReview,QuestionAndReply questionAndReply,
+			String examinerList,String delList) {
+		Long conid=null;
+		if(null!=contractReview.getContractReviewId()){
+			conid = contractReview.getContractReviewId();
+		}
+		SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String date = formt.format(new Date());
+		Long reviewId = null;
+		if(null==contractReview.getContractReviewId()){
+			contractReview.setReviewStatus(0);
+			contractReview.setCreateTime(date);
+			reviewId = contractReviewDao.save(contractReview);
+			System.out.println("reviewId="+reviewId);
+		}else {
+			reviewId = contractReview.getContractReviewId();
+			contractReviewDao.update(contractReview);
+		}
+		if(null!=examinerList&&examinerList.length()>0){
+			List<CReviewExamineInfo> cExamineInfos = parseExaminerList(contractReview.getOrderCode(),examinerList);
+			for(CReviewExamineInfo info:cExamineInfos){
+				if(null==info.getExamineInfoId()){
+					info.setContractReviewId(reviewId);
+					cReviewExamineInfoDao.save(info);
+				}
+			}
+		}
+		if(null!=delList&&delList.length()>0){
+			String[] ids = delList.split(",");
+			for(String id:ids){
+				cReviewExamineInfoDao.deleteById(Long.valueOf(id));
+			}
+		}
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		if(null==conid){
+			operationLogDao.save(ConfigTerrence.MODEL_CONTRACTREVIEW, ConfigTerrence.OPT_ADD, "主键为："+reviewId+"的合同评审单添加成功，添加人为："+admin.getAdmin().getAdminName());
+		}else{
+			operationLogDao.save(ConfigTerrence.MODEL_CONTRACTREVIEW, ConfigTerrence.OPT_EDIT, "主键为："+reviewId+"的合同评审单修改成功，修改人为："+admin.getAdmin().getAdminName());
+		}
+	}
+
+	private List<CReviewExamineInfo> parseExaminerList(String orderCode,
+			String examinerList) {
+		List<CReviewExamineInfo> cExamineInfos = new ArrayList<CReviewExamineInfo>();
+		String[] cexmineInfoArrs = examinerList.split("\\|");
+		CReviewExamineInfo cExamineInfo = null;
+		for(int i=0;i<cexmineInfoArrs.length;i++){
+			String[] values = cexmineInfoArrs[i].split(",");
+			cExamineInfo = new CReviewExamineInfo();
+			cExamineInfo.setOrderCode(orderCode);
+			if(!values[0].trim().equals("null")&&!values[0].trim().equals("")){
+				cExamineInfo.setExamineInfoId(Long.valueOf(values[0]));
+			}
+			cExamineInfo.setUserName(values[1]);
+			cExamineInfo.setDepartment(values[2]);
+			cExamineInfo.setRoleName(values[3]);
+			cExamineInfo.setUserId(Long.valueOf(values[4]));
+			cExamineInfos.add(cExamineInfo);
+		}
+		return cExamineInfos;
+	}
+
+	@Override
+	public List<CReviewExamineInfo> findEInfos(
+			CReviewExamineInfoQuery cReviewExamineInfoQuery) {
+		cReviewExamineInfoQuery.setSortColumns("department");
+		return cReviewExamineInfoDao.findList(cReviewExamineInfoQuery);
+	}
+
+	@Override
+	public void saveOrUpdateqr(QuestionAndReply questionAndReply,CReviewExamineInfo creviewExamineInfo) {
+		SimpleDateFormat formt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String date = formt.format(new Date());
+		if(null!=questionAndReply.getReplyer()&&!questionAndReply.getReplyer().trim().equals("")){
+			questionAndReply.setReplyTime(date);
+			questionAndReplyDao.update(questionAndReply);
+		}
+		if(null!=questionAndReply.getQuestioner()&&!questionAndReply.getQuestioner().trim().equals("")){
+			questionAndReply.setQuestionTime(date);
+			questionAndReplyDao.save(questionAndReply);
+		}
+		if(null!=creviewExamineInfo&&creviewExamineInfo.getExamineStatus().trim().equals("1")){
+			creviewExamineInfo.setExamineAdvice(questionAndReply.getQuestion());
+			creviewExamineInfo.setExamineTime(date);
+			creviewExamineInfo.setUserName(questionAndReply.getQuestioner());
+			creviewExamineInfo.setOrderCode(questionAndReply.getOrderCode());
+			cReviewExamineInfoDao.update(creviewExamineInfo);
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_CONTRACTREVIEW, ConfigTerrence.OPT_EXAMINE, "主键为："+creviewExamineInfo.getContractReviewId()+"的合同评审单审核成功");
+	}
+
+	@Override
+	public Page<QuestionAndReply> findQRPage(Page<QuestionAndReply> qrPage,
+			QuestionAndReplyQuery questionAndReplyQuery) {
+		try {
+			Page<QuestionAndReply> returnPage = questionAndReplyDao.findPage(qrPage,questionAndReplyQuery);
+			returnPage.setResult(returnPage.getResult());
+			return returnPage;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public List<CReviewExamineInfo> findEmailFromEInfos(
+			CReviewExamineInfoQuery cReviewExamineInfoQuery) {
+		return cReviewExamineInfoDao.findList("CReviewExamineInfo.findEmailFromEInfos",cReviewExamineInfoQuery);
+	}
+}

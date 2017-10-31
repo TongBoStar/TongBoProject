@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="OrderItem">
+
+        
+	<resultMap id="RM.OrderItem" class="com.terrence.crm.dol.bean.OrderItem">
+        <result property="id" column="id"/>
+        <result property="fnumber" column="fnumber"/>
+        <result property="fname" column="fname"/>
+        <result property="fmodel" column="fmodel"/>
+        <result property="fitemid" column="fitemid"/>
+        <result property="fsaleprice" column="fsaleprice"/>
+        <result property="taxrate" column="taxrate"/>
+        <result property="unitid" column="unitid"/>
+        <result property="unitname" column="unitname"/>
+         <result property="itemproperty" column="itemproperty"/>
+         <result property="secinv" column="secinv"/>
+        <result property="seriescode" column="seriescode"/>
+        <result property="fqtymin" column="fqtymin"/>
+         <result property="categoryid" column="categoryid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="OrderItem.columns">
+	    <![CDATA[
+        	t_order_item.id ,
+        	t_order_item.fnumber ,
+        	t_order_item.fname ,
+        	t_order_item.fmodel ,
+        	t_order_item.fitemid ,
+        	t_order_item.fsaleprice ,
+        	t_order_item.taxrate ,
+        	t_order_item.unitid ,
+        	t_order_item.unitname ,
+        	t_order_item.itemproperty ,
+        	t_order_item.secinv ,
+        	t_order_item.seriescode ,
+        	t_order_item.fqtymin ,
+        	t_order_item.categoryid
+	    ]]>
+	</sql>
+	
+   <insert id="OrderItem.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_order_item (
+        	id ,
+        	fnumber ,
+        	fname ,
+        	fmodel ,
+        	fitemid ,
+        	fsaleprice ,
+        	taxrate ,
+        	unitid ,
+        	unitname ,
+        	itemproperty 
+        ) VALUES (
+        	#id# ,
+        	#fnumber# ,
+        	#fname# ,
+        	#fmodel# ,
+        	#fitemid# ,
+        	#fsaleprice# ,
+        	#taxrate# ,
+        	#unitid# ,
+        	#unitname# ,
+        	#itemproperty#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<insert id="OrderIter.SyncK3.insert">
+	insert into t_order_item (fnumber,fname,fmodel,fitemid,fsaleprice,taxrate,unitid,unitname)
+	select k3item.fnumber,k3item.fname,k3item.fmodel,k3item.fitemid,fsaleprice,fimposttaxrate,funitid,unit.fname from K33.AIS20120718093132.dbo.t_icitem as k3item 
+	,K33.AIS20120718093132.dbo.t_measureunit unit 
+	where  not exists(select fnumber from t_order_item where k3item.fnumber=t_order_item.fnumber) and k3item.funitid=unit.fmeasureunitid
+	</insert>
+	<update id="OrderItem.update" parameterClass="com.terrence.crm.dol.bean.OrderItem">         
+        UPDATE t_order_item 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fnumber">
+	        	fnumber = #fnumber# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fname">
+	        	fname = #fname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fmodel">
+	        	fmodel = #fmodel# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fitemid">
+	        	fitemid = #fitemid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fsaleprice">
+	        	fsaleprice = #fsaleprice# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taxrate">
+	        	taxrate = #taxrate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unitid">
+	        	unitid = #unitid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unitname">
+	        	unitname = #unitname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemproperty">
+	        	itemproperty = #itemproperty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secinv">
+	        	secinv = #secinv# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="seriescode">
+	        	seriescode = #seriescode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqtymin">
+	        	fqtymin = #fqtymin# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="categoryid">
+	        	categoryid = #categoryid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        id = #id# 
+    </update>
+    <update id="OrderItem.update.category" parameterClass="com.terrence.crm.dol.bean.OrderItem">
+    	UPDATE t_order_item set categoryid = #categoryid# where id in ($ids$);
+    </update>
+    <update id="OrderItem.update.category.release" parameterClass="com.terrence.crm.dol.bean.OrderItem">
+    	UPDATE t_order_item set categoryid = null where id in ($ids$);
+    </update>
+	<delete id="OrderItem.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_order_item where
+       id = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="OrderItem.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_order_item 
+        WHERE
+       id in ($id$) 
+    ]]>
+    </delete>
+    
+    <select id="OrderItem.getById" resultMap="RM.OrderItem">
+	    select <include refid="OrderItem.columns"/>
+	    
+	        from t_order_item 
+	        where 
+		        id = #id# 
+	    
+    </select>
+    
+	<select id="OrderItem.getByProperty" resultMap="RM.OrderItem">
+		select <include refid="OrderItem.columns"/> from t_order_item where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="OrderItem.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="id">
+	             t_order_item.id = #id#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fnumber">
+	             t_order_item.fnumber like ('%$fnumber$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fname">
+	             t_order_item.fname like('%$fname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fmodel">
+	             t_order_item.fmodel = #fmodel#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_order_item.fitemid = #fitemid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fsaleprice">
+	             t_order_item.fsaleprice = #fsaleprice#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taxrate">
+	             t_order_item.taxrate = #taxrate#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="unitid">
+	             t_order_item.unitid = #unitid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="unitname">
+	             t_order_item.unitname = #unitname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemproperty">
+	             t_order_item.itemproperty = #itemproperty#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_order_item.secinv = #secinv#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seriescode">
+	             t_order_item.seriescode = #seriescode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fqtymin">
+	             t_order_item.fqtymin = #fqtymin#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_order_item.categoryid = #categoryid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="categorynull">
+	             t_order_item.categoryid is null
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemcodeList">		             
+		             <iterate property="itemcodeList" open="(" close=")" conjunction="or">
+		             	t_order_item.fnumber like ('$itemcodeList[]$%')
+					</iterate> 
+		   </isNotEmpty>
+		   <isNotEmpty prepend="AND" property="categoryids">
+	       	t_order_item.categoryid in ($categoryids$)
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="OrderItem.findPage.and">
+			<isNotEmpty prepend="AND" property="id">
+	             t_order_item.id = #id#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fnumber">
+	            t_order_item.fnumber like ('%$fnumber$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fname">
+	            t_order_item.fname like('%$fname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fmodel">
+	             t_order_item.fmodel = #fmodel#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fitemid">
+	             t_order_item.fitemid = #fitemid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fsaleprice">
+	             t_order_item.fsaleprice = #fsaleprice#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="taxrate">
+	             t_order_item.taxrate = #taxrate#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="unitid">
+	             t_order_item.unitid = #unitid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="unitname">
+	             t_order_item.unitname = #unitname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemproperty">
+	             t_order_item.itemproperty = #itemproperty#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_order_item.secinv = #secinv#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seriescode">
+	             t_order_item.seriescode = #seriescode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fqtymin">
+	             t_order_item.fqtymin = #fqtymin#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="categoryid">
+	             t_order_item.categoryid = #categoryid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="categorynull">
+	             t_order_item.categoryid is null
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="itemcodeList">		             
+		             <iterate property="itemcodeList" open="(" close=")" conjunction="or">
+		             	t_order_item.fnumber like ('$itemcodeList[]$%')
+					</iterate> 
+		   </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="categoryids">
+	       	t_order_item.categoryid in ($categoryids$)
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="OrderItem.findList" resultMap="RM.OrderItem">
+    	SELECT 
+    		<include refid="OrderItem.columns"/> 
+    	FROM 
+    		t_order_item
+		<include refid="OrderItem.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="OrderItem.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_order_item
+    ]]>
+		<include refid="OrderItem.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.OrderItem.findPage" resultMap="RM.OrderItem">
+    	select <include refid="OrderItem.columns"/>	    
+	        from t_order_item 	   
+		<include refid="OrderItem.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="OrderItem.findPage" resultMap="RM.OrderItem">
+    	select <include refid="OrderItem.columns"/>	    
+	        from t_order_item where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       id 
+	   not in(select $notTop$ 
+       id 
+	   from t_order_item <include refid="OrderItem.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="OrderItem.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

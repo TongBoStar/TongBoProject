@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="AdminImages">
+
+<resultMap id="RM.AdminImages" class="com.terrence.crm.dol.bean.AdminImages">
+	<result property="id" column="id"/>
+	<result property="imgPath" column="imgPath"/>
+	<result property="imgName" column="imgName"/>
+	<result property="crateTime" column="crateTime"/>
+	<result property="adminId" column="adminId"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="AdminImages.columns">
+	<![CDATA[
+		t_admin_images.id ,
+		t_admin_images.imgPath ,
+		t_admin_images.imgName ,
+		t_admin_images.crateTime ,
+		t_admin_images.adminId
+	]]>
+</sql>
+
+<insert id="AdminImages.insert" >
+	<![CDATA[
+	INSERT INTO t_admin_images (
+		imgPath,
+		imgName,
+		crateTime,
+		adminId
+	) VALUES (
+		#imgPath#,
+		#imgName#,
+		#crateTime#,
+		#adminId#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="AdminImages.update" parameterClass="com.terrence.crm.dol.bean.AdminImages"> 
+	UPDATE t_admin_images 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="imgPath">
+			imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="imgName">
+			imgName = #imgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="crateTime">
+			crateTime = #crateTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="adminId">
+			adminId = #adminId# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="AdminImages.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_admin_images.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgPath">
+			t_admin_images.imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgName">
+			t_admin_images.imgName = #imgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="crateTime">
+			t_admin_images.crateTime = #crateTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="adminId">
+			t_admin_images.adminId = #adminId# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="AdminImages.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_admin_images.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgPath">
+		t_admin_images.imgPath = #imgPath# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgName">
+		t_admin_images.imgName = #imgName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="crateTime">
+		t_admin_images.crateTime = #crateTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="adminId">
+		t_admin_images.adminId = #adminId# 
+	</isNotEmpty>
+</sql>
+
+<select id="AdminImages.getById" resultMap="RM.AdminImages">
+	select <include refid="AdminImages.columns"/> from t_admin_images where id=#id#
+</select>
+
+<select id="AdminImages.getByProperty" resultMap="RM.AdminImages">
+	select <include refid="AdminImages.columns"/> from t_admin_images where $propertyName$=#propertyValue#
+</select>
+
+<delete id="AdminImages.delete">
+	<![CDATA[
+		DELETE FROM t_admin_images WHERE id=#id#
+	]]>
+</delete>
+<delete id="AdminImages.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_admin_images WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="AdminImages.findPage.count" resultClass="long">
+	select count(*) from t_admin_images <include refid="AdminImages.findPage.where"/>
+</select>
+
+<select id="AdminImages.findPage" resultMap="RM.AdminImages">
+	select <include refid="AdminImages.columns"/> 
+		from t_admin_images 
+	<include refid="AdminImages.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="AdminImages.findList" resultMap="RM.AdminImages">
+	SELECT <include refid="AdminImages.columns"/> FROM t_admin_images
+	<include refid="AdminImages.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

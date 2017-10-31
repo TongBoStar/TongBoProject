@@ -1,0 +1,80 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.DepartmentQuery;
+
+@Repository
+public class DepartmentDao extends BaseIbatisDao<Department,java.lang.Long> implements IDepartmentDao{
+
+		
+	public void saveOrUpdate(Department entity) {
+		if(entity.getTeamid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Department";
+	}
+	/**
+	 * 查找部门
+	 * @param adminQuery
+	 * @return
+	 */
+	@Override
+	public List<Department> findDepartList(DepartmentQuery query) {
+		return (List<Department>)this.getSqlMapClientTemplate().queryForList("Department.findDepartList",query);
+		
+	}
+	
+	public Department getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Department)this.getSqlMapClientTemplate().queryForObject("Department.getByProperty", map);		
+	}
+
+	@Override
+	public List<Department> findNameList(DepartmentQuery departmentQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Department.findNameList", departmentQuery);
+	}
+
+	@Override
+	public void syncDepERPData() {
+		this.getSqlMapClientTemplate().queryForObject("Department.getData.for.ERP");
+		
+	}
+
+	@Override
+	public List<Department> findListAll(DepartmentQuery departmentQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Department.find.alldata.depart", departmentQuery);
+	}
+
+	@Override
+	public Department findParentid(Department department) {
+		return (Department) this.getSqlMapClientTemplate().queryForObject("Department.find.depart.parentid", department);
+	}
+
+	@Override
+	public List<Department> findListDept(DepartmentQuery departmentQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Department.find.teamName.list", departmentQuery);
+	}
+
+}

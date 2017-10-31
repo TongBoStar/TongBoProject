@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProcessTaskBj">
+
+        
+	<resultMap id="RM.ProcessTaskBj" class="com.terrence.crm.dol.bean.ProcessTaskBj">
+        <result property="taskid" column="taskid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="amount" column="amount"/>
+        <result property="planenddate" column="planenddate"/>
+        <result property="createdate" column="createdate"/>
+        <result property="adminid" column="adminid"/>
+        <result property="explain" column="explain"/>
+        <result property="tasktype" column="tasktype"/>
+        <result property="taskstatus" column="taskstatus"/>
+        <result property="ori" column="ori"/>
+        <result property="icmoid" column="icmoid"/>
+        <result property="waitnote" column="waitnote"/>
+        
+        <result property="fverid" column="fverid"/>
+        <result property="fversion" column="fversion"/>
+    </resultMap>
+    <resultMap id="RM.ProcessTaskBj.Base" class="com.terrence.crm.dol.bean.ProcessTaskBj">
+        <result property="taskid" column="taskid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="amount" column="amount"/>
+        <result property="planenddate" column="planenddate"/>
+        <result property="createdate" column="createdate"/>
+        <result property="adminid" column="adminid"/>
+        <result property="explain" column="explain"/>
+        <result property="tasktype" column="tasktype"/>
+        <result property="taskstatus" column="taskstatus"/>
+        <result property="ori" column="ori"/>
+        <result property="icmoid" column="icmoid"/>
+        <result property="waitnote" column="waitnote"/>
+        
+        <result property="fverid" column="fverid"/>
+        <result property="fversion" column="fversion"/>
+        <result property="baseItem" resultMap="RM.ProcessTaskBj.Base.Detail"/>
+        <result property="icmo" resultMap="RM.ProcessTaskBj.Icmo"/>
+        <result property="itemVer" resultMap="RM.ProcessTaskBj.ItemVer"/>
+        
+    </resultMap>
+    
+	<resultMap id="RM.ProcessTaskBj.ItemVer" class="com.terrence.crm.dol.bean.ItemVer">
+        <result property="fverid" column="pfverid"/>
+        <result property="baseitemid" column="pbaseitemid"/>
+        <result property="fversion" column="pfversion"/>
+        <result property="itemcode" column="pitemcode"/>
+        <result property="isdefault" column="pisdefault"/>
+        
+        <result property="finishstatus" column="pfinishstatus"/>
+        <result property="wfstatus" column="pwfstatus"/>
+        <result property="imgpath" column="pimgpath"/>
+        <result property="adminid" column="padminid"/>
+        <result property="auditor" column="pauditor"/>
+    </resultMap>
+    
+    
+    <resultMap id="RM.ProcessTaskBj.BaseVersion" class="com.terrence.crm.dol.bean.ProcessTaskBj">
+        <result property="taskid" column="taskid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="amount" column="amount"/>
+        <result property="planenddate" column="planenddate"/>
+        <result property="createdate" column="createdate"/>
+        <result property="adminid" column="adminid"/>
+        <result property="explain" column="explain"/>
+        <result property="tasktype" column="tasktype"/>
+        <result property="taskstatus" column="taskstatus"/>
+        <result property="ori" column="ori"/>
+        <result property="icmoid" column="icmoid"/>
+        <result property="waitnote" column="waitnote"/>
+        
+        <result property="fverid" column="fverid"/>
+        <result property="fversion" column="fversion"/>
+        <result property="baseItem" resultMap="RM.ProcessTaskBj.Base.Detail"/>
+        <result property="icmo" resultMap="RM.ProcessTaskBj.Icmo"/>
+    </resultMap>
+    
+    
+	 <resultMap id="RM.ProcessTaskBj.Base.Detail" class="com.terrence.crm.dol.bean.BaseItem">
+	 	<result property="baseitemid" column="baseitemid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="formatno" column="formatno"/>
+        <result property="wfstatus" column="wfstatus"/>
+    </resultMap>
+	<resultMap class="com.terrence.crm.dol.bean.Icmo" id="RM.ProcessTaskBj.Icmo">
+		<result property="priority" column="priority"/>
+	</resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ProcessTaskBj.columns">
+	    <![CDATA[
+        	t_process_taskbj.taskid ,
+        	t_process_taskbj.itemcode ,
+        	t_process_taskbj.amount ,
+        	t_process_taskbj.planenddate ,
+        	t_process_taskbj.createdate ,
+        	t_process_taskbj.adminid ,
+        	t_process_taskbj.explain ,
+        	t_process_taskbj.tasktype ,
+        	t_process_taskbj.taskstatus ,
+        	t_process_taskbj.ori ,
+        	t_process_taskbj.icmoid ,
+        	t_process_taskbj.waitnote , 
+        	
+        	t_process_taskbj.fverid ,
+        	t_process_taskbj.fversion 
+	    ]]>
+	</sql>
+	
+   <insert id="ProcessTaskBj.insert" >
+    
+        INSERT INTO
+        t_process_taskbj (
+        	itemcode ,
+        	amount ,
+        	planenddate ,
+        	createdate ,
+        	explain ,
+        	ori ,
+        	icmoid,
+        	waitnote 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="tasktype">tasktype</isNotEmpty>
+        		<isNotEmpty prepend="," property="fverid">fverid</isNotEmpty>
+        		<isNotEmpty prepend="," property="fversion">fversion</isNotEmpty>
+        	</dynamic>
+        ) VALUES (
+        	#itemcode# ,
+        	#amount# ,
+        	#planenddate# ,
+        	#createdate# ,
+        	#explain# ,
+        	#ori# ,
+        	#icmoid# ,
+        	#waitnote#
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="tasktype">#tasktype#</isNotEmpty>
+        		<isNotEmpty prepend="," property="fverid">#fverid#</isNotEmpty>
+        		<isNotEmpty prepend="," property="fversion">#fversion#</isNotEmpty>
+        	</dynamic> 
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="taskid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ProcessTaskBj.update" parameterClass="com.terrence.crm.dol.bean.ProcessTaskBj">         
+        UPDATE t_process_taskbj 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="planenddate">
+	        	planenddate = #planenddate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="adminid">
+	        	adminid = #adminid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="explain">
+	        	explain = #explain# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="tasktype">
+	        	tasktype = #tasktype# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="taskstatus">
+	        	taskstatus = #taskstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ori">
+	        	ori = #ori# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="icmoid">
+	        	icmoid = #icmoid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="waitnote">
+	        	waitnote = #waitnote# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fverid">
+	        	fverid= #fverid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fversion">
+	        	fversion= #fversion# 
+	        </isNotEmpty>
+	        
+	    </dynamic>
+        WHERE 
+	        taskid = #taskid# 
+    </update>
+    
+	<delete id="ProcessTaskBj.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_process_taskbj where
+       taskid = #taskid# 
+    ]]>
+    </delete>
+    
+    <delete id="ProcessTaskBj.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_process_taskbj 
+        WHERE
+       taskid in ($taskid$) 
+    ]]>
+    </delete>
+    
+    <select id="ProcessTaskBj.getById" resultMap="RM.ProcessTaskBj">
+	    select <include refid="ProcessTaskBj.columns"/>
+	    
+	        from t_process_taskbj 
+	        where 
+		        taskid = #taskid# 
+	    
+    </select>
+    
+	<select id="ProcessTaskBj.getByProperty" resultMap="RM.ProcessTaskBj">
+		select <include refid="ProcessTaskBj.columns"/> from t_process_taskbj where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ProcessTaskBj.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_process_taskbj.taskid = #taskid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_process_taskbj.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_process_taskbj.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="planenddateBegin">
+	             t_process_taskbj.planenddate &gt;= #planenddateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planenddateEnd">
+	             t_process_taskbj.planenddate &lt;= #planenddateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdate">
+	             t_process_taskbj.createdate = #createdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminid">
+	             t_process_taskbj.adminid = #adminid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="explain">
+	             t_process_taskbj.explain = #explain#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tasktype">
+	             t_process_taskbj.tasktype = #tasktype#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskstatus">
+	             t_process_taskbj.taskstatus = #taskstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="status">
+	             t_base_item.wfstatus in ($status$)
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ori">
+	             t_process_taskbj.ori = #ori#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="icmoid">
+	             t_process_taskbj.icmoid = #icmoid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="waitnote">
+	             t_process_taskbj.waitnote like ('%$waitnote$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fverid">
+	        	t_process_taskbj.fverid= #fverid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fversion">
+	        	t_process_taskbj.fversion= #fversion# 
+	        </isNotEmpty>
+	        
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ProcessTaskBj.findPage.and">
+			<isNotEmpty prepend="AND" property="taskid">
+	             t_process_taskbj.taskid = #taskid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_process_taskbj.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_process_taskbj.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="planenddateBegin">
+	             t_process_taskbj.planenddate &gt;= #planenddateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="planenddateEnd">
+	             t_process_taskbj.planenddate &lt;= #planenddateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdate">
+	             t_process_taskbj.createdate = #createdate#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminid">
+	             t_process_taskbj.adminid = #adminid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="explain">
+	             t_process_taskbj.explain = #explain#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tasktype">
+	             t_process_taskbj.tasktype = #tasktype#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="taskstatus">
+	             t_process_taskbj.taskstatus = #taskstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="status">
+	             t_base_item.wfstatus in ($status$)
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ori">
+	             t_process_taskbj.ori = #ori#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="icmoid">
+	             t_process_taskbj.icmoid = #icmoid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="waitnote">
+	             t_process_taskbj.waitnote like ('%$waitnote$%')
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fverid">
+	        	t_process_taskbj.fverid= #fverid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="fversion">
+	        	t_process_taskbj.fversion= #fversion# 
+	        </isNotEmpty>
+	        
+	</sql>
+    
+    <select id="ProcessTaskBj.findList" resultMap="RM.ProcessTaskBj">
+    	SELECT 
+    		<include refid="ProcessTaskBj.columns"/> 
+    	FROM 
+    		t_process_taskbj
+		<include refid="ProcessTaskBj.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ProcessTaskBj.findPage.count" resultClass="long">
+        select 
+        count(*)
+        from  
+        t_process_taskbj     left join        t_icmo             on t_process_taskbj.icmoid=t_icmo.icmoid  
+    left join        t_item_ver             on t_process_taskbj.itemcode=t_item_ver.itemcode 
+            and t_item_ver.isdefault=1  left join       t_base_item 
+    on   t_process_taskbj.itemcode=t_base_item.itemcode 
+    where (isnull(t_item_ver.wfstatus,0) in(0,2,5) ) 
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ProcessTaskBj.findPage" resultMap="RM.ProcessTaskBj">
+    	select <include refid="ProcessTaskBj.columns"/>	    
+	        from t_process_taskbj 	   
+		<include refid="ProcessTaskBj.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+
+	<select id="ProcessTaskBj.findPage" resultMap="RM.ProcessTaskBj.Base">
+    	select <include refid="ProcessTaskBj.columns"/>,t_base_item.itemname,t_base_item.formatno,t_base_item.baseitemid,t_base_item.wfstatus,
+    	t_icmo.priority,
+    		t_item_ver.fverid pfverid,
+        	t_item_ver.baseitemid pbaseitemid ,
+        	t_item_ver.fversion pfversion,
+        	t_item_ver.itemcode pitemcode,
+        	t_item_ver.isdefault pisdefault,
+        	
+        	t_item_ver.finishstatus pfinishstatus,
+        	t_item_ver.wfstatus pwfstatus,
+        	t_item_ver.imgpath pimgpath,
+        	t_item_ver.adminid padminid,
+        	t_item_ver.auditor pauditor
+    	
+	        from 
+	          t_process_taskbj     left join        t_icmo             on t_process_taskbj.icmoid=t_icmo.icmoid  
+    left join        t_item_ver             on t_process_taskbj.itemcode=t_item_ver.itemcode 
+            and t_item_ver.isdefault=1  left join       t_base_item 
+    on   t_process_taskbj.itemcode=t_base_item.itemcode 
+    where (isnull(t_item_ver.wfstatus,0) in(0,2,5) ) 
+	   <isNotEmpty property="notTop">  and 
+	       taskid 
+		   not in(select $notTop$ 
+	       taskid 
+		   from  t_process_taskbj     left join        t_icmo             on t_process_taskbj.icmoid=t_icmo.icmoid  
+	    left join        t_item_ver             on t_process_taskbj.itemcode=t_item_ver.itemcode 
+	            and t_item_ver.isdefault=1  left join       t_base_item 
+	    on   t_process_taskbj.itemcode=t_base_item.itemcode 
+	    where (isnull(t_item_ver.wfstatus,0) in(0,2,5) )  
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    
+    
+    
+    
+    <select id="ProcessTaskBj.findPageVersion.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from 
+			t_process_taskbj 
+				left join t_icmo on t_process_taskbj.icmoid=t_icmo.icmoid
+				left join t_base_item on t_process_taskbj.itemcode=t_base_item.itemcode,
+			t_item_ver
+		    where
+         t_process_taskbj.fverid=t_item_ver.fverid 
+    ]]>
+	   and  t_item_ver.wfstatus in (#status#) 
+	     <isNotEmpty property="tasktype" prepend="AND"> t_process_taskbj.tasktype=#tasktype#</isNotEmpty>
+    </select>
+    
+    <select id="ProcessTaskBj.findPageVersion" resultMap="RM.ProcessTaskBj.BaseVersion">
+    	select <include refid="ProcessTaskBj.columns"/>,t_base_item.itemname,t_base_item.formatno
+    	,t_base_item.baseitemid,t_base_item.wfstatus,t_icmo.priority
+	     from 
+			t_process_taskbj 
+		    	left join
+		        	t_icmo on t_process_taskbj.icmoid=t_icmo.icmoid
+			left join t_base_item on t_process_taskbj.itemcode=t_base_item.itemcode,
+	 	t_item_ver
+       
+    where
+         t_process_taskbj.fverid=t_item_ver.fverid 	      
+	   <isNotEmpty property="notTop">  and 
+       taskid 
+	   not in(select $notTop$ 
+       taskid 
+	   from 
+	   		t_process_taskbj 
+		    	left join t_icmo on t_process_taskbj.icmoid=t_icmo.icmoid
+		    		left join t_base_item on t_process_taskbj.itemcode=t_base_item.itemcode,
+	 		t_item_ver
+	    where
+    	     t_process_taskbj.fverid=t_item_ver.fverid
+	   and  t_item_ver.wfstatus in (#status#) 
+	     <isNotEmpty property="tasktype" prepend="AND"> t_process_taskbj.tasktype=#tasktype#</isNotEmpty>
+	   	 <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+
+	   and  t_item_ver.wfstatus in (#status#) 
+	     <isNotEmpty property="tasktype" prepend="AND"> t_process_taskbj.tasktype=#tasktype#</isNotEmpty>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+		
+    </select>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+	
+</sqlMap>

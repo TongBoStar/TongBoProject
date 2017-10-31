@@ -1,0 +1,187 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Bitem;
+import com.terrence.crm.dol.query.BitemQuery;
+import com.terrence.crm.dol.query.ItemRuleQuery;
+import com.terrence.crm.dol.dao.IBitemDao;
+import com.terrence.crm.dol.dao.IItemRuleDao;
+import com.terrence.crm.dol.service.IBitemService;
+@Service
+@Transactional
+public class BitemService extends BaseService implements IBitemService {
+	protected static Logger logger = LoggerFactory.getLogger(BitemService.class);
+	@Autowired
+	@Qualifier("bitemDao")
+	private IBitemDao bitemDao;
+	
+	
+	@Autowired
+	@Qualifier("itemRuleDao")
+	private IItemRuleDao itemRuleDao;
+	public String getIbatisSqlMapNamespace() {
+		return "Bitem";
+	}
+	@Transactional(readOnly=true)
+	public Bitem getById(java.lang.Long id) throws ServiceException
+	{
+		return bitemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Bitem entity) throws ServiceException
+	{
+		bitemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Bitem entity) throws ServiceException
+	{
+		Long adId = bitemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Bitem entity) throws ServiceException
+	{
+		Integer returnValue =  bitemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = bitemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = bitemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BitemQuery query = new BitemQuery();
+		try {
+			return bitemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Bitem> findPage(Page<Bitem> page, BitemQuery query) throws ServiceException
+	{
+		return bitemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Bitem> findPage(Page<Bitem> page,String statement, BitemQuery query) throws ServiceException
+	{
+		return bitemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Bitem> findList(BitemQuery query) throws ServiceException
+	{
+		return bitemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Bitem> findList(BitemQuery query,Integer pageSize) throws ServiceException
+	{
+		return bitemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Bitem> findList(BitemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return bitemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Bitem> findAllList() throws ServiceException
+	{
+		return bitemDao.findAllList();
+	}
+	@Override
+	public void findBitemErp() throws ServiceException {
+		bitemDao.findBitemErp();
+	}
+	@Override
+	public List<Bitem> getListByProperty(String proName, Object proValue)
+			throws ServiceException {
+		return (List<Bitem>)this.bitemDao.getListByProperty(proName, proValue);
+	}
+	@Override
+	public int deleteInfoById(Long bitemId, String fnumber) {
+		BitemQuery query=new  BitemQuery();
+		query.setFparentid(bitemId);//y 查找id 对应的物料
+		//然后设置查询条件为父编码为 当前物料编码的查询条件
+		ItemRuleQuery itemRuleQuery = new ItemRuleQuery();
+		itemRuleQuery.setItemid(bitemId);
+		Integer returnValue=0;
+		if(bitemDao.findList(query).size()>0)//y 如果按照查询条件 返回集合 数大于0,不允许删除
+		{
+			return 0;
+		}
+		else if(itemRuleDao.findList(itemRuleQuery).size()>0)//y  
+		{
+			return 0;
+		}
+		else
+		{    
+			Bitem  entity=new  Bitem();
+		    entity.setFitemid(bitemId);
+			entity.setFdeleted(1);
+			returnValue = bitemDao.update(entity);//假删除
+			/*//begin  同时删除排产和K3没有孩子的目录
+			if(baseItemService.deleteInfoByItemcode(fnumber)==1)
+			{
+				try {
+					updateTreeCacheCategory();
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw new ServiceException(" 原因：系统异常请重试!");
+				}
+			}
+			else
+			{
+				throw new ServiceException(" 原因：物料目录中包含子数据的节点,不能删除!");
+				 
+			}*/
+			
+			return returnValue ;
+		}
+	}
+	@Override
+	public List<Bitem> findTreeList() throws ServiceException {
+		return this.bitemDao.findTreeList();
+	}
+	@Override
+	public void saveUpdateDateERP() throws ServiceException {
+		bitemDao.saveUpdateDateERP();
+	}
+
+}

@@ -1,0 +1,50 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Surveys;
+import com.terrence.crm.dol.dao.ISurveysDao;
+
+@Repository
+public class SurveysDao extends BaseIbatisDao<Surveys,java.lang.Long> implements ISurveysDao{
+
+		
+	public void saveOrUpdate(Surveys entity) {
+		if(entity.getSurveysid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Surveys";
+	}
+	public Surveys getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Surveys)this.getSqlMapClientTemplate().queryForObject("Surveys.getByProperty", map);		
+	}
+	public List<Long> findFinnerIdByYear(int year){
+		return this.getSqlMapClientTemplate().queryForList("Surveys.findFinnerIdByYear", year);
+	}
+	
+	@Override
+	public List<Long> findByFinnerIdAndYear(String ids, int year) {
+		Map map=new HashMap();		
+		map.put("finnerid", ids);
+		map.put("fyear", year);
+		return this.getSqlMapClientTemplate().queryForList("Surveys.findByFinnerIdAndYear", map);
+	}
+}

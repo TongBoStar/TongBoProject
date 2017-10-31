@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ToolDetail">
+
+        
+	<resultMap id="RM.ToolDetail" class="com.terrence.crm.dol.bean.ToolDetail">
+        <result property="toolsid" column="toolsid"/>
+        <result property="classid" column="classid"/>
+        <result property="toolcode" column="toolcode"/>
+        <result property="toolname" column="toolname"/>
+        <result property="formatno" column="formatno"/>
+         <result property="positionid" column="positionid"/>
+        <result property="secinv" column="secinv"/>
+        <result property="unit" column="unit"/>
+        <result property="fqty" column="fqty"/>
+        <result property="surplus" column="surplus"/>
+        <result property="loan" column="loan"/>
+        <result property="discard" column="discard"/>
+    </resultMap>
+    
+    <resultMap id="RM.ToolDetail.tool.cla" class="com.terrence.crm.dol.bean.ToolDetail">
+        <result property="toolsid" column="toolsid"/>
+        <result property="classid" column="classid"/>
+        <result property="toolcode" column="toolcode"/>
+        <result property="toolname" column="toolname"/>
+        <result property="formatno" column="formatno"/>
+        <result property="positionid" column="positionid"/>
+        <result property="secinv" column="secinv"/>
+        <result property="unit" column="unit"/>
+        <result property="fqty" column="fqty"/>
+        <result property="surplus" column="surplus"/>
+        <result property="loan" column="loan"/>
+        <result property="discard" column="discard"/>
+        <result property="positions" resultMap="RM.Positions.posName"/>
+        <result property="measureunit" resultMap="RM.Measureunits.utName"/>
+    </resultMap>
+	<resultMap id="RM.Measureunits.utName" class="com.terrence.crm.dol.bean.Measureunits">
+        <result property="unitname" column="unitname"/>
+    </resultMap>
+    <resultMap id="RM.Positions.posName" class="com.terrence.crm.dol.bean.Positions">
+        <result property="positionname" column="positionname"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ToolDetail.columns">
+	    <![CDATA[
+        	t_tool_detail.toolsid ,
+        	t_tool_detail.classid ,
+        	t_tool_detail.toolcode ,
+        	t_tool_detail.toolname ,
+        	t_tool_detail.formatno ,
+        	t_tool_detail.positionid ,
+        	t_tool_detail.secinv ,
+        	t_tool_detail.unit ,
+        	t_tool_detail.fqty,
+        	t_tool_detail.surplus ,
+        	t_tool_detail.loan ,
+        	t_tool_detail.discard 
+        	
+	    ]]>
+	</sql>
+	
+   <insert id="ToolDetail.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_tool_detail (
+        	classid ,
+        	toolcode ,
+        	toolname ,
+        	formatno ,
+        	positionid,
+        	secinv,
+        	unit,
+        	fqty
+        ) VALUES (
+        	#classid# ,
+        	#toolcode# ,
+        	#toolname# ,
+        	#formatno#,
+        	#positionid#,
+        	#secinv#,
+        	#unit# ,
+        	#fqty#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="toolsid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ToolDetail.update" parameterClass="com.terrence.crm.dol.bean.ToolDetail">         
+        UPDATE t_tool_detail 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="classid">
+	        	classid = #classid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="toolcode">
+	        	toolcode = #toolcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="toolname">
+	        	toolname = #toolname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="formatno">
+	        	formatno = #formatno# 
+	        </isNotEmpty>
+	        
+	        <isNotEmpty prepend="," property="positionid">
+	        	positionid = #positionid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="secinv">
+	        	secinv = #secinv# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unit">
+	        	unit = #unit# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fqty">
+	        	fqty = #fqty# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="surplus">
+	        	surplus = #surplus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="loan">
+	        	loan = #loan# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="discard">
+	        	discard = #discard# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        toolsid = #toolsid# 
+    </update>
+    
+	<delete id="ToolDetail.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_tool_detail where
+       toolsid = #toolsid# 
+    ]]>
+    </delete>
+    
+    <delete id="ToolDetail.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_tool_detail 
+        WHERE
+       toolsid in ($toolsid$) 
+    ]]>
+    </delete>
+    
+    <select id="ToolDetail.getById" resultMap="RM.ToolDetail">
+	    select <include refid="ToolDetail.columns"/>
+	    
+	        from t_tool_detail 
+	        where 
+		        toolsid = #toolsid# 
+	    
+    </select>
+    
+      <select id="ToolDetail.getById.Tool" resultMap="RM.ToolDetail.tool.cla">
+	    select <include refid="ToolDetail.columns"/>,t_measureunit.unitname,t_positions.positionname	
+	    
+	        from t_tool_detail  left join t_measureunit on t_tool_detail.unit = t_measureunit.measureunitid 
+	        	left join t_positions on t_tool_detail.positionid = t_positions.positionid
+	        where 
+		        toolsid = #toolsid# 
+	    
+    </select>
+    
+    
+    
+	<select id="ToolDetail.getByProperty" resultMap="RM.ToolDetail">
+		select <include refid="ToolDetail.columns"/> from t_tool_detail where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ToolDetail.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="toolsid">
+	             t_tool_detail.toolsid = #toolsid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="classid">
+	             t_tool_detail.classid = #classid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="toolcode">
+	             t_tool_detail.toolcode = #toolcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="toolname">
+	             t_tool_detail.toolname = #toolname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="formatno">
+	             t_tool_detail.formatno = #formatno#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="positionid">
+	             t_tool_detail.positionid = #positionid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_tool_detail.secinv = #secinv#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="unit">
+	             t_tool_detail.unit = #unit#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="toolids">
+	             t_tool_detail.classid in ($toolids$)
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ToolDetail.findPage.and">
+			<isNotEmpty prepend="AND" property="toolsid">
+	             t_tool_detail.toolsid = #toolsid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="classid">
+	             t_tool_detail.classid = #classid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="toolcode">
+	             t_tool_detail.toolcode = #toolcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="toolname">
+	             t_tool_detail.toolname = #toolname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="formatno">
+	             t_tool_detail.formatno = #formatno#
+	       </isNotEmpty>
+	       
+	       <isNotEmpty prepend="AND" property="positionid">
+	             t_tool_detail.positionid = #positionid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="secinv">
+	             t_tool_detail.secinv = #secinv#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="unit">
+	             t_tool_detail.unit = #unit#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="toolids">
+	             t_tool_detail.classid in ($toolids$)
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="ToolDetail.findList" resultMap="RM.ToolDetail">
+    	SELECT 
+    		<include refid="ToolDetail.columns"/> 
+    	FROM 
+    		t_tool_detail
+		<include refid="ToolDetail.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ToolDetail.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tool_detail
+    ]]>
+		<include refid="ToolDetail.findPage.where"/>    
+    </select>
+    
+     <select id="ToolDetail.findPage.toolClass.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tool_detail
+    ]]>
+		<include refid="ToolDetail.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ToolDetail.findPage" resultMap="RM.ToolDetail">
+    	select <include refid="ToolDetail.columns"/>	    
+	        from t_tool_detail 	   
+		<include refid="ToolDetail.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ToolDetail.findPage" resultMap="RM.ToolDetail">
+    	select <include refid="ToolDetail.columns"/>	    
+	        from t_tool_detail where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       toolsid 
+	   not in(select $notTop$ 
+       toolsid 
+	   from t_tool_detail <include refid="ToolDetail.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ToolDetail.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    <select id="ToolDetail.findPage.toolClass" resultMap="RM.ToolDetail.tool.cla">
+    	select <include refid="ToolDetail.columns"/>,t_measureunit.unitname,t_positions.positionname	    
+	        from t_tool_detail left join t_measureunit on t_tool_detail.unit = t_measureunit.measureunitid 
+	        	left join t_positions on t_tool_detail.positionid = t_positions.positionid
+	        where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       toolsid 
+	   not in(select $notTop$ 
+       toolsid 
+	   from t_tool_detail <include refid="ToolDetail.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ToolDetail.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

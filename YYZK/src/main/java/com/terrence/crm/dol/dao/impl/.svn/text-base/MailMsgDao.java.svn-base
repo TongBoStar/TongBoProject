@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.MailMsg;
+import com.terrence.crm.dol.dao.IMailMsgDao;
+
+@Repository
+public class MailMsgDao extends BaseIbatisDao<MailMsg,java.lang.Long> implements IMailMsgDao{
+
+		
+	public void saveOrUpdate(MailMsg entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	/**
+	 * 通过单据信息更新
+	 * @param entity
+	 */
+	public void updateByBillInfo(MailMsg entity) {
+		this.getSqlMapClientTemplate().update("MailMsg.updateByBillInfo", entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "MailMsg";
+	}
+	public MailMsg getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (MailMsg)this.getSqlMapClientTemplate().queryForObject("MailMsg.getByProperty", map);		
+	}
+
+}

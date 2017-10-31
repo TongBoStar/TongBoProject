@@ -1,0 +1,175 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.stereotype.Repository;
+
+import com.sun.org.apache.regexp.internal.recompile;
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TrainRecord;
+import com.terrence.crm.dol.dao.ITrainRecordDao;
+import com.terrence.crm.dol.query.TrainRecordQuery;
+import com.terrence.crm.dol.utils.DateUtils;
+
+@Repository
+public class TrainRecordDao extends BaseIbatisDao<TrainRecord,java.lang.Long> implements ITrainRecordDao{
+
+		
+	public void saveOrUpdate(TrainRecord entity) {
+		if(entity.getRecid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TrainRecord";
+	}
+	public TrainRecord getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TrainRecord)this.getSqlMapClientTemplate().queryForObject("TrainRecord.getByProperty", map);		
+	}
+
+	@Override
+	public Map<String, Object> findTrainRecordByIdMax(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		TrainRecord trainRecord = new TrainRecord();
+		Map<String, Object> trainRecordMap = new HashMap<String, Object>();
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			ResultSetMetaData rsmd=rs.getMetaData();
+			Integer columnCount = rsmd.getColumnCount();//查询出有多少个列
+			String head;
+			while (rs.next()) {
+				for (int i = 1; i <= columnCount; i++) {
+					head = rsmd.getColumnName(i);//取出表头
+					trainRecordMap.put(head, rs.getObject(head));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return trainRecordMap;
+	}
+
+	@Override
+	public Integer getRecordCount(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Integer count = 0;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				count=rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return count;
+	}
+
+	@Override
+	public Long findCheckIdForTrainRecord(String sql) {
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		Long checkid = null;
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				checkid=rs.getLong(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return checkid;
+	}
+
+	@Override
+	public TrainRecord findTrainCheckIdSql(String sql) {//checktimeid,seqno,itemcode,tplid,trialid
+		DataSource dataSource=this.getDataSource();
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		TrainRecord tr = new TrainRecord();
+		try {
+			con = dataSource.getConnection();	
+			stmt = con.createStatement();
+			rs=  stmt.executeQuery(sql);
+			while (rs.next()) {
+				tr.setChecktimeid(rs.getLong(1));
+				tr.setSeqno(rs.getString(2));
+				tr.setItemcode(rs.getString(3));
+				tr.setTplid(rs.getLong(4));
+				tr.setTrialid(rs.getLong(5));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			} 
+		return tr;
+	}
+
+
+
+}

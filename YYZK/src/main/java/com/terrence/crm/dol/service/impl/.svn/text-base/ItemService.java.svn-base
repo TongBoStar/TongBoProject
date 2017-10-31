@@ -1,0 +1,165 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Item;
+import com.terrence.crm.dol.query.ItemQuery;
+import com.terrence.crm.dol.dao.IItemDao;
+import com.terrence.crm.dol.service.IItemService;
+
+@Service
+@Transactional
+public class ItemService extends BaseService implements IItemService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemService.class);
+	@Autowired
+	@Qualifier("itemDao")
+	private IItemDao itemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Item";
+	}
+	@Transactional(readOnly=true)
+	public Item getById(java.lang.Long id) throws ServiceException
+	{
+		return itemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Item entity) throws ServiceException
+	{
+		itemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Item entity) throws ServiceException
+	{
+		Long adId = itemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Item entity) throws ServiceException
+	{
+		Integer returnValue =  itemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemQuery query = new ItemQuery();
+		try {
+			return itemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Item> findPage(Page<Item> page, ItemQuery query) throws ServiceException
+	{
+		return itemDao.findPage(page, query);
+	}
+	
+	/**
+	 * 查询物料带单位名称
+	 * @param query
+	 * @return
+	 * @throws ServiceException
+	 */
+	public List<Item> listItemInfo(ItemQuery query) throws ServiceException
+	{
+		return itemDao.listItemInfo(query);
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<Item> findPage(Page<Item> page,String statement, ItemQuery query) throws ServiceException
+	{
+		return itemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Item> findList(ItemQuery query) throws ServiceException
+	{
+		return itemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Item> findList(ItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Item> findList(ItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Item> findAllList() throws ServiceException
+	{
+		return itemDao.findAllList();
+	}
+	@Override
+	public Item getItemByFNumber(String fNumber) {
+		return itemDao.getByColumn("Item.getItemByFNumber", fNumber);
+	}
+	/**
+	 * 通过物料代码查找物料信息
+	 */
+	public Item getItemInfoByFNumber(String fNumber) {
+		return itemDao.getByColumn("Item.getItemInfoByFNumber", fNumber);
+	}
+	
+	/**
+	 * 通过物料代码查找物料信息材质
+	 */
+	public Item getItemMaterialInfoByFNumber(String fNumber) {
+		return itemDao.getByColumn("Item.getItemMaterialInfoByFNumber", fNumber);
+	}
+	@Override
+	public void updateItemData(Item entity) throws ServiceException {
+		itemDao.update("Item.update.pdcategory.dataStatus", entity);
+	}
+	@Override
+	public void updateStatus(Item entity) throws ServiceException {
+		itemDao.update("Item.update.pdcategory.jiebang", entity);
+	}
+	@Override
+	public void findErp() throws ServiceException {
+		itemDao.findErp();
+	}
+
+}

@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.CirculationEntity;
+import com.terrence.crm.dol.dao.ICirculationEntityDao;
+
+@Repository
+public class CirculationEntityDao extends BaseIbatisDao<CirculationEntity,java.lang.Long> implements ICirculationEntityDao{
+
+		
+	public void saveOrUpdate(CirculationEntity entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "CirculationEntity";
+	}
+	public CirculationEntity getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (CirculationEntity)this.getSqlMapClientTemplate().queryForObject("CirculationEntity.getByProperty", map);		
+	}
+
+}

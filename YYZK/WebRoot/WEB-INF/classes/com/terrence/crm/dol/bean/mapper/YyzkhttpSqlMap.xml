@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Yyzkhttp">
+
+<resultMap id="RM.Yyzkhttp" class="com.terrence.crm.dol.bean.Yyzkhttp">
+	<result property="id" column="id"/>
+	<result property="actionModule" column="actionModule"/>
+	<result property="ftype" column="ftype"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Yyzkhttp.columns">
+	<![CDATA[
+		t_yyzkhttp.id ,
+		t_yyzkhttp.actionModule ,
+		t_yyzkhttp.ftype
+	]]>
+</sql>
+
+<insert id="Yyzkhttp.insert" >
+	<![CDATA[
+	INSERT INTO t_yyzkhttp (
+		actionModule,
+		ftype
+	) VALUES (
+		#actionModule#,
+		#ftype#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Integer" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Yyzkhttp.update" parameterClass="com.terrence.crm.dol.bean.Yyzkhttp"> 
+	UPDATE t_yyzkhttp 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="actionModule">
+			actionModule = #actionModule# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="ftype">
+			ftype = #ftype# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Yyzkhttp.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_yyzkhttp.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="actionModule">
+			t_yyzkhttp.actionModule = #actionModule# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="ftype">
+			t_yyzkhttp.ftype = #ftype# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Yyzkhttp.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_yyzkhttp.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="actionModule">
+		t_yyzkhttp.actionModule = #actionModule# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="ftype">
+		t_yyzkhttp.ftype = #ftype# 
+	</isNotEmpty>
+</sql>
+
+<select id="Yyzkhttp.getById" resultMap="RM.Yyzkhttp">
+	select <include refid="Yyzkhttp.columns"/> from t_yyzkhttp where id=#id#
+</select>
+
+<select id="Yyzkhttp.getByProperty" resultMap="RM.Yyzkhttp">
+	select <include refid="Yyzkhttp.columns"/> from t_yyzkhttp where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Yyzkhttp.delete">
+	<![CDATA[
+		DELETE FROM t_yyzkhttp WHERE id=#id#
+	]]>
+</delete>
+<delete id="Yyzkhttp.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_yyzkhttp WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Yyzkhttp.findPage.count" resultClass="long">
+	select count(*) from t_yyzkhttp <include refid="Yyzkhttp.findPage.where"/>
+</select>
+
+<select id="Yyzkhttp.findPage" resultMap="RM.Yyzkhttp">
+	select <include refid="Yyzkhttp.columns"/> 
+		from t_yyzkhttp 
+	<include refid="Yyzkhttp.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Yyzkhttp.findList" resultMap="RM.Yyzkhttp">
+	SELECT <include refid="Yyzkhttp.columns"/> FROM t_yyzkhttp
+	<include refid="Yyzkhttp.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

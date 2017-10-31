@@ -1,0 +1,133 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PerFee;
+import com.terrence.crm.dol.query.PerFeeQuery;
+import com.terrence.crm.dol.dao.IPerFeeDao;
+import com.terrence.crm.dol.service.IPerFeeService;
+
+@Service
+@Transactional
+public class PerFeeService extends BaseService implements IPerFeeService {
+	protected static Logger logger = LoggerFactory.getLogger(PerFeeService.class);
+	@Autowired
+	@Qualifier("perFeeDao")
+	private IPerFeeDao perFeeDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PerFee";
+	}
+	@Transactional(readOnly=true)
+	public PerFee getById(java.lang.Long id) throws ServiceException
+	{
+		return perFeeDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PerFee entity) throws ServiceException
+	{
+		perFeeDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PerFee entity) throws ServiceException
+	{
+		Long adId = perFeeDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PerFee entity) throws ServiceException
+	{
+		Integer returnValue =  perFeeDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = perFeeDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = perFeeDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	/**
+	 * 删除应收款及关联的业绩奖明细
+	 */
+	public Integer deleteByMultipleByBillid(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = perFeeDao.deleteByMultipleByBillid(delIds);
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PerFeeQuery query = new PerFeeQuery();
+		try {
+			return perFeeDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PerFee> findPage(Page<PerFee> page, PerFeeQuery query) throws ServiceException
+	{
+		return perFeeDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PerFee> findPage(Page<PerFee> page,String statement, PerFeeQuery query) throws ServiceException
+	{
+		return perFeeDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PerFee> findList(PerFeeQuery query) throws ServiceException
+	{
+		return perFeeDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PerFee> findList(PerFeeQuery query,Integer pageSize) throws ServiceException
+	{
+		return perFeeDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PerFee> findList(PerFeeQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return perFeeDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PerFee> findAllList() throws ServiceException
+	{
+		return perFeeDao.findAllList();
+	}
+
+}

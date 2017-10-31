@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssemblyCheck;
+import com.terrence.crm.dol.query.AssemblyCheckQuery;
+import com.terrence.crm.dol.dao.IAssemblyCheckDao;
+import com.terrence.crm.dol.service.IAssemblyCheckService;
+
+@Service
+@Transactional
+public class AssemblyCheckService extends BaseService implements IAssemblyCheckService {
+	protected static Logger logger = LoggerFactory.getLogger(AssemblyCheckService.class);
+	@Autowired
+	@Qualifier("assemblyCheckDao")
+	private IAssemblyCheckDao assemblyCheckDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssemblyCheck";
+	}
+	@Transactional(readOnly=true)
+	public AssemblyCheck getById(java.lang.Long id) throws ServiceException
+	{
+		return assemblyCheckDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssemblyCheck entity) throws ServiceException
+	{
+		assemblyCheckDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssemblyCheck entity) throws ServiceException
+	{
+		Long adId = assemblyCheckDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssemblyCheck entity) throws ServiceException
+	{
+		Integer returnValue =  assemblyCheckDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assemblyCheckDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assemblyCheckDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssemblyCheckQuery query = new AssemblyCheckQuery();
+		try {
+			return assemblyCheckDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyCheck> findPage(Page<AssemblyCheck> page, AssemblyCheckQuery query) throws ServiceException
+	{
+		return assemblyCheckDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssemblyCheck> findPage(Page<AssemblyCheck> page,String statement, AssemblyCheckQuery query) throws ServiceException
+	{
+		return assemblyCheckDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyCheck> findList(AssemblyCheckQuery query) throws ServiceException
+	{
+		return assemblyCheckDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyCheck> findList(AssemblyCheckQuery query,Integer pageSize) throws ServiceException
+	{
+		return assemblyCheckDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssemblyCheck> findList(AssemblyCheckQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assemblyCheckDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssemblyCheck> findAllList() throws ServiceException
+	{
+		return assemblyCheckDao.findAllList();
+	}
+
+}

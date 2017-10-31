@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Reqtake">
+
+        
+	<resultMap id="RM.Reqtake" class="com.terrence.crm.dol.bean.Reqtake">
+        <result property="reqtakeid" column="reqtakeid"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="status" column="status"/>
+        <result property="createdate" column="createdate"/>
+        <result property="reqemp" column="reqemp"/>
+        <result property="outemp" column="outemp"/>
+        <result property="batchno" column="batchno"/>
+        <result property="takedate" column="takedate"/>
+    </resultMap>
+    
+    <resultMap id="RM.Reqtake.Detail" class="com.terrence.crm.dol.bean.Reqtake">
+        <result property="reqtakeid" column="reqtakeid"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="status" column="status"/>
+        <result property="createdate" column="createdate"/>
+        <result property="reqemp" column="reqemp"/>
+        <result property="outemp" column="outemp"/>
+        <result property="batchno" column="batchno"/>
+        <result property="takedate" column="takedate"/>
+        <result property="matchstatus" column="matchstatus"/>
+        <result property="reqname" column="reqname"/>
+        <result property="outname" column="outname"/>
+        
+        <result property="baseitem" resultMap="RM.Reqtake.BaseItem" />
+    </resultMap>
+	
+    <resultMap id="RM.Reqtake.BaseItem" class="com.terrence.crm.dol.bean.BaseItem">
+         <result property="itemname" column="itemname"/>
+        <result property="formatno" column="formatno"/>
+    </resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Reqtake.columns">
+	    <![CDATA[
+        	t_reqtake.reqtakeid ,
+        	t_reqtake.fbillno ,
+        	t_reqtake.itemcode ,
+        	t_reqtake.status ,
+        	t_reqtake.createdate ,
+        	t_reqtake.reqemp ,
+        	t_reqtake.outemp ,
+        	t_reqtake.batchno ,
+        	t_reqtake.takedate 
+	    ]]>
+	</sql>
+	
+   <insert id="Reqtake.insert" >
+    
+        INSERT INTO
+        t_reqtake (
+        	fbillno 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemcode">itemcode</isNotEmpty>
+        		<isNotEmpty prepend="," property="status">status</isNotEmpty>
+        		<isNotEmpty prepend="," property="createdate">createdate</isNotEmpty>
+        		<isNotEmpty prepend="," property="reqemp">reqemp</isNotEmpty>
+        		<isNotEmpty prepend="," property="outemp">outemp</isNotEmpty>
+        		<isNotEmpty prepend="," property="batchno">batchno</isNotEmpty>
+        		<isNotEmpty prepend="," property="takedate">takedate</isNotEmpty>
+        	</dynamic>	
+        ) VALUES (
+        	#fbillno# 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="itemcode">#itemcode#</isNotEmpty>
+        		<isNotEmpty prepend="," property="status">#status#</isNotEmpty>
+        		<isNotEmpty prepend="," property="createdate">#createdate#</isNotEmpty>
+        		<isNotEmpty prepend="," property="reqemp">#reqemp#</isNotEmpty>
+        		<isNotEmpty prepend="," property="outemp">#outemp#</isNotEmpty>
+        		<isNotEmpty prepend="," property="batchno">#batchno#</isNotEmpty>
+        		<isNotEmpty prepend="," property="takedate">#takedate#</isNotEmpty>
+        	</dynamic>
+        )
+    
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="reqtakeid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Reqtake.update" parameterClass="com.terrence.crm.dol.bean.Reqtake">         
+        UPDATE t_reqtake 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="reqemp">
+	        	reqemp = #reqemp# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="outemp">
+	        	outemp = #outemp# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="batchno">
+	        	batchno = #batchno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="takedate">
+	        	takedate = #takedate# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        reqtakeid = #reqtakeid# 
+    </update>
+    
+	<delete id="Reqtake.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_reqtake where
+       reqtakeid = #reqtakeid# 
+    ]]>
+    </delete>
+    
+    <delete id="Reqtake.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_reqtake 
+        WHERE
+       reqtakeid in ($reqtakeid$) 
+    ]]>
+    </delete>
+    
+    <select id="Reqtake.getById" resultMap="RM.Reqtake">
+	    select <include refid="Reqtake.columns"/>
+	    
+	        from t_reqtake 
+	        where 
+		        reqtakeid = #reqtakeid# 
+	    
+    </select>
+    
+	<select id="Reqtake.getByProperty" resultMap="RM.Reqtake">
+		select <include refid="Reqtake.columns"/> from t_reqtake where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Reqtake.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="reqtakeid">
+	             t_reqtake.reqtakeid = #reqtakeid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_reqtake.fbillno like ('%$fbillno$%') 
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_reqtake.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_reqtake.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_reqtake.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_reqtake.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="reqemp">
+	             t_reqtake.reqemp = #reqemp#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="outemp">
+	             t_reqtake.outemp = #outemp#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_reqtake.batchno = #batchno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="takedateBegin">
+	            CONVERT(varchar(100), t_reqtake.takedate, 23) &gt;= CONVERT(varchar(100), #takedateBegin#, 23)
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="takedateEnd">
+	             CONVERT(varchar(100), t_reqtake.takedate, 23) &lt;= CONVERT(varchar(100), #takedateEnd#, 23)
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Reqtake.findPage.and">
+			<isNotEmpty prepend="AND" property="reqtakeid">
+	             t_reqtake.reqtakeid = #reqtakeid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fbillno">
+	             t_reqtake.fbillno like ('%$fbillno$%') 
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_reqtake.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_reqtake.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_reqtake.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_reqtake.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="reqemp">
+	             t_reqtake.reqemp = #reqemp#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="outemp">
+	             t_reqtake.outemp = #outemp#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="batchno">
+	             t_reqtake.batchno = #batchno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="takedateBegin">
+	            CONVERT(varchar(100), t_reqtake.takedate, 23) &gt;= CONVERT(varchar(100), #takedateBegin#, 23)
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="takedateEnd">
+	             CONVERT(varchar(100), t_reqtake.takedate, 23) &lt;= CONVERT(varchar(100), #takedateEnd#, 23)
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="Reqtake.Entity" resultMap="RM.Reqtake">
+    	SELECT 	<include refid="Reqtake.columns"/> FROM t_reqtake <include refid="Reqtake.findPage.where"/>
+    </select>
+    
+    <select id="Reqtake.findList" resultMap="RM.Reqtake">
+    	SELECT 
+    		<include refid="Reqtake.columns"/> 
+    	FROM 
+    		t_reqtake
+		<include refid="Reqtake.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Reqtake.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_reqtake,t_icmo
+        where  t_icmo.fbillno=t_reqtake.fbillno and t_icmo.isdel!=-1  
+    ]]>
+		<include refid="Reqtake.findPage.and"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Reqtake.findPage" resultMap="RM.Reqtake">
+    	select <include refid="Reqtake.columns"/>	    
+	        from t_reqtake 	   
+		<include refid="Reqtake.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Reqtake.findPage" resultMap="RM.Reqtake.Detail">
+    	select <include refid="Reqtake.columns"/>,t_work_plan.matchstatus matchstatus,t_base_item.itemname,
+    	t_base_item.formatno,
+    	t_admin.adminname reqname,
+    	cc.adminname outname
+	        from t_reqtake left join t_work_plan on t_reqtake.fbillno=t_work_plan.fbillno
+	        left join t_base_item on t_reqtake.itemcode=t_base_item.itemcode
+	        left join t_admin on t_reqtake.reqemp=t_admin.adminid
+	        left join t_admin cc on t_reqtake.outemp=cc.adminid
+	        ,
+	        t_icmo
+	        where 1=1
+	        and t_icmo.fbillno=t_reqtake.fbillno and t_icmo.isdel!=-1   
+	   <isNotEmpty property="notTop">  and 
+       reqtakeid 
+	   not in(select $notTop$ 
+       reqtakeid 
+	   from t_reqtake, t_icmo
+	   where 1=1  and t_icmo.fbillno=t_reqtake.fbillno and t_icmo.isdel!=-1  
+	    <include refid="Reqtake.findPage.and"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Reqtake.findPage.and"/>
+	   	
+	   	
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+	<update id="Reqtake.update.status" parameterClass="com.terrence.crm.dol.bean.Reqtake">
+		update t_reqtake set status=1 where fbillno=#fbillno#
+	</update>
+
+
+	
+</sqlMap>

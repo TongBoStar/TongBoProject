@@ -1,0 +1,136 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TecPro;
+import com.terrence.crm.dol.query.TecProQuery;
+import com.terrence.crm.dol.query.ToolsQuery;
+import com.terrence.crm.dol.dao.ITecProDao;
+import com.terrence.crm.dol.service.ITecProService;
+
+@Service
+@Transactional
+public class TecProService extends BaseService implements ITecProService {
+	protected static Logger logger = LoggerFactory.getLogger(TecProService.class);
+	@Autowired
+	@Qualifier("tecProDao")
+	private ITecProDao tecProDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TecPro";
+	}
+	@Transactional(readOnly=true)
+	public TecPro getById(java.lang.Long id) throws ServiceException
+	{
+		return tecProDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TecPro entity) throws ServiceException
+	{
+		if(null==entity.getParentproid()){
+			entity.setParentproid(-1L);
+		}
+		tecProDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TecPro entity) throws ServiceException
+	{
+		Long adId = tecProDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TecPro entity) throws ServiceException
+	{
+		Integer returnValue =  tecProDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = tecProDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		TecProQuery query=new TecProQuery();
+		query.setParentproid(Long.valueOf(delIds.split(",")[0]));
+		
+		Integer returnValue=0;
+		if(tecProDao.findList(query).size()>0){
+				return 0;
+		}else{
+			 returnValue = tecProDao.deleteByMultipleId(delIds);
+			
+			return returnValue;
+		}
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TecProQuery query = new TecProQuery();
+		try {
+			return tecProDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TecPro> findPage(Page<TecPro> page, TecProQuery query) throws ServiceException
+	{
+		return tecProDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TecPro> findPage(Page<TecPro> page,String statement, TecProQuery query) throws ServiceException
+	{
+		return tecProDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TecPro> findList(TecProQuery query) throws ServiceException
+	{
+		return tecProDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TecPro> findList(TecProQuery query,Integer pageSize) throws ServiceException
+	{
+		return tecProDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TecPro> findList(TecProQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return tecProDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TecPro> findAllList() throws ServiceException
+	{
+		return tecProDao.findAllList();
+	}
+
+}

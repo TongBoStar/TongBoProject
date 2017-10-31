@@ -1,0 +1,2872 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Actions;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.PutstorageentityQuery;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IPutstorageentityService;
+import com.terrence.crm.dol.utils.CacheService;
+import com.terrence.crm.dol.service.IPdCategoryService;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/baseItem")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "baseItem." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class BaseItemAction extends CrudActionSupport<BaseItem>  implements ApplicationContextAware{
+
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+
+	@Autowired
+	@Qualifier("putstorageentityService")
+	private IPutstorageentityService putstorageentityService;
+	@Autowired
+	@Qualifier("pdCategoryService")
+	private IPdCategoryService pdCategoryService;
+	
+	private BaseItem entity;
+
+	
+	private BaseItemQuery baseItemQuery;
+	private PutstorageentityQuery putstorageentityQuery;
+	
+	
+	private java.lang.Long baseItemId;
+	
+	/** 分页器 */
+	private Page<BaseItem> page = new Page<BaseItem>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[3];
+	
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	private List<java.lang.String> checkedNumberList;
+	
+	private String propertyValue;
+	private ApplicationContext ctx;
+	
+	private List<BaseItem> baseItemList;
+	private String xlsfile;
+	
+	
+	
+	/**
+	 *<p>同步K3物料目录<p>.
+	 *Author:tianliyuan
+	 *CreatDate:2015-3-12上午13:37:27
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/syncK3ItemDetail")
+	public String syncK3ItemDetail() throws Exception {
+		try {
+			baseItemService.syncK3ItemDetail();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同步失败";
+		}
+		return JSON;
+	}
+	/**
+	 *<p>同步物料数据<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-5-6上午10:41:27
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/syncData")
+	public String syncData() throws Exception {
+		try {
+			baseItemService.SyncBaseItem();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同步失败";
+		}
+		return JSON;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (baseItemId != null ) {
+			entity = baseItemService.getById(baseItemId);
+		} else {
+			entity = new BaseItem();
+		}
+	}
+	public String showToList()throws Exception
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try{
+			baseItemQuery.setCheckedIdList(checkedIdList);
+		baseItemList=baseItemService.findList(baseItemQuery);
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询列表成功";
+		
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	 public String listToInventory()throws Exception
+		{
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			try{
+				baseItemList=baseItemService.findList("BaseItem.find.listToInventory", baseItemQuery);
+			
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}
+			return JSON;
+		}
+	
+	 public String listToInventoryadd()throws Exception
+		{
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			try{
+				baseItemList=baseItemService.findList("BaseItem.find.addlistToInventory", baseItemQuery);
+			
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}
+			return JSON;
+		}
+	
+	 
+	 
+	 
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			baseItemService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	@Action("/review/listToPdSolution")
+	public String listToPdSolution()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try 
+		{
+			page = baseItemService.findPage(page,"BaseItem.Pd.findPage", baseItemQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			baseItemList=baseItemService.findList(baseItemQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	
+	public String listAllName()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+			page.setPageSize(20);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			page=baseItemService.findPage(page, "BaseItem.findPage.namecode", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareSavebindPosition() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/bindPosition")
+	public String savebindPosition() throws Exception {
+		try {
+
+			String updateIds = StringUtils.join(checkedIdList, ",");
+			entity.setAllupdateid(updateIds);
+			baseItemService.update("BaseItem.update.BaseItemBindPosition", entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "绑定成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	/**
+	 *<p>同步K3物料目录<p>.
+	 *Author:tianliyuan
+	 *CreatDate:2015-3-12上午13:37:27
+	 * @return
+	 * @throws Exception
+	 */
+	/*@Action("/system/syncK3ItemDetail")
+	public String syncK3ItemDetail() throws Exception {
+		try {
+			baseItemService.syncK3ItemDetail();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同步失败";
+		}
+		return JSON;
+	}*/
+	/**
+	 *<p>同步物料数据<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-5-6上午10:41:27
+	 * @return
+	 * @throws Exception
+	 */
+	/*@Action("/system/syncData")
+	public String syncData() throws Exception {
+		try {
+			baseItemService.SyncBaseItem();
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "同步失败";
+		}
+		return JSON;
+	}*/
+	@Action("/system/listToTeamPosition")
+	public String listToTeamPosition()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			if(null!=baseItemQuery.getStorage()){
+				if(baseItemQuery.getStorage().intValue()!=-1){//未绑定
+					baseItemQuery.setDeptid(baseItemQuery.getUnbind().longValue());
+					baseItemQuery.setUnbind(null);
+				}
+			}
+			
+			baseItemQuery.setStorage(null);
+			page=baseItemService.findPage(page, "BaseItem.findList.listToTeamPosition", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	
+	@Action("/system/listToPosition")
+	public String listToPosition()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			if(null!=baseItemQuery.getStorage()&&baseItemQuery.getStorage().intValue()==-1){
+				baseItemQuery.setStorage(null);
+			}
+			page=baseItemService.findPage(page, "BaseItem.findList.listToPosition", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	@Action("/system/listToPositionsys")
+	public String listToPositionsys()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			
+			if(null!=baseItemQuery.getStorage()&&baseItemQuery.getStorage().intValue()==0){//0未绑定
+				baseItemQuery.setUnbind(1);
+				baseItemQuery.setStorage(null);
+			}
+			
+			page=baseItemService.findPage(page, "BaseItem.findList.listToPositionsys", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 
+	 */
+	public String listToItem()throws Exception
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.findPage.Order", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			//String categoryids=baseItemQuery.getCategoryids()+pdCategoryService.findSubNode(Long.parseLong(baseItemQuery.getCategoryids()));
+			//baseItemQuery.setCategoryids(categoryids);
+			page = baseItemService.findPage(page, baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	@Actions({@Action("/process/listToItem"),@Action("/system/listToItem")})
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/process/zlistToItem")
+	public String listToItemz() throws Exception {
+		
+		if (!page.isOrderBySetted()) {
+			//page.setOrderBy("baseItemId");
+			page.setOrderBy("t_base_item.itemcode");
+			page.setOrder(Page.DESC);
+		}
+		page.setOrderBy("t_base_item.itemcode");
+		page.setOrder(Page.ASC);
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		/**/
+		if(null!=baseItemQuery.getIds()&&"".equalsIgnoreCase(baseItemQuery.getIds())){
+				page.setOrderBy("t_base_item.baseitemid");
+				page.setOrder(Page.DESC);
+		}
+		if(null!=baseItemQuery.getIds()&&!"".equalsIgnoreCase(baseItemQuery.getIds())){
+			if("0".equalsIgnoreCase(baseItemQuery.getIds())){
+				page.setOrderBy("t_base_item.baseitemid");
+				page.setOrder(Page.DESC);
+			}
+		}
+		
+		
+		try {
+			//String categoryids=baseItemQuery.getCategoryids()+pdCategoryService.findSubNode(Long.parseLong(baseItemQuery.getCategoryids()));
+			//baseItemQuery.setCategoryids(categoryids);
+			//page = baseItemService.findPage(page, baseItemQuery);
+			if(null!=baseItemQuery.getItemparentcode()&&"ROOT".equals(baseItemQuery.getItemparentcode())){
+				baseItemQuery.setItemparentcode("");
+			}
+			//begin by tianliyuan for 修改物料列表 显示 没有禁用的物料 at 20150302
+			//baseItemQuery.setDeleted((short)0);//显示正常的
+			baseItemQuery.setDetail(true);//false 0 是目录,true 1 不是目录
+			baseItemQuery.setSortColumns("t_base_item.itemcode");
+			/*if(0==baseItemQuery.getBaseitemid()){
+				baseItemQuery.setSortColumns("t_base_item.baseitemid");
+			}*/
+			if(null!=baseItemQuery.getIds()&&"".equalsIgnoreCase(baseItemQuery.getIds())){
+				baseItemQuery.setSortColumns("t_base_item.baseitemid");
+		    }
+			if(null!=baseItemQuery.getIds()&&!"".equalsIgnoreCase(baseItemQuery.getIds())){
+				if("0".equalsIgnoreCase(baseItemQuery.getIds())){
+					baseItemQuery.setSortColumns("t_base_item.baseitemid");
+				}
+			}
+			//baseItemQuery.setFlevel("3");//flevel=3
+			//end   by tianliyuan for 修改物料列表 显示 没有禁用的物料 at 20150302
+			page = baseItemService.findPage(page, "BaseItem.findPage.z", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 保存或更新目录
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAllCategorybak() throws Exception {
+		
+		try {
+			//System.out.println("==进入saveOrUpdata方法：==========entity:"+entity.toString());
+			if(entity.getItemparentcode()==null)//这里等于ROOT
+			{
+				entity.setItemcode(entity.getShortnumber());
+				entity.setItemparentcode("");
+			}
+			else
+			{ 
+				if(entity.getItemparentcode().equals("ROOT"))
+				{
+					entity.setItemcode(entity.getShortnumber());
+				}
+				else
+				{
+					entity.setItemcode(entity.getItemparentcode()+"."+entity.getShortnumber());
+				}
+			}
+			
+			if(check()==0){//检查重复
+				//设置默认值
+				entity.setItemclass((long)4);
+				entity.setDeleted((short)0);
+				if(entity.getItemparentcode().equals("ROOT"))
+				{
+					entity.setFlevel("1");
+				}else{
+					entity.setFlevel("2");
+				}
+				//新添加的
+				entity.setDetail(false);//所有的一级,二级都为0
+				baseItemService.saveOrUpdateInfo(entity);
+				updateTreeCacheCategory();
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				resultInfo[2] = "opt";
+			}
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			resultInfo[2] = "opt";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			resultInfo[2] = "opt";
+			
+		}
+		return JSON;
+	}
+	/**
+	 * 保存或更新目录
+	 * @return
+	 * @throws Exception
+	 */
+	public String saveAllCategory() throws Exception {
+		
+		try {
+			//System.out.println("==进入saveOrUpdata方法：==========entity:"+entity.toString());
+			if(entity.getItemparentcode()==null)//这里等于ROOT
+			{
+				entity.setItemcode(entity.getShortnumber());
+				entity.setItemparentcode("");
+			}
+			else
+			{ 
+				if(entity.getItemparentcode().equals("ROOT"))
+				{
+					entity.setItemcode(entity.getShortnumber());
+				}
+				else
+				{
+					entity.setItemcode(entity.getItemparentcode()+"."+entity.getShortnumber());
+				}
+			}
+			
+			if(check()==0){//检查重复
+				//设置默认值
+				entity.setItemclass((long)4);
+				entity.setDeleted((short)0);
+				if(entity.getItemparentcode().equals("ROOT"))
+				{
+					entity.setFlevel("1");
+				}else{
+					entity.setFlevel("2");
+				}
+				//新添加的
+				entity.setDetail(false);//所有的一级,二级都为0
+				//begin 修需求修改不判断是否有孩子直接修改,如果有孩子,孩子的父级代码也被修改
+				
+				//end   修需求修改不判断是否有孩子直接修改,如果有孩子,孩子的父级代码也被修改
+//				if(null!=entity.getBaseitemid()){
+//					//修改操作
+//					
+//				}else{
+				     baseItemService.saveOrUpdateInfo(entity);
+//				}
+				updateTreeCacheCategory();
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				resultInfo[2] = "opt";
+			}
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			resultInfo[2] = "opt";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			resultInfo[2] = "opt";
+			
+		}
+		return JSON;
+	}
+	private String CATEGORYKEY="baseItemTree";
+	public String updateTreeCacheCategory()throws Exception
+	{
+	
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try
+		{
+			    baseItemQuery.setBaseitemid((long)0);
+				List< BaseItem > list=baseItemService.findList(baseItemQuery);
+				baseItemList=new ArrayList< BaseItem >();
+				for( BaseItem   baseItem :list)
+				{
+					tree+="<li><span pcode="+baseItem.getItemcode()+" ref="+baseItem.getBaseitemid()
+					+" lev="+baseItem.getShortnumber()//.getShortcode()
+					+" pid="+baseItem.getPid()+" spanname="
+					+baseItem.getItemname()
+					+" ><a href=\"javascript:;\" onclick=\"setmeasureCategory("+baseItem.getBaseitemid()
+					+",'"+baseItem.getItemname()+"','"+baseItem.getItemcode()+"');\">"
+					+baseItem.getItemcode()+"("+baseItem.getItemname()+")</a></span>"
+					+loopCategory(baseItem)+"</li>";
+				
+				}
+				CacheService.getInstance().replace(CATEGORYKEY, tree);
+		
+			resultInfo[0] = "0";
+			//resultInfo[1] = "查询列表成功";
+			resultInfo[2] = "opt";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			resultInfo[2] = "opt";
+		}
+		return JSON;
+	
+	}
+	public int check(){
+		//FitemId 存在说明是修改操作, 
+		if(null!=entity.getBaseitemid() ){
+			//查询t_base_item_parent 表看有孩子吗?
+			BaseItemQuery  query = new BaseItemQuery();
+			query.setPid(entity.getBaseitemid());
+			List< BaseItem > list=baseItemService.findList(query);
+			if(null!=list&&0<list.size()){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此节点下有子节点不允许做修改!";
+				resultInfo[2] = "updateopt";
+				return -1;
+			}
+			
+			BaseItemQuery baseItemQuery = new BaseItemQuery();
+			baseItemQuery.setItemparentcode(entity.getFoldnumber());
+			
+			if(null!=baseItemQuery.getItemparentcode()&&"ROOT".equals(baseItemQuery.getItemparentcode())){
+				baseItemQuery.setItemparentcode("");
+			}
+			page = baseItemService.findPage(page, "BaseItem.findPage.z", baseItemQuery);
+			if( 0<page.getTotalCount() ){//查询t_base_item3级的说明有孩子
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此节点下有子节点不允许做修改!";
+				resultInfo[2] = "updateopt";
+				return -1;
+			}
+			
+		}
+		
+		
+		BaseItemQuery  mcQuery = new BaseItemQuery();
+		mcQuery.setItemcode(entity.getItemcode());
+		//if(baseItemService.findList(mcQuery).size()>0&&entity.getBaseitemid()==null){//添加操作
+		if(baseItemService.findListv(mcQuery).size()>0&&entity.getBaseitemid()==null){//添加操作
+			resultInfo[0] = "-1";
+			resultInfo[1] = "此代码已存在!请重新编写!";
+			resultInfo[2] = "opt";
+			return -1;
+			
+		}else if(null!=entity.getBaseitemid()&&baseItemService.findList(mcQuery).size()>0){
+			List< BaseItem > clist = baseItemService.findList(mcQuery);
+			/*//FitemId 存在说明是修改操作,如果再通过 Fnumber查一下有结果数目大于1
+			if(null!=clist&&1<clist.size()){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此节点下有子节点不允许做修改!";
+				return -1;
+			}*/
+			long check=0;
+			for( BaseItem  m:clist){
+				if(m.getBaseitemid().longValue()!=entity.getBaseitemid().longValue()){//数据库判断查询出来的 fitemid与页面提交的fitemid 不一样
+					check++;
+				}
+			}
+			if(check>0){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此代码已存在!请重新编写!";
+				resultInfo[2] = "opt";
+				return -1;
+			}else{
+				return 0;
+			}
+							
+		}else{
+			return 0;
+			
+		}
+		
+	}
+	
+	public String showInfoToJson() throws Exception {
+		try {
+			entity = baseItemService.getById(baseItemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 删除目录操作
+	 * @return
+	 * @throws Exception
+	 */
+	public String deleteCategoryInfo() throws Exception {
+		
+		
+		try 
+		{
+			//System.out.println("fItemIDList:"+fItemIDList);
+			/**/if(baseItemService.deleteInfoById(baseItemId)==1)
+			{
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+			updateTreeCacheCategory();
+			}
+			else
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "不能删除包含子数据的节点";
+			}
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		
+		}
+		return JSON;
+	}
+	private String tree="";
+	public String listToCategoryTree()throws Exception
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try
+		{
+			baseItemQuery.setBaseitemid((long)0);
+			if(CacheService.getInstance().get(CATEGORYKEY)==null)
+				{
+			   List<BaseItem>  list=baseItemService.findListv(baseItemQuery);
+			   baseItemList=new ArrayList<BaseItem>();
+			   for(BaseItem  baseItem:list)
+				{
+					tree+="<li><span class=\"folder\" pcode="+baseItem.getItemcode()+" ref="+baseItem.getBaseitemid()
+					+" lev="+baseItem.getShortnumber()//.getShortcode()
+					+" level="+baseItem.getFlevel()//添加级别 1为1级 2为2级
+					+" name="+baseItem.getItemname()//当前节点的名称
+					+" pnumber="+baseItem.getItemcode()//当前节点的父编码
+					+" pid="+baseItem.getPid()+" spanname="
+					+baseItem.getItemname()
+					+" ><a href=\"javascript:;\" onclick=\"setmeasureCategory("+baseItem.getBaseitemid()
+					+",'"+baseItem.getItemname()+"','"+baseItem.getItemcode()+"');\">"
+					+baseItem.getItemcode()+"("+baseItem.getItemname()+")</a></span>"
+					+loopCategory(baseItem)+"</li>";
+				}
+			   
+				/*List<TWebBaseItemParent> list=webBaseItemParentService.findList(baseItemParentQuery);
+				webBaseItemParentList=new ArrayList<TWebBaseItemParent>();
+				for(TWebBaseItemParent tWebBaseItemParent:list)
+				{
+					tree+="<li><span pcode="+tWebBaseItemParent.getFnumber()+" ref="+tWebBaseItemParent.getFitemId()
+					+" lev="+tWebBaseItemParent.getFshortnumber()//.getShortcode()
+					+" level="+tWebBaseItemParent.getFlevel()//添加级别 1为1级 2为2级
+					+" name="+tWebBaseItemParent.getFname()//当前节点的名称
+					+" pnumber="+tWebBaseItemParent.getFnumber()//当前节点的父编码
+					+" pid="+tWebBaseItemParent.getFparentId()+" spanname="
+					+tWebBaseItemParent.getFname()
+					+" ><a href=\"javascript:;\" onclick=\"setmeasureCategory("+tWebBaseItemParent.getFitemId()
+					+",'"+tWebBaseItemParent.getFname()+"','"+tWebBaseItemParent.getFnumber()+"');\">"
+					+tWebBaseItemParent.getFnumber()+"("+tWebBaseItemParent.getFname()+")</a></span>"
+					+loopCategory(tWebBaseItemParent)+"</li>";
+				}*/
+				CacheService.getInstance().add(CATEGORYKEY, tree);
+			}else{
+				tree=(String)CacheService.getInstance().get(CATEGORYKEY);
+			}
+		
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String loopCategory(BaseItem baseItem)
+	{
+		BaseItemQuery baseItemQuery = new BaseItemQuery();
+		
+		baseItemQuery.setItemparentcode(baseItem.getItemcode());
+		baseItemQuery.setDeleted((short)0);//取出未删除的
+		baseItemQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+		baseItemQuery.setSortColumns("itemcode");
+		List<BaseItem> list=baseItemService.findListv(baseItemQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+baseItemQuery.getBaseitemid()+"\">");
+			for(BaseItem  baseItems:list)
+			{
+				
+				//再次查询当前显示的节点有孩子就为文件夹,没有就为文件
+				BaseItemQuery baseItemIsHavaChildQuery = new BaseItemQuery();
+				baseItemIsHavaChildQuery.setItemparentcode(baseItems.getItemcode());
+				baseItemIsHavaChildQuery.setDeleted((short)0);//取出未删除的
+				baseItemIsHavaChildQuery.setDetail(false);//树状列表只显示目录的数据在树列表中
+				List<BaseItem> listIsHavaChild=baseItemService.findListv(baseItemIsHavaChildQuery); 
+				if(null!=listIsHavaChild&&0<listIsHavaChild.size()){//folder
+					sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"folder\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				else{//file
+				
+				//判断是否为二级代码目录,如果是右键点击显示的是添加物料属性的页面
+				//if(null!=tWebBaseItemParents.getFlevel()&&1==tWebBaseItemParents.getFlevel()){
+				//if( Integer.valueOf(baseItems.getFlevel())==2){	
+				sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+							+"\"><span class=\"file\" pcode="+baseItems.getItemcode() 
+							+" ref="+baseItems.getBaseitemid()
+							+" lev="+baseItems.getShortnumber()//.getShortcode()
+							+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+							+" name="+baseItem.getItemname()//当前节点的名称
+							+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+							+" pid=\""+baseItems.getItemcode()
+							+"\"  spanname="+baseItems.getItemname()
+							+" ><a href=\"javascript:setmeasureCategory("
+							+baseItems.getBaseitemid()+",'"
+							+baseItems.getItemname()+"','"
+							+baseItems.getItemcode()+"');\" >"
+							+baseItems.getItemcode()+"("
+							+baseItems.getItemname()+")</a></span>"
+							+loopCategory(baseItems)+"</li>");
+				}
+				//}
+					/*if( Integer.valueOf(baseItems.getFlevel())<2){
+						sbuf.append("<li  id=\"li"+baseItems.getBaseitemid()
+								+"\"><span class=\"folder\" pcode="+baseItems.getItemcode() 
+								+" ref="+baseItems.getBaseitemid()
+								+" lev="+baseItems.getShortnumber()//.getShortcode()
+								+" level="+baseItems.getFlevel()//添加级别 1为1级 2为2级
+								+" name="+baseItem.getItemname()//当前节点的名称
+								+" pnumber="+baseItems.getItemcode()//当前节点的父编码
+								+" pid=\""+baseItems.getItemcode()
+								+"\"  spanname="+baseItems.getItemname()
+								+" ><a href=\"javascript:setmeasureCategory("
+								+baseItems.getBaseitemid()+",'"
+								+baseItems.getItemname()+"','"
+								+baseItems.getItemcode()+"');\" >"
+								+baseItems.getItemcode()+"("
+								+baseItems.getItemname()+")</a></span>"
+								+loopCategory(baseItems)+"</li>");
+					}*/
+					
+				/*}else if( null!=tWebBaseItemParents.getFlevel()&&2==tWebBaseItemParents.getFlevel() ){
+					sbuf.append("<li  id=\"li"+tWebBaseItemParents.getFitemId()
+							+"\"><span pcode="+tWebBaseItemParents.getFpnumber() 
+							+" ref="+tWebBaseItemParents.getFitemId()
+							+" lev="+tWebBaseItemParents.getFshortnumber()//.getShortcode()
+							+" pid=\""+tWebBaseItemParents.getFnumber()
+							+"\"  spanname="+tWebBaseItemParents.getFname()
+							+" ><a href=\"javascript:setmeasureCategory("  //这是单击后显示其孩子的链接
+							+tWebBaseItemParents.getFitemId()+",'"
+							+tWebBaseItemParents.getFname()+"','"
+							+tWebBaseItemParents.getFnumber()+"');\" >"
+							+tWebBaseItemParents.getFnumber()+"("
+							+tWebBaseItemParents.getFname()+")</a></span>"
+							+loopCategory(tWebBaseItemParents)+"</li>");
+				}*/
+				
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			baseItemService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	@Actions({@Action("/itemprocess/saveOrUpdateItem"),@Action("/itemprocess/check")})
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+
+	public void prepareUpdateItemwfstatus() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemprocess/updateItemwfstatus")
+	public String updateItemwfstatus() throws Exception {
+		
+		try {
+			baseItemService.updatewfstauts(entity);
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功";	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+		
+	@Action("/process/listToBaseItemProcess")
+	public String listToBaseItemProcess()throws Exception
+	{
+		try 
+		{
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			if(baseItemQuery.getParentcode()!=null&&!baseItemQuery.getParentcode().equals(""))
+			{
+				page=baseItemService.findPage(page,"BaseItem.Process.Parent.findPage",baseItemQuery);
+			}
+			else
+			{
+			page=baseItemService.findPage(page,"BaseItem.Process.findPage",baseItemQuery);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1"; 
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	@Action("/excel/saveExport")
+	public void saveExport(){
+		String filename=getRequest().getParameter("filename");
+		HSSFWorkbook wb = null;
+		try {
+			wb = new HSSFWorkbook(new FileInputStream(getRequest().getRealPath("/")+filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+			HttpServletResponse response = getResponse();
+			response.setContentType("application/vnd.ms-excel");
+			try {
+				if(getRequest().getParameter("filenametype").equals("1")){
+
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "物料表.xls".getBytes("gb2312"), "ISO8859-1" ) );					
+				}
+				else if(getRequest().getParameter("filenametype").equals("2"))
+				{
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "产品装配材料清单.xls".getBytes("gb2312"), "ISO8859-1" ) );	
+				}
+				else if(getRequest().getParameter("filenametype").equals("3"))
+				{
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "PLM物料表.xls".getBytes("gb2312"), "ISO8859-1" ) );	
+				}
+				else{
+
+					response.setHeader("Content-disposition","attachment; filename=" + new String( "工艺报表.xls".getBytes("gb2312"), "ISO8859-1" ) );	
+				}
+					OutputStream ouputStream = response.getOutputStream(); 
+					 wb.write(ouputStream);  
+					 ouputStream.flush();  
+					 ouputStream.close();
+					 new File(getRequest().getRealPath("/")+filename).delete();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	
+	@Action("/excel/exportAllitem")
+	public String exportAllitem(){
+		    try {
+		    	if(baseItemQuery == null) {
+					baseItemQuery = new BaseItemQuery();
+				}
+				String fileName = baseItemService.findAllitemXls(getRequest().getRealPath("/"),baseItemQuery);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	@Action("/excel/exportPLMItem")
+	public String exportPLMItem(){
+		    try {
+		    	if(baseItemQuery == null) {
+					baseItemQuery = new BaseItemQuery();
+				}
+				String fileName = baseItemService.findPLMItem(getRequest().getRealPath("/"),baseItemQuery);
+				resultInfo[0] = "0";
+				resultInfo[1] = fileName;
+			} catch (Exception e) {
+				resultInfo[0] = "-1"; 
+				resultInfo[1] = "操作失败";
+				e.printStackTrace();
+			}
+			return JSON;
+		    
+	}
+	
+	
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = baseItemService.getById(baseItemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	
+	@Action("/process/listToTopicSize")
+	public String listToTopicSize()
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.Topic.Size.findPage", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listTrialCode(){
+
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+		//	if(baseItemQuery.getIsaddtrial()==null||baseItemQuery.getIsaddtrial()==1){//已绑定
+				page = baseItemService.findPage(page,"BaseItem.Trial.findPagebind", baseItemQuery);
+		//	}else if(baseItemQuery.getIsaddtrial()==0){//未绑定
+		//		page = baseItemService.findPage(page,"BaseItem.Trial.findPageUnbind", baseItemQuery);	
+		//	}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	
+		
+	}
+	@Action("/process/listToPd")
+	public String listToPd() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			if(baseItemQuery.getCategoryids()!=null)
+			{
+			String categoryids=baseItemQuery.getCategoryids()+pdCategoryService.findSubNode(Long.parseLong(baseItemQuery.getCategoryids()));
+			baseItemQuery.setCategoryids(categoryids);
+			}
+			page = baseItemService.findPage(page, baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/process/listToPdBom")
+	public String listToPdBom() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			if(baseItemQuery.getCategoryids()!=null)
+			{
+			String categoryids=baseItemQuery.getCategoryids()+pdCategoryService.findSubNode(Long.parseLong(baseItemQuery.getCategoryids()));
+			baseItemQuery.setCategoryids(categoryids);
+			}
+			page = baseItemService.findPage(page,"BaseItem.findPage.bom",baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	public String listItemEntity()throws Exception
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			entity= baseItemService.getByProperty("t_base_item.itemcode",baseItemQuery.getItemcode());
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String listToEntity()throws Exception
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			baseItemList = baseItemService.findList(baseItemQuery,10);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/**
+	 * 列出盘库的物料信息
+	 * @return
+	 * @throws Exception
+	 */
+	public String listToEntityTakeStock()throws Exception 
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			//baseItemList = baseItemService.finditemforTakeStock(baseItemQuery);
+			baseItemList = baseItemService.finditemforTakeStock(baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listToEntityPorequest()throws Exception//添加采购申请单明细中用=============
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			baseItemList = baseItemService.finditemforPorequest(baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listAll() throws Exception {
+		try{
+			baseItemList = baseItemService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String importxls()throws Exception
+	{
+		try
+		{
+			baseItemService.saveOrUpdateXlsData(xlsfile);
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "导入失败";
+		}
+		return JSON;
+	}
+	public String importItemxls(){
+		try
+		{
+			baseItemService.saveOrUpdateItemXlsData(xlsfile);
+			resultInfo[0] = "0";
+			resultInfo[1] = "导入成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "导入失败";
+		}
+		return JSON;
+	}
+	
+	@Action("/system/listTobaseitem")
+	public String listTobaseitem()//采购系统，供应商管理中的物料管理列表
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.listBaseitem.findPage", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/system/listTobaseitemWU")
+	public String listTobaseitemWU()//采购系统，供应商管理中的物料管理列表没绑定
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.listBaseitem.findPage.WU", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/system/listTobaseitemBANG")
+	public String listTobaseitemBANG()//采购系统，供应商管理中的物料管理列表
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.listBaseitem.findPage.BANG", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+public String findBaseItem() throws Exception {
+		
+		try {
+			entity = baseItemService.getByIdBaseItem(baseItemId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+public String findBaseItemList() throws Exception {//2013-10-16 Y 采购系统物料管理
+	
+	try {
+		entity = baseItemService.findBaseItemList(baseItemId);
+		
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询成功";
+	} catch(ServiceException e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = e.getMessage();
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询失败";
+	}
+	return JSON;
+}
+
+public void prepareSaveANDupdate() throws Exception {
+	prepareModel();
+}
+@Action("/system/saveANDupdate")
+public String saveANDupdate() throws Exception {
+	
+	try {
+		baseItemService.saveANDupdate(entity);
+		
+		resultInfo[0] = "0";
+		resultInfo[1] = "操作成功";
+		
+		addActionMessage("操作成功");
+	} catch(ServiceException e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = e.getMessage();
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		
+		resultInfo[0] = "-1";
+		resultInfo[1] = "操作失败";
+	
+	}
+	return JSON;
+}
+	// -------------------自定义方法
+	public void prepareSaveItem() throws Exception {
+		prepareModel();
+	}
+	public String saveItem() throws Exception {
+			int i=baseItemService.saveIte(entity,baseItemQuery);
+			if(i==-1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "物料编码已存在！！请重新输入！！";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功！";
+
+			}
+		return JSON;
+	}
+	public void prepareUpdateToJson()throws Exception
+	{
+		prepareModel();
+	}
+	public String updateToJson()throws Exception
+	{
+		try {
+			String ids = StringUtils.join(checkedIdList, ",");
+			entity.setIds(ids);
+			baseItemService.update("BaseItem.update.category", entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public String releasebind()throws Exception
+	{
+		
+		try {
+			String ids = StringUtils.join(checkedIdList, ",");
+			BaseItem item=new BaseItem();
+			item.setIds(ids);
+			baseItemService.update("BaseItem.update.category.release", item);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	//------------------------------------------------------
+	public void prepareUpdateBaseItem() throws Exception {
+		prepareModel();
+	}
+	public String updateBaseItem(){
+		BaseItem baseItem=new BaseItem(); 
+		try {
+			baseItem= baseItemService.getByProperty("itemcode", entity.getItemcode());
+			baseItem.setWfstatus(1);//待审核
+			baseItemService.update(baseItem);
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "更新成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "更新失败";
+		}
+		return JSON;
+	}
+	//-----------------------
+	public void prepareShowByCodes() throws Exception {
+		prepareModel();
+	}
+	public String showByCodes(){
+		 
+		try {
+			entity= baseItemService.getByProperty("itemcode", entity.getItemcode());
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "更新成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "更新失败";
+		}
+		return JSON;
+	}	
+	
+	//------------------------
+
+	
+	/**
+	 * 新增计划计算已审，未审计划量，已有订单量，预测，总需求
+	 * @throws Exception
+	 */
+	public String computeplannum()throws Exception
+	{
+		try{
+			baseItemService.updateItem();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public void prepareUpdateItem() throws Exception {
+		prepareModel();
+	}
+	public String updateItem()
+	{
+		try {
+			baseItemService.update(entity);
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "更新成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public void prepareUpdatefinspectionlevel() throws Exception {
+		prepareModel();
+	}
+	public String updatefinspectionlevel()
+	{
+		try {
+			baseItemService.updatefinspectionlevel(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "更新成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+
+	
+	public void prepareBaseitemList() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/baseitem")	
+	public String baseitemList() throws Exception {
+		
+		try {
+			entity = baseItemService.getByProperty("itemcode", entity.getItemcode());
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败!";
+			e.printStackTrace();
+		}
+			
+		return JSON;
+	}
+	@Action("/system/baseitemVer")	
+	public String baseitemListVer() throws Exception {
+		
+		try {
+			entity = baseItemService.getByEntityVer("BaseItem.getByEntityVer",baseItemQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败!";
+			e.printStackTrace();
+		}
+			
+		return JSON;
+	}
+
+	public void prepareUpdateItemPicPath() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/updateItemPicPath")	
+	public String updateItemPicPath() throws Exception {
+		
+		try {
+			 baseItemService.update(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败!";
+			e.printStackTrace();
+		}
+			
+		return JSON;
+	}
+	
+	public void prepareUpdateById()throws Exception
+	{
+		prepareModel();
+	}
+	//---------------2013-8-10 自定义方法 --批量修改 
+	@Action("/system/updateById")
+	public String updateById()throws Exception
+	{
+		try {
+			String ids = StringUtils.join(checkedIdList, ",");
+			entity.setIds(ids);
+			if(null!=entity.getFinspectionlevel()){
+				baseItemService.updateFinspectionlevel(entity);
+			}else {
+				baseItemService.updateById(entity);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	/**
+	 * 按照选择的导出物料
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/exportItemPLMItem")
+	public String exportItemPLMItem() throws Exception
+	{
+		try {
+			//查找当前批量中在排产或K3中有库存
+			String ids = StringUtils.join(checkedIdList, ",");
+			if(null==entity){
+				entity=new BaseItem();
+			}
+			entity.setIds(ids);
+			String  fileName = baseItemService.exportItemPLMItem(entity,getRequest().getRealPath("/"));
+			resultInfo[0] = "0";
+			resultInfo[1] = fileName;
+		} catch (Exception e) {
+			resultInfo[0] = "-1"; 
+			resultInfo[1] = "操作失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/**
+	 * 删除叶子节点做禁用
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/deleteItemByIds")
+	public String deleteItemByIds()throws Exception
+	{
+		try {
+			//查找当前批量中在排产或K3中有库存
+			String ids = StringUtils.join(checkedIdList, ",");
+			if(null==entity){
+				entity=new BaseItem();
+			}
+			entity.setIds(ids);
+			
+			String[] itemIsinventoryarr= baseItemService.findItemIsinventory(entity);
+			if(null!=itemIsinventoryarr){
+				if(null!=itemIsinventoryarr[0]&&!"".equalsIgnoreCase(itemIsinventoryarr[0])){//排产
+					resultInfo[0] = "-1";
+					resultInfo[1] = "物料:"+itemIsinventoryarr[0]+"在排产中有库存不能禁用";
+					return JSON;
+				}
+				if(null!=itemIsinventoryarr[1]&&!"".equalsIgnoreCase(itemIsinventoryarr[1])){//K3
+					resultInfo[0] = "-1";
+					resultInfo[1] = "物料:"+itemIsinventoryarr[1]+"在K3中有库存不能禁用";
+					return JSON;
+				}
+			}
+			//走到这里说明准备禁用的物料在排产中和K3中都没有库存,做禁用操作
+			entity.setDeleted((short)1);//假删除
+			baseItemService.updateByIdWithK3(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功"); 
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	/**
+	 * 做启用
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/updateItemInfosUndelete")
+	public String updateItemInfosUndelete()throws Exception
+	{
+		try {
+			//传递的全是已经禁用的,启用不需要判断物料在排产中和K3中是否有库存,直接做启用操作
+			String ids = StringUtils.join(checkedIdList, ",");
+			if(null==entity){
+				entity=new BaseItem();
+			}
+			entity.setIds(ids);
+			entity.setDeleted((short)0);//启用
+			baseItemService.updateByIdWithK3(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	public void prepareUpdateBaseItemById()throws Exception
+	{
+		prepareModel();
+	}
+	@Action("/system/updateBaseItemById")
+	public String updateBaseItemById()throws Exception//采购系统，供应商管理，物料管理：物料绑定方法
+	{
+		try {
+			String ids = StringUtils.join(checkedIdList, ",");
+			entity.setIds(ids);
+			baseItemService.updateBaseItemById(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+	
+	
+	
+	public String showpositionBycode(){
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			entity=baseItemService.getByProperty("itemcode", baseItemQuery.getItemcode());
+			//entity=baseItemService.getpositionBycode(baseItemQuery.getItemcode());
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败!";
+			e.printStackTrace();
+		}
+			
+		return JSON;
+	}
+	public String showpositionall(){
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			entity=baseItemService.getpositionBycode(baseItemQuery.getItemcode());
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功！";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败!";
+			e.printStackTrace();
+		}
+			
+		return JSON;
+	}
+	
+	public void prepareUpdateBaseItemBangById()throws Exception
+	{
+		prepareModel();
+	}
+	public String updateBaseItemBangById()throws Exception//方案绑定
+	{
+		try {
+			String ids = StringUtils.join(checkedIdList, ",");
+			entity.setIds(ids);
+			baseItemService.updateBaseItemBangById(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareSaveSolution()throws Exception
+	{
+		prepareModel();
+	}
+	@Action("/pdlist/saveSolution")
+	public String saveSolution() throws Exception {//产品方案绑定pdlist.jsp
+		
+		try {
+			baseItemService.saveSolution(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		
+		}
+		return JSON;
+	}
+	
+	@Action("/pdlist/showSolution")
+	public String showSolution() throws Exception {//产品方案回显
+			
+			try {
+				entity = baseItemService.getSolutionById(baseItemId);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询失败";
+			}
+			return JSON;
+		}
+		
+	
+	/**
+	 * 物料装配方案查询
+	 * @return
+	 */
+	public String listToScheme()
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			//page = baseItemService.findPage(page,"BaseItem.material.assembly.scheme.findPage", baseItemQuery);
+			page = baseItemService.findPage(page,"BaseItem.material.assembly.scheme.findPage.NEW", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareUpdateGuide() throws Exception {
+		prepareModel();
+	}
+	@Action("/baseguide/updateGuide")
+	public String updateGuide() throws Exception {
+		try {
+
+			String updateIds = StringUtils.join(checkedIdList, ",");
+			entity.setBaseitemids(updateIds);
+			entity.setGuideis(1);
+			baseItemService.update("BaseItem.update.data.to.guide", entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "绑定成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	@Action("/baseItemUpdate/updateReopid")
+	public String updateReopid() throws Exception {
+		try {
+			BaseItem bi = new BaseItem();
+			String updateIds = StringUtils.join(checkedIdList, ",");
+			bi.setBaseitemids(updateIds);
+			bi.setRpid(baseItemQuery.getRpid());
+			
+			baseItemService.update("BaseItem.update.for.the.rpid", bi);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "绑定成功！";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String findbaseguide()throws Exception//查询
+	{
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try {
+			entity=baseItemService.findbaseguide(baseItemQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	public String findInKey()throws Exception
+	{
+		try {
+			entity=baseItemService.findInKey(baseItemQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+			
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 080、081物料查询(关联关键件)
+	 * @return
+	 */
+	public String finditemcode()
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.key.itemcode.findData.findPage", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 序列号管理列表查询
+	 * @return
+	 */
+	public String findserialNum()
+	{
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("baseItemId");
+			page.setOrder(Page.DESC);
+		}
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		
+		try {
+			page = baseItemService.findPage(page,"BaseItem.findPage.serialNumber.management", baseItemQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public void prepareBindFReport() throws Exception {
+		prepareModel();
+	}
+	public String bindFReport(){
+		try {
+			baseItemService.updateByRpid(entity,checkedIdList);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public void prepareUpdateCheckStatus() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemprocess/uncheck")
+	public String updateCheckStatus() throws Exception {
+		
+		try {
+			//baseItemService.update(entity);
+			baseItemService.updateVersion(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功";	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	public void prepareUpdatecheckwfstatus() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemprocess/updatecheckwfstatus")
+	public String updatecheckwfstatus() throws Exception {
+		
+		try {
+			baseItemService.updatecheckwfstauts(entity);
+
+			resultInfo[0] = "0";
+			resultInfo[1] = "修改成功";	
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+	//------------------------------
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public BaseItem getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public BaseItemQuery getBaseItemQuery() {
+		return baseItemQuery;
+	}
+
+	
+	public void setBaseItemQuery(BaseItemQuery baseItemQuery) {
+		this.baseItemQuery = baseItemQuery;
+	}
+
+	public void setBaseItemId(java.lang.Long baseItemId) {
+		this.baseItemId = baseItemId;
+	}
+	
+	
+	public java.lang.Long getBaseItemId() {
+		return this.baseItemId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<BaseItem> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<BaseItem> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<BaseItem> getBaseItemList() {
+		return baseItemList;
+	}
+
+	public String getXlsfile() {
+		return xlsfile;
+	}
+
+	public void setXlsfile(String xlsfile) {
+		this.xlsfile = xlsfile;
+	}
+
+	public String getPropertyValue() {
+		return propertyValue;
+	}
+
+	public void setPropertyValue(String propertyValue) {
+		this.propertyValue = propertyValue;
+	}
+
+public String showbatchSN()throws Exception{
+	
+		if(baseItemQuery == null) {
+			baseItemQuery = new BaseItemQuery();
+		}
+		try{
+		
+			if(baseItemQuery.getIsbatch().intValue()==1){//批次管理
+				baseItemList=baseItemService.findList("BaseItem.findList.getbatch", baseItemQuery);
+			}else{//序列号管理
+				baseItemList=baseItemService.findList("BaseItem.findList.getSN", baseItemQuery);
+			}
+			
+	
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询列表成功";
+		
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+
+public String showBaseFqty()throws Exception{
+	
+	if(baseItemQuery == null) {
+		baseItemQuery = new BaseItemQuery();
+	}
+	try{
+		System.out.println("============="+baseItemQuery.getItemcode());
+		entity=baseItemService.getByBaseFqty("BaseItem.getBaseFqty", baseItemQuery);
+
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询列表成功";
+	
+	} catch (Exception e) {
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询列表失败";
+	}
+	
+	
+	return JSON;
+}
+
+
+public String showtopicid()throws Exception{
+	
+	if(baseItemQuery == null) {
+		baseItemQuery = new BaseItemQuery();
+	}
+	try{
+		
+		entity=baseItemService.getByBaseFqty("BaseItem.gettopicid", baseItemQuery);
+
+		resultInfo[0] = "0";
+		resultInfo[1] = "查询列表成功";
+	
+	} catch (Exception e) {
+		resultInfo[0] = "-1";
+		resultInfo[1] = "查询列表失败";
+	}
+	
+	
+	return JSON;
+}
+
+public BaseItem getEntity() {
+	return entity;
+}
+public void setEntity(BaseItem entity) {
+	this.entity = entity;
+}
+
+
+public PutstorageentityQuery getPutstorageentityQuery() {
+	return putstorageentityQuery;
+}
+public void setPutstorageentityQuery(PutstorageentityQuery putstorageentityQuery) {
+	this.putstorageentityQuery = putstorageentityQuery;
+}
+public String getTree() {
+	return tree;
+}
+public void setTree(String tree) {
+	this.tree = tree;
+}
+public List<java.lang.String> getCheckedNumberList() {
+	return checkedNumberList;
+}
+public void setCheckedNumberList(List<java.lang.String> checkedNumberList) {
+	this.checkedNumberList = checkedNumberList;
+}
+	
+	/*
+	装配:
+		生产任务单表 ----t_assembly_task
+		领料单表--------t_picking_detail
+		质检单表--------t_pd_qm
+		入库单表--------t_putstorageentitywo 
+	*/	
+			
+	
+
+		public String showCertificateUrl()throws Exception{
+			
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try{
+		
+				baseItemList=baseItemService.findList("BaseItem.findlist.findurl", baseItemQuery);
+		
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+				
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+			}
+			return JSON;
+			
+		}
+	
+		
+public String showBySn()throws Exception{
+			
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try{
+		
+				entity=baseItemService.getByTecsn("BaseItem.getByTecsn", baseItemQuery);
+		
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+				
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+			}
+			return JSON;
+			
+		}
+		
+
+public String showBySnzj()throws Exception{
+			
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try{
+		
+				entity=baseItemService.getByTecsn("BaseItem.getByTecsnzj", baseItemQuery);
+		
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+				
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+			}
+			return JSON;
+			
+		}
+		
+		public String findBaseItemCallslip()throws Exception{
+			
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try{
+				baseItemList=baseItemService.getBaseItemCallslip(baseItemQuery);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+				
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+			}
+			return JSON;
+			
+		}
+		/**
+		 * 采购申请单根据物料编码查询物料相关信息
+		 * @return
+		 * @throws Exception
+		 */
+		public String findBaseItemPorequest()throws Exception{
+			
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try{
+				baseItemList=baseItemService.findBaseItemPorequest(baseItemQuery);
+				if(baseItemList!=null&&baseItemList.size()>0){
+					this.entity=baseItemList.get(0);
+				}else{
+					this.entity = new BaseItem();
+				}
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				entity.setCreatedateBegin(sdf.format(new Date()));
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+				
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败("+e.getMessage()+")";
+			}
+			return JSON;
+			
+		}
+		public String findBaseItemPoorder()throws Exception//添加采购订单明细中用=============
+		{
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			
+			try {
+				baseItemList = baseItemService.finditemforPorequest(baseItemQuery);
+				if(baseItemList!=null&&baseItemList.size()>0){
+					this.entity=baseItemList.get(0);
+				}else{
+					this.entity = new BaseItem();
+				}
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}
+			return JSON;
+		}
+		public ApplicationContext getCtx() {
+			return ctx;
+		}
+		public void setCtx(ApplicationContext ctx) {
+			this.ctx = ctx;
+		}
+		
+		/**系统订单中物料列表查询*/
+		public String listItemInfo() throws Exception {
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			baseItemList = new ArrayList<BaseItem>();
+			try {
+				baseItemList  = baseItemService.listItemInfo(baseItemQuery);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}
+			return JSON;
+		}
+		/**系统订单中物料选择后回显*/
+		public String chooseItem() throws Exception {
+			if(baseItemQuery == null) {
+				baseItemQuery = new BaseItemQuery();
+			}
+			this.entity = new BaseItem();
+			try{
+				this.entity = baseItemService.getItemInfoByFNumber(baseItemQuery.getItemcode());
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询成功";
+			} catch (Exception e) {
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询失败("+e.getMessage()+")";
+			}
+			return JSON;
+		}
+}

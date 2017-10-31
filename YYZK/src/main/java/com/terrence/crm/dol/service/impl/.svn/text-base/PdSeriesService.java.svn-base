@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdSeries;
+import com.terrence.crm.dol.query.PdSeriesQuery;
+import com.terrence.crm.dol.dao.IPdSeriesDao;
+import com.terrence.crm.dol.service.IPdSeriesService;
+
+@Service
+@Transactional
+public class PdSeriesService extends BaseService implements IPdSeriesService {
+	protected static Logger logger = LoggerFactory.getLogger(PdSeriesService.class);
+	@Autowired
+	@Qualifier("pdSeriesDao")
+	private IPdSeriesDao pdSeriesDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdSeries";
+	}
+	@Transactional(readOnly=true)
+	public PdSeries getById(java.lang.Long id) throws ServiceException
+	{
+		return pdSeriesDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdSeries entity) throws ServiceException
+	{
+		pdSeriesDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdSeries entity) throws ServiceException
+	{
+		Long adId = pdSeriesDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdSeries entity) throws ServiceException
+	{
+		Integer returnValue =  pdSeriesDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdSeriesDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdSeriesDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdSeriesQuery query = new PdSeriesQuery();
+		try {
+			return pdSeriesDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdSeries> findPage(Page<PdSeries> page, PdSeriesQuery query) throws ServiceException
+	{
+		return pdSeriesDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdSeries> findPage(Page<PdSeries> page,String statement, PdSeriesQuery query) throws ServiceException
+	{
+		return pdSeriesDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdSeries> findList(PdSeriesQuery query) throws ServiceException
+	{
+		return pdSeriesDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdSeries> findList(PdSeriesQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdSeriesDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdSeries> findList(PdSeriesQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdSeriesDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdSeries> findAllList() throws ServiceException
+	{
+		return pdSeriesDao.findAllList();
+	}
+
+}

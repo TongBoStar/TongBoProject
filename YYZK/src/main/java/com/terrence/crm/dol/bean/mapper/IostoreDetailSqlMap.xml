@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="IostoreDetail">
+
+<resultMap id="RM.IostoreDetail" class="com.terrence.crm.dol.bean.IostoreDetail">
+	<result property="id" column="id"/>
+	<result property="fid" column="fid"/>
+	<result property="itemCode" column="itemCode"/>
+	<result property="itemName" column="itemName"/>
+	<result property="itemMode" column="itemMode"/>
+	<result property="funit" column="funit"/>
+	<result property="fqty" column="fqty"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="IostoreDetail.columns">
+	<![CDATA[
+		t_iostore_detail.id ,
+		t_iostore_detail.fid ,
+		t_iostore_detail.itemCode ,
+		t_iostore_detail.itemName ,
+		t_iostore_detail.itemMode ,
+		t_iostore_detail.funit ,
+		t_iostore_detail.fqty
+	]]>
+</sql>
+
+<insert id="IostoreDetail.insert" >
+	<![CDATA[
+	INSERT INTO t_iostore_detail (
+		fid,
+		itemCode,
+		itemName,
+		itemMode,
+		funit,
+		fqty
+	) VALUES (
+		#fid#,
+		#itemCode#,
+		#itemName#,
+		#itemMode#,
+		#funit#,
+		#fqty#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="IostoreDetail.update" parameterClass="com.terrence.crm.dol.bean.IostoreDetail"> 
+	UPDATE t_iostore_detail 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="fid">
+			fid = #fid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemCode">
+			itemCode = #itemCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemName">
+			itemName = #itemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="itemMode">
+			itemMode = #itemMode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="funit">
+			funit = #funit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fqty">
+			fqty = #fqty# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="IostoreDetail.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_iostore_detail.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fid">
+			t_iostore_detail.fid = #fid# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemCode">
+			t_iostore_detail.itemCode = #itemCode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemName">
+			t_iostore_detail.itemName = #itemName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemMode">
+			t_iostore_detail.itemMode = #itemMode# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="funit">
+			t_iostore_detail.funit = #funit# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fqty">
+			t_iostore_detail.fqty = #fqty# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="IostoreDetail.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_iostore_detail.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fid">
+		t_iostore_detail.fid = #fid# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemCode">
+		t_iostore_detail.itemCode = #itemCode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemName">
+		t_iostore_detail.itemName = #itemName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemMode">
+		t_iostore_detail.itemMode = #itemMode# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="funit">
+		t_iostore_detail.funit = #funit# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fqty">
+		t_iostore_detail.fqty = #fqty# 
+	</isNotEmpty>
+</sql>
+
+<select id="IostoreDetail.getById" resultMap="RM.IostoreDetail">
+	select <include refid="IostoreDetail.columns"/> from t_iostore_detail where id=#id#
+</select>
+
+<select id="IostoreDetail.getByProperty" resultMap="RM.IostoreDetail">
+	select <include refid="IostoreDetail.columns"/> from t_iostore_detail where $propertyName$=#propertyValue#
+</select>
+
+<delete id="IostoreDetail.delete">
+	<![CDATA[
+		DELETE FROM t_iostore_detail WHERE id=#id#
+	]]>
+</delete>
+<delete id="IostoreDetail.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_iostore_detail WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="IostoreDetail.findPage.count" resultClass="long">
+	select count(*) from t_iostore_detail <include refid="IostoreDetail.findPage.where"/>
+</select>
+
+<select id="IostoreDetail.findPage" resultMap="RM.IostoreDetail">
+	select <include refid="IostoreDetail.columns"/> 
+		from t_iostore_detail 
+	<include refid="IostoreDetail.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="IostoreDetail.findList" resultMap="RM.IostoreDetail">
+	SELECT <include refid="IostoreDetail.columns"/> FROM t_iostore_detail
+	<include refid="IostoreDetail.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+<delete id="IostoreDetail.delete.iostoreId">
+	<![CDATA[
+		DELETE FROM t_iostore_detail WHERE fbillno ='$ids$'
+	]]>
+</delete>
+</sqlMap>

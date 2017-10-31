@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ReportPackage;
+import com.terrence.crm.dol.query.ReportPackageQuery;
+import com.terrence.crm.dol.dao.IReportPackageDao;
+import com.terrence.crm.dol.service.IReportPackageService;
+
+@Service
+@Transactional
+public class ReportPackageService extends BaseService implements IReportPackageService {
+	protected static Logger logger = LoggerFactory.getLogger(ReportPackageService.class);
+	@Autowired
+	@Qualifier("reportPackageDao")
+	private IReportPackageDao reportPackageDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ReportPackage";
+	}
+	@Transactional(readOnly=true)
+	public ReportPackage getById(java.lang.Long id) throws ServiceException
+	{
+		return reportPackageDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ReportPackage entity) throws ServiceException
+	{
+		reportPackageDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ReportPackage entity) throws ServiceException
+	{
+		Long adId = reportPackageDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ReportPackage entity) throws ServiceException
+	{
+		Integer returnValue =  reportPackageDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = reportPackageDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = reportPackageDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ReportPackageQuery query = new ReportPackageQuery();
+		try {
+			return reportPackageDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ReportPackage> findPage(Page<ReportPackage> page, ReportPackageQuery query) throws ServiceException
+	{
+		return reportPackageDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ReportPackage> findPage(Page<ReportPackage> page,String statement, ReportPackageQuery query) throws ServiceException
+	{
+		return reportPackageDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportPackage> findList(ReportPackageQuery query) throws ServiceException
+	{
+		return reportPackageDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportPackage> findList(ReportPackageQuery query,Integer pageSize) throws ServiceException
+	{
+		return reportPackageDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ReportPackage> findList(ReportPackageQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return reportPackageDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ReportPackage> findAllList() throws ServiceException
+	{
+		return reportPackageDao.findAllList();
+	}
+
+}

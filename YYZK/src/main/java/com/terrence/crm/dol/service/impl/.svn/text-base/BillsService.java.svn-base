@@ -1,0 +1,129 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Bills;
+import com.terrence.crm.dol.dao.IBillsDao;
+import com.terrence.crm.dol.query.BillsQuery;
+import com.terrence.crm.dol.service.IBillsService;
+
+@Service
+@Transactional
+public class BillsService extends BaseService implements IBillsService {
+	protected static Logger logger = LoggerFactory.getLogger(BillsService.class);
+	@Autowired
+	@Qualifier("billsDao")
+	private IBillsDao billsDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Bills";
+	}
+	@Transactional(readOnly=true)
+	public Bills getById(java.lang.Long id) throws ServiceException
+	{
+		return billsDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Bills entity) throws ServiceException
+	{
+		billsDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Bills entity) throws ServiceException
+	{
+		Long adId = billsDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Bills entity) throws ServiceException
+	{
+		Integer returnValue =  billsDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = billsDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = billsDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		BillsQuery query = new BillsQuery();
+		try {
+			return billsDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Bills> findPage(Page<Bills> page, BillsQuery query) throws ServiceException
+	{
+		return billsDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Bills> findPage(Page<Bills> page,String statement, BillsQuery query) throws ServiceException
+	{
+		return billsDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Bills> findList(BillsQuery query) throws ServiceException
+	{
+		return billsDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Bills> findList(BillsQuery query,Integer pageSize) throws ServiceException
+	{
+		return billsDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Bills> findList(BillsQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return billsDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Bills> findAllList() throws ServiceException
+	{
+		return billsDao.findAllList();
+	}
+	@Override
+	public Bills getByBill(String statement, BillsQuery billsQuery)
+			throws ServiceException {
+		return billsDao.getByColumn(statement, billsQuery.getDispatchid().toString());
+	}
+
+}

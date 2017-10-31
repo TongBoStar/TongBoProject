@@ -1,0 +1,1748 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="zh_cn">
+<head>
+<title>用户信息列表</title>
+<%@ include file="/sysresources/common/include.jsp"%>
+<script type="text/javascript" src="${ctx}/scripts/jquery.ztree.all-3.1.min.js"></script>
+<link href="${ctx}/css/zTreeStyle/zTreeStyle.css" type="text/css" rel="stylesheet" />
+<style type="text/css">
+.affirmlayer{top:10;left:10;width:500px;border:3px solid #E7EFF1;background:#fff;border-radius:5px!important;}
+.affirmlayer h2{height:30px;border-bottom:1px solid #ccc;padding:5px 5px;font-size:14px;background:#E7EFF1;}
+.titleh2{height:30px;border-bottom:1px solid #ccc;padding:0 10px;font-size:14px;margin:0 0px;color:#666;width:100%;}
+.nobdTB{background:#fff;}
+.nobdTB tr td{padding:0 5px 7px; font-size:12px; vertical-align:middle;}
+input.inputall{border:1px #ccc solid; width:174px; height:20px;}
+</style>
+<script language="JavaScript" type="text/JavaScript"> 
+$(document).ready(function() {
+	window.simpleTable =$(document).SimpleTable({
+		id:'adminpage',
+		formId: 'queryForm',
+		pageNo: '1',
+		pageSize : '20',
+		order: 'asc',
+		orderBy: 't_admin.adminId',
+		submitForm : submitadminForm//分页回调函数
+	});
+	
+	//loadTeam();	
+	loadadmin();
+});
+
+function submitadminForm(simpleTable, param)
+{
+		loadadmin();
+}
+
+/**
+ * 查询管理员
+ */
+var m=0; 
+function loadadmin() {
+	openblockdiv();
+	var html='';
+	var pageParam = simpleTable.bindPageParam();
+	var formParam = $('#queryForm').serialize();
+	var url = ctx + '/admin/admin!listToJson.htm';
+	var teamid="";
+	if(m==0){
+		if('${param.teamid}'!=''){
+		teamid='adminQuery.teamid='+'${param.teamid}';
+		m=1;
+		}
+	}
+	var html = '';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data :pageParam +'&'+formParam+'&'+teamid,
+		success : function(data) {
+			data = $.parseJSON(data);
+			
+			var page = data.page;
+				$.refreshPageToolbar(page,"adminpage",simpleTable);
+				$.each(page.result, function(i, o){
+					
+					html += '<tr>';
+					html += '	<td><input type="checkbox" id="checkedAdmin" name="checkedAdmin" value="' + o.adminId + '"/></td>';
+					html += '	<td><a href="javascript:modifyAdmin(\'' + o.adminId + '\')"><img src="${ctx}/images/icon01.gif"/></a> | <a href="javascript:delAdmin(\'' + o.adminId + '\')"><img src="${ctx}/images/delete_small.gif"/></a></td>';
+					html += '<td><input type="button" value="客户组" class="btnred" onclick="addClientgrant('+o.adminId+')"/></td>';
+					html += '	<td>' + o.adminName + '</td>';
+					/* if(o.type==1){
+					html += '	<td>管理员</td>';
+					}else
+					if(o.type==2){
+					html += '	<td>班长</td>';
+					}else
+					if(o.type==3){
+					html += '	<td>普通用户</td>';
+					}else if(o.type==4){
+						html += '<td>经销商</td>';
+					}else{
+						html += '<td></td>';
+					} */
+					
+					
+					
+					html+= '<td>'+(o.loginName!=null?o.loginName:"")+'</td>';
+					html+= '<td>'+(o.dept==null?"":o.dept.teamname)+'</td>';
+					/* html+= '<td>'+(o.tefname==null?"":o.tefname)+'</td>';
+					html+='<td>'+(o.duty==null?"":o.duty.dutyname)+'</td>';
+					html+='<td>'+(o.superiorname==null?"":o.superiorname)+'</td>';
+					html+='<td>'+(o.areaname==null?"":o.areaname)+'</td>';
+					html+='<td>'+(o.salemname==null?"":o.salemname)+'</td>';
+					html+='<td>'+(o.amanagername==null?"":o.amanagername)+'</td>';
+					//html+='<td>'+(o.provincename==null?"":o.provincename)+'</td>';
+					if(o.aplist!=null && o.aplist.length>0){
+						var apstr="";
+						html+='<td><select class="selectall">';
+						//html+='<option selected="selected">查看</optiong>';
+						for(var tt=0;tt<o.aplist.length;tt++){
+							if((tt+1)==o.aplist.length){
+								apstr+=o.aplist[tt].provincename;
+							}else{
+								apstr+=o.aplist[tt].provincename + ",";
+							}
+							html+='<option>'+o.aplist[tt].provincename+'</optiong>';
+						}
+						//html+='<td><a href="javascript:showPro(\''+apstr+'\')" onMouseOver="javascript:showDiv(\''+apstr+'\')">查看</a></td>';
+						//html+='<td><a title="'+apstr+'">查看</a></td>';
+						html+='</select></td>';
+						//html+='<td><a href="javascript:showPro(\''+apstr+'\')" >查看</a></td>';
+					}else{
+						html+='<td></td>';
+					} */
+					
+					html += '	<td>' + (o.lastLoginTimeString != null?o.lastLoginTimeString:"") + '</td>';					
+					var status = '未知';
+					if(o.status == 0) {
+						status = '正常';
+					} else if(o.status == 1) {
+						status = '锁定';
+					}
+					html += '	<td>' + status +'</td>';
+					
+					html += '</tr>';
+					
+				});
+				$('#data-body').html(html);
+				closeblockdiv();
+		}
+	});
+}
+
+function lookprov(){
+
+}
+
+
+
+/**
+ * 添加管理员
+ */
+function addAdmin() {
+	if('${param.teamid}'!=''){
+	//window.location.href = ctx + '/admin/admin_add.htm?teamid=${param.teamid}';
+		clearAddDiv();
+		getAdmin();
+		loadteam();
+		showarea();
+		showprovince();
+		openDiv("inputDiv");
+	}else{
+	//window.location.href = ctx + '/admin/admin_add.htm';
+		clearAddDiv();
+		getAdmin();
+		loadteam();
+		showarea();
+		showprovince();
+		openDiv("inputDiv");
+	}
+	
+}
+
+/**
+ * 修改管理员
+ */
+function modifyAdmin(adminId) {
+	if('${param.teamid}'!=''){
+	//window.location.href = ctx + '/admin/admin-input.htm?adminId=' + adminId+'&teamid=${param.teamid}';
+		clearModifyDiv();
+		getAdmin1(adminId);
+		openDiv("modifyDiv");
+	}
+	else{
+	//window.location.href = ctx + '/admin/admin-input.htm?adminId=' + adminId;
+		clearModifyDiv();
+		getAdmin1(adminId);
+		openDiv("modifyDiv");
+	}
+}
+
+/**
+ * 删除管理员
+ */
+function delAdmin(adminId) {
+	var param = {};
+	if(adminId) {
+		param['checkedIdList[0]'] = adminId;
+	} else {		
+		var delAdmins = $('[name="checkedAdmin"]:checked');
+		//console.log('del admin length: ' + delAdmins.length);
+		var cnt = 0;
+		$.each(delAdmins, function(i, o){			
+			param['checkedIdList[' + cnt + ']'] = $(o).val();
+			cnt++;
+		});
+	}
+	//console.log('param : ' + param['checkedIdList[0]']);
+	if(!param['checkedIdList[0]']) {
+		alert('请选择要删除的用户！');
+		return;
+	}
+	
+	if(!confirm('确定删除用户？')) {
+		return;
+	}
+	var url = ctx + '/admin/admin!delete.htm';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data : param,
+		success : function(data) {
+			
+			if(data && data == 'success') {
+				loadadmin();
+			} else {
+				alert('删除用户失败！');
+			}
+		}
+	});
+}
+
+
+/**
+ * 添加客户权限组
+ */
+function addClientgrant(adminid) {
+	
+	window.location.href = ctx + '/admin/admin_clientgrant.htm?adminId='+adminid;
+}
+//---------------------------------------
+var teamlist=new Array();
+function loadTeam(){
+	var url = "${ctx}/system/listteam.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		data:"teamId="+0,
+		success : function(data) {
+				data = $.parseJSON(data);
+				$.each(data.teamList,function(i,o){
+				teamlist.push(o);
+				});
+		loadadmin();
+		}
+	});
+}
+
+/**添加遮罩层*/
+/* 
+var xval, tval, bval, rval, lval;
+function block_viewport() {
+	xval=getBusyOverlay('viewport',{color:'#A59F9F', opacity:0.1, text:'请稍等...', style:'text-shadow: 0 0 3px black;font-weight:bold;font-size:16px;color:blue;'},{color:'#ff0', size:100, type:'o'});
+	if(xval) {var c=0,t=1;
+		xval.ntime=window.setInterval(function() {
+			c--; 
+			if(c>t) {window.clearInterval(xval.ntime); xval.remove();}
+		},50);
+	}
+} */
+
+function adminErpData(){
+	block_viewport();
+	var url = "${ctx}/admin/adminTongERP.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		success : function(data) {
+			xval.remove();
+			alert(data);
+		
+		}
+	});	
+}
+//============================================================================
+//用户新增
+function getAdmin() {
+	
+	var url = ctx + '/admin/admin!addAdmin.htm';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data : '' ,
+		success : function(data) {			
+			if(data && data instanceof Object) {
+				
+				$('input[name="status"][value="' + data.status + '"]').attr("checked",true);
+				var setting = {
+						check: {
+							enable: true,
+							chkStyle: "checkbox",
+							chkboxType: { "Y": "ps", "N": "s" }
+						},
+						data: {
+							key:{
+								name:'name'
+							},
+							simpleData: {
+								enable: true,
+								idKey: "roleId",
+								pIdKey: "pId",
+								rootPId: 0
+							}
+						}
+					};
+
+				$.fn.zTree.init($('#rolesTree'), setting, data.rolesTreeList);
+				$('#adminName').focus();
+			} else {
+				alert(data);
+			}
+		}
+	});
+}
+function clearAddDiv(){
+$('#error_info').html("");
+$('#adminName').val("");
+$('#loginName').val("");
+$('#password').val("");
+$('#confirmPassword').val("");
+$('#empcode').val("");
+$('#email').val("");
+$('#teamid').val("");
+$('#empporId').val("");
+$("#empSuperior").val("");
+$('#dutyid').val("");
+$('input[name="status"]').removeAttr("checked");
+$('#form select[id="teamid"] option').removeAttr("selected");
+$('#form select[id="type"] option').removeAttr("selected");
+$("#areaid").val("");
+$("#provinceid").val("");
+$("#amanagerid").val("");
+$("#amanagername").val("");
+$("#salemid").val("");
+$("#salemname").val("");
+$("#isstruct").val("");
+}
+function verifyForm() {
+	var param = {};
+	
+	var adminName = $.trim($('#adminName').val());
+	if(adminName == '') {
+		alert('用户名称不能为空！');
+		$('#adminName').focus();
+		return null;
+	} 
+	param['entity.adminName'] = adminName;
+	
+	var loginName = $.trim($('#loginName').val());
+	if(loginName == '') {
+		alert('登录名不能为空！');
+		$('#loginName').focus();
+		return null;
+	} 
+	param['entity.loginName'] = loginName;
+
+	if(!$('#tr_password').is(":hidden")) {
+		var password =$.trim($('#password').val());
+		if(password == '') {
+			alert('密码不能为空！');
+			$('#password').focus();
+			return null;
+		}
+		var confirmPassword =$.trim($('#confirmPassword').val());
+		if(confirmPassword == '') {
+			alert('确认密码不能为空！');
+			$('#confirmPassword').focus();
+			return null;
+		}
+		if(confirmPassword != password) {
+			alert('两次密码不一样！');
+			$('#confirmPassword').focus();
+			return null;
+		}
+		param['entity.password'] = password;
+	}
+	
+	var empcode = $.trim($('#empcode').val());
+	param['entity.empcode'] = empcode;
+	var email= $.trim($('#email').val());
+	if(email==null || email==""){
+		alert("请填写邮箱地址");
+		return null;
+	}
+	
+	param['entity.email'] = email;
+	var teamid=$('#teamid').val();
+	param['entity.teamid']=teamid;
+	if(teamid=='')
+	{
+		alert('请选择部门！');
+		return null;
+	}
+	/* var areaid = $("#areaid").val();
+	if(areaid==null||areaid==''){
+		alert("请选择区域！");
+		return null;
+	}
+	param['entity.areaid'] = $("#areaid").val(); */	
+	/* var empSuperior=$('#empporId').val();
+	if(empSuperior==null || empSuperior==""){
+		alert("请选择上级领导");
+		return null;
+	}
+	param['entity.empSuperior']=empSuperior;
+	
+	param['entity.superiorname']=$("#empSuperior").val(); */
+	
+	
+	/* var dutyid= $.trim($('#dutyid').val());
+	if(dutyid==-1)
+	{
+		alert('请选择职务项！');
+		return null;
+	}
+	param['entity.dutyid'] = dutyid; */
+	
+	var status = $('input[name="status"]:checked').val();
+	if(!status) {
+		alert('状态不能为空！');
+		$('input[name="status"][value="0"]').focus();
+		return null;
+	} 
+	param['entity.status'] = status;
+	
+	var teamid=$('#form select[id="teamid"] option:selected').val();
+	param['entity.teamid']=teamid;
+	
+	/* var type=$('#form select[id="type"] option:selected').val();
+	param['entity.type']=type; */
+	
+	/* var tt = "";
+	var selList = $("#provinceid").val();
+	if(selList !=null){
+		for(var sq=0;sq<selList.length;sq++){
+			if((sq+1)==$("#provinceid").val().length){
+				tt+=selList[sq];
+			}else{
+				tt+=selList[sq]+",";
+			}
+		}
+	
+		param['entity.provinceids'] = tt; 
+	} */
+	
+	var treeObj = $.fn.zTree.getZTreeObj('rolesTree');
+	var nodes = treeObj.getCheckedNodes(true);
+	var cnt = 0;
+	$.each(nodes, function(i, o){
+		if(o.id != 0) {
+			param['entity.roleIdList[' + cnt + ']'] = o.id;
+			cnt++;
+		}
+		
+	});
+	
+	/* param['entity.amanagerid'] = $("#amanagerid").val();
+	param['entity.amanagername'] = $("#amanagername").val();
+	param['entity.salemid']=$("#salemid").val();
+	param['entity.salemname']=$("#salemname").val();
+	param['entity.isstruct']=$("#isstruct").val(); */
+	return param;
+}
+
+function submitForm() {
+	var param = verifyForm();
+	if(!param) {
+		return;
+	}
+	var url = ctx + '/admin/admin!save.htm';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data : param,
+		success : function(data) {			
+			if(data && data == 'success') {
+				closeDiv("inputDiv");
+				loadadmin();
+			} else {
+				errorInfo(data);
+			}
+		}
+	});
+}
+
+function resetFrom() {
+	clearAddDiv();
+}
+
+function changePassword() {
+	var condition = $('[id="switchingPassword"]:checked').val();
+	if(condition) {
+		$('#tr_password').show();
+		$('#tr_confirmpassword').show();
+	} else {
+		$('#tr_password').hide();
+		$('#tr_confirmpassword').hide();
+	}
+}
+
+function errorInfo(info) {
+	$('#error_info').html(info);
+}
+function loadteam()
+{
+	var html='';
+	var url = "${ctx}/system/listteam.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		success : function(data) {
+			data = $.parseJSON(data);
+			var teamList = data.departmentList;
+			$.each(teamList,function(i,o){
+			html+='<option value="'+o.teamid+'">'+o.teamname+'</option>';
+			});
+			$('#teamid').append(html);
+		}
+	});
+}
+function showparent(){
+	if($('#teamid').val()==0){
+	$("#dutyid").html('<option value="-1">----</option>');
+	return false;
+	}
+	var html=' <option value="-1">----</option>';
+	var teamid=$('#teamid').val();
+	
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		success : function(data) {
+				$.each(data, function(i, o){
+					if(o.type!=1){//管理员排除
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+					}
+				});
+				$('#empSuperior').html(html);
+			}
+		});
+	
+	 var dutyhtml='<option value="-1">----</option>';
+	 var url = ctx+'/system/dutyList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data :'dutyQuery.teamid='+teamid,
+		success : function(data) {
+				data = $.parseJSON(data);
+				$.each(data.dutyList, function(i, o){
+				dutyhtml+='<option value="'+o.dutyid+'">'+o.dutyname+'</option>';
+				});
+				$('#dutyid').html(dutyhtml);
+			}
+		});
+		
+		
+
+}
+
+
+function showarea(areaid){
+				
+	var html='<option value="-1">----</option>';
+	var url = "${ctx}/area/arealist.htm";
+		$.webAjax( {
+			type : "post",
+			url : url,
+			success : function(data) {
+			data = $.parseJSON(data);
+				if(data.resultInfo[0]=='0')
+				{
+					var areaList=data.areaList;
+					$.each(areaList,function(i,o){
+						html+='<option value="'+o.areaid+'">'+o.areaname+'</option>';
+					});
+					$('#areaid').html(html);
+					$("#areaid").attr("value",areaid);
+				}else{
+				alert(data.resultInfo[1]);
+				}				
+			}
+		});
+
+}
+
+function showprovince(provinceid,aplist){
+				
+	var html='<option value="-1">----</option>';
+	var url = "${ctx}/province/provincelist.htm";
+		$.webAjax( {
+			type : "post",
+			url : url,
+			success : function(data) {
+			data = $.parseJSON(data);
+				if(data.resultInfo[0]=='0')
+				{
+					var provinceList=data.provinceList;
+					$.each(provinceList,function(i,o){
+						html+='<option value="'+o.provinceid+'" id="option'+o.provinceid+'">'+o.provincename+'</option>';
+					});
+					$('#provinceid').html(html);
+					
+					if(aplist != null && aplist.length>0){
+						for(var tq =0;tq<aplist.length;tq++){
+							$("#option"+aplist[tq].provinceid).attr("selected","selected");
+							
+						}
+					}
+					
+					
+					//$("#provinceid").attr("value",provinceid);
+				}else{
+				alert(data.resultInfo[1]);
+				}				
+			}
+		});
+
+}
+//=======================================================================================
+
+function search(){
+	
+	$("#empsupDiv").css("display","");
+	var code = $("#empSuperior").val();
+	var html='<td><select id="selectCode" onchange="changeCode();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					//if(o.type!=1){//管理员排除
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+					//}
+				});
+					html+='</select></td>';
+					$('#selectsbody').html(html);
+			}
+		});
+	 
+	 
+	
+}
+
+function changeCode(){
+			var sel = $("#selectCode").val();
+			var txt =$("#selectCode").find("option:selected").text();
+			/* var txt="";
+			$("#selectCode option").each(function(){ //遍历全部option
+				if($(this).attr("value")==sel){
+					txt=$(this).text();
+				}
+		    }); */
+			$("#empporId").attr("value",sel);
+			$("#empSuperior").attr("value",txt);
+			$("#empsupDiv").css("display","none");
+}
+
+function enterCheck(){
+	search();
+}
+
+//===========================================================
+
+function qysearch(){
+	
+	$("#qyDiv").css("display","");
+	var code = $("#amanagername").val();
+	var html='<td><select id="qyselectCode" onchange="qychangeCode();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+				
+				});
+					html+='</select></td>';
+					$('#qyselectsbody').html(html);
+			}
+		});
+	 
+	 
+	
+}
+
+function qychangeCode(){
+			var sel = $("#qyselectCode").val();
+			//var txt = $('#qyselectCode').find('option:[value='+sel+']').text();
+			var txt =$("#qyselectCode").find("option:selected").text();
+			/* var txt="";
+			$("#qyselectCode option").each(function(){ //遍历全部option
+				if($(this).attr("value")==sel){
+					txt=$(this).text();
+				}
+		    }); */
+			$("#amanagerid").attr("value",sel);
+			$("#amanagername").attr("value",txt);
+			$("#qyDiv").css("display","none");
+}
+
+function qyenterCheck(){
+	qysearch();
+}
+function sales()
+{
+	$("#saleDiv").css("display","");
+	var code = $("#salemname").val();
+	var html='<td><select id="selectSaleCode" onchange="changeSaleCode();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+				});
+					html+='</select></td>';
+					$('#salesbody').html(html);
+			}
+		});
+}
+function changeSaleCode()
+{
+	var sel = $("#selectSaleCode").val();
+	var txt =$("#selectSaleCode").find("option:selected").text();
+	//var txt = $('#selectSaleCode').find('option:[value='+sel+']').text();
+	/* var txt="";
+	$("#selectSaleCode option").each(function(){ //遍历全部option
+		if($(this).attr("value")==sel){
+			txt=$(this).text();
+		}
+    }); */
+	$("#salemid").attr("value",sel);
+	$("#salemname").attr("value",txt);
+	$("#saleDiv").css("display","none");
+}
+
+
+
+//编辑用户==============================================
+function getAdmin1(adminId) {
+	//var adminId = '${param.adminId}';
+	if(adminId) {
+		$('#tr_switchpassword1').show();
+	} else {
+		$('#tr_password1').show();
+		$('#tr_confirmpassword1').show();
+	}
+	var url = ctx + '/admin/admin!input.htm';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data : 'adminId=' + adminId,
+		success : function(data) {			
+			if(data && data instanceof Object) {
+				
+				$('#adminId1').val(data.adminId);
+				$('#adminName1').val(data.adminName);
+				$('#loginName1').val(data.loginName);
+				$('#amanagerid1').val(data.amanagerid);
+				$('#amanagername1').val(data.amanagername);
+				
+				loadteam1(data.teamid);
+				loadparent1(data.teamid,data.empSuperior,data.dutyid,data.empsupname);
+				showarea1(data.areaid);
+				showprovince1(data.provinceid,data.aplist);
+				teamDeptLoad1(data.teamseq);
+				$('input[name="status1"][value="' + data.status + '"]').attr("checked",true);
+				$('#type1').attr("value",data.type);
+				//----------------------------
+				$('#empcode1').attr("value",(data.empcode==null?" ":data.empcode));
+				$('#email1').attr("value",(data.email==null?" ":data.email));
+				$("#emptype1").attr("value",data.emptype);
+				$("#isstruct1").attr("value",data.isstruct);
+				var setting = {
+						check: {
+							enable: true,
+							chkStyle: "checkbox",
+							chkboxType: { "Y": "ps", "N": "s" }
+						},
+						data: {
+							key:{
+								name:'name'
+							},
+							simpleData: {
+								enable: true,
+								idKey: "roleId",
+								pIdKey: "pId",
+								rootPId: 0
+							}
+						}
+					};
+
+				$.fn.zTree.init($('#rolesTree1'), setting, data.rolesTreeList);
+				$('#adminName1').focus();
+			} else {
+				alert(data);
+			}
+		}
+	});
+}
+
+function verifyForm1() {
+	var param = {};
+	var adminId = $('#adminId1').val();
+	param['entity.adminId'] = adminId;
+	
+	var adminName = $.trim($('#adminName1').val());
+	if(adminName == '') {
+		//errorInfo('管理员名称不能为空！');
+		alert('管理员名称不能为空！');
+		$('#adminName1').focus();
+		return null;
+	} 
+	param['entity.adminName'] = adminName;
+	
+	var loginName = $.trim($('#loginName1').val());
+	if(loginName == '') {	
+		//errorInfo('登录名不能为空！');
+		alert('登录名不能为空！');
+		$('#loginName1').focus();
+		return null;
+	} 
+	param['entity.loginName'] = loginName;
+
+	if(!$('#tr_password1').is(":hidden")) {
+		var password =$.trim($('#password1').val());
+		if(password == '') {
+			//errorInfo('密码不能为空！');
+			alert('密码不能为空！');
+			$('#password1').focus();
+			return null;
+		}
+		var confirmPassword =$.trim($('#confirmPassword1').val());
+		if(confirmPassword == '') {
+			//errorInfo('确认密码不能为空！');
+			alert('确认密码不能为空！');
+			$('#confirmPassword1').focus();
+			return null;
+		}
+		if(confirmPassword != password) {
+			//errorInfo('两次密码不一样！');
+			alert('两次密码不一样！');
+			$('#confirmPassword1').focus();
+			return null;
+		}
+		param['entity.password'] = password;
+	}
+	
+	param['entity.email'] = $("#email1").val();
+	if($("#email1").val()==null || $("#email1").val()==""){
+		alert("请填写邮箱地址");
+		return null;
+	}
+	
+	var teamid=$('select[id="teamid1"] option:selected').val();
+	param['entity.teamid']=teamid;
+	if(teamid=='')
+	{
+		//errorInfo('请选择部门！');
+		alert('请选择部门！');
+		return null;
+	}
+	/* var areaid1 = $("#areaid1").val();
+	if(areaid1==null||areaid1==''){
+		alert("请选择区域！");
+		return null;
+	} 
+	param['entity.areaid'] = $("#areaid1").val();
+	*/
+	/* var empSuperior=$('#empporId1').val();
+	if(empSuperior==null){
+		alert("请选择上级领导");
+		return null;
+	}
+	param['entity.empSuperior']=empSuperior;
+	param['entity.superiorname']=$('#empSuperior1').val();
+	 */
+	
+	/* var dutyid= $.trim($('#dutyid1').val());
+	if(dutyid==-1)
+	{
+		alert('请选择职务项！');
+		return null;
+	}
+	param['entity.dutyid']=dutyid;	 */
+	
+	var status = $('input[name="status1"]:checked').val();
+	if(!status) {
+		alert('状态不能为空！');
+		$('input[name="status1"][value="0"]').focus();
+		return null;
+	} 
+	param['entity.status'] = status;
+	
+
+	/* //类别
+	var type=$('#form select[id="type1"] option:selected').val();
+	param['entity.type']=type; */
+	
+	var treeObj = $.fn.zTree.getZTreeObj('rolesTree1');
+	var nodes = treeObj.getCheckedNodes(true);
+	var cnt = 0;
+	$.each(nodes, function(i, o){
+		if(o.id != 0) {
+			param['entity.roleIdList[' + cnt + ']'] = o.id;
+			cnt++;
+		}
+		
+	});
+	
+	
+	/* 
+	//省份
+	var tt = "";
+	var selList = $("#provinceid1").val();
+	if(selList !=null){
+		for(var sq=0;sq<selList.length;sq++){
+			if((sq+1)==$("#provinceid1").val().length){
+				tt+=selList[sq];
+			}else{
+				tt+=selList[sq]+",";
+			}
+		}
+	
+		param['entity.provinceids'] = tt; 
+	} */
+
+	//param['entity.emptype'] = $("#emptype1").val();
+	//param['entity.amanagerid'] = $("#amanagerid1").val();
+	//param['entity.amanagername'] = $("#amanagername1").val();
+	//param['entity.teamseq'] = $("#teamseq1").val();
+	param['entity.empcode'] = $("#empcode1").val();
+	
+	//param['entity.salemid']=$("#salemid1").val();
+	//param['entity.salemname']=$("#salemname1").val();
+	//param['entity.isstruct']=$("#isstruct1").val();
+	
+	
+	return param;
+}
+
+function submitForm1() {
+	var param = verifyForm1();
+	if(!param) {
+		return;
+	}
+	var url = ctx + '/admin/admin!save.htm';
+	$.webAjax( {
+		type : 'post',
+		url : url,
+		data : param,
+		success : function(data) {			
+			if(data && data == 'success') {
+				closeDiv("modifyDiv");
+				loadadmin();
+			} else {
+				errorInfo1(data);
+			}
+		}
+	});
+}
+
+function resetFrom1() {
+	clearModifyDiv();
+}
+function clearModifyDiv(){
+	//清除输入项
+$('#error_info1').html("");
+$('#adminId1').val("");
+$('#adminName1').val("");
+$('#loginName1').val("");
+$('#password1').val("");
+$('#confirmPassword1').val("");
+$("#email1").val("");
+$('select[id="teamid1"] option').removeAttr("selected");
+$('#empporId1').val("");
+$('#empSuperior1').val("");
+$('#dutyid1').val("");
+ $('input[name="status1"]').removeAttr("checked");
+ $('#form select[id="type1"] option').removeAttr("selected");
+$("#areaid1").val("");
+$("#provinceid1").val("");
+$("#emptype1").val("");
+$("#amanagerid1").val("");
+$("#amanagername1").val("");
+$("#teamseq1").val("");
+$("#empcode1").val("");
+$("#salemid1").val("");
+$("#salemname1").val("");
+$("#isstruct1").val("");
+}
+function changePassword1() {
+	var condition = $('[id="switchingPassword1"]:checked').val();
+	//console.log('switching password: ' + condition);
+	if(condition) {
+		$('#tr_password1').show();
+		$('#tr_confirmpassword1').show();
+	} else {
+		$('#tr_password1').hide();
+		$('#tr_confirmpassword1').hide();
+	}
+}
+
+function errorInfo1(info) {
+	$('#error_info1').html(info);
+}
+
+function loadteam1(teamid)
+{
+	var html='';
+	var url = "${ctx}/system/listteam.htm";
+	$.webAjax( {
+		type : "post",
+		url : url,
+		success : function(data) {
+			data = $.parseJSON(data);
+			var teamList = data.departmentList;
+			$.each(teamList,function(i,o){
+			html+='<option value="'+o.teamid+'" '+(o.teamid==teamid?"selected":"")+'>'+o.teamname+'</option>';
+			});
+			$('#teamid1').append(html);
+		}
+	});
+}
+
+function showparent1(){
+	if($('#teamid1').val()==''){
+	//$('#empSuperior').html('<option value="-1">----</option>');
+	$("#dutyid1").html('<option value="-1">----</option>');
+	return false;
+	}
+	var html=' <option value="-1">----</option>';
+	var teamid=$('#teamid1').val();
+	
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+	//	data :'adminQuery.teamid='+teamid,
+		success : function(data) {
+				$.each(data, function(i, o){
+					if(o.type!=1){//管理员排除
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+					}
+				});
+				$('#empSuperior1').html(html);
+			}
+		});
+	
+	 var dutyhtml='<option value="-1">----</option>';
+	 var url = ctx+'/system/dutyList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data :'dutyQuery.teamid='+teamid,
+		success : function(data) {
+		data = $.parseJSON(data);
+				$.each(data.dutyList, function(i, o){
+				dutyhtml+='<option value="'+o.dutyid+'">'+o.dutyname+'</option>';
+				});
+				$('#dutyid1').html(dutyhtml);
+			}
+		});
+		
+		
+
+}
+function loadparent1(teamid,parentid,dutyid,empsupname){
+
+	$("#empSuperior1").val((empsupname==null?"":empsupname));
+	$("#empporId1").val(parentid);		
+	 var dutyhtml='<option value="-1">----</option>';
+	 var url = ctx+'/system/dutyList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data :'dutyQuery.teamid='+teamid,
+		success : function(data) {
+		data = $.parseJSON(data);
+				$.each(data.dutyList, function(i, o){
+				dutyhtml+='<option value="'+o.dutyid+'">'+o.dutyname+'</option>';
+				});
+				$('#dutyid1').html(dutyhtml);
+				$("#dutyid1").val(dutyid);
+			}
+		});
+}
+
+
+//============================================
+function teamDeptLoad1(teamseq){
+
+		var html='<option value="">请选择</option>';
+		var url = "${ctx}/team/team!listToQuery.htm";
+		$.webAjax( {
+			type : "post",
+			url : url,
+			success : function(data) {
+			data = $.parseJSON(data);
+				if(data.resultInfo[0]=='0')
+				{
+					var teamList=data.teamList;
+					$.each(teamList,function(i,o){
+						html+='<option value="'+o.teamseq+'" '+(o.teamseq==teamseq?"selected":"")+'>'+o.fname+'</option>';
+					});
+					$('#teamseq1').html(html);
+					 
+				}else{
+					alert(data.resultInfo[1]);
+				}				
+			}
+		});
+	
+
+}
+
+function showarea1(areaid){
+				
+	var html='<option value="">----</option>';
+	var url = "${ctx}/area/arealist.htm";
+		$.webAjax( {
+			type : "post",
+			url : url,
+			success : function(data) {
+			data = $.parseJSON(data);
+				if(data.resultInfo[0]=='0')
+				{
+					var areaList=data.areaList;
+					$.each(areaList,function(i,o){
+						html+='<option value="'+o.areaid+'">'+o.areaname+'</option>';
+					});
+					$('#areaid1').html(html);
+					$("#areaid1").attr("value",areaid);
+				}else{
+				alert(data.resultInfo[1]);
+				}				
+			}
+		});
+
+}
+
+function showprovince1(provinceid,aplist){
+				
+	var html='<option value="-1">----</option>';
+	var url = "${ctx}/province/provincelist.htm";
+		$.webAjax( {
+			type : "post",
+			url : url,
+			success : function(data) {
+			data = $.parseJSON(data);
+				if(data.resultInfo[0]=='0')
+				{
+					var provinceList=data.provinceList;
+					$.each(provinceList,function(i,o){
+						html+='<option value="'+o.provinceid+'" id="option'+o.provinceid+'">'+o.provincename+'</option>';
+					});
+					$('#provinceid1').html(html);
+					
+					if(aplist != null && aplist.length>0){
+						for(var tq =0;tq<aplist.length;tq++){
+							$("#option"+aplist[tq].provinceid).attr("selected","selected");
+							
+						}
+					}
+					
+				}else{
+				alert(data.resultInfo[1]);
+				}				
+			}
+		});
+
+}
+//=======================================================================================
+
+function search1(){
+	
+	$("#empsupDiv1").css("display","");
+	var code = $("#empSuperior1").val();
+	var html='<td><select id="selectCode1" onchange="changeCode1();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					//if(o.type!=1){//管理员排除
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+					//}
+				});
+					html+='</select></td>';
+					$('#selectsbody1').html(html);
+			}
+		});
+}
+function sales1()
+{
+	$("#saleDiv1").css("display","");
+	var code = $("#salemname1").val();
+	var html='<td><select id="selectSaleCode1" onchange="changeSaleCode1();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+				});
+					html+='</select></td>';
+					$('#salesbody1').html(html);
+			}
+		});
+}
+function changeSaleCode1()
+{
+	var sel = $("#selectSaleCode1").val();
+	var txt = $('#selectSaleCode1').find('option:selected').text();
+	//var txt = $('#selectSaleCode1').find('option:[value='+sel+']').text();
+	/* var txt="";
+	$("#selectSaleCode1 option").each(function(){ 
+		if($(this).attr("value")==sel){
+			txt=$(this).text();
+		}
+    }); */
+	$("#salemid1").attr("value",sel);
+	$("#salemname1").attr("value",txt);
+	$("#saleDiv1").css("display","none");
+}
+function changeCode1(){
+			var sel = $("#selectCode1").val();
+			var txt = $('#selectCode1').find('option:selected').text();
+			//var txt = $('#selectCode1').find('option:[value='+sel+']').text();
+			/* var txt="";
+			$("#selectCode1 option").each(function(){ 
+				if($(this).attr("value")==sel){
+					txt=$(this).text();
+				}
+			}); */
+			$("#empporId1").attr("value",sel);
+			$("#empSuperior1").attr("value",txt);
+			$("#empsupDiv1").css("display","none");
+}
+
+function enterCheck1(){
+	search1();
+}
+
+
+function qysearch1(){
+	
+	$("#qyDiv1").css("display","");
+	var code = $("#amanagername1").val();
+	var html='<td><select id="qyselectCode1" onchange="qychangeCode1();" style="width: 370px; height: 147px;background-color: #ccc;" multiple="true">';
+	var data = 'adminQuery.adminName='+code; 
+	var url = ctx + '/system/adminList.htm';
+		$.webAjax( {
+		type : 'post',
+		url : url,
+		data:data,
+		success : function(data) {
+				$.each(data, function(i, o){
+					
+					html+='<option value="'+o.adminId+'">'+o.adminName+'</option>';
+				
+				});
+					html+='</select></td>';
+					$('#qyselectsbody1').html(html);
+			}
+		});
+	 
+	 
+	
+}
+
+function qychangeCode1(){
+			var sel = $("#qyselectCode1").val();
+			var txt = $('#qyselectCode1').find('option:selected').text();
+			//var txt = $('#qyselectCode1').find('option:[value='+sel+']').text();
+			/* var txt="";
+			$("#qyselectCode1 option").each(function(){ 
+				if($(this).attr("value")==sel){
+					txt=$(this).text();
+				}
+			}); */
+			$("#amanagerid1").attr("value",sel);
+			$("#amanagername1").attr("value",txt);
+			$("#qyDiv1").css("display","none");
+}
+
+function qyenterCheck1(){
+	qysearch1();
+}
+
+</script>
+</head>
+<body style="height:600px;">
+    <div style="height:100%;">
+    	<%@ include file="/sysresources/common/topmsg.jsp"%>
+        <!--BEGIN BACK TO TOP-->
+        <a id="totop" href="#"><i class="fa fa-angle-up"></i></a>
+        <!--END BACK TO TOP-->
+        <!--BEGIN TOPBAR-->
+        <%@ include file="/sysresources/common/top.jsp"%>
+        <!--END TOPBAR-->
+        <div id="wrapper">
+            <!--BEGIN SIDEBAR MENU-->
+            <%@ include file="/sysresources/common/menu.jsp"%>
+            <!--END SIDEBAR MENU-->
+            <!--BEGIN PAGE WRAPPER-->
+            <div id="page-wrapper">
+                <!--BEGIN TITLE & BREADCRUMB PAGE-->
+                <form action="" name="queryForm" id="queryForm" method="post">
+				<div class="portlet box portlet-grey">
+					<div class="portlet-header">
+						<div class="caption">
+							<!-- 查询条件 -->
+							用户名称
+							<input type="text" class="input160"  name="adminQuery.adminName" />&nbsp;
+							登录名
+							<input type="text" class="input160"  name="adminQuery.loginName" />&nbsp;
+							状态 
+							<select id="status" name="adminQuery.status" class="select120">
+								<option value="">所有</option>
+								<option value="0">正常</option>
+								<option value="1">锁定</option>
+							</select> 
+							在职状态
+							<select id="isdel" name="adminQuery.isdel" class="select120">
+								<option value="">所有</option>
+								<option value="0">在职</option>
+								<option value="1">离职</option>
+							</select> 
+							<button id="searchbtn" type="button" class="btn btn-info" style="border-radius:2px!important;margin-top:-3px;" onclick="loadadmin();">搜索</button>
+							<button type="button" class="btn btn-info" style="border-radius:2px!important;margin-top:-3px;" onclick="adminErpData();">同步ERP数据</button>
+							<button type="button" class="btn btn-info" style="border-radius:2px!important;margin-top:-3px;" onclick="addAdmin();">添加</button>
+							<button type="button" class="btn btn-info" style="border-radius:2px!important;margin-top:-3px;" onclick="delAdmin();">删除</button>
+							<!-- <input type="button" value="搜索" class="btnall" onclick="loadadmin()" /> 
+							<input type="button" value="同步ERP数据" class="btnall" onclick="adminErpData()" />
+							<input type="button" value="添加用户" class="btnall" onclick="addAdmin()" />&nbsp; 
+							<input type="button" value="删除用户" class="btnall" onclick="delAdmin()" /> -->
+						</div>
+						
+						<div class="tools"><i class="fa fa-chevron-up"></i></i><i class="fa fa-times"></i>
+						</div>
+					</div>
+					<!--<div class="portlet-body"></div>-->
+				</div>
+                <!--END TITLE & BREADCRUMB PAGE-->
+                <!--BEGIN CONTENT-->
+                <div id="table-sorter-tab" class="tab-pane fade in active" style="overflow:auto; height:545px;width:100%px;margin-bottom:3px;">
+                <div>
+					<div><!-- <div class="chat-scroller"> -->
+						<div class="col-lg-12">
+							<table class="table table-hover table-striped table-bordered table-advanced tablesorter" style="min-width:1000px;width:100%;">
+								<thead>
+								<!-- 表头 -->
+									<tr>
+										<th align="left" width="20"><input type="checkbox"
+											onclick="$.antiSelectAllCheckboxes('queryForm', 'checkedAdmin')" />
+										</th>
+										<th align="left" width="80">操作</th>
+										<th align="left" width="100">客户权限组</th>
+										<th align="left" width="150" sortColumn="t_admin.adminName">用户名称</th>
+										<!-- <th align="left" width="100" sortColumn="t_admin.type">用户类型</th> -->
+										<th align="left" width="150" sortColumn="t_admin.loginName">登录名</th>
+										<th align="left" width="150" sortColumn="t_admin.teamid">部门</th>
+										<!-- <th align="left" width="150" sortColumn="t_admin.teamseq">班组</th>
+										<th align="left" width="100" sortColumn="t_admin.dutyid">职务</th>
+										<th align="left" width="100" sortColumn="t_admin.emp_superior">上级领导</th>
+										<th align="left" width="100" sortColumn="t_admin.areaid">区域</th>
+										<th align="left" width="100" sortColumn="t_admin.salemid">销售经理</th>
+										<th align="left" width="100" sortColumn="t_admin.amanagerid">区域经理</th>
+										<th align="left" width="100" sortColumn="t_admin.provinceid">省份</th> -->
+										<th align="left" width="150" sortColumn="t_admin.lastLoginTime">最后一次登录时间</th>
+										<th align="left" width="80" sort="t_admin.status">状态</th>
+										
+									</tr>
+								</thead>
+								<tbody id="data-body">
+								<!-- 表内容 -->
+								</tbody>
+							</table>
+						</div>
+					</div>
+					</div>
+				</div>
+				</form>
+				<div class="pages">            		
+				   	<div class="ps-right">            	
+					   	<simpletable:pageToolbar page="${page}" id="adminpage">
+					   	</simpletable:pageToolbar>            
+				   </div>
+				</div>
+                <!--END CONTENT-->
+            </div>
+            <!--BEGIN FOOTER-->
+            <%@ include file="/sysresources/common/footer.jsp"%>
+            <!--END FOOTER-->
+            <!--END PAGE WRAPPER-->
+        </div>
+    </div>
+    <div id="inputDiv" class="affirmlayer" style="display: none; width: 580px;height: 620px;">
+				<h2 syle="height:10%;">
+					<b>用户信息</b>
+					<a href="#" onclick="closeDiv('inputDiv');" style="float:right;font-size: 18px;"><i class="fa fa-times-circle"></i></a>
+				</h2>
+				<div style="height:87%;overflow: auto;">
+					<form action="" name="form" id="form" method="post">
+						<div id="table-sorter-tab" class="tab-pane fade in active" >
+	                         <ul id="sliderTab" class="nav nav-tabs ul-edit">
+	                             <li class="active"><a href="#ui-slider-tab" data-toggle="tab">用户信息</a></li>
+	                             <li class=""><a href="#noui-slider-tab" data-toggle="tab">角色选择</a></li>
+	                         </ul>
+	                         <div id="sliderTabContent" class="tab-content pan">
+	                             <div id="ui-slider-tab" class="tab-pane fade active in">
+	                             	<table id="cont_1" cellspacing="0" cellpadding="0" border="0" class="nobdTB">
+					                    <tr style="display:;">
+					                        <td>&nbsp;</td>
+					                        <td id="error_info" class="fs11 fcRed"></td>
+					                    </tr>
+					                    
+					                    <tr>
+					                        <td align="right" width="120">用户名称</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="adminName" name="adminName" /><font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                    
+					                    <tr>
+					                        <td align="right">登录名</td>
+					                        <td align="left"><input type="text" class="inputall" id="loginName" name="loginName" /><font color="red">*</font></td>
+					                    </tr>
+					                   
+					                    <tr id="tr_password">
+					                        <td align="right">密码</td>
+					                        <td align="left"><input type="password" class="inputall" id="password" name="password"/><font color="red">*</font></td>
+					                    </tr>
+					                    <tr id="tr_confirmpassword">
+					                        <td align="right">确认密码</td>
+					                        <td align="left"><input type="password" class="inputall" id="confirmPassword" name="confirmPassword"/><font color="red">*</font></td>
+					                    </tr>
+					                    <tr>
+					                    	<td align="right" width="120">用户编号</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="empcode" name="empcode" />
+					                        </td>
+					                    </tr>
+					                    <tr>
+					                    
+					                    	<td align="right" width="120">邮箱</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="email" name="email" /><font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                  
+					                    
+					                    
+					                    <tr>
+					                        <td align="right">部门</td>
+					                        <td align="left"><select name="teamid" id="teamid" onchange="showparent();" class="selectall"><option value="">----</option></select></td>
+					                    </tr>
+					                      <!-- <tr>
+					                        <td align="right">区域</td>
+					                        <td align="left"><select name="areaid" id="areaid"  class="selectall"></select></td>
+					                    </tr>
+					                      <tr>
+					                    	<td align="right" width="120">上级领导</td>
+					                        <td align="left">
+					                            <input name="superiorname" id="empSuperior" value="" class="input120" onclick="enterCheck();" onkeyup="enterCheck();"  /><input name="empSuperior" type="hidden" value="" id="empporId" />
+					                            <div id="empsupDiv" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="selectsbody"></tbody></table></div><font color="red">*</font>
+					                        </td>
+					                    </tr>   
+					                     <tr>
+					                    	<td align="right" width="120">销售经理</td>
+					                        <td align="left">
+					                            <input name="salemname" id="salemname" value="" class="input120" onclick="sales();" onkeyup="sales();"  /><input name="salemid" type="hidden" value="" id="salemid" />
+					                            <div id="saleDiv" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="salesbody"></tbody></table></div>
+					                        </td>
+					                    </tr>  
+					                    <tr>
+					                    	<td align="right" width="120">区域经理</td>
+					                        <td align="left">
+					                            <input name="amanagername" id="amanagername" value="" class="input120" onclick="qyenterCheck();" onkeyup="qyenterCheck();"  /><input name="amanagerid" type="hidden" value="" id="amanagerid" />
+					                            <div id="qyDiv" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="qyselectsbody"></tbody></table></div>
+					                        </td>
+					                    </tr>
+					                    <tr>
+					                        <td align="right">省份</td>
+					                        <td align="left"><select name="provinceids" id="provinceid"  class="selectall" multiple="multiple" style="height:100px;"></select></td>
+					                    </tr>
+					                   
+					                    <tr>
+					                    
+					                    	<td align="right" width="120">上级领导</td>
+					                        <td align="left">
+					                            <select id="empSuperior" name="empSuperior" class="selectall">
+					                            <option value="-1">----</option>
+					                            </select>
+					                        </td>
+					                    </tr> 
+					                     <tr>
+					                    
+					                    	<td align="right" width="120">职务</td>
+					                        <td align="left">
+					                            <select id="dutyid" name="dutyid" class="selectall">
+					                            <option value="-1">----</option>
+					                            </select>
+					                            <font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                    <tr>
+					                        <td align="right">类别</td>
+					                        <td align="left"><select name="type" id="type" class="selectall">
+					                        <option value="1">管理员</option>
+					                        <option value="2">班长</option>
+					                        <option value="3" selected="selected">普通用户</option>
+					                        <option value="4">经销商</option>
+					                        </select></td>
+					                    </tr>
+					                    <tr>
+					                    	<td align="right">是否销售组织</td>
+					                        <td align="left"><select name="isstruct" id="isstruct" class="selectall">
+					                        <option value="0">否</option>
+					                        <option value="1">是</option>
+					                        
+					                        </select></td>
+					                    </tr> -->
+					                    <tr>
+					                        <td align="right">状态</td>
+					                        <td align="left"><input type="radio" name="status" value="0" checked="checked" />正常<input type="radio" name="status" value="1"/>锁定<label id="status-error"></label></td>
+					                    </tr>
+					                </table>
+	                             </div>
+	                             <div id="noui-slider-tab" class="tab-pane fade">
+	                             	<table id="cont_2" cellspacing="0" cellpadding="0" border="0" class="nobdTB" style="display:;">
+					                    <tr style="display:;">
+					                        <td class="fs11 fcRed" colspan="2">角色</td>
+					                    </tr>
+					                    <tr >
+					                        <td align="left" id="rolesTree" class="ztree"></td>
+					                    </tr>
+					                </table>
+	                             </div>
+	                         </div>
+		                 </div>
+						<input type="hidden" id="hiddenid" name="id"/>
+					</form>
+				</div>
+				<div style="width:100%;text-align: center;height:10%;border-top: 1px solid #ccc;padding-top:3px;">
+					<input type="button" value="保存" class="btn btn-success btn-outlined" style="border-radius:5px!important;"  onclick="submitForm()"/> 
+					<input type="button" value="重置" class="btn btn-success btn-outlined" style="border-radius:5px!important;" onclick="resetFrom()"/>
+					<button type="button" class="btn btn-warning btn-outlined" style="border-radius:5px!important;" onclick="closeDiv('inputDiv');">取消</button>
+					<!-- <button type="button" class="btn btn-success btn-outlined" style="border-radius:5px!important;" onclick="save();">保存</button>
+					<button type="button" class="btn btn-warning btn-outlined" style="border-radius:5px!important;" onclick="closeDiv('inputDiv');">取消</button> -->
+			    </div>
+			</div>
+			<div id="modifyDiv" class="affirmlayer" style="display: none; width: 580px;height: 620px;">
+				<h2 syle="height:10%;">
+					<b>用户信息</b>
+					<a href="#" onclick="closeDiv('modifyDiv');" style="float:right;font-size: 18px;"><i class="fa fa-times-circle"></i></a>
+				</h2>
+				<div style="height:87%;overflow: auto;">
+					<form action="" name="modifyform" id="modifyform" method="post">
+						<input type="hidden" class="inputall" id="adminId1" name="adminId" />
+						<div id="table-sorter-tab1" class="tab-pane fade in active" >
+	                         <ul id="sliderTab1" class="nav nav-tabs ul-edit">
+	                             <li class="active"><a href="#ui-slider-tab1" data-toggle="tab">用户信息</a></li>
+	                             <li class=""><a href="#noui-slider-tab1" data-toggle="tab">角色选择</a></li>
+	                         </ul>
+	                         <div id="sliderTabContent1" class="tab-content pan">
+	                             <div id="ui-slider-tab1" class="tab-pane fade active in">
+	                               	<table id="cont_1" cellspacing="0" cellpadding="0" border="0" class="nobdTB" >
+					                    <tr style="display:;">
+					                        <td>&nbsp;</td>
+					                        <td id="error_info1" class="fs11 fcRed"></td>
+					                    </tr>
+					                    <tr>
+					                        <td align="right" width="120">用户名称</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="adminName1" name="adminName" /><font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                    <tr>
+					                        <td align="right">登录名</td>
+					                        <td align="left"><input type="text" readonly class="inputall" id="loginName1" name="loginName" /><font color="red">*</font></td>
+					                    </tr>
+					                    <tr id="tr_switchpassword1" style="display:none;">
+					                        <td align="right">修改密码</td>
+					                        <td align="left"><input type="checkbox" id="switchingPassword1" value="1" onclick="changePassword1()"/></td>
+					                    </tr>
+					                    <tr id="tr_password1" style="display:none;">
+					                        <td align="right">密码</td>
+					                        <td align="left"><input type="password" class="inputall" id="password1" name="password"/></td>
+					                    </tr>
+					                    <tr id="tr_confirmpassword1" style="display:none;">
+					                        <td align="right">确认密码</td>
+					                        <td align="left"><input type="password" class="inputall" id="confirmPassword1" name="confirmPassword"/></td>
+					                    </tr>
+					                    <tr>
+					                    	<td align="right" width="120">用户编号</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="empcode1" name="empcode" />
+					                        </td>
+					                    </tr>
+					                    <tr>
+					                    
+					                    	<td align="right" width="120">邮箱</td>
+					                        <td align="left">
+					                            <input type="text" class="inputall" id="email1" name="email" /><font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                   
+					                    
+					                    
+					                    <tr>
+					                        <td align="right">状态</td>
+					                        <td align="left"><input type="radio" name="status1" value="0"/>正常<input type="radio" name="status1" value="1"/>锁定<label id="status-error"></label></td>
+					                    </tr>
+					                    <tr>
+					                        <td align="right">部门</td>
+					                        <td align="left"><select name="teamid" id="teamid1" onchange="showparent1();" class="selectall"><option value="">请选择</option></select></td>
+					                    </tr>
+					                    <!--<tr>
+					                        <td align="right">班组</td>
+					                        <td align="left"><select name="teamseq" id="teamseq1"  class="selectall"></select></td>
+					                    </tr>
+					                     <tr>
+					                        <td align="right">区域</td>
+					                        <td align="left"><select name="areaid" id="areaid1"  class="selectall"></select></td>
+					                    </tr>
+					                      <tr>
+					                    	<td align="right" width="120">上级领导</td>
+					                        <td align="left">
+					                            <input name="superiorname" id="empSuperior1" value="" class="input120" onclick="enterCheck1();" onkeyup="enterCheck1();"  /><input name="empSuperior" type="hidden" value="" id="empporId1" />
+					                            <div id="empsupDiv1" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="selectsbody1"></tbody></table></div><font color="red">*</font>
+					                        </td>
+					                    </tr>   
+					                    <tr>
+					                    	<td align="right" width="120">销售经理</td>
+					                        <td align="left">
+					                            <input name="salemname" id="salemname1" value="" class="input120" onclick="sales1();" onkeyup="sales1();"  /><input name="salemid" type="hidden" value="" id="salemid1" />
+					                            <div id="saleDiv1" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="salesbody1"></tbody></table></div>
+					                        </td>
+					                    </tr>  
+					                     <tr>
+					                    	<td align="right" width="120">区域经理</td>
+					                        <td align="left">
+					                            <input name="amanagername" id="amanagername1" value="" class="input120" onclick="qyenterCheck1();" onkeyup="qyenterCheck1();"  /><input name="amanagerid" type="hidden" value="" id="amanagerid1" />
+					                            <div id="qyDiv1" class="itemDiv" style="position:absolute;width: 390px;height: 160px;background: #ccc;display: none; ">
+					                            <table><tbody id="qyselectsbody1"></tbody></table></div>
+					                        </td>
+					                    </tr>
+					                    
+					                    <tr>
+					                        <td align="right">省份</td>
+					                        <td align="left"><select name="provinceids" id="provinceid1"  class="selectall" multiple="multiple" style="height:100px;"></select></td>
+					                    </tr>
+					                   
+					                  
+					                    
+					                    
+					                     <tr>
+					                    	<td align="right" width="120">职务</td>
+					                        <td align="left">
+					                            <select id="dutyid1" name="dutyid" class="selectall">
+					                            <option value="-1">----</option>
+					                            </select>
+					                            <font color="red">*</font>
+					                        </td>
+					                    </tr>
+					                    
+					                    <tr>
+					                        <td align="right">类别</td>
+					                        <td align="left"><select name="type" id="type1" class="selectall">
+					                        <option value="1">管理员</option>
+					                        <option value="2">班长</option>
+					                        <option value="3">普通用户</option>
+					                         <option value="4">经销商</option>
+					                        </select></td>
+					                    </tr>
+					                    <tr>
+					                    	<td align="right">是否销售组织</td>
+					                        <td align="left"><select name="isstruct" id="isstruct1" class="selectall">
+					                        <option value="0">否</option>
+					                        <option value="1">是</option>
+					                        
+					                        </select></td>
+					                    </tr> -->
+					                   <!-- <tr>
+					                        <td align="right">用户类别</td>
+					                        <td align="left"><select name="emptype" id="emptype" class="selectall">
+					                        <option value="0">------</option>
+					                        <option value="1">职员</option>
+					                        <option value="2">经销商</option>
+					                        </select></td>
+					                    </tr> --> 
+					                </table>
+	                             </div>
+	                             <div id="noui-slider-tab1" class="tab-pane fade">
+	                             	<table id="cont_21" cellspacing="0" cellpadding="0" border="0" class="nobdTB" style="display:;">
+					                    <tr style="display:;">
+					                        <td class="fs11 fcRed" colspan="2">角色</td>
+					                    </tr>
+					                    <tr >
+					                        <td align="left" id="rolesTree1" class="ztree"></td>
+					                    </tr>
+					                </table>
+	                             </div>
+	                         </div>
+						</div>
+					</form>
+				</div>
+				<div style="width:100%;text-align: center;height:10%;border-top: 1px solid #ccc;padding-top:3px;">
+					<input type="button" value="保存" class="btn btn-success btn-outlined" style="border-radius:5px!important;"  onclick="submitForm1()"/> 
+					<input type="button" value="重置" class="btn btn-success btn-outlined" style="border-radius:5px!important;" onclick="resetFrom1()"/>
+					<button type="button" class="btn btn-warning btn-outlined" style="border-radius:5px!important;" onclick="closeDiv('modifyDiv');">取消</button>
+			    </div>
+			</div>
+</body>
+
+</html>
+
+
+
+
+

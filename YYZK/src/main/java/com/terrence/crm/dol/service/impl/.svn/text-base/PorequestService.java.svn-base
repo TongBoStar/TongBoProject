@@ -1,0 +1,516 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Department;
+import com.terrence.crm.dol.bean.Message;
+import com.terrence.crm.dol.bean.Porequest;
+import com.terrence.crm.dol.bean.Porequestentry;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.dao.IMessageDao;
+import com.terrence.crm.dol.dao.IPorequestDao;
+import com.terrence.crm.dol.dao.IPorequestentryDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.MessageQuery;
+import com.terrence.crm.dol.query.PorequestQuery;
+import com.terrence.crm.dol.query.PorequestentryQuery;
+import com.terrence.crm.dol.service.IPorequestService;
+import com.terrence.crm.dol.service.IProcessExetaskService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+
+@Service
+@Transactional
+public class PorequestService extends BaseService implements IPorequestService {
+	protected static Logger logger = LoggerFactory.getLogger(PorequestService.class);
+	@Autowired
+	@Qualifier("porequestDao")
+	private IPorequestDao porequestDao;
+	
+	@Autowired
+	@Qualifier("porequestentryDao")
+	private IPorequestentryDao porequestentryDao;
+
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	
+	@Autowired
+	@Qualifier("departmentDao")
+	private IDepartmentDao departmentDao;
+	
+	@Autowired
+	private K3ServiceProxy k3ServiceProxy; 
+	
+	@Autowired
+	@Qualifier("processExetaskService")
+	private IProcessExetaskService processExetaskService;
+	
+	@Autowired
+	@Qualifier("messageDao")
+	private IMessageDao messageDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Porequest";
+	}
+	@Transactional(readOnly=true)
+	public Porequest getById(java.lang.Long id) throws ServiceException
+	{
+		return porequestDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Porequest entity) throws ServiceException
+	{
+		porequestDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Porequest entity) throws ServiceException
+	{
+		Long adId = porequestDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Porequest entity) throws ServiceException
+	{
+		Integer returnValue =  porequestDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = porequestDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = porequestDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PorequestQuery query = new PorequestQuery();
+		try {
+			return porequestDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Porequest> findPage(Page<Porequest> page, PorequestQuery query) throws ServiceException
+	{
+		return porequestDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Porequest> findPage(Page<Porequest> page,String statement, PorequestQuery query) throws ServiceException
+	{
+		return porequestDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequest> findList(PorequestQuery query) throws ServiceException
+	{
+		return porequestDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequest> findList(PorequestQuery query,Integer pageSize) throws ServiceException
+	{
+		return porequestDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Porequest> findList(PorequestQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return porequestDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Porequest> findAllList() throws ServiceException
+	{
+		return porequestDao.findAllList();
+	}
+	
+	
+	@Override
+	public Porequest findPQDetail(PorequestQuery porequestQuery)
+			throws ServiceException {
+		Porequest entity = new Porequest();
+		 entity =porequestDao.findPQDetail(porequestQuery);
+		 PorequestentryQuery porequestentryQuery = new PorequestentryQuery();
+		 porequestentryQuery.setFinterid(porequestQuery.getFinterid());
+		List<Porequestentry> listporequestentry = porequestentryDao.findlistToPOAll(porequestentryQuery);
+		entity.setListporequestentry(listporequestentry);
+		return entity;
+	}
+	@Override
+	public void updateforPoAudit(List<Long> checkedIdList,
+			Porequest porequest) throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		porequestDao.updateforPoAudit(auditIds,porequest);
+		
+	}
+	@Override
+	public List<Porequest> findListaudit(List<Long> checkedIdList)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Porequest porequest = new Porequest();
+		porequest.setFinterids(auditIds);
+		return porequestDao.findListaudit(porequest);
+	}
+	@Override
+	public Porequest findPQtasks(PorequestQuery porequestQuery)
+			throws ServiceException {
+		return porequestDao.findPQtasks(porequestQuery);
+	}
+	@Override
+	public void updateforPoUNAudit(List<Long> checkedIdList, Porequest porequest)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		porequestDao.updateforPoUNAudit(auditIds,porequest);
+		
+		
+		 Porequest pp = new Porequest();
+		 pp.setFinterids(auditIds);
+		 List<Porequest> ppList =  porequestDao.findppList(pp);
+		 if(ppList.size()>0){
+			for(int sq=0;sq<ppList.size();sq++){
+				updateBaseItemData(ppList.get(sq),0);//更新物料表的已有计划数量
+			}
+			//同步数据到erp
+			TREReturn  terreturn = k3ServiceProxy.deleteK3Porequest(ppList);
+			if(terreturn.getnCode() == -1){
+				throw new ServiceException();
+			}
+		}
+		
+		
+		
+	}
+	@Override
+	public void updateforclose(List<Long> checkedIdList, Porequest porequest)
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		porequestDao.updateforclose(auditIds,porequest);
+	}
+	@Override
+	public void updateforUNclose(List<Long> checkedIdList, Porequest porequest)
+			throws ServiceException {
+
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		porequestDao.updateforUNclose(auditIds,porequest);
+	}
+	@Override
+	public Porequest findDetil(Long porequestId) throws ServiceException {
+		return porequestDao.findDetil(porequestId);
+	}
+	@Override
+	public void updatedetailstatus(Porequest entity) throws ServiceException {
+		/**
+		 * 修改物料表中的已有计划数量
+		 */
+		//暂时屏蔽
+		updateBaseItemData(entity,1);
+		entity.setFstatus(1);
+		entity.setCheckid(SpringSecurityUtils.getCurrentUserId());//审核人ID
+		entity.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核时间
+		porequestDao.updateDetailstatus(entity);
+		
+		//同步数据到K3的Porequest表中---暂时屏蔽201605221747
+		List<Long> listchecked = new ArrayList<Long>();
+		listchecked.add(entity.getFinterid());
+		//synchronousK3(listchecked);
+		
+	}
+	public void synchronousK3(List<Long> checkedIdList) throws ServiceException {
+		
+		
+		/**K3同步开始**/
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		Porequest derpoor = new Porequest();
+		derpoor.setFinterids(auditIds);
+		List<Porequest> porequestList = porequestDao.findtongdata(derpoor);
+		
+		if(porequestList.size()>0){
+			List<List<Porequestentry>> list = new ArrayList<List<Porequestentry>>();
+			for(int d=0;d<porequestList.size();d++){
+				//查询采购申请单分录集合
+				Porequestentry porequestentry = new Porequestentry();
+				porequestentry.setFinterid(porequestList.get(d).getFinterid());
+				List<Porequestentry> porequestentryList = porequestentryDao.findPorequestentrytongdata(porequestentry);//查询订单明细
+				list.add(porequestentryList);
+				
+			}
+			
+			//同步K3数据				
+			TREReturn  terreturn = k3ServiceProxy.savePorequest(k3ServiceProxy.porequestK3Service, porequestList,list);
+			if(terreturn.getnCode() == -1){
+				throw new ServiceException(terreturn.getStrText(),"-1");
+			}
+			Map<Long,String> map=new HashMap();
+			 map = terreturn.getMap();
+		
+			if(map.size()==0){
+				throw new ServiceException("审核失败，ERP同步单据数据为空","-1");	
+			}
+			/*for(Map.Entry<Long, String> entry: map.entrySet()) { //保存K3数据后，回写K3的单据编号
+				Poorder poordererp = new Poorder();	
+				
+				if(entry.getValue()==null || entry.getValue().equals("NULL") || entry.getValue().equals("") || entry.getValue().equals("null")){
+					throw new ServiceException("审核失败，ERP同步单据数据为空","-1");	
+				}
+				poordererp.setErpfbillno(entry.getValue());
+				poordererp.setFinterid(entry.getKey());
+				poorderDao.update(poordererp);
+			}*/
+		}
+		
+		/**k3同步结束**/
+		
+		
+	}
+	/**
+	 * 更新物料表中的已有计划数
+	 * @param entity
+	 * @param status 
+	 */
+	private void updateBaseItemData(Porequest entity, int status) {
+		PorequestentryQuery pq = new PorequestentryQuery();
+		pq.setFinterid(entity.getFinterid());
+		List<Porequestentry> porList = porequestentryDao.findList(pq);
+		if(porList.size()>0){
+			for(int tt=0;tt<porList.size();tt++){
+				List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+				BaseItemQuery bQuery=new BaseItemQuery();
+				bQuery.setItemcode(porList.get(tt).getItemcode());
+				baseitemList = baseItemDao.findEntityBase(bQuery);
+				
+				if(baseitemList.size()>0){//在采购申请单表中未分账套
+					Double sumqty = 0D;
+					if(status==1){//审核增加
+						sumqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) + porList.get(tt).getAmount();
+					}else{//反审减少
+						sumqty = (baseitemList.get(0).getPlanfqty()==null?0D:baseitemList.get(0).getPlanfqty()) - porList.get(tt).getAmount();
+					}
+					BaseItem bitem = new BaseItem();
+					bitem.setItemcode(porList.get(tt).getItemcode());
+					bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+					bitem.setPlanfqty(sumqty<0?0D:sumqty);
+					baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+				}else{
+					throw new ServiceException("物料表中没有物料编码："+porList.get(tt).getItemcode());
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void updateforbatch(List<Long> checkedIdList, Porequest porequest)//批量修改
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		//更新审核人和审核时间
+		 porequestDao.updateforPoAudit(auditIds,porequest);
+		 
+		 Porequest pp = new Porequest();
+		 pp.setFinterids(auditIds);
+		List<Porequest> ppList =  porequestDao.findppList(pp);
+		
+		if(ppList.size()>0){
+			for(int sq=0;sq<ppList.size();sq++){
+				updateBaseItemData(ppList.get(sq),1);//更新物料表的已有计划数量
+			}
+		}
+		
+		
+		//将已审核的数据同步到K3中
+		//synchronousK3(checkedIdList);
+	
+		
+	}
+	@Override
+	public void updateRejected(List<Long> checkedIdList, Porequest porequest)//驳回的申请单修改状态，为制单人创建待办任务
+			throws ServiceException {
+		String auditIds = StringUtils.join(checkedIdList, ",");
+		porequest.setFinterids(auditIds);
+		
+		porequestDao.update("update.Porequest.find.rejected", porequest);//修改申请单状态
+	
+	}
+	@Override
+	public Porequest findPorequestEntity(PorequestQuery porequestQuery)
+			throws ServiceException {
+		return porequestDao.findPorequestEntity(porequestQuery);
+	}
+	@Override
+	public void updateStatuts(Porequest entity) throws ServiceException {
+		
+		Department Department = new Department();
+		Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+		Department.setTeamid(teamid);
+		Department tem = departmentDao.findParentid(Department);//查询部门负责人
+		
+		Porequest porequest = new Porequest();
+		porequest.setFstatus(2);
+		porequest.setFinterid(entity.getFinterid());
+		if(tem == null){
+			porequest.setFrequesterid(SpringSecurityUtils.getCurrentUserId());
+		}else{
+			porequest.setFrequesterid(tem.getAdminId());
+		}
+		
+		porequestDao.updateCheck(porequest);
+	}
+	@Override
+	public void updateStatutsAll(List<Long> checkedIdList)
+			throws ServiceException {
+	 	
+	 	Department Department = new Department();
+		Long teamid = Long.valueOf(SpringSecurityUtils.getCurrentTeamid());
+		Department.setTeamid(teamid);
+		Department tem = departmentDao.findParentid(Department);//查询部门负责人
+		
+		for(int sq = 0;sq<checkedIdList.size();sq++){
+			Porequest porequest = new Porequest();
+			porequest.setFstatus(2);
+			porequest.setFinterid(checkedIdList.get(sq));
+			if(tem == null){
+				porequest.setFrequesterid(SpringSecurityUtils.getCurrentUserId());
+			}else{
+				porequest.setFrequesterid(tem.getAdminId());
+			}
+			
+			porequestDao.updateCheck(porequest);
+		}
+		
+	}
+	@Override
+	public void exeProcess(Porequest entity, ProcessExetask processExetask) {
+		Map<String,Object> map = processExetaskService.exeProcess(processExetask,0);
+		if((Boolean)map.get("rebackTag")){
+			dispatchStatus(entity,processExetask.getTaskCode(),(Integer)map.get("step"),(String)map.get("stepName"));
+			changeMessage(entity,processExetask.getTaskCode(),map);
+			if((Integer)map.get("step")==-1){
+				//拨回到开始节点
+				entity.setFstatus(0);
+				entity.setRejectedwhy(processExetask.getFmark()==null?"":processExetask.getFmark());
+				entity.setCheckstatus(null);
+				entity.setCheckdesc(null);
+			}
+		}else if((Boolean)map.get("flag")){
+			Integer step = (Integer)map.get("step");
+			String desc = (String)map.get("stepName")+" 执行人:"+(String)map.get("handlers");
+			dispatchStatus(entity,processExetask.getTaskCode(),step,desc);
+			changeMessage(entity,processExetask.getTaskCode(),map);
+			if((Boolean)map.get("endTag")){//进入下推流程
+				//申请单审核操作
+				updateBaseItemData(entity,1);
+				entity.setFstatus(1);
+				entity.setCheckid(SpringSecurityUtils.getCurrentUserId());//审核人ID
+				entity.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//审核时间
+				porequestDao.updateDetailstatus(entity);
+				
+				//同步数据到K3的Porequest表中
+				/*List<Long> listchecked = new ArrayList<Long>();
+				listchecked.add(entity.getFinterid());
+				synchronousK3(listchecked);*/
+			}
+		}
+		porequestDao.update(entity);
+		AdminSession admin = (AdminSession) SecurityContextHolder.getContext()
+				.getAuthentication().getPrincipal();
+		operationLogDao.save(ConfigTerrence.MODEL_PURCHASEAPPLY, ConfigTerrence.OPT_EXAMINE, "主键为："+entity.getFinterid()+"的采购申请单审核成功，审核人为："+admin.getAdmin().getAdminName());
+		
+	}
+	public void dispatchStatus(Porequest entity,String mark,Integer step,String desc){
+		if(mark.equals("TO_POREQUEST_PUSH_TASK")){
+			entity.setCheckstatus(step);
+			entity.setCheckdesc(desc);
+		}
+	}
+	//更新和保存系统消息
+	public void changeMessage(Porequest entity,String mark,Map<String,Object> map){
+		Porequest da = porequestDao.getById(entity.getFinterid());
+		if(mark.equals("TO_POREQUEST_PUSH_TASK")){
+			//1先将原来的消息更新为status=2
+			MessageQuery query = new MessageQuery();
+			query.setFbillid(da.getFinterid());
+			query.setProcessname(mark);
+			query.setSortColumns("id");
+			List<Message> lists = messageDao.findList(query);
+			if(lists!=null&&lists.size()>0){
+				Message mes = lists.get(lists.size()-1);
+				mes.setStatus(2);
+				mes.setExecdate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//执行日期
+				this.messageDao.update(mes);
+			}
+			//2如果有当前执行人则插入数据
+			if(map!=null&&map.get("handlerIds")!=null){
+				List<Long> handlerIds = new ArrayList<Long>();
+				handlerIds = (List<Long>) map.get("handlerIds");
+				String empids="";
+				if(handlerIds!=null&&handlerIds.size()>0){
+					for(int i=0;i<handlerIds.size();i++){
+						if(i==handlerIds.size()-1){
+							empids +=handlerIds.get(i);
+						}else{
+							empids +=handlerIds.get(i)+",";
+						}
+					}
+				}
+				if(empids!=null&&!empids.equals("")){
+					Message message = new Message();
+					message.setName("采购申请单待审核");//消息名称
+					message.setContent("单据编号："+da.getFbillno()+";制单人："+da.getCreaterName()+";制单日期："+(da.getCreatedateString()==null?"":da.getCreatedateString().substring(0, 10)));//消息内容
+					message.setType(1);//单据类型
+					message.setFbillno(da.getFbillno());//单据编号
+					message.setFbillid(da.getFinterid());//单据主键
+					message.setUrl("procure/purchase/new_porequest_table.htm");//链接地址
+					message.setStatus(1);//消息状态(1未处理2已处理)
+					message.setCreatedate(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));//创建日期
+					message.setEmpids(empids);//执行人
+					message.setProcessname(mark);//流程名称
+					this.messageDao.save(message);
+				}
+			}
+		}
+	}
+
+}

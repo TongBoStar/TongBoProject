@@ -1,0 +1,1093 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.query.ItemWaitQuery;
+import com.terrence.crm.dol.service.IItemWaitService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/itemWait")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "itemWait." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class ItemWaitAction extends CrudActionSupport<ItemWait>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("itemWaitService")
+	private IItemWaitService itemWaitService;
+	
+	
+	private ItemWait entity;
+
+	private ItemWaitQuery itemWaitQuery;
+	
+	//private ItemSizeValQuery itemSizeValQuery;
+	private java.lang.Long itemWaitId;
+	
+	/** 分页器 */
+	private Page<ItemWait> page = new Page<ItemWait>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<ItemWait> itemWaitList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (itemWaitId != null ) {
+			entity = itemWaitService.getById(itemWaitId);
+		} else {
+			entity = new ItemWait();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			itemWaitService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	
+	public String listToQuery()throws Exception
+	{
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			itemWaitList = itemWaitService.findList(itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemWaitId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			page = itemWaitService.findPage(page, itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public void prepareReviewToItem() throws Exception {
+		prepareModel();
+	}
+	public void prepareSaveToItemwait() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/saveToJson")
+	public String saveToItemwait() throws Exception
+	{
+		try {
+			List<Long> secids=entity.getSecids();
+			
+			for(Long secid:secids)
+			{
+				entity.getFresults().add(Integer.parseInt(this.getRequest().getParameter("fresult"+secid).toString()));
+			}
+			
+			itemWaitService.saveToItemwait(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	public void prepareSaveSize() throws Exception {
+		prepareModel();
+	}
+	public String saveSize()throws Exception
+	{
+		try {
+			
+			
+			entity.setChecker2(SpringSecurityUtils.getCurrentRealName());
+			entity.setSizedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测日期，当前系统日期
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());//当前登录人id
+			itemWaitService.saveOrSize(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	public void prepareCheck()throws Exception
+	{
+		prepareModel();
+	}
+	public String check() throws Exception
+	{
+		try 
+		{
+			entity.setReview1(SpringSecurityUtils.getCurrentRealName());
+			itemWaitService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			
+			itemWaitService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	@Action("/")
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = itemWaitService.getById(itemWaitId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	
+	
+	public String deleteWait() throws Exception {
+			
+			try {
+				itemWaitService.deleteWait(itemWaitQuery);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "删除成功";
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "删除失败";
+			}
+			return JSON;
+		}
+		
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			itemWaitList = itemWaitService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+
+	public String findModel() throws Exception {
+		try{
+			entity = itemWaitService.findModel(itemWaitId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String findModelNew() throws Exception {
+		try{
+			
+			ItemWait itemwait = new ItemWait();
+			itemwait.setWaitid(itemWaitQuery.getWaitid());
+			
+			entity = itemWaitService.findModelNew(itemwait);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	//审核操作状态修改
+	public void prepareUpdateStatus() throws Exception {
+		prepareModel();
+	}
+	public String updateStatus()throws Exception
+	{
+		try {
+			entity.setReview2(SpringSecurityUtils.getCurrentRealName());
+			itemWaitService.updateStatus(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	
+	
+	//提交待审核
+	public void prepareUpdateStatusItemWait() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/updateStatusItemWait")
+	public String updateStatusItemWait()throws Exception
+	{
+		try {
+			itemWaitService.updateStatus(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 待检物料审核
+	 * @throws Exception
+	 */
+	public void prepareUpdateReviewstatus() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/reviewstatusUpdate")
+	public String updateReviewstatus()throws Exception
+	{
+		try {
+			entity.setReview1(SpringSecurityUtils.getCurrentRealName());
+			entity.setReview2(SpringSecurityUtils.getCurrentRealName());
+			entity.setExaminedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+			
+			itemWaitService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	public void prepareUpdateReviewData() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/reviewUpateData")
+	public String updateReviewData()throws Exception
+	{
+		try {
+		
+			itemWaitService.updateNew(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	public String listPending() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemWaitId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			page = itemWaitService.findPage(page, "ItemWait.pending.findPage", itemWaitQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listChecked() throws Exception {//已检物资列表
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemWaitId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			//page = itemWaitService.findPage(page, "ItemWait.checked.findPage", itemWaitQuery);
+			
+			page = itemWaitService.findPage(page, "ItemWait.checked.findPage.newPage", itemWaitQuery);
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listCheckPage() throws Exception {//2013-10-22  待检物资列表
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemWaitId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			//page = itemWaitService.findPage(page, itemWaitQuery);
+			page = itemWaitService.findPage(page, "ItemWait.checked.findPage.list", itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareSaveWaitPush() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/saveWaitPush")
+	public String saveWaitPush() throws Exception {//待检物资合格下推
+			
+			try {
+				itemWaitService.saveWaitPush(checkedIdList);
+				
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";
+				
+				
+			} catch(ServiceException e) {
+				logger.error(e.getMessage());
+					
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				
+				resultInfo[0] = "-1";
+				resultInfo[1] = "操作失败";
+			
+			}
+			return JSON;
+		}
+	
+	
+	
+	
+	
+	
+	public String checkBatchnoItemcode()throws Exception //查询有无此批次号
+	{
+				
+		try {
+			itemWaitList = itemWaitService.findcheckBatchno(itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareUpdateAuditUN() throws Exception {//反审核
+		prepareModel();
+	}
+	@Action("/itemwait/auditUN")
+	public String updateAuditUN()throws Exception
+	{
+		try {
+			
+			itemWaitService.updateAuditUN(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	
+	public String findunqualifiedpage() throws Exception {//2013-10-22  待检物资列表
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("itemWaitId");
+			page.setOrder(Page.DESC);
+		}
+		if(itemWaitQuery == null) {
+			itemWaitQuery = new ItemWaitQuery();
+		}
+		
+		try {
+			//page = itemWaitService.findPage(page, itemWaitQuery);
+			page = itemWaitService.findPage(page, "ItemWait.findpage.unqualified.list", itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public void prepareSaveAdd() throws Exception {//保存添加、添加权限控制
+		prepareModel();
+	}
+	@Action("/itemwait/saveAdd")
+	public String saveAdd() throws Exception {
+		
+		try {
+			
+			itemWaitService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	
+	public void prepareSaveSizeNew() throws Exception {//尺寸检测保存添加权限控制
+		prepareModel();
+	}
+	@Action("/itemwait/saveSizeNew")
+	public String saveSizeNew()throws Exception
+	{
+		try {
+			
+			
+			entity.setChecker2(SpringSecurityUtils.getCurrentRealName());
+			entity.setSizedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测日期，当前系统日期
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());//当前登录人id
+			itemWaitService.saveOrSize(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	public void prepareCheckProject()throws Exception
+	{
+		prepareModel();
+	}
+	@Action("/itemwait/checkProject")
+	public String checkProject() throws Exception
+	{
+		try 
+		{
+			entity.setReview1(SpringSecurityUtils.getCurrentRealName());
+			itemWaitService.update(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return JSON;
+	}
+	
+	public String findItemWait()throws Exception 
+	{
+				
+		try {
+			itemWaitList = itemWaitService.findItemWait(itemWaitQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveWaitNew() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/saveItemWaitNew")
+	public String saveWaitNew() throws Exception
+	{
+		try {
+			List<Long> secids=entity.getSecids();
+			
+			for(Long secid:secids)
+			{
+				entity.getFresults().add(Integer.parseInt(this.getRequest().getParameter("fresult"+secid).toString()));
+			}
+			
+			
+			entity.setChecker2(SpringSecurityUtils.getCurrentRealName());
+			entity.setSizedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测日期，当前系统日期
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());//当前登录人id
+			
+			
+			itemWaitService.saveWaitNew(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	
+	
+	
+	public void prepareSaveItemTopic() throws Exception {
+		prepareModel();
+	}
+	@Action("/itemwait/saveItemTopic")
+	public String saveItemTopic() throws Exception
+	{
+		try {
+//			List<Long> secids=entity.getSecids();
+//			
+//			for(Long secid:secids)
+//			{
+//				entity.getFresults().add(Integer.parseInt(this.getRequest().getParameter("fresult"+secid).toString()));
+//			}
+			
+			entity.setChecker1(SpringSecurityUtils.getCurrentRealName());
+			entity.setChecker2(SpringSecurityUtils.getCurrentRealName());
+			entity.setSizedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//检测日期，当前系统日期
+			entity.setCheckdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));
+			entity.setCheckemp(SpringSecurityUtils.getCurrentUserId());//当前登录人id
+			
+			
+			itemWaitService.saveItemTopic(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public ItemWait getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public ItemWaitQuery getItemWaitQuery() {
+		return itemWaitQuery;
+	}
+
+	
+	public void setItemWaitQuery(ItemWaitQuery itemWaitQuery) {
+		this.itemWaitQuery = itemWaitQuery;
+	}
+
+	public void setItemWaitId(java.lang.Long itemWaitId) {
+		this.itemWaitId = itemWaitId;
+	}
+	
+	
+	public java.lang.Long getItemWaitId() {
+		return this.itemWaitId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<ItemWait> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<ItemWait> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<ItemWait> getItemWaitList() {
+		return itemWaitList;
+	}
+
+//	public ItemSizeValQuery getItemSizeValQuery() {
+//		return itemSizeValQuery;
+//	}
+//
+//	public void setItemSizeValQuery(ItemSizeValQuery itemSizeValQuery) {
+//		this.itemSizeValQuery = itemSizeValQuery;
+//	}
+	
+	
+}

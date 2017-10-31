@@ -1,0 +1,45 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Plratio;
+import com.terrence.crm.dol.dao.IPlratioDao;
+import com.terrence.crm.dol.query.PlratioQuery;
+
+@Repository
+public class PlratioDao extends BaseIbatisDao<Plratio,java.lang.Long> implements IPlratioDao{
+
+		
+	public void saveOrUpdate(Plratio entity) {
+		if(entity.getRatioid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Plratio";
+	}
+	public Plratio getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Plratio)this.getSqlMapClientTemplate().queryForObject("Plratio.getByProperty", map);		
+	}
+
+	@Override
+	public Plratio findPlratio(PlratioQuery plratioQuery) {
+		return (Plratio) this.getSqlMapClientTemplate().queryForObject("Plratio.getentity.data.select", plratioQuery);
+	}
+
+}

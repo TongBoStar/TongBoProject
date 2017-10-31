@@ -1,0 +1,61 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Icserial;
+import com.terrence.crm.dol.dao.IIcserialDao;
+import com.terrence.crm.dol.query.IcserialQuery;
+
+
+@Repository
+public class IcserialDao extends BaseIbatisDao<Icserial,java.lang.Long> implements IIcserialDao{
+
+		
+	public void saveOrUpdate(Icserial entity) {
+		if(entity.getSerialid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Icserial";
+	}
+	public Icserial getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Icserial)this.getSqlMapClientTemplate().queryForObject("Icserial.getByProperty", map);		
+	}
+
+	@Override
+	public void saveSerial(Icserial icserial) {
+		this.getSqlMapClientTemplate().insert("Icserial.insert.in.poorder", icserial);
+		
+	}
+
+	@Override
+	public List<Icserial> findAllNumber(IcserialQuery icserialQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Icserial.find.findAll.number", icserialQuery);
+	}
+
+	@Override
+	public List<Icserial> findNumberNot(IcserialQuery icserialQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Icserial.find.number.notLock", icserialQuery);
+	}
+
+	@Override
+	public void updateIcserial(Icserial ics) {
+		this.getSqlMapClientTemplate().update("Icserial.update.return.data", ics);
+	}
+
+}

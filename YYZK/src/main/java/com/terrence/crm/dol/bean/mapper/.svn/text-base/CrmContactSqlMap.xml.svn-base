@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CrmContact">
+
+        
+	<resultMap id="RM.CrmContact" class="com.terrence.crm.dol.bean.CrmContact">
+        <result property="contactid" column="contactid"/>
+        <result property="finnerid" column="finnerid"/>
+        <result property="contactname" column="contactname"/>
+        <result property="telphone" column="telphone"/>
+        <result property="mobile" column="mobile"/>
+        <result property="email" column="email"/>
+        <result property="departid" column="departid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CrmContact.columns">
+	    <![CDATA[
+        	t_crm_contact.contactid ,
+        	t_crm_contact.finnerid ,
+        	t_crm_contact.contactname ,
+        	t_crm_contact.telphone ,
+        	t_crm_contact.mobile ,
+        	t_crm_contact.email ,
+        	t_crm_contact.departid 
+	    ]]>
+	</sql>
+	
+   <insert id="CrmContact.insert" >
+   
+        INSERT INTO
+        t_crm_contact (
+        	
+        	finnerid ,
+        	contactname 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="telphone">
+        			telphone
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="mobile">
+        			mobile
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="email">
+        			email
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="departid">
+        			departid
+        		</isNotEmpty>
+        	</dynamic>
+        ) VALUES (
+        	#finnerid# ,
+        	#contactname# 
+        	<dynamic prepend="">
+        		<isNotEmpty prepend="," property="telphone">
+        			#telphone#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="mobile">
+        			#mobile#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="email">
+        			#email#
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="departid">
+        			#departid#
+        		</isNotEmpty>
+        	</dynamic>
+        )
+  
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="contactid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="CrmContact.update" parameterClass="com.terrence.crm.dol.bean.CrmContact">         
+        UPDATE t_crm_contact 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="finnerid">
+	        	finnerid = #finnerid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="contactname">
+	        	contactname = #contactname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="telphone">
+	        	telphone = #telphone# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="mobile">
+	        	mobile = #mobile# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="email">
+	        	email = #email# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="departid">
+	        	departid = #departid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        contactid = #contactid# 
+    </update>
+    
+	<delete id="CrmContact.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_crm_contact where
+       contactid = #contactid# 
+    ]]>
+    </delete>
+    
+    <delete id="CrmContact.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_crm_contact 
+        WHERE
+       contactid in ($contactid$) 
+    ]]>
+    </delete>
+    
+     <delete id="CrmContact.deleteByFinnerid">
+    <![CDATA[
+        DELETE FROM 
+        	t_crm_contact 
+        WHERE
+       finnerid in ($finnerid$) 
+    ]]>
+    </delete>
+    
+    <select id="CrmContact.getById" resultMap="RM.CrmContact">
+	    select <include refid="CrmContact.columns"/>
+	    
+	        from t_crm_contact 
+	        where 
+		        contactid = #contactid# 
+	    
+    </select>
+    
+	<select id="CrmContact.getByProperty" resultMap="RM.CrmContact">
+		select <include refid="CrmContact.columns"/> from t_crm_contact where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="CrmContact.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="contactid">
+	             t_crm_contact.contactid = #contactid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_crm_contact.finnerid = #finnerid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="contactname">
+	             t_crm_contact.contactname = #contactname#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="telphone">
+	             t_crm_contact.telphone = #telphone#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="mobile">
+	             t_crm_contact.mobile = #mobile#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="email">
+	             t_crm_contact.email = #email#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="departid">
+	             t_crm_contact.departid = #departid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="CrmContact.findPage.and">
+			<isNotEmpty prepend="AND" property="contactid">
+	             t_crm_contact.contactid = #contactid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="finnerid">
+	             t_crm_contact.finnerid = #finnerid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="contactname">
+	             t_crm_contact.contactname = #contactname#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="telphone">
+	             t_crm_contact.telphone = #telphone#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="mobile">
+	             t_crm_contact.mobile = #mobile#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="email">
+	             t_crm_contact.email = #email#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="departid">
+	             t_crm_contact.departid = #departid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="CrmContact.findList" resultMap="RM.CrmContact">
+    	SELECT 
+    		<include refid="CrmContact.columns"/> 
+    	FROM 
+    		t_crm_contact
+		<include refid="CrmContact.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="CrmContact.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_crm_contact
+    ]]>
+		<include refid="CrmContact.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="CrmContact.findPage" resultMap="RM.CrmContact">
+    	select <include refid="CrmContact.columns"/>	    
+	        from t_crm_contact 	   
+		<include refid="CrmContact.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Sql.CrmContact.findPage" resultMap="RM.CrmContact">
+    	select <include refid="CrmContact.columns"/>	    
+	        from t_crm_contact where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       contactid 
+	   not in(select $notTop$ 
+       contactid 
+	   from t_crm_contact <include refid="CrmContact.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="CrmContact.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

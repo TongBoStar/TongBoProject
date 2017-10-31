@@ -1,0 +1,467 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IProcessDao;
+import com.terrence.crm.dol.service.IItemProcedureService;
+
+@Service
+@Transactional
+public class ItemProcedureService extends BaseService implements IItemProcedureService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemProcedureService.class);
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("processDao")
+	private IProcessDao processDao;
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemProcedure";
+	}
+	@Transactional(readOnly=true)
+	public ItemProcedure getById(java.lang.Long id) throws ServiceException
+	{
+		return itemProcedureDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemProcedure entity) throws ServiceException
+	{
+
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(entity.getItemid());
+//		if(itemProcedureDao.findList(itemProcedureQuery).size()==0){//此物料下无对应工序
+//			entity.setParentid(-1L);//第一序上序为-1
+//		}else{
+//			List<ItemProcedure> itlist = itemProcedureDao.findList(itemProcedureQuery);
+//			//System.out.println("pid:"+itlist.get(itlist.size()-2).getProcedureid().intValue());
+//			entity.setParentid(itlist.get(itlist.size()-2).getProcedureid());//有上序取上序id
+//		}
+		entity.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+		//---检查工序是否重复----------------
+
+		//-------------------------------------------------------------------------------------------	
+		if(null==entity.getItemprocedureid()){//添加
+			Long Itemprocedureid =itemProcedureDao.save(entity);
+			Integer[] isdefault = entity.getIsdefault();
+			Long[] processidlist = entity.getProcessid();
+			
+			ItemProcess itemprocess=new ItemProcess();
+			itemprocess.setItemid(entity.getItemid());
+			itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+			itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+			itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+			itemprocess.setItemprocedureid(Itemprocedureid);
+			
+			for(int i=0;i<processidlist.length;i++){
+				
+				itemprocess.setProcessid(processidlist[i]);
+				itemprocess.setIsdefault(isdefault[i]);
+				itemprocess.setTeamid(processDao.getById(processidlist[i]).getTeamid());
+				itemprocess.setProcessname(processDao.getById(processidlist[i]).getProcessname());
+				itemProcessDao.save(itemprocess);	
+			}
+			
+		}else{//修改
+			itemProcedureDao.update(entity);//修改物料工序关系表
+			Integer[] isdefault = entity.getIsdefault();
+			Long[] processidlist = entity.getProcessid();
+			
+			List<ItemProcess> itemProcesslist=new ArrayList<ItemProcess>();
+			ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+			itemProcessQuery.setItemprocedureid(entity.getItemprocedureid());
+			itemProcesslist= itemProcessDao.findList(itemProcessQuery);
+			
+			for(int i=0;i<processidlist.length;i++){
+				int check=0;	
+				for(ItemProcess itp:itemProcesslist){
+							if(processidlist[i].longValue()==itp.getProcessid().longValue()){//如果工作中心存在,则修改
+								ItemProcess itemprocess=new ItemProcess();
+								ItemProcessQuery itpQuery=new ItemProcessQuery();
+								itpQuery.setItemprocedureid(entity.getItemprocedureid());
+								itpQuery.setProcessid(processidlist[i].longValue());
+								itemprocess=itemProcessDao.findList(itpQuery).get(0);
+								itemprocess.setIsdefault(isdefault[i]);//只需修改是否默认的状态
+								itemProcessDao.update(itemprocess);
+								check=1;
+								break;
+							}
+				}
+				if(check==0){//新添加的工作中心
+					ItemProcess itemprocess=new ItemProcess();
+					itemprocess.setItemid(entity.getItemid());
+					itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+					itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+					itemprocess.setItemprocedureid(entity.getItemprocedureid());
+					itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+					
+					itemprocess.setProcessid(processidlist[i]);
+					itemprocess.setIsdefault(isdefault[i]);
+					itemprocess.setTeamid(processDao.getById(processidlist[i]).getTeamid());
+					itemprocess.setProcessname(processDao.getById(processidlist[i]).getProcessname());
+					itemProcessDao.save(itemprocess);
+				}
+			}
+		}
+	}
+	
+	public java.lang.Long save(ItemProcedure entity) throws ServiceException
+	{
+
+		ItemProcedureQuery checkQuery=new ItemProcedureQuery();
+		checkQuery.setItemid(entity.getItemid());
+		checkQuery.setProcedureid(entity.getProcedureid());
+		checkQuery.setFverid(entity.getFverid());
+		if(itemProcedureDao.findList(checkQuery).size()>0){
+			return -1L;
+		}
+		
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setFverid(entity.getFverid());
+		itemProcedureQuery.setItemid(entity.getItemid());
+		itemProcedureQuery.setSortColumns("seqno");
+		if(itemProcedureDao.findList(itemProcedureQuery).size()==0){//此物料下无对应工序
+			entity.setParentid(-1L);//第一序上序为-1
+			entity.setSeqno(1);//第一序的排序序号为1
+		}else{
+			List<ItemProcedure> itlist = itemProcedureDao.findList(itemProcedureQuery);
+			entity.setParentid(itlist.get(itlist.size()-1).getItemprocedureid());//有上序取上序id
+			entity.setSeqno(itlist.get(itlist.size()-1).getSeqno()+1);//获取上序的排序id,+1
+		}
+		entity.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+		
+		Long adId = itemProcedureDao.save(entity);
+		
+		ItemProcess itemprocess=new ItemProcess();
+		itemprocess.setItemid(entity.getItemid());
+		itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+		itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+		itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+		
+		itemprocess.setItemprocedureid(adId);
+		itemprocess.setProcessname(processDao.getById(entity.getProcessid()[0]).getProcessname());
+		itemprocess.setIsdefault(entity.getIsdefault()[0]);
+		itemprocess.setTeamid(processDao.getById(entity.getProcessid()[0]).getTeamid());
+		itemprocess.setProcessid(entity.getProcessid()[0]);
+		itemProcessDao.save(itemprocess);
+		return adId;
+	}
+	
+	public Integer update(ItemProcedure entity) throws ServiceException
+	{
+		Integer returnValue =  itemProcedureDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemProcedureDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+
+		ItemProcedureQuery query=new ItemProcedureQuery();
+		query.setItemprocedureid(Long.valueOf(delIds));
+		ItemProcedure nowitemProcedure = itemProcedureDao.findList(query).get(0);
+		Long pid = nowitemProcedure.getParentid();//获取上级id
+		Integer seqno = nowitemProcedure.getSeqno();
+		ItemProcedure changitemProcedure=null;
+		
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setParentid(Long.valueOf(delIds));
+		
+		
+		
+		//删除物料和工序关系,同时删除工艺卡itemprocess
+		ItemProcedure itemProcedure=new ItemProcedure();
+		for(long id:idList){
+			itemProcessDao.deleteByItemProcedureId(id);
+			}
+		Integer returnValue = itemProcedureDao.deleteByMultipleId(delIds);
+		
+
+		if(itemProcedureDao.findList(itemProcedureQuery).size()!=0){
+			changitemProcedure = itemProcedureDao.findList(itemProcedureQuery).get(0);
+			changitemProcedure.setParentid(pid);	
+			itemProcedureDao.update(changitemProcedure);	
+		}
+		//被删除工序后面的工序,排序字段全减1
+		ItemProcedureQuery findquery = new ItemProcedureQuery();
+		findquery.setItemid(nowitemProcedure.getItemid());
+		List<ItemProcedure> itemProcedureList =new ArrayList<ItemProcedure>(); 
+		itemProcedureList=itemProcedureDao.findList(findquery);
+		if(itemProcedureList.size()!=0){
+			for(ItemProcedure itp:itemProcedureList){
+				if(seqno<itp.getSeqno()){
+					itp.setSeqno(itp.getSeqno()-1);
+					itemProcedureDao.update(itp);
+				}
+			}
+			
+		}
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemProcedureQuery query = new ItemProcedureQuery();
+		try {
+			return itemProcedureDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemProcedure> findPage(Page<ItemProcedure> page, ItemProcedureQuery query) throws ServiceException
+	{
+		return itemProcedureDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemProcedure> findPage(Page<ItemProcedure> page,String statement, ItemProcedureQuery query) throws ServiceException
+	{
+		return itemProcedureDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemProcedure> findList(ItemProcedureQuery query) throws ServiceException
+	{
+		return itemProcedureDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemProcedure> findList(ItemProcedureQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemProcedureDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemProcedure> findList(ItemProcedureQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemProcedureDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemProcedure> findAllList() throws ServiceException
+	{
+		return itemProcedureDao.findAllList();
+	}
+	@Override
+	public Long saveInsertionProcedures(ItemProcedure entity) {
+				
+		Long getid = entity.getItemprocedureid();
+		
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemprocedureid(getid);
+		ItemProcedure downItemProcedure =itemProcedureDao.findList(itemProcedureQuery).get(0);
+		//---检查是否重复添加工序-------------
+		ItemProcedureQuery checkQuery=new ItemProcedureQuery();
+		checkQuery.setProcedureid(entity.getProcedureid());
+		checkQuery.setItemid(downItemProcedure.getItemid());
+		checkQuery.setFverid(entity.getFverid());
+		if(itemProcedureDao.findList(checkQuery).size()>0){
+			return -1L;
+		}
+		//----------------
+		ItemProcedure insertionItemProcedure=new ItemProcedure();
+		
+		insertionItemProcedure.setParentid(downItemProcedure.getParentid());
+		insertionItemProcedure.setProcedureid(entity.getProcedureid());
+		insertionItemProcedure.setItemid(downItemProcedure.getItemid());
+		insertionItemProcedure.setItemname(downItemProcedure.getItemname());
+		//System.out.println(insertionItemProcedure.toString());
+		
+		insertionItemProcedure.setSeqno(downItemProcedure.getSeqno());//排序字段
+		insertionItemProcedure.setFverid(entity.getFverid());
+
+		ItemProcedureQuery itemProcedureQ=new ItemProcedureQuery();
+		itemProcedureQ.setItemid(downItemProcedure.getItemid());
+		itemProcedureQ.setFverid(entity.getFverid());
+		
+		List<ItemProcedure> itemProcedureList = itemProcedureDao.findList(itemProcedureQ);//获取此物料下所有工序
+		for(ItemProcedure ipce:itemProcedureList){
+			if(ipce.getSeqno().intValue()>downItemProcedure.getSeqno().intValue()||ipce.getSeqno().intValue()==downItemProcedure.getSeqno().intValue()){
+				ipce.setSeqno(ipce.getSeqno()+1);
+				itemProcedureDao.update(ipce);//所有大于本序的工序,排序字段全部加1
+			}
+		}
+		
+		Long adId = itemProcedureDao.save(insertionItemProcedure);//新插入的工序
+		
+		downItemProcedure.setParentid(adId);
+		downItemProcedure.setSeqno(downItemProcedure.getSeqno()+1);
+		itemProcedureDao.update(downItemProcedure);//更新被插入工序的上序id
+		
+//		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+//		itemProcedureQuery.setItemid(entity.getItemid());
+//		if(itemProcedureDao.findList(itemProcedureQuery).size()==0){//此物料下无对应工序
+//			entity.setParentid(-1L);//第一序上序为-1
+//		}else{
+//			List<ItemProcedure> itlist = itemProcedureDao.findList(itemProcedureQuery);
+//			entity.setParentid(itlist.get(itlist.size()-1).getProcedureid());//有上序取上序id
+//		}
+//		entity.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+//		
+		//Long adId = itemProcedureDao.save(entity);
+		
+		ItemProcess itemprocess=new ItemProcess();
+		itemprocess.setItemid(entity.getItemid());
+		itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+		itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+		itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+		
+		itemprocess.setItemprocedureid(adId);
+		itemprocess.setProcessname(processDao.getById(entity.getProcessid()[0]).getProcessname());
+		itemprocess.setIsdefault(entity.getIsdefault()[0]);
+		itemprocess.setTeamid(processDao.getById(entity.getProcessid()[0]).getTeamid());
+		itemprocess.setProcessid(entity.getProcessid()[0]);
+		itemProcessDao.save(itemprocess);
+		return adId;
+		
+	}
+	@Override
+	public Long saveOrUpdateItemProcedures(ItemProcedure entity) {
+
+
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(entity.getItemid());
+		entity.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+		//---检查工序是否重复----------------
+		
+		//----------------------------------
+		
+		ItemProcedureQuery checkQuery=new ItemProcedureQuery();
+		checkQuery.setItemid(entity.getItemid());
+		checkQuery.setProcedureid(entity.getProcedureid());
+		checkQuery.setFverid(entity.getFverid());
+		if(itemProcedureDao.findList(checkQuery).size()>0&&(itemProcedureDao.findList(checkQuery).get(0).getItemprocedureid().longValue()!=entity.getItemprocedureid().longValue())){
+		return -1L;	//有重复
+		}
+		//-------------------------------------------------------------------------------------------	
+		if(null==entity.getItemprocedureid()){//添加
+			Long Itemprocedureid =itemProcedureDao.save(entity);
+			Integer[] isdefault = entity.getIsdefault();
+			Long[] processidlist = entity.getProcessid();
+			
+			ItemProcess itemprocess=new ItemProcess();
+			itemprocess.setItemid(entity.getItemid());
+			itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+			itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+			itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+			itemprocess.setItemprocedureid(Itemprocedureid);
+			
+			for(int i=0;i<processidlist.length;i++){
+				
+				itemprocess.setProcessid(processidlist[i]);
+				itemprocess.setIsdefault(isdefault[i]);
+				itemprocess.setTeamid(processDao.getById(processidlist[i]).getTeamid());
+				itemprocess.setProcessname(processDao.getById(processidlist[i]).getProcessname());
+				itemProcessDao.save(itemprocess);	
+			}
+			
+		}else{//修改
+			itemProcedureDao.update(entity);//修改物料工序关系表
+			Integer[] isdefault = entity.getIsdefault();
+			Long[] processidlist = entity.getProcessid();
+			
+			List<ItemProcess> itemProcesslist=new ArrayList<ItemProcess>();
+			ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+			itemProcessQuery.setItemprocedureid(entity.getItemprocedureid());
+			itemProcesslist= itemProcessDao.findList(itemProcessQuery);
+			
+			for(int i=0;i<processidlist.length;i++){
+				int check=0;	
+				for(ItemProcess itp:itemProcesslist){
+							if(processidlist[i].longValue()==itp.getProcessid().longValue()){//如果工作中心存在,则修改
+								ItemProcess itemprocess=new ItemProcess();
+								ItemProcessQuery itpQuery=new ItemProcessQuery();
+								itpQuery.setItemprocedureid(entity.getItemprocedureid());
+								itpQuery.setProcessid(processidlist[i].longValue());
+								itemprocess=itemProcessDao.findList(itpQuery).get(0);
+								itemprocess.setIsdefault(isdefault[i]);//只需修改是否默认的状态
+								itemProcessDao.update(itemprocess);
+								check=1;
+								break;
+							}
+				}
+				if(check==0){//新添加的工作中心
+					ItemProcess itemprocess=new ItemProcess();
+					itemprocess.setItemid(entity.getItemid());
+					itemprocess.setItemcode(baseItemDao.getById(entity.getItemid()).getItemcode());
+					itemprocess.setItemname(baseItemDao.getById(entity.getItemid()).getItemname());
+					itemprocess.setItemprocedureid(entity.getItemprocedureid());
+					itemprocess.setItemmode(baseItemDao.getById(entity.getItemid()).getFormatno());
+					
+					itemprocess.setProcessid(processidlist[i]);
+					itemprocess.setIsdefault(isdefault[i]);
+					//添加时查询是否有默认为是的工作中心,若有,则此工作中心为否,若无则不便
+					//itemprocedureid--
+					ItemProcessQuery itQuery=new ItemProcessQuery();
+					itQuery.setItemprocedureid(entity.getItemprocedureid());
+					List<ItemProcess> itlist = itemProcessDao.findList(itQuery);
+					for(ItemProcess it:itlist){
+						if(it.getIsdefault().intValue()==1){//默认为是
+							itemprocess.setIsdefault(0);break;
+						}
+					}
+					//------------------------------------------------------
+					
+					itemprocess.setTeamid(processDao.getById(processidlist[i]).getTeamid());
+					itemprocess.setProcessname(processDao.getById(processidlist[i]).getProcessname());
+					itemProcessDao.save(itemprocess);
+				}
+			}
+		}
+	
+		
+		
+		
+		
+		return 0L;
+	}
+	@Override
+	public List<ItemProcedure> findList(ItemProcedureQuery itemProcedureQuery,
+			String statement) throws ServiceException {
+		
+		return itemProcedureDao.findList(statement, itemProcedureQuery);
+	}
+
+}

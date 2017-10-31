@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Adtt;
+import com.terrence.crm.dol.dao.IAdttDao;
+
+@Repository
+public class AdttDao extends BaseIbatisDao<Adtt,java.lang.Long> implements IAdttDao{
+
+		
+	public void saveOrUpdate(Adtt entity) {
+		if(entity.getAdttid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Adtt";
+	}
+	public Adtt getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Adtt)this.getSqlMapClientTemplate().queryForObject("Adtt.getByProperty", map);		
+	}
+
+	@Override
+	public Adtt findEntity(Adtt adtt2) {
+		return (Adtt) this.getSqlMapClientTemplate().queryForObject("Adtt.find.entity.data.for.delete", adtt2);
+	}
+
+	@Override
+	public Adtt findAdtt(Adtt att) {
+		return (Adtt) this.getSqlMapClientTemplate().queryForObject("Adtt.find.status.fqtyed.data", att);
+	}
+
+}

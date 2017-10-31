@@ -1,0 +1,46 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Duty;
+import com.terrence.crm.dol.dao.IDutyDao;
+import com.terrence.crm.dol.query.DutyQuery;
+
+@Repository
+public class DutyDao extends BaseIbatisDao<Duty,java.lang.Long> implements IDutyDao{
+
+		
+	public void saveOrUpdate(Duty entity) {
+		if(entity.getDutyid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Duty";
+	}
+	public Duty getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Duty)this.getSqlMapClientTemplate().queryForObject("Duty.getByProperty", map);		
+	}
+
+	@Override
+	public List<Duty> findDutyList(DutyQuery dutyQuery) {
+		return this.getSqlMapClientTemplate().queryForList("Duty.findDutyList",dutyQuery);
+	}
+
+}

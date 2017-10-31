@@ -1,0 +1,67 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyDetail;
+import com.terrence.crm.dol.dao.IAssemblyDetailDao;
+import com.terrence.crm.dol.query.AssemblyDetailQuery;
+
+@Repository
+public class AssemblyDetailDao extends BaseIbatisDao<AssemblyDetail,java.lang.Long> implements IAssemblyDetailDao{
+
+		
+	public void saveOrUpdate(AssemblyDetail entity) {
+		if(entity.getAssemblyid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyDetail";
+	}
+	public AssemblyDetail getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyDetail)this.getSqlMapClientTemplate().queryForObject("AssemblyDetail.getByProperty", map);		
+	}
+
+	@Override
+	public List<AssemblyDetail> findListDetail(AssemblyDetailQuery query) {
+		return this.getSqlMapClientTemplate().queryForList("AssemblyDetail.find.list.for.detail", query);
+	}
+
+	@Override
+	public List<AssemblyDetail> findassemblyList(
+			AssemblyDetailQuery assemblyDetailQuery) {
+		return this.getSqlMapClientTemplate().queryForList("AssemblyDetail.find.assemblyList.data", assemblyDetailQuery);
+	}
+
+	@Override
+	public List<AssemblyDetail> findadList(AssemblyDetailQuery adq) {
+		return this.getSqlMapClientTemplate().queryForList("AssemblyDetail.find.assdetial.list.data", adq);
+	}
+
+	@Override
+	public List<AssemblyDetail> findListDataList(AssemblyDetail asdetail) {
+		return this.getSqlMapClientTemplate().queryForList("AssemblyDetail.find.list.data.forCheck", asdetail);
+	}
+
+	@Override
+	public void delDataFor(AssemblyDetail ad) {
+		this.getSqlMapClientTemplate().delete("AssemblyDetail.delDataFor.data", ad);
+	}
+
+}

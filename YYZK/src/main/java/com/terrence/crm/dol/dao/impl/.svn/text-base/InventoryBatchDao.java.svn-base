@@ -1,0 +1,116 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.query.InventoryBatchQuery;
+
+@Repository
+public class InventoryBatchDao extends BaseIbatisDao<InventoryBatch,java.lang.Long> implements IInventoryBatchDao{
+
+		
+	public void saveOrUpdate(InventoryBatch entity) {
+		if(entity.getBatchid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "InventoryBatch";
+	}
+	public InventoryBatch getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (InventoryBatch)this.getSqlMapClientTemplate().queryForObject("InventoryBatch.getByProperty", map);		
+	}
+
+	@Override
+	public void saveSync(String statemtnt) {
+		this.getSqlMapClientTemplate().insert(statemtnt);
+	}
+
+	@Override
+	public void updateSync(String statemtnt) {
+		this.getSqlMapClientTemplate().update(statemtnt);		
+	}
+
+	@Override
+	public InventoryBatch getBatchnoAndDbno(String parentcode) {
+
+		return (InventoryBatch)this.getSqlMapClientTemplate().queryForObject("InventoryBatch.getBatchnoAndDbno", parentcode);
+		 
+	}
+
+	@Override
+	public void getSync(String statement) {
+		this.getSqlMapClientTemplate().queryForObject(statement);
+	}
+
+	@Override
+	public InventoryBatch findIBentity(InventoryBatch inventbatch) {
+		return (InventoryBatch) this.getSqlMapClientTemplate().queryForObject("InventoryBatch.find.IBentity",inventbatch );
+	}
+	/**
+	 * 通过物料代码,批次号,仓库ID 查找 排产库存中某个物料的帐存数量
+	 */
+	@Override
+	public InventoryBatch getByInfos(InventoryBatch inventbatch) {
+		return (InventoryBatch) this.getSqlMapClientTemplate().queryForObject("InventoryBatch.getByInfos",inventbatch );
+	}
+
+	@Override
+	public void deleteIB(InventoryBatch inventoryBatch) {
+		this.getSqlMapClientTemplate().delete("InventoryBatch.delete.in.putsotrage", inventoryBatch);
+		
+	}
+
+	@Override
+	public List<InventoryBatch> findinba(InventoryBatch inbatch) {
+		return (List<InventoryBatch>) this.getSqlMapClientTemplate().queryForList("InventoryBatch.find.inba", inbatch);
+	}
+
+	@Override
+	public List<InventoryBatch> findInventoeyList(InventoryBatch ibatch) {
+		return this.getSqlMapClientTemplate().queryForList("InventoryBatch.find.List.inventBatch", ibatch);
+	}
+
+	@Override
+	public InventoryBatch findIBentityBatchno(InventoryBatch inventbatch) {
+		return (InventoryBatch) this.getSqlMapClientTemplate().queryForObject("InventoryBatch.find.entity.for.batchno", inventbatch);
+	}
+
+	@Override
+	public InventoryBatch findEntity(InventoryBatch ibatch) {
+		return (InventoryBatch) this.getSqlMapClientTemplate().queryForObject("InventoryBatch.find.entity.returnGoods", ibatch);
+	}
+
+	@Override
+	public InventoryBatch findbatch(InventoryBatch inbatchno) {
+		return (InventoryBatch) this.getSqlMapClientTemplate().queryForObject("InventoryBatch.find.batch.fqtylock", inbatchno);
+	}
+
+	@Override
+	public List<InventoryBatch> findStockList(
+			InventoryBatchQuery inventoryBatchQuery) {
+		return this.getSqlMapClientTemplate().queryForList("InventoryBatch.findlist.in.callslip", inventoryBatchQuery);
+	}
+
+	@Override
+	public void syncFromErp(String sqlStatement) {
+		this.getSqlMapClientTemplate().queryForObject(sqlStatement);
+	}
+
+
+}

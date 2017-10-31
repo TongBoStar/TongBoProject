@@ -1,0 +1,40 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Measureunits;
+import com.terrence.crm.dol.dao.IMeasureunitsDao;
+import com.terrence.crm.dol.query.MeasureunitsQuery;
+import com.terrence.crm.dol.service.IMeasureunitsService;
+
+@Service
+@Transactional
+public class MeasureunitsService extends BaseService implements IMeasureunitsService {
+	protected static Logger logger = LoggerFactory.getLogger(MeasureunitsService.class);
+	@Autowired
+	@Qualifier("measureunitsDao")
+	private IMeasureunitsDao measureunitsDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Measureunits";
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunits> findList(MeasureunitsQuery query) throws ServiceException
+	{
+		return measureunitsDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Measureunits> findAllList() throws ServiceException
+	{
+		return measureunitsDao.findAllList();
+	}
+}

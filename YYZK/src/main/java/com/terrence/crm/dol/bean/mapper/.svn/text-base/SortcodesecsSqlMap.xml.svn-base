@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Sortcodesecs">
+<resultMap id="RM.Sortcodesecs" class="com.terrence.crm.dol.bean.Sortcodesec">
+        <result property="secid" column="secid"/>
+        <result property="seccode" column="seccode"/>
+        <result property="secname" column="secname"/>
+        <result property="secdesc" column="secdesc"/>
+        <result property="secenable" column="secenable"/>
+        <result property="emplid" column="emplid"/>
+        <result property="lastupdate" column="lastupdate"/>
+        <result property="firid" column="firid"/>
+    </resultMap>
+    <!-- 用于select查询公用抽取的列 -->
+	<sql id="Sortcodesecs.columns">
+	    <![CDATA[
+        	t_sortcodesecs.secid ,
+        	t_sortcodesecs.seccode ,
+        	t_sortcodesecs.secname ,
+        	t_sortcodesecs.secdesc ,
+        	t_sortcodesecs.secenable ,
+        	t_sortcodesecs.emplid ,
+        	t_sortcodesecs.lastupdate ,
+        	t_sortcodesecs.firid 
+	    ]]>
+	</sql>
+    <!-- 查询物料类别分类 -->
+    <select id="SortCodeSecs.findSecInfoList" resultMap="RM.Sortcodesecs">
+    	select <include refid="Sortcodesecs.columns"/> 
+    	from t_sortcodesecs where t_sortcodesecs.firid = 
+    	(select t_sortcodefirs.firid from t_sortcodefirs where fircode = #fircodevalue#  )
+    </select>
+</sqlMap>

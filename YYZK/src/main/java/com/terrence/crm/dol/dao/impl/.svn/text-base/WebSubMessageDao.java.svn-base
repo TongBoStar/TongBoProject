@@ -1,0 +1,30 @@
+package com.terrence.crm.dol.dao.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WebSubMessage;
+import com.terrence.crm.dol.dao.IWebSubMessageDao;
+@Repository
+public class WebSubMessageDao extends BaseIbatisDao<WebSubMessage,java.lang.Long> implements IWebSubMessageDao{
+	public void saveOrUpdate(WebSubMessage entity) {
+		if(entity.getFinterId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WebSubMessage";
+	}
+	public WebSubMessage getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WebSubMessage)this.getSqlMapClientTemplate().queryForObject("WebSubMessage.getByProperty", map);		
+	}
+}

@@ -1,0 +1,52 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Exchangerateentry;
+import com.terrence.crm.dol.dao.IExchangerateentryDao;
+import com.terrence.crm.dol.query.ExchangerateentryQuery;
+
+@Repository
+public class ExchangerateentryDao extends BaseIbatisDao<Exchangerateentry,java.lang.Long> implements IExchangerateentryDao{
+
+		
+	public void saveOrUpdate(Exchangerateentry entity) {
+		if(entity.getFentryid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Exchangerateentry";
+	}
+	public Exchangerateentry getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Exchangerateentry)this.getSqlMapClientTemplate().queryForObject("Exchangerateentry.getByProperty", map);		
+	}
+
+	@Override
+	public void findErp() {
+		this.getSqlMapClientTemplate().queryForObject("Exchangerateentry");
+		
+	}
+
+	@Override
+	public Exchangerateentry findrate(
+			ExchangerateentryQuery exchangerateentryQuery) {
+		return (Exchangerateentry) this.getSqlMapClientTemplate().queryForObject("ExchangeRateEntry.find.rate", exchangerateentryQuery);
+	}
+
+}

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.SdariEngineer;
+import com.terrence.crm.dol.query.SdariEngineerQuery;
+import com.terrence.crm.dol.dao.ISdariEngineerDao;
+import com.terrence.crm.dol.service.ISdariEngineerService;
+
+@Service
+@Transactional
+public class SdariEngineerService extends BaseService implements ISdariEngineerService {
+	protected static Logger logger = LoggerFactory.getLogger(SdariEngineerService.class);
+	@Autowired
+	@Qualifier("sdariEngineerDao")
+	private ISdariEngineerDao sdariEngineerDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "SdariEngineer";
+	}
+	@Transactional(readOnly=true)
+	public SdariEngineer getById(java.lang.Long id) throws ServiceException
+	{
+		return sdariEngineerDao.getById(id);
+	}
+	
+	public void saveOrUpdate(SdariEngineer entity) throws ServiceException
+	{
+		sdariEngineerDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(SdariEngineer entity) throws ServiceException
+	{
+		Long adId = sdariEngineerDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(SdariEngineer entity) throws ServiceException
+	{
+		Integer returnValue =  sdariEngineerDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = sdariEngineerDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = sdariEngineerDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		SdariEngineerQuery query = new SdariEngineerQuery();
+		try {
+			return sdariEngineerDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<SdariEngineer> findPage(Page<SdariEngineer> page, SdariEngineerQuery query) throws ServiceException
+	{
+		return sdariEngineerDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<SdariEngineer> findPage(Page<SdariEngineer> page,String statement, SdariEngineerQuery query) throws ServiceException
+	{
+		return sdariEngineerDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<SdariEngineer> findList(SdariEngineerQuery query) throws ServiceException
+	{
+		return sdariEngineerDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<SdariEngineer> findList(SdariEngineerQuery query,Integer pageSize) throws ServiceException
+	{
+		return sdariEngineerDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<SdariEngineer> findList(SdariEngineerQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return sdariEngineerDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<SdariEngineer> findAllList() throws ServiceException
+	{
+		return sdariEngineerDao.findAllList();
+	}
+
+}

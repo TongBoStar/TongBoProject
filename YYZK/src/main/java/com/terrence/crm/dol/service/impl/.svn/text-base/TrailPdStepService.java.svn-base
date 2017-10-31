@@ -1,0 +1,219 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TrailPdStep;
+import com.terrence.crm.dol.bean.TrailPdStepQualVar;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.bean.TrialPd;
+import com.terrence.crm.dol.query.TrailPdStepQualVarQuery;
+import com.terrence.crm.dol.query.TrailPdStepQuery;
+import com.terrence.crm.dol.query.TrialDeviceQuery;
+import com.terrence.crm.dol.dao.ITrailPdStepDao;
+import com.terrence.crm.dol.dao.ITrailPdStepQualVarDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.dao.ITrialPdDao;
+import com.terrence.crm.dol.service.ITrailPdStepService;
+
+@Service
+@Transactional
+public class TrailPdStepService extends BaseService implements ITrailPdStepService {
+	protected static Logger logger = LoggerFactory.getLogger(TrailPdStepService.class);
+	@Autowired
+	@Qualifier("trailPdStepDao")
+	private ITrailPdStepDao trailPdStepDao;
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	@Autowired
+	@Qualifier("trailPdStepQualVarDao")
+	private ITrailPdStepQualVarDao trailPdStepQualVarDao;
+	@Autowired
+	@Qualifier("trialPdDao")
+	private ITrialPdDao trialPdDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TrailPdStep";
+	}
+	@Transactional(readOnly=true)
+	public TrailPdStep getById(java.lang.Long id) throws ServiceException
+	{
+		return trailPdStepDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TrailPdStep entity) throws ServiceException
+	{
+		trailPdStepDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TrailPdStep entity) throws ServiceException
+	{
+		Long adId = trailPdStepDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TrailPdStep entity) throws ServiceException
+	{
+		Integer returnValue =  trailPdStepDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = trailPdStepDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = trailPdStepDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TrailPdStepQuery query = new TrailPdStepQuery();
+		try {
+			return trailPdStepDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdStep> findPage(Page<TrailPdStep> page, TrailPdStepQuery query) throws ServiceException
+	{
+		return trailPdStepDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TrailPdStep> findPage(Page<TrailPdStep> page,String statement, TrailPdStepQuery query) throws ServiceException
+	{
+		return trailPdStepDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStep> findList(TrailPdStepQuery query) throws ServiceException
+	{
+		return trailPdStepDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStep> findList(TrailPdStepQuery query,Integer pageSize) throws ServiceException
+	{
+		return trailPdStepDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TrailPdStep> findList(TrailPdStepQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return trailPdStepDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TrailPdStep> findAllList() throws ServiceException
+	{
+		return trailPdStepDao.findAllList();
+	}
+	@Override
+	public void saveTodetail(TrailPdStep entity) throws ServiceException {
+			
+		
+		
+		/*	if(null==entity.getDid()){
+				entity.setDid(null);
+				entity.setQualvar("/");
+			}else{
+				TrialDevice device = trialDeviceDao.getById(entity.getDid());
+				entity.setQualvar(device.getFename());
+			}
+		*/
+		Long stepid=-1L;
+		
+		if(null!=entity.getStepid()){//更新
+			trailPdStepDao.update(entity);
+			stepid=entity.getStepid();
+		}else{//添加
+			stepid=trailPdStepDao.save(entity);
+		}
+		
+		
+		
+		TrailPdStepQualVarQuery  trailPdStepQualVarQuery=new TrailPdStepQualVarQuery();
+		trailPdStepQualVarQuery.setStepid(stepid);
+		trailPdStepQualVarDao.deleteByWhere("TrailPdStepQualVar.deletebystepid", trailPdStepQualVarQuery);
+		
+		if(null!=entity.getIsoklist()){//是否合格字段,关系绑定---修改后模版查询要修改---
+				//绑定关系t_trail_pd_step_qual_var
+			//stepid
+			String isok="";
+			isok=entity.getIsoklist();
+			if(isok==""){
+				return ;
+			}
+			String[] isoklist = isok.split(",");
+			for(String devicename:isoklist){
+				TrialDevice trialDevice=new TrialDevice();
+				TrialDeviceQuery query=new TrialDeviceQuery();
+				query.setDivicename(devicename);
+				
+				query.setTrialid(trialPdDao.getById(trailPdStepDao.getById(stepid).getTplid()).getTrialid());
+				trialDevice = trialDeviceDao.getByEntity("TrialDevice.getBydevicename", query);
+				String ename=trialDevice.getFename();//变量名
+				String cname=trialDevice.getDivicename();//中文名
+				
+				TrailPdStepQualVar trailPdStepQualVar=new TrailPdStepQualVar();
+				trailPdStepQualVar.setStepid(stepid);
+				trailPdStepQualVar.setVarname(ename);//变量名ename
+				trailPdStepQualVar.setCnname(cname);//中文名
+				//保存	
+				trailPdStepQualVarDao.save(trailPdStepQualVar);
+				
+			}
+			
+		}
+		
+	}
+
+	@Transactional(readOnly=true)
+	public TrailPdStep getDetailById(Long trailPdStepId)
+			throws ServiceException {
+		
+		
+		
+		return trailPdStepDao.getById("TrailPdStep.getDetailById", trailPdStepId);
+		
+	}
+	@Override
+	public List<TrailPdStep> findAllList(TrailPdStepQuery trailPdStepQuery) {
+		return trailPdStepDao.findAllList(trailPdStepQuery);
+	}
+
+	
+	
+	
+}

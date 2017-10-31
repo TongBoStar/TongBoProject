@@ -1,0 +1,588 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import com.sun.star.uno.RuntimeException;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.Authority;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Check;
+import com.terrence.crm.dol.bean.CheckRecord;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.ItemWait;
+import com.terrence.crm.dol.bean.Nogood;
+import com.terrence.crm.dol.bean.NogoodNote;
+import com.terrence.crm.dol.bean.Poorder;
+import com.terrence.crm.dol.bean.Poorderentry;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.bean.ProcessExetask;
+import com.terrence.crm.dol.bean.ProcessHandle;
+import com.terrence.crm.dol.bean.ProcessHistask;
+import com.terrence.crm.dol.bean.ProcessTask;
+import com.terrence.crm.dol.bean.Putstorage;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.query.NogoodQuery;
+import com.terrence.crm.dol.query.ProcessDetailQuery;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.ICheckRecordDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IItemWaitDao;
+import com.terrence.crm.dol.dao.INogoodDao;
+import com.terrence.crm.dol.dao.INogoodNoteDao;
+import com.terrence.crm.dol.dao.IPoorderDao;
+import com.terrence.crm.dol.dao.IPoorderentryDao;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+import com.terrence.crm.dol.dao.IProcessExetaskDao;
+import com.terrence.crm.dol.dao.IProcessHistaskDao;
+import com.terrence.crm.dol.dao.IProcessTaskDao;
+import com.terrence.crm.dol.dao.IPutstorageDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.impl.IcbillnoDao;
+import com.terrence.crm.dol.service.IAdminRoleService;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IAuthorityService;
+import com.terrence.crm.dol.service.IEmailService;
+import com.terrence.crm.dol.service.INogoodService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
+@Service
+@Transactional
+public class NogoodService extends BaseService implements INogoodService {
+	protected static Logger logger = LoggerFactory.getLogger(NogoodService.class);
+	@Autowired
+	@Qualifier("nogoodDao")
+	private INogoodDao nogoodDao;
+	@Autowired
+	@Qualifier("nogoodNoteDao")
+	private INogoodNoteDao nogoodNoteDao;
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("checkRecordDao")
+	private ICheckRecordDao checkRecordDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("itemWaitDao")
+	private IItemWaitDao itemWaitDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("poorderDao")
+	private IPoorderDao poorderDao;
+	@Autowired
+	@Qualifier("poorderentryDao")
+	private IPoorderentryDao poorderentryDao;
+	@Autowired
+	@Qualifier("putstorageDao")
+	private IPutstorageDao putstorageDao;
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	@Autowired
+	@Qualifier("emailService")
+	private IEmailService emailService;
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	@Autowired
+	@Qualifier("authorityService")
+	private IAuthorityService authorityService;
+	@Autowired
+	@Qualifier("freemarkerConfiguration")
+	private Configuration freemarkerConfiguration;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("processTaskDao")
+	private IProcessTaskDao processTaskDao;
+	@Autowired
+	@Qualifier("processHistaskDao")
+	private IProcessHistaskDao processHistaskDao;
+	@Autowired
+	@Qualifier("processExetaskDao")
+	private IProcessExetaskDao processExetaskDao;
+	@Autowired
+	@Qualifier("processDetailDao")
+	private IProcessDetailDao processDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Nogood";
+	}
+	@Transactional(readOnly=true)
+	public Nogood getById(java.lang.Long id) throws ServiceException
+	{
+		return nogoodDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Nogood entity,String notes,Integer sendEmail) throws ServiceException
+	{
+		if(null!=notes&&!notes.equals("")){
+			parseNogoodNotes(entity,notes,sendEmail);
+		}
+		if(null==sendEmail||sendEmail.intValue()!=1){
+			AdminSession admin = (AdminSession)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			if(null!=entity&&null!=entity.getCheckerStatus()&&entity.getCheckerStatus().intValue()==1){
+				entity.setQc(admin.getAdmin().getAdminId());
+				if(null==entity.getQcdate()||entity.getQcdate().equals("")){
+					entity.setQcdate(new Date());
+				}
+			}
+			if(null!=entity&&null!=entity.getClosestatus()&&entity.getClosestatus().intValue()==2){
+				entity.setQs(admin.getAdmin().getAdminId());
+				if(null==entity.getPedate()||entity.getPedate().equals("")){
+					entity.setPedate(new Date());
+				}
+			}
+			/**
+			if(null!=entity&&null!=entity.getDesignStatus()&&entity.getDesignStatus().intValue()==1){
+				entity.setPedate(new Date());
+			}
+			if(null!=entity&&null!=entity.getLeaderStatus()&&entity.getLeaderStatus().intValue()==1){
+				entity.setPedate(new Date());
+			}
+			if(null!=entity&&null!=entity.getDepStatus()&&entity.getDepStatus().intValue()==1){
+				entity.setPedate(new Date());
+			}*/
+			nogoodDao.saveOrUpdate(entity);
+			//更新机加流转卡等数据
+			updateData(entity);
+		}
+	}
+	private void updateData(Nogood entity){
+		Nogood entity2 = nogoodDao.getById(entity.getRid());
+		//如果是机加单据，需要在完成时更新流转卡信息
+		if(null!=entity&&null!=entity.getCheckerStatus()&&entity.getCheckerStatus().intValue()==1
+				&&(entity2.getFtype().intValue()==713||entity2.getFtype().intValue()==714)){
+			//Check check = checkDao.getById(entity2.getCheckid());
+			//check.setRepariacceptnum(check.getRepairnum()+entity.getBackToFactory().longValue());
+			//check.setReceviernum(check.getReceviernum()+entity.getConcession().longValue());
+			//check.setOperationdiscardnum(check.getOperationdiscardnum()+entity.getMakenoapass().longValue());
+			//check.setItemdiscardnum(check.getItemdiscardnum()+entity.getMaterialnopass().longValue());
+			//checkDao.update(check);
+			CheckRecord cr = checkRecordDao.getByProperty("checkid", String.valueOf(entity2.getCheckid()));
+			if(entity2.getFtype().intValue()==713){//终检的到质检员提交单据时反馈返修数
+				cr.setRepairnum((cr.getRepairnum()==null?0:cr.getRepairnum())+(entity.getRepair()==null?0:entity.getRepair().longValue()));
+			}
+			cr.setReceivernum((cr.getReceivernum()==null?0:cr.getReceivernum())+(entity.getConcession()==null?0:entity.getConcession().longValue()));
+			cr.setItemdiscard((cr.getItemdiscard()==null?0:cr.getItemdiscard())+(entity.getMaterialnopass()==null?0:entity.getMaterialnopass().longValue()));
+			cr.setWorkdiscard((cr.getWorkdiscard()==null?0:cr.getWorkdiscard())+(entity.getMakenoapass()==null?0:entity.getMakenoapass().longValue()));
+			checkRecordDao.update(cr);
+			//EmployeeTask et = employeeTaskDao.getByProperty("employeetaskid", String.valueOf(check.getEmployeetaskid()));
+			EmployeeTaskQuery etq = new EmployeeTaskQuery();
+			etq.setEmployeetaskid(cr.getEmployeetaskid());
+			EmployeeTask et = employeeTaskDao.getByEntity("EmployeeTask.getByEmployeeTaskId", etq);
+			
+			DispatchWork dw = dispatchWorkDao.getById(et.getDispatchid());
+			dw.setAcceptednum((dw.getAcceptednum()==null?0:dw.getAcceptednum())+(entity.getRepairGoods()==null?0:entity.getRepairGoods().intValue()));
+			dispatchWorkDao.update(dw);
+			
+			
+			Icmo icmo = icmoDao.getById(cr.getWorkid());
+			icmo.setWwaste((icmo.getWwaste()==null?0:icmo.getWwaste())+(entity.getMakenoapass()==null?0:entity.getMakenoapass()));
+			icmo.setMwaste((icmo.getMwaste()==null?0:icmo.getMwaste())+(entity.getMaterialnopass()==null?0:entity.getMaterialnopass()));
+			icmo.setConcession((icmo.getConcession()==null?0:icmo.getConcession())+(entity.getConcession()==null?0:entity.getConcession()));
+			icmo.setRepairs((icmo.getRepairs()==null?0:icmo.getRepairs())+(entity.getRepair()==null?0:entity.getRepair()));
+			icmo.setRepairgoods((icmo.getRepairgoods()==null?0:icmo.getRepairgoods())+(entity.getRepairGoods()==null?0:entity.getRepairGoods()));
+			icmoDao.update(icmo);
+		}
+		if(null!=entity&&null!=entity.getCheckerStatus()&&entity.getCheckerStatus().intValue()==1
+				&&(entity2.getFtype().intValue()==711)){
+			ItemWait iw = itemWaitDao.getById(entity2.getCheckid());
+			iw.setFtotalfqty((null==iw.getFtotalfqty()?0D:iw.getFtotalfqty())+(null==entity.getRepairGoods()?0D:entity.getRepairGoods())+(null==entity.getConcession()?0D:entity.getConcession()));
+			iw.setConcessionsum(entity.getConcession());
+			iw.setRepairGoods(entity.getRepairGoods());
+			itemWaitDao.update(iw);
+		}
+		if(null!=entity&&null!=entity.getClosestatus()&&entity.getClosestatus().intValue()==2&&entity2.getFtype().intValue()==711){
+			//ItemWait itemWait = new ItemWait();
+			//itemWait.setCreatedate(new Date());
+			//itemWaitDao.saveWaitPush(itemWait);
+			if(null!=entity2.getRepairGoods()||null!=entity2.getConcession()){
+				reback(entity2);
+			}
+		}
+	}
+	private void reback(Nogood entity){
+		ItemWait itemWait = itemWaitDao.getById(entity.getCheckid());
+		IcbillnoQuery icbillnoQuery = new IcbillnoQuery();
+		String sss = "WINPC";
+		icbillnoQuery.setFpreletter(sss);
+		Icbillno icbillno = icbillnoDao.findfcurno(icbillnoQuery);//查询当前入库单号
+		
+		Integer sun = icbillno.getFcurno();//当前编号
+		Integer l = icbillno.getFlength();//编号长度
+		Long fbid = icbillno.getFbillid();//编号类型id
+		
+		//=====================================================
+		//if(icbillno.getFpreletter().equals("WIN") || String.valueOf(icbillno.getFpreletter())=="WIN"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			icq.setFcurno(icbillno.getFcurno()+1);
+			icq.setFbillid(icbillno.getFbillid());
+			icq.setFpreletter(icbillno.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		//}
+		//=====================================================
+		Poorder derpoor = new Poorder();
+		derpoor.setFbillno(itemWait.getPoorderno());
+		Poorder p = poorderDao.findPooderEntity(derpoor);
+		
+		List<Poorderentry> listP = new ArrayList<Poorderentry>();
+		Poorderentry ppp = new Poorderentry();
+		ppp.setFinterid(p.getFinterid());
+		listP = poorderentryDao.findListXi(ppp);
+		
+		ProcessTask processTask = processTaskDao.getByProperty("taskCode", "TO_PUSHINTO_INVENTORY");
+		ProcessDetailQuery processDetailQuery = new ProcessDetailQuery();
+		processDetailQuery.setProcessId(processTask.getProcessIds());
+		List<ProcessDetail> processDetails = processDetailDao.findList(processDetailQuery);
+		String handlers = "";
+		ProcessDetail processDetail = processDetails.get(0);
+		for(ProcessHandle ph:processDetail.getProcessHandleList()){
+			handlers += ph.getHandlerName()+" ";
+		}
+		
+		Putstorage putstorage = new Putstorage();
+		putstorage.setCreatdate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+		putstorage.setIsclose(0);//0:未关闭  1：已关闭
+		putstorage.setStatus(0);//0：未审核 1：已审核
+		putstorage.setSrctype(71L);//源单类型
+		
+		if(!listP.get(0).getEmpid().equals("") && listP.get(0).getEmpid() != null){
+			putstorage.setEmpid(listP.get(0).getEmpid());//负责人
+		}else{
+			putstorage.setEmpid(entity.getEmp());//待检物料的申请人
+		}
+		
+		putstorage.setSupplier(itemWait.getSuppler());//供应商
+		
+		putstorage.setMaker(SpringSecurityUtils.getCurrentUserId());//制单人
+		putstorage.setTeamid(Long.valueOf(SpringSecurityUtils.getCurrentTeamid()));//交货部门====制单人所在部门
+		
+		//Integer fno = sun + 1;//每次保存编号加1
+		Integer fno = sun + 1;//先加1再用
+		Integer s2= fno.toString().length();
+		if((l - s2)>0){
+			for(int i = 0;i<(l-s2);i++){
+				sss+='0';
+			}
+			sss+=fno.toString();
+		}else{
+			sss+=fno.toString();
+		}
+		putstorage.setFbillno(sss);//入库单号
+		putstorage.setFsource(String.valueOf(entity.getRid()));
+		putstorage.setStatus(0);//0、待审  1、审核
+		putstorage.setFstatusDesc(processDetail.getNodeName()+",执行人:"+handlers);
+		Long ptid = putstorageDao.save(putstorage, "Putstorage.insert.in.poorderentry");//保存入库单
+		
+		ProcessHistask processHistask = new ProcessHistask();
+		processHistask.setSourceCode(sss);
+		processHistask.setSourceId(ptid);
+		processHistask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processHistask.setExamineStatus(null);
+		processHistask.setFmark("");
+		processHistask.setNodeSeq(0);
+		processHistask.setNodeName("提交单据!");
+		processHistask.setOperater(SpringSecurityUtils.getCurrentUserId());
+		processHistask.setOperaterName(SpringSecurityUtils.getCurrentRealName());
+		processHistask.setOperateTime(DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+		processHistaskDao.save(processHistask);
+		
+		ProcessExetask processExetask = new ProcessExetask();
+		processExetask.setTaskCode("TO_PUSHINTO_INVENTORY");
+		processExetask.setSourceCode(sss);
+		processExetask.setSourceId(ptid);
+		processExetask.setNodeName(processDetail.getNodeName());
+		processExetask.setNodeSeq(processDetail.getNodeSeq());
+		processExetask.setHandlers(handlers);
+		processExetaskDao.save(processExetask);
+		
+			Putstorageentity putstorageentity = new Putstorageentity();
+			putstorageentity.setFinterid(ptid);
+			putstorageentity.setItemcode(itemWait.getItemcode());
+			if(itemWait.getAcceptfqty() != null){
+				Double cd = entity.getConcession()==null?0:entity.getConcession();
+				Double bd = entity.getRepairGoods()==null?0:entity.getRepairGoods();
+				putstorageentity.setFqty(cd+bd);//数量------合格数
+			}
+			if(itemWait.getUnit() != null){
+				putstorageentity.setUnitid(Long.valueOf(itemWait.getUnit()));//单位
+			}
+			
+			if(itemWait.getOrderid() != null){
+				putstorageentity.setOrderid(itemWait.getOrderid());//订单明细id
+			}
+			putstorageentity.setCreatedate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//创建时间
+			putstorageentity.setPoorderno(itemWait.getPoorderno());//订单号
+			putstorageentity.setStorageid(itemWait.getFitemid());//库房
+			if(itemWait.getFxmark() != null){//帐套
+				putstorageentity.setFxmark(itemWait.getFxmark());
+			}
+			
+			if(itemWait.getBatchno() != null){
+				putstorageentity.setFbatchno(itemWait.getBatchno());
+			}
+			putstorageentity.setWaitid(itemWait.getWaitid());
+			putstorageentityDao.save(putstorageentity, "Putstorageentity.insert.in.poorderentry");//保存入库单明细
+	}
+	private void parseNogoodNotes(Nogood entity,String notes,Integer sendEmail) throws ServiceException{
+		NogoodNote nogoodNote = null;
+		String[] nogoodNotes = notes.split("\\|");
+		boolean sendLeader = false;
+		boolean sendDesigner = false;
+		List<Long> adminIds = new ArrayList<Long>();
+		try{
+			Long repairsTemp = 0L;
+			for(String temp:nogoodNotes){
+				if(!temp.trim().equals("")){
+					String[] ngnotes = temp.split(",");
+					nogoodNote = new NogoodNote();
+					nogoodNote.setNoteid(Long.valueOf(ngnotes[0]));
+					nogoodNote.setSeverity(Integer.valueOf(ngnotes[1]));
+					nogoodNote.setCause(Integer.valueOf(ngnotes[2]));
+					nogoodNote.setPmode(Integer.valueOf(ngnotes[3]));
+					nogoodNote.setIsdesigner(Integer.valueOf(ngnotes[4]));
+					nogoodNote.setIsleader(Integer.valueOf(ngnotes[5]));
+					if(nogoodNote.getIsdesigner().intValue()==1){
+						sendDesigner = true;
+					}
+					if(nogoodNote.getIsleader().intValue()==1){
+						sendLeader = true;
+					}
+					nogoodNote.setRepair(ngnotes[6].trim().equals("")?null:Double.valueOf(ngnotes[6]));
+					nogoodNote.setMaterialnopass(ngnotes[7].trim().equals("")?null:Double.valueOf(ngnotes[7]));
+					nogoodNote.setMakenoapass(ngnotes[8].trim().equals("")?null:Double.valueOf(ngnotes[8]));
+					nogoodNote.setConcession(ngnotes[9].trim().equals("")?null:Double.valueOf(ngnotes[9]));
+					nogoodNote.setFdeptnames(ngnotes[10]);
+					nogoodNote.setDemp(ngnotes[11].trim().equals("")?null:Long.valueOf(ngnotes[11]));
+					nogoodNote.setPemp(ngnotes[12].trim().equals("")?null:Long.valueOf(ngnotes[12]));
+					nogoodNote.setDesigneridea(ngnotes[13].trim().equals("")?null:ngnotes[13].trim());
+					nogoodNote.setLeaderidea(ngnotes[14].trim().equals("")?null:ngnotes[14].trim());
+					if(nogoodNote.getPmode().intValue()==4){
+						repairsTemp += ngnotes[15].trim().equals("")?0L:Long.valueOf(ngnotes[15].trim());
+					}
+					nogoodNote.setHandleStatus(ngnotes[16].trim().equals("")?null:Integer.valueOf(ngnotes[16]));
+					adminIds.add(nogoodNote.getPemp());
+					if(null==sendEmail||sendEmail.intValue()!=1){
+						nogoodNoteDao.update(nogoodNote);
+					}
+				}
+			}
+			//如果是巡检，则审理主管审理时实时进行更新流转卡数据
+			Nogood entity2 = nogoodDao.getById(entity.getRid());
+			if(null!=entity&&null!=entity.getClosestatus()&&entity.getClosestatus().intValue()==1&&entity2.getFtype().intValue()==714){
+				CheckRecord cr = checkRecordDao.getByProperty("checkid", String.valueOf(entity2.getCheckid()));
+				cr.setRepairnum((cr.getRepairnum()==null?0:cr.getRepairnum())+repairsTemp);
+				checkRecordDao.update(cr);
+			}
+			if(null!=sendEmail&&sendEmail.intValue()==1){
+				sendEmail(adminIds,sendDesigner,sendLeader,entity);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	/**
+	 * 发送邮件
+	 * @param lList
+	 * @param sendDesigner
+	 * @param sendLeader
+	 */
+	public void sendEmail(List<Long> lList,boolean sendDesigner,boolean sendLeader,Nogood entity){
+		Authority authority = new Authority();
+		authority.setAuthorityKey("ROLE_CHECK_LEADER");
+		List<Admin> leaders = authorityService.findAdminsByAuthority(authority);
+		authority.setAuthorityKey("ROLE_CHECK_DESIGNER");
+		List<Admin> designers = authorityService.findAdminsByAuthority(authority);
+		StringBuffer emails = new StringBuffer();
+		for(Admin admin:designers){
+			if(null!=admin&&null!=admin.getEmail()
+					&&!admin.getEmail().trim().equals("")&&!leaders.contains(admin))
+				leaders.add(admin);
+		}
+		Admin admin;
+		for(Long lo:lList){
+			admin = adminService.getById(lo);
+			if(null!=admin&&null!=admin.getEmail()
+					&&!admin.getEmail().trim().equals("")&&!leaders.contains(admin)){
+				leaders.add(admin);
+			}
+		}
+		for(Admin temp:leaders){
+			if(null!=temp&&null!=temp.getEmail()&&!temp.getEmail().trim().equals(""))
+			emails.append(temp.getEmail()).append(";");
+		}
+		System.out.println(emails.toString());
+		entity = nogoodDao.getById(entity.getRid());
+		String subject = "不合格检查通知";
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String content = "";
+		try {
+			Template template = freemarkerConfiguration.getTemplate("template/examineEmailTemplate.ftl", "utf-8");
+			paramMap.put("workno",entity.getWorkno());
+			content = FreeMarkerTemplateUtils.processTemplateIntoString(template, paramMap);
+			emailService.sendEmail("", emails.toString(), subject, content);
+		} catch (Exception e) {
+			logger.error("构造邮件失败",e);
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	public java.lang.Long save(Nogood entity) throws ServiceException
+	{
+		Long adId = nogoodDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Nogood entity) throws ServiceException
+	{
+		Integer returnValue =  nogoodDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = nogoodDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = nogoodDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		NogoodQuery query = new NogoodQuery();
+		try {
+			return nogoodDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Nogood> findPage(Page<Nogood> page, NogoodQuery query) throws ServiceException
+	{
+		return nogoodDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Nogood> findPage(Page<Nogood> page,String statement, NogoodQuery query) throws ServiceException
+	{
+		return nogoodDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Nogood> findList(NogoodQuery query) throws ServiceException
+	{
+		return nogoodDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Nogood> findList(NogoodQuery query,Integer pageSize) throws ServiceException
+	{
+		return nogoodDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Nogood> findList(NogoodQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return nogoodDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Nogood> findAllList() throws ServiceException
+	{
+		return nogoodDao.findAllList();
+	}
+
+	@Override
+	public Nogood findAllInfosById(Long nogoodId) {
+		Nogood nogood = nogoodDao.getById("Nogood.findAllInfosById",nogoodId);
+		
+		BaseItem bitem = baseItemDao.getByProperty("itemcode", nogood.getItemcode());
+		
+		ItemWait itemwait = itemWaitDao.getById(nogood.getSourceid());
+		
+		if(nogood.getFtype().intValue()==713){
+			Check c=checkDao.getById("Check.getemtaskidanditemcode", nogood.getCheckid());//id:checkid-----t_check
+			Long nums=0L;
+			if(null!=dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getAcceptednum()){
+				nums=dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getAcceptednum().longValue();
+			}
+			//EmployeeTask et = employeeTaskDao.getById(c.getEmployeetaskid());
+			//if(null!=et){
+			//	nogood.setEmp(et.getEmpid());
+			//	nogood.setEmpName(adminService.getById(et.getEmpid()).getAdminName());
+			//}
+			//已检合格数disacceptnum
+			c.setDisacceptnum(nums);
+			//上序合格数frontdisacceptnum
+			c.setFrontdisacceptnum(dispatchWorkDao.getByAcceptNum(dispatchWorkDao.getById(employeeTaskDao.getById(c.getEmployeetaskid()).getDispatchid()).getPreorder().longValue()).longValue());	
+			nogood.setGoodCount(Double.valueOf(String.valueOf(c.getDisacceptnum())));
+			nogood.setPreSeqCount(Double.valueOf(String.valueOf(c.getFrontdisacceptnum())));
+		}
+		nogood.setFissnmanager(bitem.getFissnmanager());
+		if(itemwait != null){
+			nogood.setItemWait(itemwait);
+		}
+		return nogood;
+	}
+
+
+}

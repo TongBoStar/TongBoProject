@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+   "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap>
+   <resultMap id="RM.Msg" class="com.terrence.core.dol.bean.Msg">
+       <result property="id" column="id"/>
+       <result property="toUserId" column="toUserId"/>
+       <result property="details" column="details"/>
+       <result property="state" column="state"/>
+       <result property="url" column="url"/>
+       <result property="receiveTime" column="receiveTime"/>
+       <result property="isDel" column="isDel"/>
+       <result property="menuId" column="menuId"/>
+       <result property="menu" column="menuId" select="Menu.getById"/>
+   </resultMap>
+
+   <sql id="Msg.columns">
+       <![CDATA[
+           id,toUserId,details,state,url,receiveTime,isDel,menuId
+       ]]>
+   </sql>
+
+
+   <insert id="Msg.insert" >
+   <![CDATA[
+       INSERT INTO core_msg
+       (
+		toUserId
+		,details
+		,state
+		,url
+		,receiveTime
+		,isDel
+		,menuId
+       )
+       VALUES
+       (
+       	#toUserId#
+       	,#details#
+		,#state#
+		,#url#
+		,#receiveTime#
+		,#isDel#
+		,#menuId#
+       )
+   ]]>
+       <selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+           SELECT  @@identity
+       </selectKey>
+   </insert>
+
+   <update id="Msg.update" >
+       UPDATE core_msg 
+       <dynamic prepend="SET">
+       <isNotEmpty prepend="," property="toUserId">
+           toUserId = #toUserId# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="details">
+           details = #details# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="state">
+           state = #state# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="url">
+           url = #url# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="receiveTime">
+           receiveTime = #receiveTime# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="isDel">
+           isDel = #isDel# 
+       </isNotEmpty>
+       <isNotEmpty prepend="," property="menuId">
+           menuId = #menuId# 
+       </isNotEmpty>
+       </dynamic>	
+       WHERE 
+       id = #id# 
+   </update>
+
+   <delete id="Msg.delete">
+       <![CDATA[
+       DELETE FROM core_msg WHERE
+       id = #id# 
+       ]]>
+   </delete>
+
+   <select id="Msg.getById" resultMap="RM.Msg">
+       SELECT <include refid="Msg.columns"/>
+       <![CDATA[
+       FROM core_msg 
+       WHERE 
+       id = #id# 
+       ]]>
+   </select>
+
+   <sql id="Msg.findPage.where">
+       <dynamic prepend="WHERE">
+           <isNotEmpty prepend="AND" property="id">
+               id = #id#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="toUserId">
+               toUserId = #toUserId#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="details">
+               details = #details#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="state">
+               state = #state#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="url">
+               url = #url#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="receiveTime">
+               receiveTime = #receiveTime#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="isDel">
+               isDel = #isDel#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="menuId">
+               menuId = #menuId#
+           </isNotEmpty>
+       </dynamic>
+   </sql>
+
+   <select id="Msg.findPage.count" resultClass="long">
+       SELECT count(*) FROM core_msg <include refid="Msg.findPage.where"/>
+   </select>
+
+   <select id="Msg.findPage" resultMap="RM.Msg">
+       SELECT <include refid="Msg.columns"/> 
+       FROM core_msg <include refid="Msg.findPage.where"/>
+           <isNotEmpty property="notTop"> and
+               id not in(select $notTop$ id from core_msg <include refid="Msg.findPage.where"/> <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$ </isNotEmpty>) 
+           </isNotEmpty>  
+           <isNotEmpty property="sortColumns">
+	            ORDER BY $sortColumns$
+           </isNotEmpty>
+   </select>
+
+   <select id="Msg.findList" resultMap="RM.Msg">
+       SELECT <include refid="Msg.columns"/> 
+       FROM core_msg <include refid="Msg.findPage.where"/>
+       <isNotEmpty property="sortColumns">
+       ORDER BY $sortColumns$
+       </isNotEmpty>
+   </select>
+
+</sqlMap>

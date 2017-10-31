@@ -1,0 +1,485 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.Date;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BomDrawTitle;
+import com.terrence.crm.dol.bean.DesignAssist;
+import com.terrence.crm.dol.bean.ModelList;
+import com.terrence.crm.dol.dao.IBomDrawTitleDao;
+import com.terrence.crm.dol.dao.IDesignAssistDao;
+import com.terrence.crm.dol.dao.IModelListDao;
+import com.terrence.crm.dol.query.ModelListQuery;
+import com.terrence.crm.dol.service.IModelListService;
+import com.terrence.crm.dol.utils.ConfigTerrence;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+@Service
+@Transactional
+public class ModelListService extends BaseService implements IModelListService {
+	@Autowired
+	@Qualifier("modelListDao")
+	private IModelListDao modelListDao;
+	@Autowired
+	@Qualifier("designAssistDao")
+	private IDesignAssistDao designAssistDao;
+	@Autowired
+	@Qualifier("bomDrawTitleDao")
+	private IBomDrawTitleDao bomDrawTitleDao;
+	@Override
+	public ModelList getById(Long id) throws ServiceException {
+		return modelListDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(ModelList entity) throws ServiceException {
+		modelListDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(ModelList entity) throws ServiceException {
+		return modelListDao.save(entity);
+	}
+	@Override
+	public Integer update(ModelList entity) throws ServiceException {
+		return modelListDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return modelListDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = modelListDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<ModelList> findPage(Page<ModelList> page, ModelListQuery query) throws ServiceException{
+		return modelListDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ModelList> findPage(Page<ModelList> page,String statement, ModelListQuery query) throws ServiceException{
+		return modelListDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ModelList> findList(ModelListQuery query) throws ServiceException{
+		return modelListDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ModelList> findList(ModelListQuery query,Integer pageSize) throws ServiceException{
+		return modelListDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ModelList> findList(ModelListQuery query,String statement,Integer pageSize) throws ServiceException{
+		return modelListDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ModelList> findAllList() throws ServiceException{
+		return modelListDao.findAllList();
+	}
+	@Override
+	public List<ModelList> listToCallslip(ModelListQuery modelListQuery) {
+		return modelListDao.findList("ModelList.findList.Callslip", modelListQuery);
+	}
+	@Override
+	public void dispatchModel(List<Long> checkedIdList,List<String> dispatchList,ModelListQuery modelListQuery) throws Exception{
+		String ids = StringUtils.join(checkedIdList, ",");
+		List<ModelList> modelLists = modelListDao.findModelByGroupId(ids,"t_model_list");
+		DesignAssist designAssist = designAssistDao.getById(modelLists.get(0).getDesignassistId());
+		String dispatchModel = "";
+		/*BomDrawTitleQuery bomDrawTitleQuery = new BomDrawTitleQuery();
+		bomDrawTitleQuery.setDesignassistId(designAssist.getId());
+		List<BomDrawTitle> bomDrawTitles = bomDrawTitleDao.findList(bomDrawTitleQuery);
+		boolean flag = false;
+		if(null!=bomDrawTitles&&bomDrawTitles.size()>0){//如果有总图才能下分，没有总图不能下分
+			for(BomDrawTitle bo:bomDrawTitles){
+				if(bo.getBomDrawType().intValue()==1){//总图
+					flag = true;
+				}
+			}
+		}else{//还未上传图纸，全部是分配手动填写的记录
+			flag = true;
+		}
+		if(!flag){//已经有图纸上传，但是没有上传总图
+			throw new ServiceException("没有上传总图，请先上传总图！");
+		}*/
+		if(dispatchList.contains("t_bracket_list")){
+			dispatchModel = "支架下料";
+			Integer changestatus = 0;
+			if(null!=designAssist.getBracketStatus()&&(designAssist.getBracketStatus().intValue()==100||designAssist.getBracketStatus().intValue()==50)){
+				changestatus = 1;//新增
+				designAssist.setBracketStatus(50);//有变更
+				designAssistDao.update(designAssist);
+			}
+			/*List<ModelList> temps = modelListDao.findModelByGroupId(ids,"t_bracket_list");
+			if(null!=temps&&temps.size()>0){
+				//throw new ServiceException("在支架中已经分配过!");
+				for(int i=0;i<modelLists.size();i++){
+					ModelList mo = modelLists.get(i);
+					for(ModelList motemp:temps){
+						if(motemp.getItemcode().equals(mo.getItemcode())){
+							if(mo.getSourceType().intValue()==1){
+								motemp.setFcount(mo.getFcount()+motemp.getManualfcount());
+							}else{
+								motemp.setFcount(mo.getFcount()+motemp.getFcount());
+							}
+							motemp.setModelMark("t_bracket_list");
+							mo.setIsdispatch("t_bracket_list");
+							modelListDao.update(motemp);
+							modelLists.remove(mo);
+						}
+					}
+				}
+				if(null!=modelLists && modelLists.size()>0){
+					for(ModelList mo:modelLists){
+						mo.setModelMark("t_bracket_list");
+						mo.setIsdispatch("t_bracket_list");
+						mo.setChangestatus(changestatus);
+						modelListDao.save(mo);
+					}
+				}
+			}else{*/
+				BomDrawTitle bt = new BomDrawTitle();
+				bt.setId(modelLists.get(0).getBdtId());
+				bt.setMfcount(null==modelListQuery?null:modelListQuery.getFcount());
+				if(null!=modelListQuery){
+					bomDrawTitleDao.update(bt);
+				}
+				for(ModelList mo:modelLists){
+					double mqfcount = (null==modelListQuery||null==modelListQuery.getFcount())?1:modelListQuery.getFcount();
+					if(null==mo.getFcount()&&null==mo.getManualfcount()){
+						throw new ServiceException("没有数量!");
+					}
+					Double tempcount = (null==mo.getFcount())?mo.getManualfcount():mo.getFcount()*mqfcount;
+					mo.setFcount(null==mo.getFcount()?mo.getManualfcount():mo.getFcount());
+					mo.setModelMark("t_model_list");
+					mo.setIsdispatch("t_bracket_list");
+					modelListDao.update(mo);
+					mo.setModelMark("t_bracket_list");
+					mo.setModelId(mo.getId());
+					mo.setFcount(tempcount);
+					mo.setChangestatus(changestatus);
+					modelListDao.save(mo);
+				}
+			/*}*/
+		}
+		if(dispatchList.contains("t_bait_list")){
+			dispatchModel = "下料";
+			Integer changestatus = 0;
+			if(null!=designAssist.getBaitStatus()&&(designAssist.getBaitStatus().intValue()==100||designAssist.getBaitStatus().intValue()==100)){
+				changestatus = 1;//新增
+				designAssist.setBaitStatus(50);//有变更
+				designAssistDao.update(designAssist);
+			}
+			/*List<ModelList> temps = modelListDao.findModelByGroupId(ids,"t_bait_list");
+			if(null!=temps&&temps.size()>0){
+				//throw new ServiceException("在下料中已经分配过!");
+				for(ModelList mo:modelLists){
+					for(ModelList motemp:temps){
+						if(motemp.getItemcode().equals(mo.getItemcode())){
+							if(mo.getSourceType().intValue()==1){
+								motemp.setFcount(mo.getFcount()+motemp.getManualfcount());
+							}else{
+								motemp.setFcount(mo.getFcount()+motemp.getFcount());
+							}
+							motemp.setModelMark("t_bait_list");
+							mo.setIsdispatch("t_bait_list");
+							modelListDao.update(motemp);
+							modelLists.remove(mo);
+						}
+					}
+				}
+				if(null!=modelLists && modelLists.size()>0){
+					for(ModelList mo:modelLists){
+						mo.setModelMark("t_bait_list");
+						mo.setIsdispatch("t_bait_list");
+						mo.setChangestatus(changestatus);
+						modelListDao.save(mo);
+					}
+				}
+			}else{*/
+				for(ModelList mo:modelLists){
+					mo.setFcount(null==mo.getFcount()?mo.getManualfcount():mo.getFcount());
+					mo.setModelMark("t_model_list");
+					mo.setIsdispatch("t_bait_list");
+					modelListDao.update(mo);
+					mo.setModelMark("t_bait_list");
+					mo.setModelId(mo.getId());
+					mo.setChangestatus(changestatus);
+					modelListDao.save(mo);
+				}
+			/*}*/
+		}
+		if(dispatchList.contains("t_assweld_list")){
+			dispatchModel = "组焊";
+			Integer changestatus = 0;
+			if(null!=designAssist.getAssweldStatus()&&(designAssist.getAssweldStatus().intValue()==100||designAssist.getAssweldStatus().intValue()==100)){
+				changestatus = 1;//新增
+				designAssist.setAssweldStatus(50);//有变更
+				designAssistDao.update(designAssist);
+			}
+			/*List<ModelList> temps = modelListDao.findModelByGroupId(ids,"t_assweld_list");
+			if(null!=temps&&temps.size()>0){
+				//throw new ServiceException("在组焊已经分配过!");
+				for(ModelList mo:modelLists){
+					for(ModelList motemp:temps){
+						if(motemp.getItemcode().equals(mo.getItemcode())){
+							if(mo.getSourceType().intValue()==1){
+								motemp.setFcount(mo.getFcount()+motemp.getManualfcount());
+							}else{
+								motemp.setFcount(mo.getFcount()+motemp.getFcount());
+							}
+							motemp.setModelMark("t_assweld_list");
+							mo.setIsdispatch("t_assweld_list");
+							modelListDao.update(motemp);
+							modelLists.remove(mo);
+						}
+					}
+				}
+				if(null!=modelLists && modelLists.size()>0){
+					for(ModelList mo:modelLists){
+						mo.setModelMark("t_assweld_list");
+						mo.setIsdispatch("t_assweld_list");
+						mo.setChangestatus(changestatus);
+						modelListDao.save(mo);
+					}
+				}
+			}else{*/
+				for(ModelList mo:modelLists){
+					mo.setFcount(null==mo.getFcount()?mo.getManualfcount():mo.getFcount());
+					mo.setModelMark("t_model_list");
+					mo.setIsdispatch("t_assweld_list");
+					modelListDao.update(mo);
+					mo.setModelMark("t_assweld_list");
+					mo.setModelId(mo.getId());
+					mo.setChangestatus(changestatus);
+					modelListDao.save(mo);
+				}
+			/*}*/
+		}
+		if(dispatchList.contains("t_assemble_list")){
+			dispatchModel = "装配";
+			Integer changestatus = 0;
+			if(null!=designAssist.getAssembleStatus()&&(designAssist.getAssembleStatus().intValue()==100||designAssist.getAssembleStatus().intValue()==100)){
+				changestatus = 1;//新增
+				designAssist.setAssembleStatus(50);//有变更
+				designAssistDao.update(designAssist);
+			}
+			/*List<ModelList> temps = modelListDao.findModelByGroupId(ids,"t_assemble_list");
+			if(null!=temps&&temps.size()>0){
+				//throw new ServiceException("在装配中已经分配过!");
+				for(ModelList mo:modelLists){
+					for(ModelList motemp:temps){
+						if(motemp.getItemcode().equals(mo.getItemcode())){
+							if(mo.getSourceType().intValue()==1){
+								motemp.setFcount(mo.getFcount()+motemp.getManualfcount());
+							}else{
+								motemp.setFcount(mo.getFcount()+motemp.getFcount());
+							}
+							motemp.setModelMark("t_assemble_list");
+							mo.setIsdispatch("t_assemble_list");
+							modelListDao.update(motemp);
+							modelLists.remove(mo);
+						}
+					}
+				}
+				if(null!=modelLists && modelLists.size()>0){
+					for(ModelList mo:modelLists){
+						mo.setModelMark("t_assemble_list");
+						mo.setIsdispatch("t_assemble_list");
+						mo.setChangestatus(changestatus);
+						modelListDao.save(mo);
+					}
+				}
+			}else{*/
+				for(ModelList mo:modelLists){
+					mo.setFcount(null==mo.getFcount()?mo.getManualfcount():mo.getFcount());
+					mo.setModelMark("t_model_list");
+					mo.setIsdispatch("t_assemble_list");
+					modelListDao.update(mo);
+					mo.setModelMark("t_assemble_list");
+					mo.setModelId(mo.getId());
+					mo.setChangestatus(changestatus);
+					modelListDao.save(mo);
+				}
+			/*}*/
+		}
+		if(dispatchList.contains("t_delivery_list")){
+			dispatchModel = "发货";
+			Integer changestatus = 0;
+			if(null!=designAssist.getDeliveryStatus()&&(designAssist.getDeliveryStatus().intValue()==100||designAssist.getDeliveryStatus().intValue()==100)){
+				changestatus = 1;//新增
+				designAssist.setDeliveryStatus(50);//有变更
+				designAssistDao.update(designAssist);
+			}
+			/*List<ModelList> temps = modelListDao.findModelByGroupId(ids,"t_delivery_list");
+			if(null!=temps&&temps.size()>0){
+				//throw new ServiceException("在发货中已经分配过!");
+				for(ModelList mo:modelLists){
+					for(ModelList motemp:temps){
+						if(motemp.getItemcode().equals(mo.getItemcode())){
+							if(mo.getSourceType().intValue()==1){
+								motemp.setFcount(mo.getFcount()+motemp.getManualfcount());
+							}else{
+								motemp.setFcount(mo.getFcount()+motemp.getFcount());
+							}
+							motemp.setModelMark("t_delivery_list");
+							mo.setIsdispatch("t_delivery_list");
+							modelListDao.update(motemp);
+							modelLists.remove(mo);
+						}
+					}
+				}
+				if(null!=modelLists && modelLists.size()>0){
+					for(ModelList mo:modelLists){
+						mo.setModelMark("t_delivery_list");
+						mo.setIsdispatch("t_delivery_list");
+						mo.setChangestatus(changestatus);
+						modelListDao.save(mo);
+					}
+				}
+			}else{*/
+				for(ModelList mo:modelLists){
+					mo.setFcount(null==mo.getFcount()?mo.getManualfcount():mo.getFcount());
+					mo.setModelMark("t_model_list");
+					mo.setIsdispatch("t_delivery_list");
+					modelListDao.update(mo);
+					mo.setModelMark("t_delivery_list");
+					mo.setModelId(mo.getId());
+					mo.setChangestatus(changestatus);
+					modelListDao.save(mo);
+				}
+			/*}*/
+		}
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_DISPATCH, "BOM分配(技术支持ID:"+designAssist.getId()+",分配记录:"+ids+",分配对象:"+dispatchModel+")");
+	}
+	@Override
+	public void saveManualBatch(List<ModelList> modelListList) throws Exception {
+		String dateTime = DateUtils.formtDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+		Long modelId = null;
+		String modelMark = "";
+		if(null!=modelListList&&modelListList.size()>0){
+			DesignAssist designAssist = designAssistDao.getById(modelListList.get(0).getDesignassistId());
+			for(ModelList modellist:modelListList){
+				if(null!=modellist&&null!=modellist.getItemcode()&&!"".equals(modellist.getItemcode().trim())){
+					modelMark = modellist.getModelMark();
+					modellist.setModelMark("t_model_list");
+					modellist.setIsdispatch(modelMark);
+					modellist.setCreateTime(dateTime);
+					modellist.setCreaterId(SpringSecurityUtils.getCurrentUserId());
+					modellist.setCreaterName(SpringSecurityUtils.getCurrentRealName());
+					modelId = modelListDao.save(modellist);
+					modellist.setModelMark(modelMark);
+					modellist.setFcount(modellist.getManualfcount());
+					modellist.setModelId(modelId);
+					modellist.setChangestatus(dispatchStatus(designAssist, modelMark));
+					modelId = modelListDao.save(modellist);
+				}
+			}
+			operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_ADD, "手动添加BOM(技术支持ID:"+designAssist.getId()+")");
+		}
+	}
+	public Integer dispatchStatus(DesignAssist designAssist,String modelMark) throws Exception{
+		if(modelMark.equals("t_bracket_list")&&null!=designAssist.getBracketStatus()&&(designAssist.getBracketStatus().intValue()==100||designAssist.getBracketStatus().intValue()==50)){
+			return 1;
+		}else if(modelMark.equals("t_bait_list")&&null!=designAssist.getBaitStatus()&&(designAssist.getBaitStatus().intValue()==100||designAssist.getBaitStatus().intValue()==50)){
+			return 1;
+		}else if(modelMark.equals("t_assweld_list")&&null!=designAssist.getAssweldStatus()&&(designAssist.getAssweldStatus().intValue()==100||designAssist.getAssweldStatus().intValue()==50)){
+			return 1;
+		}else if(modelMark.equals("t_assemble_list")&&null!=designAssist.getAssembleStatus()&&(designAssist.getAssembleStatus().intValue()==100||designAssist.getAssembleStatus().intValue()==50)){
+			return 1;
+		}else if(modelMark.equals("t_delivery_list")&&null!=designAssist.getDeliveryStatus()&&(designAssist.getDeliveryStatus().intValue()==100||designAssist.getDeliveryStatus().intValue()==50)){
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	@Override
+	public void deleteModelListDef(ModelListQuery modelListQuery)
+			throws Exception {
+		DesignAssist designAssist = designAssistDao.getById(modelListQuery.getDesignassistId());
+		ModelList modelList = modelListDao.getById("ModelList.getById",modelListQuery);
+		modelList.setId(modelListQuery.getId());
+		String delInModel = "";
+		if(modelListQuery.getModelMark().equals("t_bracket_list")){
+			delInModel = "支架下料";
+			if(null==designAssist.getBracketStatus()||designAssist.getBracketStatus().intValue()<50
+					||(null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()==1)){
+				modelListDao.deleteById(modelListQuery);
+			}else{
+				designAssist.setBracketStatus(50);
+				designAssistDao.update(designAssist);
+				modelList.setChangestatus(3);//置为删除状态
+				modelList.setModelMark(modelListQuery.getModelMark());
+				modelListDao.update(modelList);
+			}
+		}else if(modelListQuery.getModelMark().equals("t_bait_list")){
+			delInModel = "下料";
+			if(null==designAssist.getBaitStatus()||designAssist.getBaitStatus().intValue()<50
+					||(null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()==1)){
+				modelListDao.deleteById(modelListQuery);
+			}else{
+				designAssist.setBaitStatus(50);
+				designAssistDao.update(designAssist);
+				modelList.setChangestatus(3);//置为删除状态
+				modelList.setModelMark(modelListQuery.getModelMark());
+				modelListDao.update(modelList);
+			}
+		}else if(modelListQuery.getModelMark().equals("t_assweld_list")){
+			delInModel = "组焊";
+			if(null==designAssist.getAssweldStatus()||designAssist.getAssweldStatus().intValue()<50
+					||(null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()==1)){
+				modelListDao.deleteById(modelListQuery);
+			}else{
+				designAssist.setAssweldStatus(50);
+				designAssistDao.update(designAssist);
+				modelList.setChangestatus(3);//置为删除状态
+				modelList.setModelMark(modelListQuery.getModelMark());
+				modelListDao.update(modelList);
+			}
+		}else if(modelListQuery.getModelMark().equals("t_assemble_list")){
+			delInModel = "装配";
+			if(null==designAssist.getAssembleStatus()||designAssist.getAssembleStatus().intValue()<50
+					||(null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()==1)){
+				modelListDao.deleteById(modelListQuery);
+			}else{
+				designAssist.setAssembleStatus(50);
+				designAssistDao.update(designAssist);
+				modelList.setChangestatus(3);//置为删除状态
+				modelList.setModelMark(modelListQuery.getModelMark());
+				modelListDao.update(modelList);
+			}
+		}else if(modelListQuery.getModelMark().equals("t_delivery_list")){
+			delInModel = "发货";
+			if(null==designAssist.getDeliveryStatus()||designAssist.getDeliveryStatus().intValue()<50
+					||(null!=modelList.getChangestatus()&&modelList.getChangestatus().intValue()==1)){
+				modelListDao.deleteById(modelListQuery);
+			}else{
+				designAssist.setDeliveryStatus(50);
+				designAssistDao.update(designAssist);
+				modelList.setChangestatus(3);//置为删除状态
+				modelList.setModelMark(modelListQuery.getModelMark());
+				modelListDao.update(modelList);
+			}
+		}else{
+			
+		}
+		modelList.setChangestatus(0);
+		modelList.setIsdispatch(null);
+		modelList.setModelMark("t_model_list");
+		modelList.setId(modelListQuery.getModelId());
+		modelListDao.update(modelList);//更新总列表中的记录
+		operationLogDao.save(ConfigTerrence.MODEL_DESIGNASSIST, ConfigTerrence.OPT_DEL, "删除"+delInModel+"中的BOM(BOM记录:,"+modelListQuery.getId()+",技术支持ID:"+designAssist.getId()+")");
+	}
+	@Override
+	public List<ModelList> findList(String statement, ModelListQuery modelListQuery)
+			throws Exception {
+		return modelListDao.findList(statement, modelListQuery);
+	}
+}

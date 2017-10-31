@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CheckField">
+	<resultMap id="RM.CheckField" class="com.terrence.crm.dol.bean.CheckField">
+        <result property="cfid" column="cfid"/>
+        <result property="fkey" column="fkey"/>
+        <result property="fname" column="fname"/>
+        <result property="isuse" column="isuse"/>
+    </resultMap>
+    <resultMap id="RM.CheckFieldAll" class="com.terrence.crm.dol.bean.CheckField">
+        <result property="cfid" column="cfid"/>
+        <result property="fkey" column="fkey"/>
+        <result property="fname" column="fname"/>
+        <result property="fseqno" column="fseqno"/>
+        <result property="isuse" column="isuse"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="CheckField.columns">
+	    <![CDATA[
+        	t_check_field.cfid ,
+        	rtrim(t_check_field.fkey) fkey,
+        	t_check_field.fname ,
+        	t_check_field.isuse
+	    ]]>
+	</sql>
+	
+   <insert id="CheckField.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_check_field (
+        	fkey,
+        	fname ,
+        	isuse
+        ) VALUES (
+        	#fkey#,
+        	#fname#,
+        	#isuse#
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="cfid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    
+    <select id="CheckField.findList" resultMap="RM.CheckFieldAll">
+    	select <include refid="CheckField.columns"/>,tcg.fseqno fseqno     
+	        from t_check_field 
+	        left join t_check_gchartfield tcg on t_check_field.fkey=tcg.fkey and #modelid#=tcg.modelid 
+	        where isuse = #isuse#
+    </select>
+    <select id="CheckField.getById" resultMap="RM.CheckField">
+    	select <include refid="CheckField.columns"/> from t_check_field where cfid = $cfid$
+    </select>
+	<update id="CheckField.update" parameterClass="com.terrence.crm.dol.bean.CheckField">         
+        UPDATE t_check_field set 
+        	fkey = #fkey# ,fname = #fname#,isuse=#isuse# 
+        WHERE 
+	        fkey = #fkey# 
+    </update>
+    
+	<delete id="CheckField.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_check_field where cfid = #cfid# 
+    ]]>
+    </delete>
+</sqlMap>

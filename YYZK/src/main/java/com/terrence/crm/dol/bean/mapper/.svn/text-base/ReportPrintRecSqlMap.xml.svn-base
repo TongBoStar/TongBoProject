@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ReportPrintRec">
+
+        
+	<resultMap id="RM.ReportPrintRec" class="com.terrence.crm.dol.bean.ReportPrintRec">
+        <result property="recid" column="recid"/>
+        <result property="seqno" column="seqno"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="reportno" column="reportno"/>
+        <result property="tplid" column="tplid"/>
+        <result property="printdate" column="printdate"/>
+        <result property="empid" column="empid"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="ReportPrintRec.columns">
+	    <![CDATA[
+        	t_report_print_rec.recid ,
+        	t_report_print_rec.seqno ,
+        	t_report_print_rec.itemcode ,
+        	t_report_print_rec.reportno ,
+        	t_report_print_rec.tplid ,
+        	t_report_print_rec.printdate ,
+        	t_report_print_rec.empid 
+	    ]]>
+	</sql>
+	
+   <insert id="ReportPrintRec.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_report_print_rec (
+        	seqno ,
+        	itemcode ,
+        	reportno ,
+        	tplid ,
+        	printdate ,
+        	empid 
+        ) VALUES (
+        	#seqno# ,
+        	#itemcode# ,
+        	#reportno# ,
+        	#tplid# ,
+        	#printdate# ,
+        	#empid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="recid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="ReportPrintRec.update" parameterClass="com.terrence.crm.dol.bean.ReportPrintRec">         
+        UPDATE t_report_print_rec 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="seqno">
+	        	seqno = #seqno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="reportno">
+	        	reportno = #reportno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="tplid">
+	        	tplid = #tplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="printdate">
+	        	printdate = #printdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        recid = #recid# 
+    </update>
+    
+	<delete id="ReportPrintRec.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_report_print_rec where
+       recid = #recid# 
+    ]]>
+    </delete>
+    
+    <delete id="ReportPrintRec.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_report_print_rec 
+        WHERE
+       recid in ($recid$) 
+    ]]>
+    </delete>
+    
+    <select id="ReportPrintRec.getById" resultMap="RM.ReportPrintRec">
+	    select <include refid="ReportPrintRec.columns"/>
+	    
+	        from t_report_print_rec 
+	        where 
+		        recid = #recid# 
+	    
+    </select>
+    
+	<select id="ReportPrintRec.getByProperty" resultMap="RM.ReportPrintRec">
+		select <include refid="ReportPrintRec.columns"/> from t_report_print_rec where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="ReportPrintRec.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_report_print_rec.recid = #recid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_report_print_rec.seqno = #seqno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_report_print_rec.itemcode = #itemcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="reportno">
+	             t_report_print_rec.reportno = #reportno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_report_print_rec.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="printdateBegin">
+	             t_report_print_rec.printdate &gt;= #printdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="printdateEnd">
+	             t_report_print_rec.printdate &lt;= #printdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_report_print_rec.empid = #empid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="ReportPrintRec.findPage.and">
+			<isNotEmpty prepend="AND" property="recid">
+	             t_report_print_rec.recid = #recid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="seqno">
+	             t_report_print_rec.seqno = #seqno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_report_print_rec.itemcode = #itemcode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="reportno">
+	             t_report_print_rec.reportno = #reportno#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_report_print_rec.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="printdateBegin">
+	             t_report_print_rec.printdate &gt;= #printdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="printdateEnd">
+	             t_report_print_rec.printdate &lt;= #printdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="empid">
+	             t_report_print_rec.empid = #empid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="ReportPrintRec.Entity" resultMap="RM.ReportPrintRec">
+    	SELECT 	<include refid="ReportPrintRec.columns"/> FROM t_report_print_rec <include refid="ReportPrintRec.findPage.where"/>
+    </select>
+    
+    <select id="ReportPrintRec.findList" resultMap="RM.ReportPrintRec">
+    	SELECT 
+    		<include refid="ReportPrintRec.columns"/> 
+    	FROM 
+    		t_report_print_rec
+		<include refid="ReportPrintRec.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="ReportPrintRec.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_report_print_rec
+    ]]>
+		<include refid="ReportPrintRec.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.ReportPrintRec.findPage" resultMap="RM.ReportPrintRec">
+    	select <include refid="ReportPrintRec.columns"/>	    
+	        from t_report_print_rec 	   
+		<include refid="ReportPrintRec.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="ReportPrintRec.findPage" resultMap="RM.ReportPrintRec">
+    	select <include refid="ReportPrintRec.columns"/>	    
+	        from t_report_print_rec where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       recid 
+	   not in(select $notTop$ 
+       recid 
+	   from t_report_print_rec <include refid="ReportPrintRec.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="ReportPrintRec.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

@@ -1,0 +1,228 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.bean.ItemRuleDetail;
+import com.terrence.crm.dol.dao.IItemRuleDetailDao;
+import com.terrence.crm.dol.query.ItemRuleDetailQuery;
+import com.terrence.crm.dol.service.IItemRuleDetailService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.core.Page;
+
+@Service
+@Transactional
+public class ItemRuleDetailService extends BaseService implements IItemRuleDetailService {
+	protected static Logger logger = LoggerFactory.getLogger(ItemRuleDetailService.class);
+	@Autowired
+	@Qualifier("itemRuleDetailDao")
+	private IItemRuleDetailDao itemRuleDetailDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "ItemRuleDetail";
+	}
+	@Transactional(readOnly=true)
+	public ItemRuleDetail getById(java.lang.Long id) throws ServiceException
+	{
+		return itemRuleDetailDao.getById(id);
+	}
+	
+	public void saveOrUpdate(ItemRuleDetail entity) throws ServiceException
+	{
+		itemRuleDetailDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(ItemRuleDetail entity) throws ServiceException
+	{
+		Long adId = itemRuleDetailDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(ItemRuleDetail entity) throws ServiceException
+	{
+		Integer returnValue =  itemRuleDetailDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = itemRuleDetailDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = itemRuleDetailDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		ItemRuleDetailQuery query = new ItemRuleDetailQuery();
+		try {
+			return itemRuleDetailDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemRuleDetail> findPage(Page<ItemRuleDetail> page, ItemRuleDetailQuery query) throws ServiceException
+	{
+		return itemRuleDetailDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<ItemRuleDetail> findPage(Page<ItemRuleDetail> page,String statement, ItemRuleDetailQuery query) throws ServiceException
+	{
+		return itemRuleDetailDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRuleDetail> findList(ItemRuleDetailQuery query) throws ServiceException
+	{
+		return itemRuleDetailDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRuleDetail> findList(ItemRuleDetailQuery query,Integer pageSize) throws ServiceException
+	{
+		return itemRuleDetailDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<ItemRuleDetail> findList(ItemRuleDetailQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return itemRuleDetailDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<ItemRuleDetail> findAllList() throws ServiceException
+	{
+		return itemRuleDetailDao.findAllList();
+	}
+	@Override
+	public void saveall(ItemRuleDetail entity) throws ServiceException {
+		String delDetailIds = "";
+		if(entity.getDelDetailIds()!=null&&entity.getDelDetailIds()!=""){
+			delDetailIds = entity.getDelDetailIds();
+		}
+		String[] delIds = new String[]{};
+		if(delDetailIds!=null){
+			if(delDetailIds.contains(",")){
+				delIds = delDetailIds.split(",");
+			}else{
+				delIds =new String[]{delDetailIds};
+			}
+		}
+		String[] fnamelist = entity.getFnamelist();
+		String[] fcodelist = entity.getFcodelist();
+		Long[] detailidlist = entity.getDetailidlist();
+		String[] delitemidslist = entity.getDelitemidslist();
+		Long itemid = entity.getItemid();
+		Long ruleid = entity.getItemruleid();
+		Long delitemid = entity.getDelitemid();
+		ItemRuleDetail itemRuleDetail=null;
+		int length=fnamelist.length;
+		for(int i=0;i<length;i++){
+			itemRuleDetail=new ItemRuleDetail();
+			itemRuleDetail.setSeq(i);
+			itemRuleDetail.setDetailid(detailidlist[i]);
+			itemRuleDetail.setItemid(itemid);
+			itemRuleDetail.setItemruleid(ruleid);
+			if(null==fnamelist[i]||fnamelist[i].equals("")){
+				itemRuleDetail.setFname("");	
+			}else{
+				itemRuleDetail.setFname(fnamelist[i]);	
+			}
+			if(null==fcodelist[i]||fcodelist[i].equals("")){
+				itemRuleDetail.setFcode("");	
+			}else{
+				itemRuleDetail.setFcode(fcodelist[i]);
+			}
+			
+			if(delIds!=null&&delIds.length>0){//当选择的不显示详情id不为空时
+				//当前的详情id(detailidlist[i])在选择的不显示详情id(delids)中，判断不显示子节点id(delitemid)是否在数据库的不显示字段中(delitemids)中，如果不在，则添加
+				if(detailidlist[i]!=null&&Arrays.asList(delIds).contains(detailidlist[i].toString())){
+					if(delitemidslist[i]!=null&&delitemidslist[i]!=""&&!delitemidslist[i].contains(delitemid.toString())){
+						itemRuleDetail.setDelitemids(delitemidslist[i]+","+delitemid.toString());
+					}else if(delitemidslist[i]==null||delitemidslist[i]==""){
+						itemRuleDetail.setDelitemids(delitemid.toString());
+					}
+				}
+				//当前的详情id(detailidlist[i])不在选择的不显示详情id(delids)中，判断不显示子节点id(delitemid)是否在数据库的不显示字段中(delitemids)中，如果包含则去掉   
+				if(detailidlist[i]!=null&&!Arrays.asList(delIds).contains(detailidlist[i].toString())){
+					if(delitemidslist!=null&&delitemidslist[i]!=null&&delitemidslist[i]!=""&&delitemidslist[i].contains(delitemid.toString())){
+						itemRuleDetail.setDelitemids(convertIds(delitemidslist[i],delitemid));
+					}
+				}
+			}else if((delIds==null||delIds.length==0)&&delitemid!=null){//当没有选择的id时，则将详情中删除ids中去掉此id
+				if(delitemidslist!=null&&delitemidslist[i]!=null&&delitemidslist[i]!=""&&delitemidslist[i].contains(delitemid.toString())){
+					itemRuleDetail.setDelitemids(convertIds(delitemidslist[i],delitemid));
+				}
+			}
+			itemRuleDetailDao.saveOrUpdate(itemRuleDetail);
+		}
+		
+	}
+	public String convertIds(String delitemids,Long delitemid){
+		String[] ids = new String[]{};
+		if(delitemids.contains(",")){
+			ids = delitemids.split(",");
+		}else{
+			ids =new String[]{delitemids};
+		}
+		int index=-1;
+		for(int i = 0;i<ids.length;i++){
+			if(ids[i].equals(delitemid.toString())){
+				index = i;
+			}
+		}
+		String delidStr = "";
+		if(index>-1&&index==ids.length-1){
+			for(int m = 0;m<ids.length-1;m++){
+				if(m==ids.length-2){
+					delidStr += ids[m];
+				}else{
+					delidStr += ids[m]+",";
+				}
+			}
+		}else if(index>-1&&index<ids.length-1){
+			for(int m = 0;m<ids.length;m++){
+				if(m==ids.length-1&&!ids[m].equals(delitemid.toString())){
+					delidStr += ids[m];
+				}else if(!ids[m].equals(delitemid.toString())){
+					delidStr += ids[m]+",";
+				}
+			}
+		}
+		
+		return delidStr;
+	}
+	@Override
+	public void deleteAlone(ItemRuleDetailQuery itemRuleDetailQuery)
+			throws ServiceException {
+		itemRuleDetailDao.deleteById(itemRuleDetailQuery.getDetailid());
+	}
+
+}

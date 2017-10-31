@@ -1,0 +1,1571 @@
+package com.terrence.crm.dol.action;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.Icitem;
+import com.terrence.crm.dol.bean.IcitemDesign;
+import com.terrence.crm.dol.bean.IcitemQuality;
+import com.terrence.crm.dol.bean.Icitems;
+import com.terrence.crm.dol.bean.Measureunits;
+import com.terrence.crm.dol.bean.Stock;
+import com.terrence.crm.dol.bean.Supplier;
+import com.terrence.crm.dol.bean.Teams;
+import com.terrence.crm.dol.bean.Topic;
+import com.terrence.crm.dol.bean.WebAccount;
+import com.terrence.crm.dol.bean.WebIcitemPlan;
+import com.terrence.crm.dol.bean.WebItemBase;
+import com.terrence.crm.dol.bean.WebItemCore;
+import com.terrence.crm.dol.bean.WebItemEntrance;
+import com.terrence.crm.dol.bean.WebItemMaterial;
+import com.terrence.crm.dol.bean.WebItemStandard;
+import com.terrence.crm.dol.bean.WebSubMessage;
+import com.terrence.crm.dol.bean.WebUnitGroup;
+import com.terrence.crm.dol.bean.WebWorkType;
+import com.terrence.crm.dol.query.IcitemDesignQuery;
+import com.terrence.crm.dol.query.IcitemQualityQuery;
+import com.terrence.crm.dol.query.MeasureunitsQuery;
+import com.terrence.crm.dol.query.TeamQuery;
+import com.terrence.crm.dol.query.WebAccountQuery;
+import com.terrence.crm.dol.query.WebIcitemPlanQuery;
+import com.terrence.crm.dol.query.WebItemBaseQuery;
+import com.terrence.crm.dol.query.WebItemCoreQuery;
+import com.terrence.crm.dol.query.WebItemEntranceQuery;
+import com.terrence.crm.dol.query.WebItemMaterialQuery;
+import com.terrence.crm.dol.query.WebItemStandardQuery;
+import com.terrence.crm.dol.query.WebSubMessageQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IBaseItemService;
+import com.terrence.crm.dol.service.IItemBasicService;
+import com.terrence.crm.dol.service.IItemService;
+import com.terrence.crm.dol.service.IMeasureunitsService;
+import com.terrence.crm.dol.service.IStockService;
+import com.terrence.crm.dol.service.ISupplierService;
+import com.terrence.crm.dol.service.ITeamsService;
+import com.terrence.crm.dol.service.ITopicService;
+import com.terrence.crm.dol.service.IWebAccountService;
+import com.terrence.crm.dol.service.IWebSubMessageService;
+import com.terrence.crm.dol.service.IWebUnitGroupService;
+import com.terrence.crm.dol.service.IWebWorkTypeService;
+import com.terrence.crm.dol.utils.CacheService;
+import com.terrence.k3.dol.bean.TSubMessage;
+import com.terrence.k3.dol.service.IItemOptService;
+
+@Scope("prototype")
+@Namespace("/itembasic")
+public class ItembasicAction extends CrudActionSupport<Icitem>  implements ApplicationContextAware{
+	@Autowired
+	@Qualifier("itemService")
+	private IItemService itemService;
+	@Autowired
+	@Qualifier("baseItemService")
+	private IBaseItemService baseItemService;
+	@Autowired
+	@Qualifier("itemBasicService")
+	private IItemBasicService itemBasicService;
+	
+	//@Autowired
+	//@Qualifier("itemOptService")
+	//private IItemOptService itemOptService;
+	
+	@Autowired
+	@Qualifier("teamsService")
+	private ITeamsService teamsService;
+	
+	@Autowired
+	@Qualifier("webAccountService")
+	private IWebAccountService webAccountService;
+	
+	@Autowired
+	@Qualifier("webUnitGroupService")
+	private IWebUnitGroupService webUnitGroupService;
+	
+	@Autowired
+	@Qualifier("measureunitsService")
+	private IMeasureunitsService measureunitsService;
+	
+	
+	@Autowired
+	@Qualifier("webSubMessageService")
+	private IWebSubMessageService webSubMessageService;
+	
+	@Autowired
+	@Qualifier("supplierService")
+	private ISupplierService supplierService;
+	
+	@Autowired
+	@Qualifier("stockService")
+	private IStockService stockService;
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	
+	@Autowired
+	@Qualifier("webWorkTypeService")
+	private IWebWorkTypeService webWorkTypeService;
+	//
+	@Autowired
+	@Qualifier("topicService")
+	private ITopicService topicService;
+	
+	private Icitems entity;
+	
+	private WebItemCore webItemCore; 
+	private WebItemBase webItemBase;
+	private  WebItemMaterial webItemMaterial;
+	
+	private  WebIcitemPlan webIcitemPlan; 
+	private  IcitemDesign webItemDesign; 
+	private  WebItemStandard webItemStandard;
+	private  IcitemQuality webItemQuality; 
+	private  WebItemEntrance webItemEntrance;
+	
+	
+//	private Icitem itemEntity;
+	
+	private TeamQuery teamQuery;
+	/** Json操作信息 */
+	//private ItemBaseQuery itemDocQuery;
+	
+	
+	private java.lang.Long itemBasicId;
+	
+	/** 分页器 */
+	private Page<Icitems> page = new Page<Icitems>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Icitems> itemBasicList;
+
+	private List<Teams> teamList;
+	
+	private List<TSubMessage> subMessageList;
+	
+	private List<WebSubMessage> webSubMessageList;
+	
+	private List<WebAccount> webAccountList;
+	
+	private List<WebUnitGroup> webUnitGroupList;
+	
+	private List<Measureunits> measureunitList;
+	
+	private List<Stock> stockList;
+	
+	private List<Supplier> supplierList;
+	
+	private java.lang.Long unitGroupId;
+	
+	private java.lang.Integer useStateTypeId;
+	private java.lang.Integer typeId;
+	
+	private List<Admin> adminList;
+	private List<WebWorkType> webWorkTypeList;
+	
+	private List<Topic> topicList;
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			//itemBasicService.saveOrUpdate(entity);
+			itemBasicService.updatestatusAll(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+			Struts2Utils.renderJson(SUCCESS);
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("保存失败！");
+		}
+		return JSON;
+	}
+	
+	
+	
+   public String saveOptJson() throws Exception {
+		
+		try {
+			BaseItem baseItem=new BaseItem();
+			if (entity != null) {
+				baseItem= baseItemService.getByProperty("t_base_item.itemcode",entity.getItemcode());
+				if(null!=baseItem){
+					Struts2Utils.renderJson("保存失败，原因：物料代码已经存在,请更换!");
+					return JSON;
+				}
+			}
+			//itemService.getByProperty
+			itemBasicService.saveOrUpdate(entity);
+			Struts2Utils.renderJson(SUCCESS);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			Struts2Utils.renderJson(e.getMessage());
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("保存失败，原因："+e.getMessage()+" 后台异常请重试!");
+		}
+		return JSON;
+	}
+   public String itemToERP() throws Exception {
+		
+		try {
+			//1得到ERP上不存在且在本数据库中存在的物料
+			//List<BaseItem> baseItems= baseItemService.findDifferentItems();
+			//2循环集合，将集合中的数据一条一条的同步到ERP中
+			if(checkedIdList!=null&&checkedIdList.size()>0){
+				for(int i=0;i<checkedIdList.size();i++){
+					//同步数据
+					//只取了列表中的第一个进行同步
+					Icitems icitems = itemBasicService.getById(checkedIdList.get(i));
+					//基本资料1
+					WebItemCoreQuery webItemCoreQuery = new WebItemCoreQuery();
+					//基本资料2
+					WebItemBaseQuery webItemBaseQuery = new WebItemBaseQuery();
+					//物流资料
+					WebItemMaterialQuery webItemMaterialQuery = new WebItemMaterialQuery();
+					//计划资料
+					WebIcitemPlanQuery webItemPlanQuery = new WebIcitemPlanQuery();
+					//设计资料
+					IcitemDesignQuery webItemDesignQuery = new IcitemDesignQuery();
+					//标准资料
+					WebItemStandardQuery webItemStandardQuery = new WebItemStandardQuery();
+					//物料质量资料表
+					IcitemQualityQuery webItemQualityQuery = new IcitemQualityQuery();
+					//进出口资料
+					WebItemEntranceQuery webItemEntranceQuery = new WebItemEntranceQuery();
+					if(icitems!=null){
+						icitems.setFinterid(icitems.getItemproperty());//物料属性id
+						webItemCoreQuery.setAcctName(icitems.getItempropertyname());
+						//基本资料1
+						WebItemCore webItemCore = new WebItemCore();
+						webItemCore =itemBasicService.getByItemCoreInfo(checkedIdList.get(i)+"");
+						if(webItemCore!=null){
+							webItemCoreQuery.setAracctId(webItemCore.getAracctId());
+							webItemCoreQuery.setHelpCode(webItemCore.getHelpCode());
+							webItemCoreQuery.setOrderPrice(webItemCore.getOrderPrice());
+						}
+						//基本资料2
+						WebItemBase webItemBase = new WebItemBase();
+						webItemBase =itemBasicService.getByItemBaseInfo(checkedIdList.get(i)+"");
+						if(webItemBase!=null){
+							webItemBaseQuery.setFullname(webItemBase.getFullname());
+							webItemBaseQuery.setUnitGroupId(webItemBase.getUnitGroupId());
+							if(webItemBase.getUnitGroupId()!=null){
+								//单位组名称
+								WebUnitGroup unitgroup = webUnitGroupService.getById(webItemBase.getUnitGroupId());
+								if(unitgroup!=null){
+									icitems.setUnitgroupname(unitgroup.getFname());
+								}
+							}
+							webItemBaseQuery.setSource(webItemBase.getSource());
+							webItemBaseQuery.setQtyDecimal(webItemBase.getQtyDecimal());
+							webItemBaseQuery.setLowLimit(webItemBase.getLowLimit());
+							webItemBaseQuery.setHighLimit(webItemBase.getHighLimit());
+							webItemBaseQuery.setIsEquipment(webItemBase.getIsEquipment());
+							webItemBaseQuery.setIsSparePart(webItemBase.getIsSparePart());
+							webItemBaseQuery.setSecUnitId(webItemBase.getSecUnitId());
+							webItemBaseQuery.setSecCoefficient(webItemBase.getSecCoefficient());
+							webItemBaseQuery.setAlias(webItemBase.getAlias());
+							webItemBaseQuery.setApproveNo(webItemBase.getApproveNo());
+							webItemBaseQuery.setId(webItemBase.getId());
+						}
+						//物流资料
+						WebItemMaterial webItemMaterial = new WebItemMaterial();
+						webItemMaterial =itemBasicService.getByItemMaterialInfo(checkedIdList.get(i)+"");
+						if(webItemMaterial!=null){
+							webItemMaterialQuery.setAcctId(webItemMaterial.getAcctId());
+							webItemMaterialQuery.setSaleAcctId(webItemMaterial.getSaleAcctId());
+							webItemMaterialQuery.setCostAcctId(webItemMaterial.getCostAcctId());
+							webItemMaterialQuery.setOrderRector(webItemMaterial.getOrderRector());
+							webItemMaterialQuery.setIskfperiod(webItemMaterial.getIskfperiod());
+							webItemMaterialQuery.setTrack(webItemMaterial.getTrack());
+							webItemMaterialQuery.setPriceDecimal(webItemMaterial.getPriceDecimal());
+							webItemMaterialQuery.setGoodSpec(webItemMaterial.getGoodSpec());
+							webItemMaterialQuery.setStockTime(webItemMaterial.getStockTime());
+							webItemMaterialQuery.setCostProject(webItemMaterial.getCostProject());
+							webItemMaterialQuery.setBookPlan(webItemMaterial.getBookPlan());
+							webItemMaterialQuery.setAdminAcctId(webItemMaterial.getAdminAcctId());
+							webItemMaterialQuery.setNote(webItemMaterial.getNote());
+							webItemMaterialQuery.setIsSpecialTax(webItemMaterial.getIsSpecialTax());
+							webItemMaterialQuery.setOihighLimit(webItemMaterial.getOihighLimit());
+							webItemMaterialQuery.setOilowLimit(webItemMaterial.getOilowLimit());
+							webItemMaterialQuery.setSohighLimit(webItemMaterial.getSohighLimit());
+							webItemMaterialQuery.setDaysPer(webItemMaterial.getDaysPer());
+							webItemMaterialQuery.setCheckCycle(webItemMaterial.getCheckCycle());
+							webItemMaterialQuery.setCheckCycUnit(webItemMaterial.getCheckCycUnit());
+							webItemMaterialQuery.setCostDiffRate(webItemMaterial.getCostDiffRate());
+							webItemMaterialQuery.setCbrestore(webItemMaterial.getCbrestore());
+						}
+						//计划资料
+						WebIcitemPlan webIcitemPlan = new WebIcitemPlan();
+						webIcitemPlan = itemBasicService.getByItemPlanInfo(checkedIdList.get(i)+"");
+						if(webIcitemPlan!=null){
+							webItemPlanQuery.setPlanTrategy(webIcitemPlan.getPlanTrategy());
+							webItemPlanQuery.setOrderTrategy(webIcitemPlan.getOrderTrategy());
+							webItemPlanQuery.setFixLeadTime(webIcitemPlan.getFixLeadTime());
+							webItemPlanQuery.setLeadTime(webIcitemPlan.getLeadTime());
+							webItemPlanQuery.setDefaultWorkTypeId(webIcitemPlan.getDefaultWorkTypeId());
+							webItemPlanQuery.setProductPrincipal(webIcitemPlan.getProductPrincipal());
+							webItemPlanQuery.setMrpcon(webIcitemPlan.getMrpcon());
+							webItemPlanQuery.setContainerName(webIcitemPlan.getContainerName());
+							webItemPlanQuery.setPlanner(webIcitemPlan.getPlanner());
+							webItemPlanQuery.setPutInteger(webIcitemPlan.getPutInteger());
+							webItemPlanQuery.setIsBackFlush(webIcitemPlan.getIsBackFlush());
+						}
+						//设计资料
+						IcitemDesign icitemDesign = new IcitemDesign();
+						icitemDesign = itemBasicService.getByItemDesignInfo(checkedIdList.get(i)+"");
+						if(icitemDesign!=null){
+							webItemDesignQuery.setIsKeyItem(icitemDesign.getIsKeyItem());
+							webItemDesignQuery.setGrossWeight(icitemDesign.getGrossWeight());
+							webItemDesignQuery.setMaund(icitemDesign.getMaund());
+							webItemDesignQuery.setCubicMeasure(icitemDesign.getCubicMeasure());
+							webItemDesignQuery.setVersion(icitemDesign.getVersion());
+						}
+						//将各个从表信息放到icitems实体类中
+						icitems.setWebItemCoreQuery(webItemCoreQuery);
+						icitems.setWebItemBaseQuery(webItemBaseQuery);
+						icitems.setWebItemMaterialQuery(webItemMaterialQuery);
+						icitems.setWebItemPlanQuery(webItemPlanQuery);
+						icitems.setWebItemDesignQuery(webItemDesignQuery);
+						icitems.setWebItemStandardQuery(webItemStandardQuery);
+						icitems.setWebItemQualityQuery(webItemQualityQuery);
+						icitems.setWebItemEntranceQuery(webItemEntranceQuery);
+						
+					}
+					/*if(baseItems!=null&&baseItems.size()>0){
+						for(int i=0;i<baseItems.size();i++){
+							//同步数据
+							//只取了列表中的第一个进行同步
+							Icitems icitems = itemBasicService.getById(baseItems.get(i).getBaseitemid());
+							//基本资料1
+							WebItemCoreQuery webItemCoreQuery = new WebItemCoreQuery();
+							//基本资料2
+							WebItemBaseQuery webItemBaseQuery = new WebItemBaseQuery();
+							//物流资料
+							WebItemMaterialQuery webItemMaterialQuery = new WebItemMaterialQuery();
+							//计划资料
+							WebIcitemPlanQuery webItemPlanQuery = new WebIcitemPlanQuery();
+							//设计资料
+							IcitemDesignQuery webItemDesignQuery = new IcitemDesignQuery();
+							//标准资料
+							WebItemStandardQuery webItemStandardQuery = new WebItemStandardQuery();
+							//物料质量资料表
+							IcitemQualityQuery webItemQualityQuery = new IcitemQualityQuery();
+							//进出口资料
+							WebItemEntranceQuery webItemEntranceQuery = new WebItemEntranceQuery();
+							if(icitems!=null){
+								icitems.setFinterid(icitems.getItemproperty());//物料属性id
+								webItemCoreQuery.setAcctName(icitems.getItempropertyname());
+								//基本资料1
+								WebItemCore webItemCore = new WebItemCore();
+								webItemCore =itemBasicService.getByItemCoreInfo(baseItems.get(i).getBaseitemid()+"");
+								if(webItemCore!=null){
+									webItemCoreQuery.setAracctId(webItemCore.getAracctId());
+									webItemCoreQuery.setHelpCode(webItemCore.getHelpCode());
+									webItemCoreQuery.setOrderPrice(webItemCore.getOrderPrice());
+								}
+								//基本资料2
+								WebItemBase webItemBase = new WebItemBase();
+								webItemBase =itemBasicService.getByItemBaseInfo(baseItems.get(i).getBaseitemid()+"");
+								if(webItemBase!=null){
+									webItemBaseQuery.setFullname(webItemBase.getFullname());
+									webItemBaseQuery.setUnitGroupId(webItemBase.getUnitGroupId());
+									if(webItemBase.getUnitGroupId()!=null){
+										//单位组名称
+										WebUnitGroup unitgroup = webUnitGroupService.getById(webItemBase.getUnitGroupId());
+										if(unitgroup!=null){
+											icitems.setUnitgroupname(unitgroup.getFname());
+										}
+									}
+									webItemBaseQuery.setSource(webItemBase.getSource());
+									webItemBaseQuery.setQtyDecimal(webItemBase.getQtyDecimal());
+									webItemBaseQuery.setLowLimit(webItemBase.getLowLimit());
+									webItemBaseQuery.setHighLimit(webItemBase.getHighLimit());
+									webItemBaseQuery.setIsEquipment(webItemBase.getIsEquipment());
+									webItemBaseQuery.setIsSparePart(webItemBase.getIsSparePart());
+									webItemBaseQuery.setSecUnitId(webItemBase.getSecUnitId());
+									webItemBaseQuery.setSecCoefficient(webItemBase.getSecCoefficient());
+									webItemBaseQuery.setAlias(webItemBase.getAlias());
+									webItemBaseQuery.setApproveNo(webItemBase.getApproveNo());
+									webItemBaseQuery.setId(webItemBase.getId());
+								}
+								//物流资料
+								WebItemMaterial webItemMaterial = new WebItemMaterial();
+								webItemMaterial =itemBasicService.getByItemMaterialInfo(baseItems.get(i).getBaseitemid()+"");
+								if(webItemMaterial!=null){
+									webItemMaterialQuery.setAcctId(webItemMaterial.getAcctId());
+									webItemMaterialQuery.setSaleAcctId(webItemMaterial.getSaleAcctId());
+									webItemMaterialQuery.setCostAcctId(webItemMaterial.getCostAcctId());
+									webItemMaterialQuery.setOrderRector(webItemMaterial.getOrderRector());
+									webItemMaterialQuery.setIskfperiod(webItemMaterial.getIskfperiod());
+									webItemMaterialQuery.setTrack(webItemMaterial.getTrack());
+									webItemMaterialQuery.setPriceDecimal(webItemMaterial.getPriceDecimal());
+									webItemMaterialQuery.setGoodSpec(webItemMaterial.getGoodSpec());
+									webItemMaterialQuery.setStockTime(webItemMaterial.getStockTime());
+									webItemMaterialQuery.setCostProject(webItemMaterial.getCostProject());
+									webItemMaterialQuery.setBookPlan(webItemMaterial.getBookPlan());
+									webItemMaterialQuery.setAdminAcctId(webItemMaterial.getAdminAcctId());
+									webItemMaterialQuery.setNote(webItemMaterial.getNote());
+									webItemMaterialQuery.setIsSpecialTax(webItemMaterial.getIsSpecialTax());
+									webItemMaterialQuery.setOihighLimit(webItemMaterial.getOihighLimit());
+									webItemMaterialQuery.setOilowLimit(webItemMaterial.getOilowLimit());
+									webItemMaterialQuery.setSohighLimit(webItemMaterial.getSohighLimit());
+									webItemMaterialQuery.setDaysPer(webItemMaterial.getDaysPer());
+									webItemMaterialQuery.setCheckCycle(webItemMaterial.getCheckCycle());
+									webItemMaterialQuery.setCheckCycUnit(webItemMaterial.getCheckCycUnit());
+									webItemMaterialQuery.setCostDiffRate(webItemMaterial.getCostDiffRate());
+									webItemMaterialQuery.setCbrestore(webItemMaterial.getCbrestore());
+								}
+								//计划资料
+								WebIcitemPlan webIcitemPlan = new WebIcitemPlan();
+								webIcitemPlan = itemBasicService.getByItemPlanInfo(baseItems.get(i).getBaseitemid()+"");
+								if(webIcitemPlan!=null){
+									webItemPlanQuery.setPlanTrategy(webIcitemPlan.getPlanTrategy());
+									webItemPlanQuery.setOrderTrategy(webIcitemPlan.getOrderTrategy());
+									webItemPlanQuery.setFixLeadTime(webIcitemPlan.getFixLeadTime());
+									webItemPlanQuery.setLeadTime(webIcitemPlan.getLeadTime());
+									webItemPlanQuery.setDefaultWorkTypeId(webIcitemPlan.getDefaultWorkTypeId());
+									webItemPlanQuery.setProductPrincipal(webIcitemPlan.getProductPrincipal());
+									webItemPlanQuery.setMrpcon(webIcitemPlan.getMrpcon());
+									webItemPlanQuery.setContainerName(webIcitemPlan.getContainerName());
+									webItemPlanQuery.setPlanner(webIcitemPlan.getPlanner());
+									webItemPlanQuery.setPutInteger(webIcitemPlan.getPutInteger());
+									webItemPlanQuery.setIsBackFlush(webIcitemPlan.getIsBackFlush());
+								}
+								//设计资料
+								IcitemDesign icitemDesign = new IcitemDesign();
+								icitemDesign = itemBasicService.getByItemDesignInfo(baseItems.get(i).getBaseitemid()+"");
+								if(icitemDesign!=null){
+									webItemDesignQuery.setIsKeyItem(icitemDesign.getIsKeyItem());
+									webItemDesignQuery.setGrossWeight(icitemDesign.getGrossWeight());
+									webItemDesignQuery.setMaund(icitemDesign.getMaund());
+									webItemDesignQuery.setCubicMeasure(icitemDesign.getCubicMeasure());
+									webItemDesignQuery.setVersion(icitemDesign.getVersion());
+								}
+								//将各个从表信息放到icitems实体类中
+								icitems.setWebItemCoreQuery(webItemCoreQuery);
+								icitems.setWebItemBaseQuery(webItemBaseQuery);
+								icitems.setWebItemMaterialQuery(webItemMaterialQuery);
+								icitems.setWebItemPlanQuery(webItemPlanQuery);
+								icitems.setWebItemDesignQuery(webItemDesignQuery);
+								icitems.setWebItemStandardQuery(webItemStandardQuery);
+								icitems.setWebItemQualityQuery(webItemQualityQuery);
+								icitems.setWebItemEntranceQuery(webItemEntranceQuery);
+								
+							}*/
+					itemBasicService.saveDataToERP(icitems);
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "同步成功";
+			//Struts2Utils.renderJson(SUCCESS);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "1";
+			resultInfo[1] = e.getMessage();
+			//Struts2Utils.renderJson(e.getMessage());
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "1";
+			resultInfo[1] = "同步失败，原因："+e.getMessage()+" 后台异常请重试!";
+			//Struts2Utils.renderJson("保存失败，原因："+e.getMessage()+" 后台异常请重试!");
+		}
+		return JSON;
+	}
+   /**
+    * 
+    * @return
+    * @throws Exception
+    */
+   public String updateOptJson() throws Exception {
+		
+		try {
+			itemBasicService.updateItemOpt(entity);
+			Struts2Utils.renderJson(SUCCESS);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			Struts2Utils.renderJson(e.getMessage());
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("操作失败，原因："+e.getMessage()+" 后台异常请重试!");
+		}
+		return JSON;
+	}
+   /**
+    * 
+    * @return
+    * @throws Exception
+    */
+  /* public String deleteItemOptJson() throws Exception {
+		
+		try {
+			//itemBasicService.updateItemOpt(entity);
+			Struts2Utils.renderJson(SUCCESS);
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			Struts2Utils.renderJson(e.getMessage());
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("操作失败，原因："+e.getMessage()+" 后台异常请重试!");
+		}
+		return JSON;
+	}*/
+   /**
+    * 载入读取物流信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemMaterialJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemMaterial =itemBasicService.getByItemMaterialInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   
+   /**
+    * 载入读取计划信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemPlanJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webIcitemPlan =itemBasicService.getByItemPlanInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入读取计划信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemDesignJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemDesign =itemBasicService.getByItemDesignInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入读取标准信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemStandardJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemStandard =itemBasicService.getByItemStandardInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入读取Quality信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemQualityJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemQuality =itemBasicService.getByItemQualityInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入读取Entrance信息 
+    * @return
+    * @throws Exception
+    */
+   public String listItemEntranceJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemEntrance =itemBasicService.getByItemEntranceInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入基本资料中 core 表的值
+    * @return
+    * @throws Exception
+    */
+   public String listItemCoreJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemCore =itemBasicService.getByItemCoreInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入基本资料中 base 表的值
+    * @return
+    * @throws Exception
+    */
+   public String listItemBaseJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemBase =itemBasicService.getByItemBaseInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入 原物料排产资料 中 数据
+    * @return
+    * @throws Exception
+    */
+   /*public String listItemWebInfoJson() throws Exception {
+		
+		try {
+			if (itemBasicId != null) {
+				webItemCore =itemBasicService.getByItemWebInfo(itemBasicId+"");
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}*/
+      /**
+       * 查看当前物料
+       */
+   public String input() throws Exception {
+		try {
+			String method = getRequest().getMethod();
+			if (!"post".equalsIgnoreCase(method)) {
+				logger.error("非法提交");
+				Struts2Utils.renderJson("非法提交！");
+				return null;
+			}
+			if (itemBasicId == null) {
+				logger.error("参数不能为空");
+				Struts2Utils.renderJson("参数不能为空！");
+				return null;
+			}
+			//Item item=new Item();
+			Icitems icitem=new Icitems();
+			if (itemBasicId != null) {
+				icitem =itemBasicService.getById(itemBasicId);
+				
+				//item = itemService.getById(itemBasicId);
+			}
+			//查询父级物料从 K3中,应为现在web t_base_item 中没有存?
+			//Struts2Utils.renderJson(item);
+			Struts2Utils.renderJson(icitem);
+			
+		} catch (ServiceException e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson(e.getMessage());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			Struts2Utils.renderJson("读取物料信息失败！");
+		}
+		return null;
+	}
+   
+   public String listItemJson() throws Exception {
+		
+		try {
+			teamList = teamsService.findAllList();
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入物料类别分类信息
+    * @return
+    * @throws Exception
+    */
+   public String listSecCodeJson() throws Exception {
+		
+		try {
+			MeasureunitsQuery query=new MeasureunitsQuery();
+			query.setUnitid(unitGroupId);
+			measureunitList=measureunitsService.findList(query);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入说有的计量单位表
+    * @return
+    * @throws Exception
+    */
+   public String listAllUnitJson() throws Exception {
+		
+		try {
+			measureunitList=measureunitsService.findAllList();
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入计量单位表
+    * @return
+    * @throws Exception
+    */
+   public String listUnitJson() throws Exception {
+		
+		try {
+			MeasureunitsQuery query=new MeasureunitsQuery();
+			query.setUnitid(unitGroupId);
+			measureunitList=measureunitsService.findList(query);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   
+   /**
+    * 载入采购加工策略周期
+    * @return
+    * @throws Exception
+    */
+   public String listCycleJson() throws Exception {
+		
+		try {
+			stockList=stockService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入仓库
+    * @return
+    * @throws Exception
+    */
+   private String CATEGORYSTOCKKEY="stocks";
+   public String listStockJson() throws Exception {
+		
+		try {
+			
+			
+			if(CacheService.getInstance().get(CATEGORYSTOCKKEY)==null)
+			{
+				stockList=stockService.findAllList();
+			  //放入缓存中
+			  CacheService.getInstance().add(CATEGORYSTOCKKEY, stockList);
+			}else{
+				stockList=(List<Stock>)CacheService.getInstance().get(CATEGORYSTOCKKEY);
+			}
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入人员如负责人等
+    * @return
+    * @throws Exception
+    */
+   public String listEmpJson() throws Exception {
+		
+		try {
+			adminList=adminService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入部门
+    * @return
+    * @throws Exception
+    */
+   public String listTeamJson() throws Exception {
+		
+		try {
+			teamList=teamsService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入供应商
+    * @return
+    * @throws Exception
+    */
+   private String CATEGORYSUPPLIERKEY="supplier";
+   public String listSupplierJson() throws Exception { 
+		
+		try {
+			if(CacheService.getInstance().get(CATEGORYSUPPLIERKEY)==null)
+			{
+				supplierList=supplierService.findAllList();
+			  //放入缓存中
+			  CacheService.getInstance().add(CATEGORYSUPPLIERKEY, supplierList);
+			}else{
+				supplierList=(List<Supplier>)CacheService.getInstance().get(CATEGORYSUPPLIERKEY);
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入计量单位组表
+    * @return
+    * @throws Exception
+    */
+   public String listUnitGroupJson() throws Exception {
+		
+		try {
+			webUnitGroupList=webUnitGroupService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入生产类型表
+    * @return
+    * @throws Exception
+    */
+   public String listWorkTypeJson() throws Exception {
+		
+		try {
+			webWorkTypeList=webWorkTypeService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   /**
+    * 载入来料检验方案表
+    * @return
+    * @throws Exception
+    */
+   public String listTopicJson() throws Exception {
+		
+		try {
+			topicList=topicService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   private String CATEGORYKEY="accountinfos";
+   /**
+    * 载入科目表
+    * @return
+    * @throws Exception
+    */
+   public String listAccJson() throws Exception {
+		
+		try {
+			if(CacheService.getInstance().get(CATEGORYKEY)==null)
+			{
+				WebAccountQuery webAccountQuery =new WebAccountQuery();
+				webAccountQuery.setSortColumns("FNumber");
+				if(null!=entity){//说明是要显示模糊查询
+					if(null!=entity.getAcctIDfnumber()){
+						webAccountQuery.setFnumber(entity.getAcctIDfnumber());//科目编号
+					}
+					if(null!=entity.getAcctIDfname()){
+						webAccountQuery.setFname(entity.getAcctIDfname());//科目名
+					}
+					webAccountQuery.setFdelete(0);
+					webAccountList=webAccountService.findAllListWithSortColumns(webAccountQuery);//取前10条
+				}else{//说明非模糊查询
+				
+			        webAccountList=webAccountService.findAllAccountList(webAccountQuery);
+				}
+			  //放入缓存中
+			  //是放入所有的科目
+			  WebAccountQuery webAccountQueryAll =new WebAccountQuery();
+			  webAccountQueryAll.setSortColumns("FNumber");
+			  webAccountQueryAll.setFdelete(0);	
+			  List<WebAccount> webAccountAllList=webAccountService.findAllAccountList(webAccountQueryAll);
+				
+			  CacheService.getInstance().add(CATEGORYKEY, webAccountAllList);//把所有的科目放入缓存
+			}else{
+				//webAccountList= (List<WebAccount>) CacheService.getInstance().get(CATEGORYKEY);
+				
+				//取缓存数据用户
+				List<WebAccount> webAccountListCache=(List<WebAccount>)CacheService.getInstance().get(CATEGORYKEY);
+				if(null!=entity){
+					webAccountList=new ArrayList<WebAccount>();
+					 for(WebAccount webAccount : webAccountListCache){
+						 /*if( webAccount.getFname().contains(""+entity.getAcctIDfname() )
+								|| webAccount.getFnumber().contains(""+entity.getAcctIDfnumber() )
+						    ){
+							 webAccountList.add(webAccount);
+						 }*/
+						 
+						 if(null!=entity.getAcctIDfnumber()){
+							 if(  webAccount.getFnumber().contains(""+entity.getAcctIDfnumber() )
+								    ){
+									 webAccountList.add(webAccount);
+								 }//科目编号
+							}
+							if(null!=entity.getAcctIDfname()){
+								if( webAccount.getFname().contains(""+entity.getAcctIDfname() )
+								    ){
+									 webAccountList.add(webAccount);
+								 }//科目名
+							}
+						 
+					 }
+				}else{
+					webAccountList=webAccountListCache;
+				}
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入使用状态
+    * @return
+    * @throws Exception
+    */
+   public String listSubMessageJson() throws Exception {
+		
+		try {
+			if (typeId != null) {
+				//item =itemBasicService.getById(itemBasicId);
+				WebSubMessageQuery query=new WebSubMessageQuery();
+				query.setFtypeId(typeId);
+				webSubMessageList =webSubMessageService.findList(query);
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			}else{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}
+			
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   /**
+    * 载入物料属性列表
+    * @return
+    * @throws Exception
+    */
+   public String listItemErpClsJson() throws Exception {
+		
+		try {
+			//MeasureunitQuery query=new MeasureunitQuery();
+			//query.setUnitid(unitGroupId);
+			WebSubMessageQuery query=new WebSubMessageQuery();
+			query.setFtypeId(210);
+			webSubMessageList =webSubMessageService.findList(query);
+			
+			//IItemOptService service1 = new ItemOptService();
+			
+			//subMessageList =service1.queryItemSubMessageInfo(210);
+			
+			//System.out.println("结果:"+subMessageList.size());
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+   
+   
+       @Action("/system/listteamall")
+	   public String listAll() throws Exception {
+			try{
+				teamList = teamsService.findAllList();
+				resultInfo[0] = "0";
+				resultInfo[1] = "查询列表成功";
+			} catch(ServiceException e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = e.getMessage();
+			} catch(Exception e){
+				logger.warn("param error ", e);
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询列表失败";
+			}	
+			
+			return JSON;
+		}
+
+	@Override
+	public String delete() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String deleteToJson() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public String list() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void prepareModel() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String show() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String showToJson() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext arg0)
+			throws BeansException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Icitem getModel() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Icitems getEntity() {
+		return entity;
+	}
+
+	public void setEntity(Icitems entity) {
+		this.entity = entity;
+	}
+
+	public List<Teams> getTeamList() {
+		return teamList;
+	}
+	
+	public TeamQuery getTeamQuery() {
+		return teamQuery;
+	}
+
+	
+	public java.lang.Long getItemBasicId() {
+		return itemBasicId;
+	}
+
+	public void setItemBasicId(java.lang.Long itemBasicId) {
+		this.itemBasicId = itemBasicId;
+	}
+
+	public void setTeamQuery(TeamQuery teamQuery) {
+		this.teamQuery = teamQuery;
+	}
+
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	public void setResultInfo(String[] resultInfo) {
+		this.resultInfo = resultInfo;
+	}
+
+	public void setTeamList(List<Teams> teamList) {
+		this.teamList = teamList;
+	}
+
+	public List<TSubMessage> getSubMessageList() {
+		return subMessageList;
+	}
+
+	public void setSubMessageList(List<TSubMessage> subMessageList) {
+		this.subMessageList = subMessageList;
+	}
+
+	public List<WebAccount> getWebAccountList() {
+		return webAccountList;
+	}
+
+	public void setWebAccountList(List<WebAccount> webAccountList) {
+		this.webAccountList = webAccountList;
+	}
+
+	public List<WebUnitGroup> getWebUnitGroupList() {
+		return webUnitGroupList;
+	}
+
+	public void setWebUnitGroupList(List<WebUnitGroup> webUnitGroupList) {
+		this.webUnitGroupList = webUnitGroupList;
+	}
+
+	public List<Measureunits> getMeasureunitList() {
+		return measureunitList;
+	}
+
+	public void setMeasureunitList(List<Measureunits> measureunitList) {
+		this.measureunitList = measureunitList;
+	}
+
+	public java.lang.Long getUnitGroupId() {
+		return unitGroupId;
+	}
+
+	public void setUnitGroupId(java.lang.Long unitGroupId) {
+		this.unitGroupId = unitGroupId;
+	}
+
+	public List<WebSubMessage> getWebSubMessageList() {
+		return webSubMessageList;
+	}
+
+	public void setWebSubMessageList(List<WebSubMessage> webSubMessageList) {
+		this.webSubMessageList = webSubMessageList;
+	}
+
+	public List<Stock> getStockList() {
+		return stockList;
+	}
+
+	public void setStockList(List<Stock> stockList) {
+		this.stockList = stockList;
+	}
+
+	public List<Supplier> getSupplierList() {
+		return supplierList;
+	}
+
+	public void setSupplierList(List<Supplier> supplierList) {
+		this.supplierList = supplierList;
+	}
+
+	public java.lang.Integer getUseStateTypeId() {
+		return useStateTypeId;
+	}
+
+	public void setUseStateTypeId(java.lang.Integer useStateTypeId) {
+		this.useStateTypeId = useStateTypeId;
+	}
+
+	public java.lang.Integer getTypeId() {
+		return typeId;
+	}
+
+	public void setTypeId(java.lang.Integer typeId) {
+		this.typeId = typeId;
+	}
+
+	public List<Admin> getAdminList() {
+		return adminList;
+	}
+
+	public void setAdminList(List<Admin> adminList) {
+		this.adminList = adminList;
+	}
+
+	public List<WebWorkType> getWebWorkTypeList() {
+		return webWorkTypeList;
+	}
+
+	public void setWebWorkTypeList(List<WebWorkType> webWorkTypeList) {
+		this.webWorkTypeList = webWorkTypeList;
+	}
+
+	public List<Topic> getTopicList() {
+		return topicList;
+	}
+
+	public void setTopicList(List<Topic> topicList) {
+		this.topicList = topicList;
+	}
+
+	public WebItemCore getWebItemCore() {
+		return webItemCore;
+	}
+
+	public void setWebItemCore(WebItemCore webItemCore) {
+		this.webItemCore = webItemCore;
+	}
+
+	public WebItemBase getWebItemBase() {
+		return webItemBase;
+	}
+
+	public void setWebItemBase(WebItemBase webItemBase) {
+		this.webItemBase = webItemBase;
+	}
+
+	public WebItemMaterial getWebItemMaterial() {
+		return webItemMaterial;
+	}
+
+	public void setWebItemMaterial(WebItemMaterial webItemMaterial) {
+		this.webItemMaterial = webItemMaterial;
+	}
+
+	public WebIcitemPlan getWebIcitemPlan() {
+		return webIcitemPlan;
+	}
+
+	public void setWebIcitemPlan(WebIcitemPlan webIcitemPlan) {
+		this.webIcitemPlan = webIcitemPlan;
+	}
+
+	public IcitemDesign getWebItemDesign() {
+		return webItemDesign;
+	}
+
+	public void setWebItemDesign(IcitemDesign webItemDesign) {
+		this.webItemDesign = webItemDesign;
+	}
+
+	public WebItemStandard getWebItemStandard() {
+		return webItemStandard;
+	}
+
+	public void setWebItemStandard(WebItemStandard webItemStandard) {
+		this.webItemStandard = webItemStandard;
+	}
+
+	public IcitemQuality getWebItemQuality() {
+		return webItemQuality;
+	}
+
+	public void setWebItemQuality(IcitemQuality webItemQuality) {
+		this.webItemQuality = webItemQuality;
+	}
+
+	public WebItemEntrance getWebItemEntrance() {
+		return webItemEntrance;
+	}
+
+	public void setWebItemEntrance(WebItemEntrance webItemEntrance) {
+		this.webItemEntrance = webItemEntrance;
+	}
+
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+	
+}

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Cdepartment;
+import com.terrence.crm.dol.query.CdepartmentQuery;
+import com.terrence.crm.dol.dao.ICdepartmentDao;
+import com.terrence.crm.dol.service.ICdepartmentService;
+
+@Service
+@Transactional
+public class CdepartmentService extends BaseService implements ICdepartmentService {
+	protected static Logger logger = LoggerFactory.getLogger(CdepartmentService.class);
+	@Autowired
+	@Qualifier("cdepartmentDao")
+	private ICdepartmentDao cdepartmentDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Cdepartment";
+	}
+	@Transactional(readOnly=true)
+	public Cdepartment getById(java.lang.Long id) throws ServiceException
+	{
+		return cdepartmentDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Cdepartment entity) throws ServiceException
+	{
+		cdepartmentDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Cdepartment entity) throws ServiceException
+	{
+		Long adId = cdepartmentDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Cdepartment entity) throws ServiceException
+	{
+		Integer returnValue =  cdepartmentDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = cdepartmentDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = cdepartmentDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CdepartmentQuery query = new CdepartmentQuery();
+		try {
+			return cdepartmentDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Cdepartment> findPage(Page<Cdepartment> page, CdepartmentQuery query) throws ServiceException
+	{
+		return cdepartmentDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Cdepartment> findPage(Page<Cdepartment> page,String statement, CdepartmentQuery query) throws ServiceException
+	{
+		return cdepartmentDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Cdepartment> findList(CdepartmentQuery query) throws ServiceException
+	{
+		return cdepartmentDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Cdepartment> findList(CdepartmentQuery query,Integer pageSize) throws ServiceException
+	{
+		return cdepartmentDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Cdepartment> findList(CdepartmentQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return cdepartmentDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Cdepartment> findAllList() throws ServiceException
+	{
+		return cdepartmentDao.findAllList();
+	}
+
+}

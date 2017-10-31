@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.TopicItemVal;
+import com.terrence.crm.dol.dao.ITopicItemValDao;
+
+@Repository
+public class TopicItemValDao extends BaseIbatisDao<TopicItemVal,java.lang.Long> implements ITopicItemValDao{
+
+		
+	public void saveOrUpdate(TopicItemVal entity) {
+		if(entity.getValid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "TopicItemVal";
+	}
+	public TopicItemVal getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (TopicItemVal)this.getSqlMapClientTemplate().queryForObject("TopicItemVal.getByProperty", map);		
+	}
+
+}

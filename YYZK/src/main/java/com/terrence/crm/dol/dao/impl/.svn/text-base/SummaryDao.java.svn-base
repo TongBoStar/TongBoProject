@@ -1,0 +1,57 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Summary;
+import com.terrence.crm.dol.dao.ISummaryDao;
+import com.terrence.crm.dol.query.SummaryQuery;
+
+@Repository
+public class SummaryDao extends BaseIbatisDao<Summary,java.lang.Long> implements ISummaryDao{
+
+		
+	public void saveOrUpdate(Summary entity) {
+		if(entity.getSumid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Summary";
+	}
+	public Summary getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Summary)this.getSqlMapClientTemplate().queryForObject("Summary.getByProperty", map);		
+	}
+	/**
+	 * 分组查找 
+	 * @param order
+	 * @return
+	 */
+	public List<Summary> findProductQueryList(SummaryQuery  summaryQuery ) {
+		return (List<Summary>)this.getSqlMapClientTemplate()
+		.queryForList("Summary.findList.byGroup", summaryQuery);
+	}
+	/**
+	 * 查找 最新汇总时间
+	 * @param order
+	 * @return
+	 */
+	public List<Summary> findLastCreatedate(SummaryQuery  summaryQuery ) {
+		return (List<Summary>)this.getSqlMapClientTemplate()
+		.queryForList("Summary.getLastCreatedate", summaryQuery);
+	}
+
+}

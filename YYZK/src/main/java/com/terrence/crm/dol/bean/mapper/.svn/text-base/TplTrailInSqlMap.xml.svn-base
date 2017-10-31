@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TplTrailIn">
+
+        
+	<resultMap id="RM.TplTrailIn" class="com.terrence.crm.dol.bean.TplTrailIn">
+        <result property="inid" column="inid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="did" column="did"/>
+        <result property="trialid" column="trialid"/>
+        <result property="defaultval" column="defaultval"/>
+        <result property="unit" column="unit"/>
+    </resultMap>
+	
+	 
+	 <resultMap id="RM.TplTrailIn.findlist.includename" class="com.terrence.crm.dol.bean.TplTrailIn">
+        <result property="inid" column="inid"/>
+        <result property="tplid" column="tplid"/>
+        <result property="did" column="did"/>
+        <result property="trialid" column="trialid"/>
+        <result property="trialDevice" resultMap="RM.TplTrailIn.trialDevice"/>
+        <result property="defaultval" column="defaultval"/>
+        <result property="unit" column="unit"/>
+        
+    </resultMap>
+
+ 	<resultMap id="RM.TplTrailIn.trialDevice" class="com.terrence.crm.dol.bean.TrialDevice">
+        <result property="divicename" column="divicename"/>
+        <result property="fename" column="fename"/>
+    </resultMap>
+	  
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="TplTrailIn.columns">
+	    <![CDATA[
+        	t_tpl_trail_in.inid ,
+        	t_tpl_trail_in.tplid ,
+        	t_tpl_trail_in.did ,
+        	t_tpl_trail_in.trialid ,
+        	t_tpl_trail_in.defaultval ,
+        	t_tpl_trail_in.unit
+	    ]]>
+	</sql>
+	
+   <insert id="TplTrailIn.insert" >
+    
+        INSERT INTO
+        t_tpl_trail_in (
+        	tplid 
+        	<isNotEmpty prepend="," property="did">
+        		did 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="trialid">
+        		trialid 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="defaultval">
+        		defaultval 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="unit">
+        		unit 
+    		</isNotEmpty>
+    		
+    		
+        ) VALUES (
+        	#tplid# 
+        	<isNotEmpty prepend="," property="did">
+        		#did# 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="trialid">
+        		#trialid# 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="defaultval">
+        		#defaultval# 
+    		</isNotEmpty>
+    		<isNotEmpty prepend="," property="unit">
+        		#unit# 
+    		</isNotEmpty>
+        )
+     
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="inid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	
+	<update id="TplTrailIn.update" parameterClass="com.terrence.crm.dol.bean.TplTrailIn">         
+        UPDATE t_tpl_trail_in 
+        <dynamic prepend="SET"> 
+	        <isNotEmpty prepend="," property="tplid">
+	        	tplid = #tplid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="did">
+	        	did = #did# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="trialid">
+	        	trialid = #trialid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="defaultval">
+	        	defaultval = #defaultval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unit">
+	        	unit = #unit# 
+	        </isNotEmpty>
+        	
+	    </dynamic>
+        WHERE 
+	        inid = #inid# 
+    </update>
+    
+	<delete id="TplTrailIn.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_tpl_trail_in where
+       inid = #inid# 
+    ]]>
+    </delete>
+    
+    <delete id="TplTrailIn.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_tpl_trail_in 
+        WHERE
+       inid in ($inid$) 
+    ]]>
+    </delete>
+    
+    <select id="TplTrailIn.getById" resultMap="RM.TplTrailIn">
+	    select <include refid="TplTrailIn.columns"/>
+	    
+	        from t_tpl_trail_in 
+	        where 
+		        inid = #inid# 
+	    
+    </select>
+    
+	<select id="TplTrailIn.getByProperty" resultMap="RM.TplTrailIn">
+		select <include refid="TplTrailIn.columns"/> from t_tpl_trail_in where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="TplTrailIn.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="inid">
+	             t_tpl_trail_in.inid = #inid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_tpl_trail_in.tplid = #tplid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="did">
+	             t_tpl_trail_in.did = #did#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_tpl_trail_in.trialid = #trialid#
+	       </isNotEmpty>
+	       
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="TplTrailIn.findPage.and">
+			<isNotEmpty prepend="AND" property="inid">
+	             t_tpl_trail_in.inid = #inid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="tplid">
+	             t_tpl_trail_in.tplid = #tplid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="did">
+	             t_tpl_trail_in.did = #did#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_tpl_trail_in.trialid = #trialid#
+	       </isNotEmpty>
+	</sql>
+	
+    <select id="TplTrailIn.Entity" resultMap="RM.TplTrailIn">
+    	SELECT 	<include refid="TplTrailIn.columns"/> FROM t_tpl_trail_in <include refid="TplTrailIn.findPage.where"/>
+    </select>
+    
+    <select id="TplTrailIn.findList" resultMap="RM.TplTrailIn">
+    	SELECT 
+    		<include refid="TplTrailIn.columns"/> 
+    	FROM 
+    		t_tpl_trail_in
+		<include refid="TplTrailIn.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="TplTrailIn.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tpl_trail_in
+    ]]>
+		<include refid="TplTrailIn.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.TplTrailIn.findPage" resultMap="RM.TplTrailIn">
+    	select <include refid="TplTrailIn.columns"/>	    
+	        from t_tpl_trail_in 	   
+		<include refid="TplTrailIn.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="TplTrailIn.findPage" resultMap="RM.TplTrailIn">
+    	select <include refid="TplTrailIn.columns"/>	    
+	        from t_tpl_trail_in where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       inid 
+	   not in(select $notTop$ 
+       inid 
+	   from t_tpl_trail_in <include refid="TplTrailIn.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="TplTrailIn.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+
+
+
+
+    <select id="TplTrailIn.findlist.includename" resultMap="RM.TplTrailIn.findlist.includename">
+    	SELECT 
+    		<include refid="TplTrailIn.columns"/> 
+    		,t_trial_device.did
+    		,t_trial_device.divicename
+    		,t_trial_device.fename
+    		
+    	FROM 
+    		t_tpl_trail_in
+			left join 
+				t_trial_device 
+			on	t_tpl_trail_in.did=t_trial_device.did
+		where 1=1
+		
+		<isNotEmpty property="chinesename">
+			and t_trial_device.divicename like '%$chinesename$%' 	
+		</isNotEmpty>
+		<isNotEmpty property="englishname">
+			and t_trial_device.fename like '%$englishname$%'
+		</isNotEmpty>
+			
+		<include refid="TplTrailIn.findPage.and"/>
+
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+	
+
+	<insert id="TplTrailIn.update.copy">
+			insert into t_tpl_trail_in(tplid,did,trialid,defaultval,unit)
+			select 
+			#newtplid#,
+			did,trialid,defaultval,unit
+			from  t_tpl_trail_in where tplid=#tplid#
+	</insert>	
+	
+	
+	
+</sqlMap>

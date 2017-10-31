@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ItemImgs">
+
+<resultMap id="RM.ItemImgs" class="com.terrence.crm.dol.bean.ItemImgs">
+	<result property="id" column="id"/>
+	<result property="itemId" column="itemId"/>
+	<result property="imgName" column="imgName"/>
+	<result property="imgPath" column="imgPath"/>
+	<result property="showIndexStatus" column="showIndexStatus"/>
+	<result property="showStatus" column="showStatus"/>
+	<result property="createTime" column="createTime"/>
+	<result property="modifyTime" column="modifyTime"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ItemImgs.columns">
+	<![CDATA[
+		t_item_imgs.id ,
+		t_item_imgs.itemId ,
+		t_item_imgs.imgName ,
+		t_item_imgs.imgPath ,
+		t_item_imgs.showIndexStatus ,
+		t_item_imgs.showStatus ,
+		t_item_imgs.createTime ,
+		t_item_imgs.modifyTime
+	]]>
+</sql>
+
+<insert id="ItemImgs.insert" >
+	<![CDATA[
+	INSERT INTO t_item_imgs (
+		itemId,
+		imgName,
+		imgPath,
+		showIndexStatus,
+		showStatus,
+		createTime,
+		modifyTime
+	) VALUES (
+		#itemId#,
+		#imgName#,
+		#imgPath#,
+		#showIndexStatus#,
+		#showStatus#,
+		#createTime#,
+		#modifyTime#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ItemImgs.update" parameterClass="com.terrence.crm.dol.bean.ItemImgs"> 
+	UPDATE t_item_imgs 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="itemId">
+			itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="imgName">
+			imgName = #imgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="imgPath">
+			imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="showIndexStatus">
+			showIndexStatus = #showIndexStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="showStatus">
+			showStatus = #showStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="modifyTime">
+			modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+<update id="ItemImgs.UpdateByItemId" parameterClass="com.terrence.crm.dol.bean.ItemImgs"> 
+	UPDATE t_item_imgs set showIndexStatus=0 where itemId=#itemId#
+</update>
+<sql id="ItemImgs.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_item_imgs.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="itemId">
+			t_item_imgs.itemId = #itemId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgName">
+			t_item_imgs.imgName = #imgName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="imgPath">
+			t_item_imgs.imgPath = #imgPath# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="showIndexStatus">
+			t_item_imgs.showIndexStatus = #showIndexStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="showStatus">
+			t_item_imgs.showStatus = #showStatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_item_imgs.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modifyTime">
+			t_item_imgs.modifyTime = #modifyTime# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ItemImgs.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_item_imgs.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="itemId">
+		t_item_imgs.itemId = #itemId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgName">
+		t_item_imgs.imgName = #imgName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="imgPath">
+		t_item_imgs.imgPath = #imgPath# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="showIndexStatus">
+		t_item_imgs.showIndexStatus = #showIndexStatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="showStatus">
+		t_item_imgs.showStatus = #showStatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_item_imgs.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modifyTime">
+		t_item_imgs.modifyTime = #modifyTime# 
+	</isNotEmpty>
+</sql>
+
+<select id="ItemImgs.getById" resultMap="RM.ItemImgs">
+	select <include refid="ItemImgs.columns"/> from t_item_imgs where id=#id#
+</select>
+
+<select id="ItemImgs.getByProperty" resultMap="RM.ItemImgs">
+	select <include refid="ItemImgs.columns"/> from t_item_imgs where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ItemImgs.delete">
+	<![CDATA[
+		DELETE FROM t_item_imgs WHERE id=#id#
+	]]>
+</delete>
+<delete id="ItemImgs.deleteByItemId">
+	<![CDATA[
+		DELETE FROM t_item_imgs WHERE itemId=$itemId$
+	]]>
+</delete>
+<delete id="ItemImgs.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_item_imgs WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ItemImgs.findPage.count" resultClass="long">
+	select count(*) from t_item_imgs <include refid="ItemImgs.findPage.where"/>
+</select>
+
+<select id="ItemImgs.findPage" resultMap="RM.ItemImgs">
+	select <include refid="ItemImgs.columns"/> 
+		from t_item_imgs 
+	<include refid="ItemImgs.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ItemImgs.findList" resultMap="RM.ItemImgs">
+	SELECT <include refid="ItemImgs.columns"/> FROM t_item_imgs
+	<include refid="ItemImgs.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

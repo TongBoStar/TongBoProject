@@ -1,0 +1,72 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.ProItem;
+import com.terrence.crm.dol.bean.RpBill;
+import com.terrence.crm.dol.dao.IRpBillDao;
+import com.terrence.crm.dol.query.RpBillQuery;
+
+@Repository
+public class RpBillDao extends BaseIbatisDao<RpBill,java.lang.Long> implements IRpBillDao{
+
+	public List<RpBill> findStatisticPageList(RpBillQuery query) throws ServiceException
+	{
+		return (List<RpBill>)this.getSqlMapClientTemplate()
+				.queryForList("RpBill.findStatisticPageList",query);
+	}
+	public List<RpBill> findAllPageList(RpBillQuery query) throws ServiceException{
+		return (List<RpBill>)this.getSqlMapClientTemplate()
+				.queryForList("RpBill.findAllPageList",query);
+	}	
+	/**
+	 * 2015年4月前应收款管理-销售业绩奖统计
+	 */
+	public List<RpBill> findPageStatistic(RpBillQuery query) throws ServiceException{
+		return (List<RpBill>)this.getSqlMapClientTemplate()
+				.queryForList("RpBill.findPageStatistic",query);
+	}
+	/*public Page<RpBill> findStatisticPage(Page<RpBill> page,RpBillQuery query) throws ServiceException{
+		return (List<RpBill>)this.getSqlMapClientTemplate()
+				.queryForList("RpBill.findStatisticPage",query);
+	}*/
+	public void saveOrUpdate(RpBill entity) {
+		if(entity.getFbillid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "RpBill";
+	}
+	public RpBill getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (RpBill)this.getSqlMapClientTemplate().queryForObject("RpBill.getByProperty", map);		
+	}
+	/**
+	 * 通过应收款ID查找应收款 信息及当前订单负责人的业绩奖明细信息
+	 * @param minad
+	 * @return
+	 */
+	public RpBill getRpBillPeFeeInfoById(java.lang.Long id) {
+		return (RpBill) this.getSqlMapClientTemplate().queryForObject("RpBill.getRpBillPeFeeInfoById", id);
+	}
+
+}

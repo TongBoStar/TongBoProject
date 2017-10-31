@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.HisJobCheck;
+import com.terrence.crm.dol.query.HisJobCheckQuery;
+import com.terrence.crm.dol.dao.IHisJobCheckDao;
+import com.terrence.crm.dol.service.IHisJobCheckService;
+
+@Service
+@Transactional
+public class HisJobCheckService extends BaseService implements IHisJobCheckService {
+	protected static Logger logger = LoggerFactory.getLogger(HisJobCheckService.class);
+	@Autowired
+	@Qualifier("hisJobCheckDao")
+	private IHisJobCheckDao hisJobCheckDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "HisJobCheck";
+	}
+	@Transactional(readOnly=true)
+	public HisJobCheck getById(java.lang.Long id) throws ServiceException
+	{
+		return hisJobCheckDao.getById(id);
+	}
+	
+	public void saveOrUpdate(HisJobCheck entity) throws ServiceException
+	{
+		hisJobCheckDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(HisJobCheck entity) throws ServiceException
+	{
+		Long adId = hisJobCheckDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(HisJobCheck entity) throws ServiceException
+	{
+		Integer returnValue =  hisJobCheckDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = hisJobCheckDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = hisJobCheckDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		HisJobCheckQuery query = new HisJobCheckQuery();
+		try {
+			return hisJobCheckDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<HisJobCheck> findPage(Page<HisJobCheck> page, HisJobCheckQuery query) throws ServiceException
+	{
+		return hisJobCheckDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<HisJobCheck> findPage(Page<HisJobCheck> page,String statement, HisJobCheckQuery query) throws ServiceException
+	{
+		return hisJobCheckDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisJobCheck> findList(HisJobCheckQuery query) throws ServiceException
+	{
+		return hisJobCheckDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisJobCheck> findList(HisJobCheckQuery query,Integer pageSize) throws ServiceException
+	{
+		return hisJobCheckDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<HisJobCheck> findList(HisJobCheckQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return hisJobCheckDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HisJobCheck> findAllList() throws ServiceException
+	{
+		return hisJobCheckDao.findAllList();
+	}
+
+}

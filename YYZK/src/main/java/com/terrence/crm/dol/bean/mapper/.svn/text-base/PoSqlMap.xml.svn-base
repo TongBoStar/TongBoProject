@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Po">
+
+        
+	<resultMap id="RM.Po" class="com.terrence.crm.dol.bean.Po">
+        <result property="poid" column="poid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="amount" column="amount"/>
+        <result property="createdate" column="createdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="rta" column="rta"/>
+        <result property="ata" column="ata"/>
+        <result property="status" column="status"/>
+        <result property="issend" column="issend"/>
+        <result property="inventoryid" column="inventoryid"/>
+        <result property="unitname" column="unitname"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="bompushid" column="bompushid"/>
+        <result property="fmrpclosed" column="fmrpclosed"/>
+        <result property="fcomment" column="fcomment"/>
+        <result property="finterid" column="finterid"/>
+        <result property="ispush" column="ispush"/>
+        <result property="supplyid" column="supplyid"/>
+        <result property="empid" column="empid"/>
+        <result property="deptid" column="deptid"/>
+    </resultMap>
+
+	<resultMap id="RM.Po.IncludeInventory" class="com.terrence.crm.dol.bean.Po">
+        <result property="poid" column="poid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="amount" column="amount"/>
+        <result property="createdate" column="createdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="rta" column="rta"/>
+        <result property="ata" column="ata"/>
+        <result property="status" column="status"/>
+        <result property="issend" column="issend"/>
+        <result property="inventoryid" column="inventoryid"/>
+        <result property="unitname" column="unitname"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="bompushid" column="bompushid"/>
+        <result property="fmrpclosed" column="fmrpclosed"/>
+        <result property="fcomment" column="fcomment"/>
+        <result property="finterid" column="finterid"/>
+        <result property="ispush" column="ispush"/>
+        <result property="supplyid" column="supplyid"/>
+        <result property="empid" column="empid"/>
+        <result property="deptid" column="deptid"/>
+        <result property="inventory" resultMap="RM.Po.Inventory"/>
+    </resultMap>
+    
+    <resultMap id="RM.Po.IncludeInventory.baseitem" class="com.terrence.crm.dol.bean.Po">
+        <result property="poid" column="poid"/>
+        <result property="itemcode" column="itemcode"/>
+        <result property="itemname" column="itemname"/>
+        <result property="itemmode" column="itemmode"/>
+        <result property="amount" column="amount"/>
+        <result property="createdate" column="createdate"/>
+        <result property="startdate" column="startdate"/>
+        <result property="rta" column="rta"/>
+        <result property="ata" column="ata"/>
+        <result property="status" column="status"/>
+        <result property="issend" column="issend"/>
+        <result property="inventoryid" column="inventoryid"/>
+        <result property="unitname" column="unitname"/>
+        <result property="fbillno" column="fbillno"/>
+        <result property="bompushid" column="bompushid"/>
+        <result property="ispush" column="ispush"/>
+        <result property="supplyid" column="supplyid"/>
+        <result property="empid" column="empid"/>
+        <result property="deptid" column="deptid"/>
+        <result property="inventory" resultMap="RM.Po.Inventory"/>
+        <result property="admin" resultMap="RM.Admin.po.list"/>
+        <result property="supplier" resultMap="RM.Supplier.po.fname.list"/>
+    </resultMap>
+    <resultMap id="RM.BaseItem" class="com.terrence.crm.dol.bean.BaseItem">
+        <result property="responsible" column="responsible"/>
+        <result property="supplierid" column="supplierid"/>
+    
+    </resultMap>
+    
+      <resultMap id="RM.Admin.po.list" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminName" column="adminName"/>
+    </resultMap>
+    <resultMap id="RM.Supplier.po.fname.list" class="com.terrence.crm.dol.bean.Supplier">
+        <result property="fname" column="fname"/>
+    </resultMap>
+	<resultMap id="RM.Po.Inventory" class="com.terrence.crm.dol.bean.Inventory">
+		<result property="fqty" column="sumfqty"/>
+		<result property="secinv" column="secinv"/>
+		
+	</resultMap>
+	
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Po.columns">
+	    <![CDATA[
+        	t_po.poid ,
+        	t_po.itemcode ,
+        	t_po.itemname ,
+        	t_po.itemmode ,
+        	t_po.amount ,
+        	t_po.createdate ,
+        	t_po.startdate ,
+        	t_po.rta ,
+        	t_po.ata ,
+        	t_po.status ,
+        	t_po.issend ,
+        	t_po.inventoryid ,
+        	t_po.unitname ,
+        	t_po.fbillno ,
+        	t_po.bompushid ,
+        	t_po.fmrpclosed ,
+        	t_po.fcomment ,
+        	t_po.finterid ,
+        	t_po.ispush,
+        	t_po.supplyid ,
+        	t_po.empid ,
+        	t_po.deptid 
+	    ]]>
+	</sql>
+	
+   <insert id="Po.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_po (
+        	itemcode ,
+        	itemname ,
+        	itemmode ,
+        	amount ,
+        	rta ,
+        	status ,
+        	issend ,
+        	unitname ,
+        	fmrpclosed ,
+        	fcomment ,
+        	finterid ,
+        	supplyid ,
+        	empid ,
+        	deptid 
+        ) VALUES (
+        	#itemcode# ,
+        	#itemname# ,
+        	#itemmode# ,
+        	#amount# ,
+        	#rta# ,
+        	#status# ,
+        	#issend# ,
+        	#unitname#  ,
+        	#fmrpclosed# ,
+        	#fcomment# ,
+        	#finterid# ,
+        	#supplyid# ,
+        	#empid# ,
+        	#deptid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="poid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+    <insert id="Po.insert.BomPush">
+	    <![CDATA[
+	        INSERT INTO
+	        t_po (
+	        	itemcode ,
+	        	itemname ,
+	        	itemmode ,
+	        	amount ,
+	        	rta ,
+	        	status ,
+	        	issend ,
+	        	unitname ,
+        		fbillno ,
+        		bompushid 
+	        ) VALUES (
+	        	#itemcode# ,
+	        	#itemname# ,
+	        	#itemmode# ,
+	        	#amount# ,
+	        	#rta# ,
+	        	#status# ,
+	        	#issend# ,
+	        	#unitname# ,
+        		#fbillno# ,
+        		#bompushid# 
+	        )
+	    ]]> 
+    	<selectKey resultClass="java.lang.Long" type="post" keyProperty="poid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+	<update id="Po.updateByMulipleId" parameterClass="com.terrence.crm.dol.bean.Po">
+		UPDATE t_po 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="startdate">
+	        	startdate = #startdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="rta">
+	        	rta = #rta# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ata">
+	        	ata = #ata# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="issend">
+	        	issend = #issend# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="inventoryid">
+	        	inventoryid = #inventoryid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unitname">
+	        	unitname = #unitname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bompushid">
+	        	bompushid = #bompushid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispush">
+	        	ispush = #ispush# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplyid">
+	        	supplyid = #supplyid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="deptid">
+	        	deptid = #deptid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        poid in ($poids$) 
+	</update>
+	<update id="Po.update" parameterClass="com.terrence.crm.dol.bean.Po">         
+        UPDATE t_po 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="itemcode">
+	        	itemcode = #itemcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemname">
+	        	itemname = #itemname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="itemmode">
+	        	itemmode = #itemmode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="amount">
+	        	amount = #amount# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="startdate">
+	        	startdate = #startdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="rta">
+	        	rta = #rta# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ata">
+	        	ata = #ata# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="status">
+	        	status = #status# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="issend">
+	        	issend = #issend# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="inventoryid">
+	        	inventoryid = #inventoryid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="unitname">
+	        	unitname = #unitname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fbillno">
+	        	fbillno = #fbillno# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="bompushid">
+	        	bompushid = #bompushid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ispush">
+	        	ispush = #ispush# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="supplyid">
+	        	supplyid = #supplyid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="empid">
+	        	empid = #empid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="deptid">
+	        	deptid = #deptid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        poid = #poid# 
+    </update>
+    
+	<delete id="Po.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_po where
+       poid = #poid# 
+    ]]>
+    </delete>
+    
+    <delete id="Po.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_po 
+        WHERE
+       poid in ($poid$) 
+    ]]>
+    </delete>
+    
+    <select id="Po.getById" resultMap="RM.Po">
+	    select <include refid="Po.columns"/>
+	    
+	        from t_po 
+	        where 
+		        poid = #poid# 
+	    
+    </select>
+    
+	<select id="Po.getByProperty" resultMap="RM.Po">
+		select <include refid="Po.columns"/> from t_po where $propertyName$=#propertyValue#
+	</select>
+	<select id="">
+		select isnull(sum(amount),0) amount from t_po where status=0 and itemcode=#itemcode#
+	</select>
+	<sql id="Po.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="poid">
+	             t_po.poid = #poid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_po.itemcode like('%$itemcode$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_po.itemname like('%$itemname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_po.itemmode = #itemmode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="amount">
+	             t_po.amount = #amount#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_po.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_po.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="startdateBegin">
+	             t_po.startdate &gt;= #startdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="startdateEnd">
+	             t_po.startdate &lt;= #startdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="rtaBegin">
+	             t_po.rta &gt;= #rtaBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="rtaEnd">
+	             t_po.rta &lt;= #rtaEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ataBegin">
+	             t_po.ata &gt;= #ataBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ataEnd">
+	             t_po.ata &lt;= #ataEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="status">
+	             t_po.status = #status#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="issend">
+	             t_po.issend = #issend#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="inventoryid">
+	             t_po.inventoryid = #inventoryid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="unitname">
+	             t_po.unitname = #unitname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="poids">
+	             poid in ($poids$) 
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fbillno">
+	             t_po.fbillno = #fbillno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="bompushid">
+	             t_po.bompushid = #bompushid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminid">
+	        	t_base_item.responsible=#adminid#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="supplierid">
+	        	t_base_item.supplierid=#supplierid#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="ispush">
+	        	t_po.ispush=#ispush#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="supplyid">
+	             t_po.supplyid = #supplyid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_po.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="deptid">
+	             t_po.deptid = #deptid#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Po.findPage.and">
+			<isNotEmpty prepend="AND" property="poid">
+	             t_po.poid = #poid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemcode">
+	             t_po.itemcode like('%$itemcode$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemname">
+	             t_po.itemname like('%$itemname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="itemmode">
+	             t_po.itemmode = #itemmode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="amount">
+	             t_po.amount = #amount#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_po.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_po.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="startdateBegin">
+	             t_po.startdate &gt;= #startdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="startdateEnd">
+	             t_po.startdate &lt;= #startdateEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="rtaBegin">
+	             t_po.rta &gt;= #rtaBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="rtaEnd">
+	             t_po.rta &lt;= #rtaEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="ataBegin">
+	             t_po.ata &gt;= #ataBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ataEnd">
+	             t_po.ata &lt;= #ataEnd#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="status">
+	             t_po.status = #status#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="issend">
+	             t_po.issend = #issend#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="inventoryid">
+	             t_po.inventoryid = #inventoryid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="unitname">
+	             t_po.unitname = #unitname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="poids">
+	             poid in ($poids$) 
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="fbillno">
+	             t_po.fbillno = #fbillno#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="bompushid">
+	             t_po.bompushid = #bompushid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="adminid">
+	        	t_base_item.responsible=#adminid#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="supplierid">
+	        	t_base_item.supplierid=#supplierid#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="ispush">
+	        	t_po.ispush=#ispush#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="supplyid">
+	             t_po.supplyid = #supplyid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="empid">
+	             t_po.empid = #empid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="deptid">
+	             t_po.deptid = #deptid#
+	       </isNotEmpty>
+	</sql>
+    <select id="Po.findList.ByIds" resultMap="RM.Po">
+    	SELECT 
+    		<include refid="Po.columns"/> 
+    	FROM 
+    		t_po <include refid="Po.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    <select id="Po.findList" resultMap="RM.Po">
+    	SELECT 
+    		<include refid="Po.columns"/> 
+    	FROM 
+    		t_po
+		<include refid="Po.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Po.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_po left join 
+	         	t_base_item
+	         on
+	          t_po.itemcode=t_base_item.itemcode
+    ]]>
+		<include refid="Po.findPage.where"/>    
+    </select>
+    
+      <select id="Po.find.page.All.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_po left join 
+	         	t_base_item
+	         on
+	          t_po.itemcode=t_base_item.itemcode
+    ]]>
+		<include refid="Po.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Po.findPage" resultMap="RM.Po">
+    	select <include refid="Po.columns"/>	    
+	        from t_po 	   
+		<include refid="Po.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Po.findPage" resultMap="RM.Po.IncludeInventory">
+    	select <include refid="Po.columns"/>,t_inventory.secinv,isnull(t_inventory.fqty,0)+isnull(t_inventory.fqty2,0) sumfqty	    
+	        from t_po
+	        left join
+	        	t_inventory
+	        on
+	          t_po.itemcode=t_inventory.itemcode
+	         left join 
+	         	t_base_item
+	         on
+	          t_po.itemcode=t_base_item.itemcode
+			where
+	          1=1 
+	        
+	   <isNotEmpty property="notTop">  and 
+       poid 
+	   not in(select $notTop$ 
+       poid 
+	   from t_po  left join	t_inventory    on   t_po.itemcode=t_inventory.itemcode 
+	   <include refid="Po.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Po.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+    
+    <select id="Po.find.page.All" resultMap="RM.Po.IncludeInventory.baseitem">
+    	select <include refid="Po.columns"/>,t_inventory.secinv,isnull(t_inventory.fqty,0)+isnull(t_inventory.fqty2,0) sumfqty,
+    	t_supplier.fname,t_admin.adminName   
+	        from t_po
+	        left join
+	        	t_inventory
+	        on
+	          t_po.itemcode=t_inventory.itemcode
+	         left join 
+	         	t_base_item
+	         on
+	          t_po.itemcode=t_base_item.itemcode
+	          left join
+	          	t_supplier
+	          on
+	          t_base_item.supplierid = t_supplier.supplierid
+	          left join
+	          t_admin
+	          on 
+	          t_base_item.responsible = t_admin.adminId
+			where
+	          1=1 
+	        
+	   <isNotEmpty property="notTop">  and 
+       poid 
+	   not in(select $notTop$ 
+       poid 
+	   from t_po  left join	t_inventory    on   t_po.itemcode=t_inventory.itemcode 
+	   <include refid="Po.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Po.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+	
+		
+    </select>
+	
+</sqlMap>

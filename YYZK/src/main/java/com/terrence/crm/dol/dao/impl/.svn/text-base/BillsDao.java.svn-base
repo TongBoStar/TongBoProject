@@ -1,0 +1,47 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.Bills;
+import com.terrence.crm.dol.dao.IBillsDao;
+
+@Repository
+public class BillsDao extends BaseIbatisDao<Bills,java.lang.Long> implements IBillsDao{
+
+		
+	public void saveOrUpdate(Bills entity) {
+		if(entity.getBillno() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Bills";
+	}
+	public Bills getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (Bills)this.getSqlMapClientTemplate().queryForObject("Bills.getByProperty", map);		
+	}
+
+	@Override
+	public Bills getEntity(Bills bill) {
+		return (Bills) this.getSqlMapClientTemplate().queryForObject("Bills.getEitity.for.new.data", bill);
+	}
+
+	@Override
+	public Bills findEntity(Bills illbs) {
+		return (Bills) this.getSqlMapClientTemplate().queryForObject("Bills.find.select.entity.data", illbs);
+	}
+
+}

@@ -1,0 +1,139 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.DeviceMoreFile;
+import com.terrence.crm.dol.query.DeviceMoreFileQuery;
+import com.terrence.crm.dol.dao.IDeviceMoreFileDao;
+import com.terrence.crm.dol.service.IDeviceMoreFileService;
+
+@Service
+@Transactional
+public class DeviceMoreFileService extends BaseService implements IDeviceMoreFileService {
+	protected static Logger logger = LoggerFactory.getLogger(DeviceMoreFileService.class);
+	@Autowired
+	@Qualifier("deviceMoreFileDao")
+	private IDeviceMoreFileDao deviceMoreFileDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "DeviceMoreFile";
+	}
+	@Transactional(readOnly=true)
+	public DeviceMoreFile getById(java.lang.Long id) throws ServiceException
+	{
+		return deviceMoreFileDao.getById(id);
+	}
+	
+	public void saveOrUpdate(DeviceMoreFile entity) throws ServiceException
+	{
+		deviceMoreFileDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(DeviceMoreFile entity) throws ServiceException
+	{
+		Long adId = deviceMoreFileDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(DeviceMoreFile entity) throws ServiceException
+	{
+		Integer returnValue =  deviceMoreFileDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = deviceMoreFileDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = deviceMoreFileDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		DeviceMoreFileQuery query = new DeviceMoreFileQuery();
+		try {
+			return deviceMoreFileDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceMoreFile> findPage(Page<DeviceMoreFile> page, DeviceMoreFileQuery query) throws ServiceException
+	{
+		return deviceMoreFileDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<DeviceMoreFile> findPage(Page<DeviceMoreFile> page,String statement, DeviceMoreFileQuery query) throws ServiceException
+	{
+		return deviceMoreFileDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceMoreFile> findList(DeviceMoreFileQuery query) throws ServiceException
+	{
+		return deviceMoreFileDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceMoreFile> findList(DeviceMoreFileQuery query,Integer pageSize) throws ServiceException
+	{
+		return deviceMoreFileDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<DeviceMoreFile> findList(DeviceMoreFileQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return deviceMoreFileDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<DeviceMoreFile> findAllList() throws ServiceException
+	{
+		return deviceMoreFileDao.findAllList();
+	}
+	@Override
+	public List<DeviceMoreFile> findListType(
+			DeviceMoreFileQuery deviceMoreFileQuery) throws ServiceException {
+		
+		return deviceMoreFileDao.findListType(deviceMoreFileQuery);
+	}
+	@Override
+	public void saveNewEntity(DeviceMoreFile entity) throws ServiceException {
+		if(entity.getFileid()==null){
+			deviceMoreFileDao.save(entity);
+		}else{
+			deviceMoreFileDao.update("DeviceMoreFile.newDate.update", entity);
+		}
+		
+	}
+
+}

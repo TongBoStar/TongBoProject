@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Tools">
+
+        
+	<resultMap id="RM.Tools" class="com.terrence.crm.dol.bean.Tools">
+        <result property="toolsid" column="toolsid"/>
+        <result property="toolsname" column="toolsname"/>
+        <result property="toolscode" column="toolscode"/>
+        <result property="ltoolscode" column="ltoolscode"/>
+        <result property="parentcode" column="parentcode"/>
+        <result property="levels" column="levels"/>
+        <result property="parentid" column="parentid"/>
+    </resultMap>
+	<resultMap id="RM.Tools.Blade" class="com.terrence.crm.dol.bean.Tools" groupBy="toolsid">
+        <result property="toolsid" column="toolsid"/>
+        <result property="toolsname" column="toolsname"/>
+        <result property="toolscode" column="toolscode"/>
+        <result property="listblade" resultMap="RM.Tools.For.Blade"/>
+    </resultMap>
+	<resultMap id="RM.Tools.For.Blade" class="com.terrence.crm.dol.bean.Blade">
+        <result property="bladeid" column="bladeid"/>
+        <result property="bladename" column="bladename"/>
+        <result property="bladecode" column="bladecode"/>
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Tools.Blade.columns">
+	    <![CDATA[
+        	t_blade.bladeid ,
+        	t_blade.bladename ,
+        	t_blade.bladecode 
+	    ]]>
+	</sql> 
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Tools.columns">
+	    <![CDATA[
+        	t_tools.toolsid ,
+        	t_tools.toolsname ,
+        	t_tools.toolscode ,
+        	t_tools.ltoolscode ,
+        	t_tools.parentcode ,
+        	t_tools.levels ,
+        	t_tools.parentid 
+	    ]]>
+	</sql>
+	
+   <insert id="Tools.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_tools (
+        	toolsname ,
+        	toolscode ,
+        	ltoolscode ,
+        	parentcode ,
+        	levels ,
+        	parentid 
+        ) VALUES (
+        	#toolsname# ,
+        	#toolscode# ,
+        	#ltoolscode# ,
+        	#parentcode# ,
+        	#levels# ,
+        	#parentid# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="toolsid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Tools.update" parameterClass="com.terrence.crm.dol.bean.Tools">         
+        UPDATE t_tools 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="toolsname">
+	        	toolsname = #toolsname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="toolscode">
+	        	toolscode = #toolscode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ltoolscode">
+	        	ltoolscode = #ltoolscode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentcode">
+	        	parentcode = #parentcode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="levels">
+	        	levels = #levels# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="parentid">
+	        	parentid = #parentid# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        toolsid = #toolsid# 
+    </update>
+    
+	<delete id="Tools.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_tools where
+       toolsid = #toolsid# 
+    ]]>
+    </delete>
+    
+    <delete id="Tools.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_tools 
+        WHERE
+       toolsid in ($toolsid$) 
+    ]]>
+    </delete>
+    
+    <select id="Tools.getById" resultMap="RM.Tools">
+	    select <include refid="Tools.columns"/>
+	    
+	        from t_tools 
+	        where 
+		        toolsid = #toolsid# 
+	    
+    </select>
+    
+	<select id="Tools.getByProperty" resultMap="RM.Tools">
+		select <include refid="Tools.columns"/> from t_tools where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Tools.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="toolsid">
+	             t_tools.toolsid = #toolsid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="toolsname">
+	             t_tools.toolsname like ('%$toolsname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="toolscode">
+	             t_tools.toolscode = #toolscode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ltoolscode">
+	             t_tools.ltoolscode = #ltoolscode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_tools.parentcode = #parentcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_tools.levels = #levels#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_tools.parentid = #parentid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="parentids">
+	       		t_tools.parentid in ($parentids$)
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Tools.findPage.and">
+			<isNotEmpty prepend="AND" property="toolsid">
+	             t_tools.toolsid = #toolsid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="toolsname">
+	             t_tools.toolsname like ('%$toolsname$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="toolscode">
+	             t_tools.toolscode = #toolscode#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="ltoolscode">
+	             t_tools.ltoolscode = #ltoolscode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentcode">
+	             t_tools.parentcode = #parentcode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="levels">
+	             t_tools.levels = #levels#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="parentid">
+	             t_tools.parentid = #parentid#
+	       </isNotEmpty>
+	</sql>
+    
+    <select id="Tools.findList" resultMap="RM.Tools">
+    	SELECT 
+    		<include refid="Tools.columns"/> 
+    	FROM 
+    		t_tools
+		<include refid="Tools.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Tools.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_tools
+    ]]>
+		<include refid="Tools.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Tools.findPage" resultMap="RM.Tools">
+    	select <include refid="Tools.columns"/>	    
+	        from t_tools where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       toolsid 
+	   not in(select $notTop$ 
+       toolsid 
+	   from t_tools <include refid="Tools.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Tools.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+		
+    </select>
+	<select id="Tools.Blade.findList" resultMap="RM.Tools.Blade">		
+		select <include refid="Tools.columns"/>,<include refid="Tools.Blade.columns"/> 
+		from t_tools ,t_tools_blade ,t_blade where t_tools.toolsid=t_tools_blade.toolsid 
+		and t_tools_blade.bladeid=t_blade.bladeid and t_tools.toolsid in ($toolsids$)
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap>
+    <resultMap id="RM.QuestionAndReply" class="com.terrence.crm.dol.bean.QuestionAndReply">
+        <result property="questionAndReplyId" column="questionAndReplyId"/>
+        <result property="contractReviewId" column="contractReviewId"/>
+        <result property="orderCode" column="orderCode"/>
+        <result property="question" column="question"/>
+        <result property="questioner" column="questioner"/>
+        <result property="questionTime" column="questionTime"/>
+        <result property="reply" column="reply"/>
+        <result property="replyer" column="replyer"/>
+        <result property="replyTime" column="replyTime"/>
+        <result property="fstatus" column="fstatus"/>
+    </resultMap>
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="QuestionAndReply.columns">
+	    <![CDATA[
+        questionAndReplyId ,contractReviewId,orderCode, question ,questioner ,questionTime,reply,replyer,replyTime,fstatus
+	    ]]>
+	</sql>
+    <insert id="QuestionAndReply.insert" >
+        INSERT INTO t_questionandreply (
+        	orderCode
+			<dynamic prepend="">
+	        	<isNotEmpty prepend="," property="contractReviewId">contractReviewId</isNotEmpty>
+	        	<isNotEmpty prepend="," property="question">question</isNotEmpty>
+	        	<isNotEmpty prepend="," property="questioner">questioner</isNotEmpty>
+	        	<isNotEmpty prepend="," property="questionTime">questionTime</isNotEmpty>
+	        	<isNotEmpty prepend="," property="reply">reply</isNotEmpty>
+	        	<isNotEmpty prepend="," property="replyer">replyer</isNotEmpty>
+	        	<isNotEmpty prepend="," property="replyTime">replyTime</isNotEmpty>
+	        	<isNotEmpty prepend="," property="fstatus">fstatus</isNotEmpty>
+			</dynamic>
+        ) VALUES (
+        	#orderCode#
+	        <dynamic prepend="">
+	        	<isNotEmpty prepend="," property="contractReviewId">#contractReviewId#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="question">#question#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="questioner">#questioner#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="questionTime">#questionTime#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="reply">#reply#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="replyer">#replyer#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="replyTime">#replyTime#</isNotEmpty>
+	        	<isNotEmpty prepend="," property="fstatus">#fstatus#</isNotEmpty>
+			</dynamic>
+        )
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="questionAndReplyId" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+    <update id="QuestionAndReply.update" >
+        UPDATE t_questionandreply
+        	<dynamic prepend="SET">
+        		<isNotEmpty prepend="," property="question">
+        			question = #question# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="questioner">
+        			questioner = #questioner# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="questionTime">
+        			questionTime = #questionTime# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="reply">
+        			reply = #reply# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="replyer">
+        			replyer = #replyer# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="replyTime">
+        			replyTime = #replyTime# 
+        		</isNotEmpty>
+        		<isNotEmpty prepend="," property="fstatus">
+        			fstatus = #fstatus# 
+        		</isNotEmpty>
+	        </dynamic>
+        WHERE 
+	        orderCode = #orderCode#
+	        <isNotEmpty prepend="AND" property="questionAndReplyId">
+	             questionAndReplyId = #questionAndReplyId#
+	        </isNotEmpty>
+    </update>
+
+    <delete id="QuestionAndReply.delete">
+    <![CDATA[
+        DELETE FROM t_questionandreply WHERE
+        questionAndReplyId = #id# 
+    ]]>
+    </delete>
+    
+    <delete id="QuestionAndReply.deleteMultiple">
+    <![CDATA[
+        DELETE FROM t_questionandreply WHERE
+        questionAndReplyId in ($id$) 
+    ]]>
+    </delete>
+    
+    <delete id="QuestionAndReply.deleteQAByReviewId">
+    <![CDATA[
+        DELETE FROM t_questionandreply WHERE
+        contractReviewId in ($id$) 
+    ]]>
+    </delete>
+    
+    <delete id="QuestionAndReply.deleteOrderByOrderCode">
+    <![CDATA[
+        DELETE FROM t_questionandreply WHERE
+        questionAndReplyId in ($id$) 
+    ]]>
+    </delete>
+    <select id="QuestionAndReply.getById" resultMap="RM.QuestionAndReply">
+	    SELECT <include refid="QuestionAndReply.columns"/>
+	    <![CDATA[
+	        FROM t_questionandreply
+	        WHERE 
+		      questionAndReplyId = #id# 
+	    ]]>
+    </select>
+	
+	<sql id="QuestionAndReply.findPage.where">
+	    <dynamic prepend="WHERE">
+	       <isNotEmpty prepend="AND" property="questionAndReplyId">
+	            questionAndReplyId = #questionAndReplyId#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="orderCode">
+	            orderCode = #orderCode#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	<sql id="QuestionAndReply.findPage.and">
+	    <dynamic prepend="AND">
+	       <isNotEmpty prepend="AND" property="questionAndReplyId">
+	             questionAndReplyId = #questionAndReplyId#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="orderCode">
+	            orderCode = #orderCode#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	
+    <select id="QuestionAndReply.findPage.count" resultClass="long">
+        SELECT count(*) FROM t_questionandreply <include refid="QuestionAndReply.findPage.where"/>    
+    </select>
+   
+    <select id="QuestionAndReply.findPage" resultMap="RM.QuestionAndReply">
+    	SELECT <include refid="QuestionAndReply.columns"/> FROM t_questionandreply where 1=1 
+    	<isNotEmpty property="notTop">  and 
+       questionAndReplyId not in(select $notTop$ questionAndReplyId from t_questionandreply <include refid="QuestionAndReply.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>  
+	   	<include refid="QuestionAndReply.findPage.and"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+   
+    <select id="QuestionAndReply.findList" resultMap="RM.QuestionAndReply">
+    	SELECT <include refid="QuestionAndReply.columns"/> FROM t_questionandreply
+		<include refid="QuestionAndReply.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+</sqlMap>

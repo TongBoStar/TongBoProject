@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProcessDefine">
+
+<resultMap id="RM.ProcessDefine" class="com.terrence.crm.dol.bean.ProcessDefine">
+	<result property="id" column="id"/>
+	<result property="processName" column="processName"/>
+	<result property="depbelong" column="depbelong"/>
+	<result property="depbelongName" column="depbelongName"/>
+	<result property="isuse" column="isuse"/>
+	<result property="createTime" column="createTime"/>
+	<result property="createrName" column="createrName"/>
+	<result property="createrId" column="createrId"/>
+	<result property="processMark" column="processMark"/>
+</resultMap>
+<!-- 用于select查询公用抽取的列 -->
+<sql id="ProcessDefine.columns">
+	<![CDATA[
+		t_process_define.id ,
+		t_process_define.processName ,
+		t_process_define.depbelong ,
+		t_process_define.isuse ,
+		t_process_define.createTime ,
+		t_process_define.createrName ,
+		t_process_define.createrId ,
+		t_process_define.processMark
+	]]>
+</sql>
+
+<insert id="ProcessDefine.insert" >
+	<![CDATA[
+	INSERT INTO t_process_define (
+		processName,
+		depbelong,
+		isuse,
+		createTime,
+		createrName,
+		createrId,
+		processMark
+	) VALUES (
+		#processName#,
+		#depbelong#,
+		#isuse#,
+		#createTime#,
+		#createrName#,
+		#createrId#,
+		#processMark#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="ProcessDefine.update" parameterClass="com.terrence.crm.dol.bean.ProcessDefine"> 
+	UPDATE t_process_define 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="processName">
+			processName = #processName#
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="depbelong">
+			depbelong = #depbelong# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="isuse">
+			isuse = #isuse# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrName">
+			createrName = #createrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createrId">
+			createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="processMark">
+			processMark = #processMark# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="ProcessDefine.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_process_define.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="processName">
+			t_process_define.processName  like ('%$processName$%')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="depbelong">
+			t_process_define.depbelong = #depbelong# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="isuse">
+			t_process_define.isuse = #isuse# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_process_define.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrName">
+			t_process_define.createrName = #createrName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createrId">
+			t_process_define.createrId = #createrId# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="processMark">
+			t_process_define.processMark = #processMark# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="ProcessDefine.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_process_define.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="processName">
+		t_process_define.processName like ('%$processName$%')
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="depbelong">
+		t_process_define.depbelong = #depbelong# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="isuse">
+		t_process_define.isuse = #isuse# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_process_define.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrName">
+		t_process_define.createrName = #createrName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createrId">
+		t_process_define.createrId = #createrId# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="processMark">
+		t_process_define.processMark = #processMark# 
+	</isNotEmpty>
+</sql>
+
+<select id="ProcessDefine.getById" resultMap="RM.ProcessDefine">
+	select <include refid="ProcessDefine.columns"/>,td.teamname depbelongName,ta.adminName createrName  
+		from t_process_define 
+		left join t_department td on t_process_define.depbelong = td.teamid 
+		left join t_admin ta on t_process_define.createrId = ta.adminId  
+	where id=#id#
+</select>
+
+<select id="ProcessDefine.getByProperty" resultMap="RM.ProcessDefine">
+	select <include refid="ProcessDefine.columns"/>,td.teamname depbelongName,ta.adminName createrName  
+		from t_process_define 
+		left join t_department td on t_process_define.depbelong = td.teamid 
+		left join t_admin ta on t_process_define.createrId = ta.adminId 
+	where $propertyName$=#propertyValue#
+</select>
+
+<delete id="ProcessDefine.delete">
+	<![CDATA[
+		DELETE FROM t_process_define WHERE id=#id#
+	]]>
+</delete>
+<delete id="ProcessDefine.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_process_define WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="ProcessDefine.findPage.count" resultClass="long">
+	select count(*) from t_process_define <include refid="ProcessDefine.findPage.where"/>
+</select>
+
+<select id="ProcessDefine.findPage" resultMap="RM.ProcessDefine">
+	select <include refid="ProcessDefine.columns"/>,td.teamname depbelongName,ta.adminName createrName  
+		from t_process_define 
+		left join t_department td on t_process_define.depbelong = td.teamid 
+		left join t_admin ta on t_process_define.createrId = ta.adminId  
+ 		where 1=1
+	<isNotEmpty property="notTop">  
+		and id not in(
+			select $notTop$ id from t_process_define <include refid="ProcessDefine.findPage.where"/>
+			<isNotEmpty property="sortColumns"> 
+				ORDER BY $sortColumns$
+			</isNotEmpty> 
+		)
+	</isNotEmpty> 
+	<include refid="ProcessDefine.findPage.and"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="ProcessDefine.findList" resultMap="RM.ProcessDefine">
+	SELECT <include refid="ProcessDefine.columns"/>,td.teamname depbelongName,ta.adminName createrName  
+		from t_process_define 
+		left join t_department td on t_process_define.depbelong = td.teamid 
+		left join t_admin ta on t_process_define.createrId = ta.adminId 
+	<include refid="ProcessDefine.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

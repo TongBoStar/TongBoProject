@@ -1,0 +1,164 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.TplTrailIn;
+import com.terrence.crm.dol.bean.TrialDevice;
+import com.terrence.crm.dol.query.TplTrailInQuery;
+import com.terrence.crm.dol.dao.ITplTrailInDao;
+import com.terrence.crm.dol.dao.ITrialDeviceDao;
+import com.terrence.crm.dol.service.ITplTrailInService;
+
+@Service
+@Transactional
+public class TplTrailInService extends BaseService implements ITplTrailInService {
+	protected static Logger logger = LoggerFactory.getLogger(TplTrailInService.class);
+	@Autowired
+	@Qualifier("tplTrailInDao")
+	private ITplTrailInDao tplTrailInDao;
+	
+	@Autowired
+	@Qualifier("trialDeviceDao")
+	private ITrialDeviceDao trialDeviceDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "TplTrailIn";
+	}
+	@Transactional(readOnly=true)
+	public TplTrailIn getById(java.lang.Long id) throws ServiceException
+	{
+		return tplTrailInDao.getById(id);
+	}
+	
+	public void saveOrUpdate(TplTrailIn entity) throws ServiceException
+	{
+		tplTrailInDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(TplTrailIn entity) throws ServiceException
+	{
+		Long adId = tplTrailInDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(TplTrailIn entity) throws ServiceException
+	{
+		Integer returnValue =  tplTrailInDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = tplTrailInDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = tplTrailInDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		TplTrailInQuery query = new TplTrailInQuery();
+		try {
+			return tplTrailInDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<TplTrailIn> findPage(Page<TplTrailIn> page, TplTrailInQuery query) throws ServiceException
+	{
+		return tplTrailInDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<TplTrailIn> findPage(Page<TplTrailIn> page,String statement, TplTrailInQuery query) throws ServiceException
+	{
+		return tplTrailInDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<TplTrailIn> findList(TplTrailInQuery query) throws ServiceException
+	{
+		return tplTrailInDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<TplTrailIn> findList(TplTrailInQuery query,Integer pageSize) throws ServiceException
+	{
+		return tplTrailInDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<TplTrailIn> findList(TplTrailInQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return tplTrailInDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<TplTrailIn> findAllList() throws ServiceException
+	{
+		return tplTrailInDao.findAllList();
+	}
+	@Override
+	public List<TplTrailIn> findList(TplTrailInQuery tplTrailInQuery,
+			String string) throws ServiceException {
+		
+		return tplTrailInDao.findList(string, tplTrailInQuery);
+		
+		
+	}
+	@Override
+	public List<TplTrailIn> loadInputData(TplTrailInQuery tplTrailInQuery)
+			throws ServiceException {
+		List<TplTrailIn> tplTrailInList = new ArrayList<TplTrailIn>();
+		List<TplTrailIn> tplTrailIns = findTplTrailInListByTplId(tplTrailInQuery);
+		if (tplTrailIns.size()>0) {
+			for (TplTrailIn tplTrailIn : tplTrailIns) {
+				TrialDevice trialDevice = trialDeviceDao.getById(tplTrailIn.getDid());
+				tplTrailIn.setTagName(trialDevice.getFename());
+				tplTrailIn.setTagNameDesc(trialDevice.getDivicename());
+				tplTrailInList.add(tplTrailIn);
+			}
+		}
+		return tplTrailInList;
+	}
+	/**
+	 *<p>根据模板ID取出输入参数列表<p>.
+	 *Author:ZhangYuPeng
+	 *CreatDate:2014-8-6上午9:30:44
+	 * @param tplid
+	 * @return
+	 */
+	private List<TplTrailIn> findTplTrailInListByTplId(TplTrailInQuery tplTrailInQuery) {
+		return tplTrailInDao.findList(tplTrailInQuery);
+	}
+
+}

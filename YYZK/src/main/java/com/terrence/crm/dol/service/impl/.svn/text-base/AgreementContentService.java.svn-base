@@ -1,0 +1,94 @@
+package com.terrence.crm.dol.service.impl;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AgreementContent;
+import com.terrence.crm.dol.dao.IAgreementContentDao;
+import com.terrence.crm.dol.query.AgreementContentQuery;
+import com.terrence.crm.dol.service.IAgreementContentService;
+@Service
+@Transactional
+public class AgreementContentService extends BaseService implements IAgreementContentService {
+	@Autowired
+	@Qualifier("agreementContentDao")
+	private IAgreementContentDao agreementContentDao;
+	@Override
+	public AgreementContent getById(Long id) throws ServiceException {
+		return agreementContentDao.getById(id);
+	}
+	@Override
+	public void saveOrUpdate(AgreementContent entity) throws ServiceException {
+		agreementContentDao.saveOrUpdate(entity);
+	}
+	@Override
+	public Long save(AgreementContent entity) throws ServiceException {
+		return agreementContentDao.save(entity);
+	}
+	@Override
+	public Integer update(AgreementContent entity) throws ServiceException {
+		return agreementContentDao.update(entity);
+	}
+	@Override
+	public Integer deleteById(Long id) throws ServiceException {
+		return agreementContentDao.deleteById(id);
+	}
+	@Override
+	public Integer deleteByMultipleId(List<Long> idList) throws ServiceException {
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = agreementContentDao.deleteByMultipleId(delIds);
+		return returnValue;
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementContent> findPage(Page<AgreementContent> page, AgreementContentQuery query) throws ServiceException{
+		return agreementContentDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AgreementContent> findPage(Page<AgreementContent> page,String statement, AgreementContentQuery query) throws ServiceException{
+		return agreementContentDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementContent> findList(AgreementContentQuery query) throws ServiceException{
+		return agreementContentDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementContent> findList(AgreementContentQuery query,Integer pageSize) throws ServiceException{
+		return agreementContentDao.findList(query,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementContent> findList(AgreementContentQuery query,String statement,Integer pageSize) throws ServiceException{
+		return agreementContentDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AgreementContent> findAllList() throws ServiceException{
+		return agreementContentDao.findAllList();
+	}
+	@Override
+	public void saveAll(AgreementContent entity) throws ServiceException {
+		List<Integer> contentAttrs = entity.getContentAttrs();
+		List<Integer> flens =  entity.getFlens();
+		List<Integer> startPostions =entity.getStartPositions();
+		List<Integer> endPostions = entity.getEndPositions();
+		List<Integer> seqnos = entity.getSeqnos();
+		List<String> contents = entity.getContents();
+		AgreementContent ac = null;
+		agreementContentDao.deleteByAgreeId(entity.getAgreeId(),"AgreementContent.delete.agreeId");
+		for(int i=0;i<contentAttrs.size();i++){
+			ac = new AgreementContent();
+			ac.setAgreeId(entity.getAgreeId());
+			ac.setContent(contents.get(i));
+			ac.setContentAttr(contentAttrs.get(i));
+			ac.setFlen(flens.get(i));
+			ac.setStartPosition(startPostions.get(i));
+			ac.setEndPosition(endPostions.get(i));
+			ac.setSeqno(seqnos.get(i));
+			agreementContentDao.save(ac);
+		}
+	}
+}

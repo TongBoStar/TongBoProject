@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Process">
+
+        
+	<resultMap id="RM.Process" class="com.terrence.crm.dol.bean.Process">
+        <result property="processid" column="processid"/>
+        <result property="processname" column="processname"/>
+        <result property="price" column="price"/>
+        <result property="ratio" column="ratio"/>
+        <result property="createdate" column="createdate"/>
+        <result property="updatedate" column="updatedate"/>
+        <result property="deviceid" column="deviceid"/>
+        <result property="devicename" column="devicename"/>
+        <result property="globalratio" column="globalratio"/>
+        <result property="teamid" column="teamid"/>
+        <result property="teamname" column="teamname"/>
+        <result property="preparemin" column="preparemin"/>
+        <result property="debugprice" column="debugprice"/>
+    </resultMap>
+	
+	 
+	 <resultMap id="RM.Process.getByProcessid" class="com.terrence.crm.dol.bean.Process">
+        <result property="processid" column="processid"/>
+        <result property="alladminList" column="processid" select="Process.alladminList.getByProcessid"/>
+        <result property="checkedList" column="processid"  select="Process.checkedList.getByProcessid"/>
+        
+    </resultMap>
+	  
+	  <resultMap id="RM.Process.admin" class="com.terrence.crm.dol.bean.Admin">
+        <result property="adminId" column="adminid"/>
+        <result property="adminName" column="adminname"/>
+    </resultMap>
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Process.columns">
+	    <![CDATA[
+        	t_process_bj.processid ,
+        	t_process_bj.processname ,
+        	t_process_bj.price ,
+        	t_process_bj.ratio ,
+        	t_process_bj.createdate ,
+        	t_process_bj.updatedate ,
+        	t_process_bj.deviceid ,
+        	t_process_bj.devicename ,
+        	t_process_bj.globalratio ,
+        	t_process_bj.teamid ,
+        	t_process_bj.teamname ,
+        	t_process_bj.preparemin ,
+        	t_process_bj.debugprice 
+	    ]]>
+	</sql>
+	
+   <insert id="Process.insert" >
+    <![CDATA[
+        INSERT INTO
+        t_process_bj (
+        	processname ,
+        	ratio ,
+        	createdate ,
+        	updatedate ,
+        	price,
+        	globalratio ,
+        	teamid ,
+        	teamname ,
+        	preparemin,
+        	debugprice 
+        ) VALUES (
+        	#processname# ,
+        	#ratio# ,
+        	#createdate# ,
+        	#updatedate# ,
+			#price#,
+        	#globalratio# ,
+        	#teamid# ,
+        	#teamname# ,
+        	#preparemin# ,
+        	#debugprice# 
+        )
+    ]]> 
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="processid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Process.update" parameterClass="com.terrence.crm.dol.bean.Process">         
+        UPDATE t_process_bj 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="processname">
+	        	processname = #processname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="price">
+	        	price = #price# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="ratio">
+	        	ratio = #ratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="createdate">
+	        	createdate = #createdate# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="updatedate">
+	        	updatedate = #updatedate# 
+	        </isNotEmpty>
+	     <!-- 
+	        <isNotEmpty prepend="," property="deviceid">
+	        	deviceid = #deviceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="devicename">
+	        	devicename = #devicename# 
+	        </isNotEmpty>
+	      -->
+	        <isNotEmpty prepend="," property="globalratio">
+	        	globalratio = #globalratio# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamid">
+	        	teamid = #teamid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="teamname">
+	        	teamname = #teamname# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="preparemin">
+	        	preparemin = #preparemin# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="debugprice">
+	        	debugprice = #debugprice# 
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        processid = #processid# 
+    </update>
+    
+	<delete id="Process.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_process_bj where
+       processid = #processid# 
+    ]]>
+    </delete>
+    
+    <delete id="Process.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_process_bj 
+        WHERE
+       processid in ($processid$) 
+    ]]>
+    </delete>
+    
+    <select id="Process.getById" resultMap="RM.Process">
+	    select <include refid="Process.columns"/>
+	    
+	        from t_process_bj 
+	        where 
+		        processid = #processid# 
+	    
+    </select>
+    
+	<select id="Process.getByProperty" resultMap="RM.Process">
+		select <include refid="Process.columns"/> from t_process_bj where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Process.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="processid">
+	             t_process_bj.processid = #processid#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="processids">
+	             t_process_bj.processid in ($processids$)
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="processname">
+	             t_process_bj.processname like ('%$processname$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="price">
+	             t_process_bj.price = #price#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="ratio">
+	             t_process_bj.ratio = #ratio#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="createdateBegin">
+	             t_process_bj.createdate &gt;= #createdateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="createdateEnd">
+	             t_process_bj.createdate &lt;= #createdateEnd#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="updatedateBegin">
+	             t_process_bj.updatedate &gt;= #updatedateBegin#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="updatedateEnd">
+	             t_process_bj.updatedate &lt;= #updatedateEnd#
+	       </isNotEmpty>
+	       
+<!-- 
+	        <isNotEmpty prepend="," property="deviceid">
+	        	deviceid = #deviceid# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="devicename">
+	        	devicename = #devicename# 
+	        </isNotEmpty>
+	      -->
+	       
+			<isNotEmpty prepend="AND" property="globalratio">
+	             t_process_bj.globalratio = #globalratio#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="teamid">
+	             t_process_bj.teamid = #teamid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="teamname">
+	             t_process_bj.teamname = #teamname#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="preparemin">
+	             t_process_bj.preparemin = #preparemin#
+	       </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    
+    
+    <select id="Process.findList" resultMap="RM.Process">
+    	SELECT 
+    		<include refid="Process.columns"/> 
+    	FROM 
+    		t_process_bj
+		<include refid="Process.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Process.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_process_bj
+    ]]>
+		<include refid="Process.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Process.findPage" resultMap="RM.Process">
+    	select <include refid="Process.columns"/>
+	    
+	        from t_process_bj 
+	   
+		<include refid="Process.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+
+
+
+<select id="Process.getByProcessid" resultMap="RM.Process.getByProcessid">
+			select 
+				processid
+			from 
+			t_process_bj
+			where t_process_bj.processid=#processid#			
+</select>
+
+<select id="Process.alladminList.getByProcessid" resultMap="RM.Process.admin">
+			select 
+				adminid,
+				adminname
+			from 
+			t_admin 
+			where isdel=0 
+			order by adminName asc 
+</select>
+
+<select id="Process.checkedList.getByProcessid" resultMap="RM.Process.admin">
+			select 
+				t_admin.adminid,
+				t_admin.adminname
+			from 
+			t_admin_process ,t_admin
+			where t_admin_process.adminid=t_admin.adminid
+			and	t_admin_process.processid=#processid#
+</select>
+
+
+	
+</sqlMap>

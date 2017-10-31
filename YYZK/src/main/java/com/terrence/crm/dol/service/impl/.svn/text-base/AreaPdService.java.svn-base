@@ -1,0 +1,145 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AreaPd;
+import com.terrence.crm.dol.query.AreaPdQuery;
+import com.terrence.crm.dol.dao.IAreaPdDao;
+import com.terrence.crm.dol.service.IAreaPdService;
+
+@Service
+@Transactional
+public class AreaPdService extends BaseService implements IAreaPdService {
+	protected static Logger logger = LoggerFactory.getLogger(AreaPdService.class);
+	@Autowired
+	@Qualifier("areaPdDao")
+	private IAreaPdDao areaPdDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AreaPd";
+	}
+	@Transactional(readOnly=true)
+	public AreaPd getById(java.lang.Long id) throws ServiceException
+	{
+		return areaPdDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AreaPd entity) throws ServiceException
+	{
+		areaPdDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AreaPd entity) throws ServiceException
+	{
+		Long adId = areaPdDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AreaPd entity) throws ServiceException
+	{
+		Integer returnValue =  areaPdDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = areaPdDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = areaPdDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AreaPdQuery query = new AreaPdQuery();
+		try {
+			return areaPdDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AreaPd> findPage(Page<AreaPd> page, AreaPdQuery query) throws ServiceException
+	{
+		return areaPdDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AreaPd> findPage(Page<AreaPd> page,String statement, AreaPdQuery query) throws ServiceException
+	{
+		return areaPdDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AreaPd> findList(AreaPdQuery query) throws ServiceException
+	{
+		return areaPdDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AreaPd> findList(AreaPdQuery query,Integer pageSize) throws ServiceException
+	{
+		return areaPdDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AreaPd> findList(AreaPdQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return areaPdDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AreaPd> findAllList() throws ServiceException
+	{
+		return areaPdDao.findAllList();
+	}
+	@Override
+	public void saveAreaPd(AreaPd entity, List<Long> checkedIdList)
+			throws ServiceException {
+		for(Long baseid:checkedIdList){
+			AreaPd apd = new AreaPd();
+			apd.setBaseitemid(baseid);
+			List<AreaPd> aplist = areaPdDao.findpaList(apd);
+			if(aplist.size()>0){
+				throw new ServiceException("同一物料不可重复绑定区域，请先解除其他绑定");
+			}
+		}
+		
+				
+		for (Long baseTimeId : checkedIdList) {
+			AreaPd areaPd = new AreaPd();
+			areaPd.setAreaid(entity.getAreaid());
+			areaPd.setBaseitemid(baseTimeId);
+			this.saveOrUpdate(areaPd);
+		}
+		
+	}
+
+}

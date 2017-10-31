@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Trial">
+
+        
+	<resultMap id="RM.Trial" class="com.terrence.crm.dol.bean.Trial">
+        <result property="trialid" column="trialid"/>
+        <result property="devicename" column="devicename"/>
+        <result property="devicecode" column="devicecode"/>
+        <result property="notes" column="notes"/>
+        <result property="fval" column="fval"/>
+        <result property="runstatus" column="runstatus"/>
+        <result property="runmode" column="runmode"/>
+        <result property="channeldevice" column="channeldevice"/> 
+        <result property="rrate" column="rrate"/> 
+        <result property="wrate" column="wrate"/> 
+        <result property="macaddr" column="macaddr"/> 
+    </resultMap>
+	
+	  
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="Trial.columns">
+	    <![CDATA[
+        	t_trial.trialid ,
+        	t_trial.devicename ,
+        	t_trial.devicecode ,
+        	t_trial.notes ,
+        	t_trial.fval ,
+        	t_trial.runstatus, 
+        	t_trial.runmode ,
+        	t_trial.channeldevice,
+        	t_trial.rrate,
+        	t_trial.wrate,
+        	t_trial.macaddr
+	    ]]>
+	</sql>
+	
+   <insert id="Trial.insert" >
+   
+        INSERT INTO
+        t_trial (
+        	devicename ,
+        	devicecode ,
+        	notes 
+        	 <isNotEmpty prepend="," property="fval">
+	        	fval 
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="runstatus">
+	        	runstatus
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="runmode">
+	        	runmode
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="channeldevice">
+	        	channeldevice
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="rrate">
+	        	rrate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="wrate">
+	        	wrate
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="macaddr">
+	        	macaddr
+	        </isNotEmpty>
+        ) VALUES (
+        	#devicename# ,
+        	#devicecode# ,
+        	#notes# 
+        	<isNotEmpty prepend="," property="fval">
+	        	#fval#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="runstatus">
+	        	#runstatus#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="runmode">
+	        	#runmode#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="channeldevice">
+	        	#channeldevice#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="rrate">
+	        	#rrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="wrate">
+	        	#wrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="macaddr">
+	        	#macaddr#
+	        </isNotEmpty>
+        )
+   
+    <!--
+    mysql:		type="post" SELECT  select last_insert_id()
+    sqlserver:	type="post" SELECT  @@identity  AS  ID
+    oracle:		type="pre" 	SELECT  sequenceName.nextval AS ID FROM DUAL
+    DB2:		type="pre"	values nextval for sequenceName
+    -->
+        <selectKey resultClass="java.lang.Long" type="post" keyProperty="trialid" >
+            SELECT  @@identity  AS  ID
+        </selectKey>
+    </insert>
+
+	<update id="Trial.update" parameterClass="com.terrence.crm.dol.bean.Trial">         
+        UPDATE t_trial 
+        <dynamic prepend="SET">
+	        <isNotEmpty prepend="," property="devicename">
+	        	devicename = #devicename# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="devicecode">
+	        	devicecode = #devicecode# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="notes">
+	        	notes = #notes# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="fval">
+	        	fval = #fval# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="runstatus">
+	        	runstatus = #runstatus# 
+	        </isNotEmpty>
+	        <isNotEmpty prepend="," property="runmode">
+	        	runmode=#runmode#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="channeldevice">
+	        	channeldevice=#channeldevice#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="rrate">
+	        	rrate=#rrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="wrate">
+	        	wrate=#wrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="," property="macaddr">
+	        	macaddr=#macaddr#
+	        </isNotEmpty>
+	    </dynamic>
+        WHERE 
+	        trialid = #trialid# 
+    </update>
+    
+	<delete id="Trial.delete" parameterClass="java.lang.Long">
+    <![CDATA[
+        delete from t_trial where
+       trialid = #trialid# 
+    ]]>
+    </delete>
+    
+    <delete id="Trial.deleteMultiple">
+    <![CDATA[
+        DELETE FROM 
+        	t_trial 
+        WHERE
+       trialid in ($trialid$) 
+    ]]>
+    </delete>
+    
+    <select id="Trial.getById" resultMap="RM.Trial">
+	    select <include refid="Trial.columns"/>
+	    
+	        from t_trial 
+	        where 
+		        trialid = #trialid# 
+	    
+    </select>
+    
+	<select id="Trial.getByProperty" resultMap="RM.Trial">
+		select <include refid="Trial.columns"/> from t_trial where $propertyName$=#propertyValue#
+	</select>
+	
+	<sql id="Trial.findPage.where">
+	    <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_trial.trialid = #trialid#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="devicename">
+	             t_trial.devicename like ('%$devicename$%')
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="devicecode">
+	             t_trial.devicecode = #devicecode#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="notes">
+	             t_trial.notes = #notes#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="fval">
+	             t_trial.fval = #fval#
+	       </isNotEmpty>
+	       
+			<isNotEmpty prepend="AND" property="runstatus">
+	             t_trial.runstatus = #runstatus#
+	       </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="runmode">
+	        	t_trial.runmode=#runmode#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="channeldevice">
+	        	t_trial.channeldevice=#channeldevice#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="rrate">
+	        	t_trial.rrate=#rrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="wrate">
+	        	t_trial.wrate=#wrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="macaddr">
+	        	t_trial.macaddr=#macaddr#
+	        </isNotEmpty>
+	    </dynamic>	
+	</sql>
+	 
+    <sql id="Trial.findPage.and">
+			<isNotEmpty prepend="AND" property="trialid">
+	             t_trial.trialid = #trialid#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="devicename">
+	             t_trial.devicename like ('%$devicename$%')
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="devicecode">
+	             t_trial.devicecode = #devicecode#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="notes">
+	             t_trial.notes = #notes#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="fval">
+	             t_trial.fval = #fval#
+	       </isNotEmpty>
+			<isNotEmpty prepend="AND" property="runstatus">
+	             t_trial.runstatus = #runstatus#
+	       </isNotEmpty>
+	       <isNotEmpty prepend="AND" property="runmode">
+	        	t_trial.runmode=#runmode#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="channeldevice">
+	        	t_trial.channeldevice=#channeldevice#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="rrate">
+	        	t_trial.rrate=#rrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="wrate">
+	        	t_trial.wrate=#wrate#
+	        </isNotEmpty>
+	         <isNotEmpty prepend="AND" property="macaddr">
+	        	t_trial.macaddr=#macaddr#
+	        </isNotEmpty>
+	</sql>
+	
+    <select id="Trial.Entity" resultMap="RM.Trial">
+    	SELECT 	<include refid="Trial.columns"/> FROM t_trial <include refid="Trial.findPage.where"/>
+    </select>
+    
+    <select id="Trial.findList" resultMap="RM.Trial">
+    	SELECT 
+    		<include refid="Trial.columns"/> 
+    	FROM 
+    		t_trial
+		<include refid="Trial.findPage.where"/>
+		<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+    <select id="Trial.findPage.count" resultClass="long">
+    <![CDATA[
+        select 
+        count(*)
+        from t_trial
+    ]]>
+		<include refid="Trial.findPage.where"/>    
+    </select>
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 #offset#,#pageSize#,#lastRows# 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="Sql.Trial.findPage" resultMap="RM.Trial">
+    	select <include refid="Trial.columns"/>	    
+	        from t_trial 	   
+		<include refid="Trial.findPage.where"/>		
+		<isNotEmpty property="sortColumns">ORDER BY $sortColumns$</isNotEmpty>
+		
+    </select>
+    
+	<select id="Trial.findPage" resultMap="RM.Trial">
+    	select <include refid="Trial.columns"/>	    
+	        from t_trial where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       trialid 
+	   not in(select $notTop$ 
+       trialid 
+	   from t_trial <include refid="Trial.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Trial.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+    
+      <select id="Trial.list.findPage.count" resultClass="long"><!-- 2013/11/4列表 -->
+    <![CDATA[
+        select 
+        count(*)
+        from t_trial
+    ]]>
+		<include refid="Trial.findPage.where"/>    
+    </select>
+    <select id="Trial.list.findPage" resultMap="RM.Trial">
+    	select <include refid="Trial.columns"/>	    
+	        from t_trial where 1=1 
+	   <isNotEmpty property="notTop">  and 
+       trialid 
+	   not in(select $notTop$ 
+       trialid 
+	   from t_trial <include refid="Trial.findPage.where"/>
+	   	   <isNotEmpty property="sortColumns"> ORDER BY $sortColumns$	</isNotEmpty>) 
+	   	</isNotEmpty>    
+	   	<include refid="Trial.findPage.and"/>
+    	<isNotEmpty property="sortColumns">
+			ORDER BY $sortColumns$
+		</isNotEmpty>
+    </select>
+	
+</sqlMap>

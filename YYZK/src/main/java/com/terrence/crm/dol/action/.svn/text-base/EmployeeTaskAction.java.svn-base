@@ -1,0 +1,1186 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Admin;
+import com.terrence.crm.dol.bean.AssemblyDispatch;
+import com.terrence.crm.dol.bean.Device;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmpTaskVo;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.security.AdminSession;
+import com.terrence.crm.dol.contasnt.TeamTaskStatus;
+import com.terrence.crm.dol.query.AdminQuery;
+import com.terrence.crm.dol.query.AssemblyDispatchQuery;
+import com.terrence.crm.dol.query.DeviceQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.service.IAdminService;
+import com.terrence.crm.dol.service.IDeviceService;
+import com.terrence.crm.dol.service.IEmployeeTaskService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateModuleUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/employeeTask")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "employeeTask." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class EmployeeTaskAction extends CrudActionSupport<EmployeeTask>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("employeeTaskService")
+	private IEmployeeTaskService employeeTaskService;
+	
+	@Autowired
+	@Qualifier("deviceService")
+	private IDeviceService deviceService;
+	@Autowired
+	@Qualifier("adminService")
+	private IAdminService adminService;
+	private EmployeeTask entity;
+
+	private EmployeeTaskQuery employeeTaskQuery;
+	
+	
+	private java.lang.Long employeeTaskId;
+	
+	/** 分页器 */
+	private Page<EmployeeTask> page = new Page<EmployeeTask>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<EmployeeTask> employeeTaskList;
+	
+	private String startdate;
+	private String enddate;
+	private Integer needtime;
+	private int classtype;
+	EmpTaskVo empTaskVo=new EmpTaskVo();
+	/****/
+	private Integer teamid;
+	private List<Device> listdevice;
+	private List<Admin> listadmin;
+	private Long itemprocessid;
+	private Long id;
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (employeeTaskId != null ) {
+			entity = employeeTaskService.getById(employeeTaskId);
+		} else {
+			entity = new EmployeeTask();
+		}
+	}
+	public String deleteById()throws Exception
+	{
+		try {
+		employeeTaskService.deleteById(employeeTaskId);
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			int err=e.getMessage().indexOf("冲突");
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败:"+(err==-1?"":"主外键冲突");
+			
+			addActionMessage("删除失败");
+		}
+		return JSON;
+	}
+	
+	public String deleteByIdcheck()throws Exception
+	{
+		try {
+			Integer check = employeeTaskService.deleteByIdcheck(employeeTaskId);
+		if(check.intValue()==-1){
+			resultInfo[0] = "-1";
+			resultInfo[1] = "请先删除最后一序!";
+		}else {
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";	
+		}
+		
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			int err=e.getMessage().indexOf("冲突");
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败:"+(err==-1?"":"主外键冲突");
+			
+			addActionMessage("删除失败");
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			employeeTaskService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	/*@Action(value="team/showwork",results={@Result(name="showork",location="/WEB-INF/content/team/showwork.jsp")})
+	public String showwork()throws Exception
+	{
+		DeviceQuery dquery=new DeviceQuery();
+		dquery.setTeamid(teamid);
+		listdevice=deviceService.findList(dquery);
+		AdminQuery aquery=new AdminQuery();
+		aquery.setTeamid(teamid);
+		listadmin=adminService.findList(aquery);
+		return "showork";
+	}*/
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+	/**
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@Action("/system/listDeviceTask")
+	public String listToQuery()throws Exception
+	{
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		try {
+			employeeTaskList=employeeTaskService.findList(employeeTaskQuery);
+			devicestartdate();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/system/listDeviceDetail")
+	public String listToDevice()throws Exception
+	{
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		try {
+			employeeTaskQuery.setStates("0,1,3");//为完工的0:未开工，1:已开工，2:已完成.3:反检
+			employeeTaskList=employeeTaskService.findList(employeeTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("employeeTaskId");
+			page.setOrder(Page.DESC);
+		}
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try {
+			page = employeeTaskService.findPage(page, employeeTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	public void prepareListToempTask() throws Exception {
+		prepareModel();
+	}
+	
+	public String listToempTask() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("employeeTaskId");
+			page.setOrder(Page.DESC);
+		}
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try {
+			page = employeeTaskService.findPage(page,"EmployeeTask.listToempTask", employeeTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/system/employee/listToTask")
+	public String listToTask()throws Exception
+	{
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try {
+			employeeTaskList = employeeTaskService.findList("EmployeeTask.findDetail",employeeTaskQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	//==自定义查询=========================================
+	@Action("/task/user/listToEmployee")
+	public String listToEmployee() throws Exception {
+		
+		try {
+			//--获得当前用户-----------------------
+			AdminSession adminSession = SpringSecurityUtils.getCurrentUser();
+			if(adminSession.getAdmin().getType()==EmployeeTask.MONITOR){
+				employeeTaskQuery.setTeamid(adminSession.getAdmin().getTeamid().longValue());	
+			}
+			if(adminSession.getAdmin().getType()==EmployeeTask.GENERAL){
+				employeeTaskQuery.setEmpid(adminSession.getAdmin().getAdminId().longValue());
+			}
+					
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	@Action("/task/user/checkToEmployee")
+		
+public String checkToEmployee() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("employeeTaskId");
+			page.setOrder(Page.DESC);
+		}
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try {
+			employeeTaskQuery.setStatus(TeamTaskStatus.WORKING.getIndex());
+			page = employeeTaskService.findPage(page, employeeTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+@Action("/task/user/listDeviceEmployee")
+public String listDeviceEmployee() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("employeeTaskId");
+			page.setOrder(Page.DESC);
+		}
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try {
+			//employeeTaskQuery.setStates("0,1");
+			page = employeeTaskService.findPage(page, "EmployeeTask.findPage.device", employeeTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	
+	//-admin/adminjoblist------------------------------------------------
+public String listEmployee() throws Exception {
+		try {
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public void prepareSaveTask() throws Exception {
+		prepareModel();
+	}
+	public String saveTask()throws Exception
+	{
+		try {
+			employeeTaskService.saveTask(empTaskVo,entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "指派成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	public void prepareUpdateTask() throws Exception {
+		prepareModel();
+	}
+	public String updateTask()throws Exception
+	{
+		try
+		{
+			employeeTaskService.updateTask(empTaskVo,entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "指派成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			employeeTaskService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = employeeTaskService.getById(employeeTaskId);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+	@Action(value="/system/devicestartdate")
+	public String devicestartdate()throws Exception
+	{
+		try
+		{ 
+			String day=DateModuleUtils.GetDate()+" 08:30:00";
+			String night=DateModuleUtils.GetDate()+" 18:00:00";
+			entity=employeeTaskService.getMaxPlanEndDate(employeeTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+			if(employeeTaskQuery.getClasstype()==1&&entity.getPlanenddate()==null)
+			{
+				if(DateModuleUtils.DateDiff(day, DateModuleUtils.GetDateTime(), 1)>0)
+				{
+					entity.setPlanenddate(DateConvertUtils.getCurrentDateTime());
+				}
+				else
+				{
+					entity.setPlanenddate(DateConvertUtils.parse(day, "yyyy-MM-dd HH:mm:ss"));
+				}
+			}
+			else if(employeeTaskQuery.getClasstype()==2&&entity.getPlanenddate()==null)
+			{
+				if(DateModuleUtils.DateDiff(night, DateModuleUtils.GetDateTime(), 1)>0)
+				{
+					entity.setPlanenddate(DateConvertUtils.getCurrentDateTime());
+				}
+				else
+				{
+					entity.setPlanenddate(DateConvertUtils.parse(night, "yyyy-MM-dd HH:mm:ss"));
+				}
+			}
+			/*else if(DateModuleUtils.DateDiff(entity.getPlanenddateString(), startdate, 1)<0)
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "此设备在该时间内已被占用";
+			}*/
+		}
+		catch(Exception e)
+		{
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	@Action(value="/system/getenddate")
+	public String findenddate()throws Exception
+	{
+		
+		try {
+			String startdatetime=this.startdate;//DateConvertUtils.format(begintime, "yyyy-MM-dd HH:mm:ss");
+			String startdate=DateModuleUtils.GetDate(startdatetime);
+			int sh=Integer.parseInt(DateModuleUtils.GetHh(startdatetime));
+			//System.out.println("--startdatetime---"+startdatetime);
+			//System.out.println("--startdate---"+startdate);
+			if((sh>17||sh<8)&&classtype==1){
+				resultInfo[0] = "-1";
+				resultInfo[1] = "请重新选择开始时间";
+				this.enddate="开始时间有误";
+			}
+			else if(classtype==2&&(sh>=2&&sh<18))
+			{
+				resultInfo[0] = "-1";
+				resultInfo[1] = "请重新选择开始时间";
+				this.enddate="开始时间有误";
+			}
+			else
+			{
+				int totaltime=this.needtime;
+				int days=totaltime/(8*60);
+				int mod=totaltime%(8*60);
+				for(int i=0;i<days;i++)
+				{
+					startdate=DateModuleUtils.DateAdd(startdate, 1, 2);
+					if(DateModuleUtils.getWeekDay(startdate)==1)
+					{
+						startdatetime=DateModuleUtils.DateAdd(startdatetime, 24*60, 4);
+					}
+				}
+				//System.out.println("--days---"+days);
+				String enddatetime=DateModuleUtils.DateAdd(startdatetime, 24*60*days+mod, 4);
+				 //System.out.println("---enddatetime--"+enddatetime);
+				 String enddate=DateModuleUtils.GetDate(enddatetime);
+				 //System.out.println("--enddate---"+enddate);
+				 int h=Integer.parseInt(DateModuleUtils.GetHh(enddatetime));
+				if(sh<12&&h>=12)
+				{
+					enddatetime=DateModuleUtils.DateAdd(enddatetime, 60, 4);
+				}
+				while (true)
+				{
+					h=Integer.parseInt(DateModuleUtils.GetHh(enddatetime));
+					if(classtype==1)
+					{
+						if(h>=18)
+						{
+							enddatetime=DateModuleUtils.DateAdd(enddatetime, ((24-9)*60)-30, 4);
+							continue;
+						}
+						else if(h<2)
+						{
+							enddatetime=DateModuleUtils.DateAdd(enddatetime,(16+h)*60,4);
+							continue;
+						}
+						else if(h==8&&Integer.parseInt(DateModuleUtils.GetMm(enddatetime))<30)
+						{
+							enddatetime=DateModuleUtils.DateAdd(enddatetime, 30, 4);
+							continue;
+						}
+						else 
+						{
+							break;
+						}
+					}
+					else if(classtype==2)
+					{
+						if(h>=2&&h<18)
+						{
+							enddatetime=DateModuleUtils.DateAdd(enddatetime, (24-8)*60, 4);
+							continue;
+						}
+						else 
+						{
+							break;
+						}
+					}
+					else 
+					{
+						break;
+					}
+					
+				}
+				this.enddate=enddatetime;
+				resultInfo[0] = "0";
+				resultInfo[1] = enddatetime;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			resultInfo[0] = "-1";
+			resultInfo[1] = "获取时间错误，请找管理员联系.";
+		}
+		return JSON;
+	}
+	
+	// -------------------自定义方法
+
+	
+	
+	public String listAll() throws Exception {
+		try{
+			employeeTaskList = employeeTaskService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	// -------------------自定义方法
+	//------状态由未开工改为已开工----由已开工切换为已完成------------------------------
+	@Action("/task/user/changeStatusToBegin")
+	public String  changeStatusToBegin(){
+			try {
+				show();
+				int check=0; 
+				check = employeeTaskService.updateStatus(entity);
+				if(check==-2){
+					resultInfo[0] = "-1";
+					resultInfo[1] = "没提交过检查不能切换为完工状态!";
+				}			
+				
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+				resultInfo[0] = "-1";
+				resultInfo[1] = "查询失败";
+			}
+			return JSON;
+	}
+	public String showByDispatchid(){
+		try {
+			if(employeeTaskQuery == null) {
+				employeeTaskQuery = new EmployeeTaskQuery();
+			}
+			employeeTaskList=employeeTaskService.findList("EmployeeTask.findListdetail", employeeTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+}
+	
+	@Action("/task/user/showlastnum")
+	public String showlastnum(){
+		try {
+			Integer lastAcceptednum=null;
+			 lastAcceptednum=employeeTaskService.findLastnum(employeeTaskId);
+			if(lastAcceptednum.intValue()==-1){
+				resultInfo[0] = "0";
+				resultInfo[1] = "此为第一序";
+			}else{
+				resultInfo[0] = "0";
+				resultInfo[1] = lastAcceptednum+"";	
+			}				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		
+		return JSON;
+	}
+
+
+	public void prepareUpdateEployStatus() throws Exception {
+		prepareModel();
+	}
+	public String updateEployStatus(){
+		try {
+			
+			 employeeTaskService.updateEployStatus(entity);
+				resultInfo[0] = "0";
+				resultInfo[1] = "操作成功";				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		
+		return JSON;
+	}
+	
+	public void prepareListPlanDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/empTasklistPlanDetail")
+	public String listPlanDetail() throws Exception {
+		try{
+			employeeTaskList = employeeTaskService.findEpList(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public void prepareListPlanDetailcard() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/empTasklistPlanDetailcard")
+	public String listPlanDetailcard() throws Exception {
+		if(employeeTaskQuery == null) {
+			employeeTaskQuery = new EmployeeTaskQuery();
+		}
+		
+		try{
+			employeeTaskList = employeeTaskService.findList("RM.EmployeeTask.findEpListCard", employeeTaskQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	public void prepareSaveOrUpdateDetail() throws Exception {
+		prepareModel();
+	}
+	@Action("/system/updateOrSave")
+	public String saveOrUpdateDetail() throws Exception {
+		try{
+			employeeTaskService.saveOrUpdateDetail(entity);
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}	
+		
+		return JSON;
+	}
+//=======	
+	@Action("/device/calendar")
+	public String listDeviceCalendar()throws Exception
+	{
+		try {
+			if(employeeTaskQuery == null) {
+				employeeTaskQuery=new EmployeeTaskQuery();
+			}
+			String month=employeeTaskQuery.getMonth(),year=employeeTaskQuery.getYear();
+			String workmonth=employeeTaskQuery.getWorkmonth();
+			if(workmonth==null)
+			{
+				workmonth=DateUtils.GetFormatDate("yyyyMM");
+				employeeTaskQuery.setWorkmonth(workmonth);
+			}
+			
+			String days[];
+			days=new String[42]; 
+			for(int i=0;i<42;i++) 
+			{ 
+			days[i]="";
+			} 
+			Calendar thismonth=Calendar.getInstance(); 
+			if(month!=null&&(!month.equals(""))) 
+			thismonth.set(Calendar.MONTH, Integer.parseInt(month)-1 ); 
+
+			if(year!=null&&(!year.equals(""))) 
+			thismonth.set(Calendar.YEAR, Integer.parseInt(year)); 
+
+			year=String.valueOf(thismonth.get(Calendar.YEAR)); 
+			month=String.valueOf(thismonth.get(Calendar.MONTH)+1); 
+			if(month.length()<2)
+				month="0"+month;
+			thismonth.setFirstDayOfWeek(Calendar.SUNDAY); 
+			thismonth.set(Calendar.DAY_OF_MONTH,1); 
+			int firstindex=thismonth.get(Calendar.DAY_OF_WEEK)-1; 
+			int maxindex=thismonth.getActualMaximum(Calendar.DAY_OF_MONTH); 
+			for(int i=0;i<maxindex;i++) 
+			{ 
+				days[firstindex+i]=String.valueOf(i+1); 
+			} 
+			employeeTaskList=new ArrayList<EmployeeTask>();
+			for(int j=0;j<6;j++) 
+			{
+				for(int i=j*7;i<(j+1)*7;i++)
+				{
+					EmployeeTask employeeTask=new EmployeeTask();
+					employeeTask.setDays(i);
+					employeeTask.setCalendarstatus(1);
+					if(!days[i].equals(""))
+					{
+						employeeTask.setWorkday(Integer.parseInt(days[i]));
+						employeeTask.setWorkdate(DateUtils.GetDate2(year+"-"+month+"-"+days[i], "yyyy-MM-dd"));
+						employeeTask.setWorkmonth(year+month);
+					}
+					else
+					{
+						employeeTask.setWorkday(-1);
+					}
+					employeeTaskList.add(employeeTask);
+					//System.out.println(i+"="+days[i]);
+				}
+			}
+			
+			/**
+			 * 查询个人任务中设备id
+			 */
+			EmployeeTaskQuery query=new EmployeeTaskQuery();
+			query.setDeviceid(employeeTaskQuery.getDeviceid());
+			query.setWorkmonth(employeeTaskQuery.getWorkmonth());
+			List<EmployeeTask> epList=new ArrayList<EmployeeTask>();
+			epList=employeeTaskService.findList("EmployeeTask.findList.devicework", query);
+			
+			
+			
+			for(EmployeeTask eptask:this.employeeTaskList)
+			{
+				for(EmployeeTask ep:epList)
+				{			
+					//System.out.println("=========="+ep.getWorkmonth().substring(8));							
+					if(eptask.getWorkday().intValue()==Integer.valueOf(ep.getWorkmonth().substring(8)).intValue())
+					{
+						eptask.setCalendarstatus(Device.NOT_FULL);//不饱和
+						if(ep.getRuntime().intValue()>=480){//饱和
+							eptask.setCalendarstatus(Device.FULL);//不饱和	
+						}
+					}
+				}
+			}
+			
+			
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+			e.printStackTrace();
+		}
+		
+		return JSON;
+	}
+	
+//=======	
+	/**
+	 * 排产编辑中删除任务----
+	 */
+	public String deletedispatchById()throws Exception
+	{
+		try {
+		employeeTaskService.deletedispatchById(employeeTaskId);
+		
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败:";
+		}
+		return JSON;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public EmployeeTask getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public EmployeeTaskQuery getEmployeeTaskQuery() {
+		return employeeTaskQuery;
+	}
+
+	
+	public void setEmployeeTaskQuery(EmployeeTaskQuery employeeTaskQuery) {
+		this.employeeTaskQuery = employeeTaskQuery;
+	}
+
+	public void setEmployeeTaskId(java.lang.Long employeeTaskId) {
+		this.employeeTaskId = employeeTaskId;
+	}
+	
+	
+	public java.lang.Long getEmployeeTaskId() {
+		return this.employeeTaskId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<EmployeeTask> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<EmployeeTask> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<EmployeeTask> getEmployeeTaskList() {
+		return employeeTaskList;
+	}
+
+	public String getStartdate() {
+		return startdate;
+	}
+
+	public void setStartdate(String startdate) {
+		this.startdate = startdate;
+	}
+
+	public String getEnddate() {
+		return enddate;
+	}
+
+	public void setEnddate(String enddate) {
+		this.enddate = enddate;
+	}
+
+	public Integer getNeedtime() {
+		return needtime;
+	}
+
+	public void setNeedtime(Integer needtime) {
+		this.needtime = needtime;
+	}
+
+	public int getClasstype() {
+		return classtype;
+	}
+
+	public void setClasstype(int classtype) {
+		this.classtype = classtype;
+	}
+
+	public EmpTaskVo getEmpTaskVo() {
+		return empTaskVo;
+	}
+
+	public void setEmpTaskVo(EmpTaskVo empTaskVo) {
+		this.empTaskVo = empTaskVo;
+	}
+
+
+
+
+	public Integer getTeamid() {
+		return teamid;
+	}
+
+	public void setTeamid(Integer teamid) {
+		this.teamid = teamid;
+	}
+
+	public Long getItemprocessid() {
+		return itemprocessid;
+	}
+
+	public void setItemprocessid(Long itemprocessid) {
+		this.itemprocessid = itemprocessid;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public List<Device> getListdevice() {
+		return listdevice;
+	}
+
+	public void setListdevice(List<Device> listdevice) {
+		this.listdevice = listdevice;
+	}
+
+	public List<Admin> getListadmin() {
+		return listadmin;
+	}
+
+	public void setListadmin(List<Admin> listadmin) {
+		this.listadmin = listadmin;
+	}	
+	
+	
+}

@@ -1,0 +1,616 @@
+/*
+ * 
+ */
+package com.terrence.crm.dol.action;
+
+
+import javax.servlet.http.HttpServletRequest;
+import org.apache.struts2.components.ActionMessage;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.convention.annotation.Results;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.terrence.crm.dol.base.CrudActionSupport;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.base.utils.Struts2Utils;
+import com.terrence.crm.dol.query.FileTypeQuery;
+import com.terrence.crm.dol.query.TeamsQuery;
+import com.terrence.crm.dol.service.ITeamsService;
+import com.terrence.crm.dol.bean.FileType;
+import com.terrence.crm.dol.bean.Teams;
+
+/**
+ * 
+ * 
+ * @version 1.0
+ */
+@Scope("prototype")
+@Namespace("/teams")
+@Results( { @Result(name = CrudActionSupport.RELOAD, location = "teams." + CrudActionSupport.ACTIONSUFFIX + "?page.pageRequest=${page.pageRequest}", type = "redirect")})
+public class TeamsAction extends CrudActionSupport<Teams>  implements ApplicationContextAware{
+	
+	
+	@Autowired
+	@Qualifier("teamsService")
+	private ITeamsService teamsService;
+	
+	
+	private Teams entity;
+
+	private TeamsQuery teamsQuery;
+	
+	
+	private java.lang.Long teamsId;
+	
+	/** 分页器 */
+	private Page<Teams> page = new Page<Teams>();
+	
+	/** Json操作信息 */
+	private String[] resultInfo = new String[2];
+	
+	/** 所选择的编号列表 */
+	private List<java.lang.Long> checkedIdList;
+	
+	
+	private ApplicationContext ctx;
+	
+	private List<Teams> teamsList;
+	private String tree="";
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#prepareModel()
+	 */
+	@Override
+	protected void prepareModel() throws Exception {
+		if (teamsId != null ) {
+			entity = teamsService.getById(teamsId);
+		} else {
+			entity = new Teams();
+		}
+	}
+	public String listTree()throws Exception
+	{
+		if(teamsQuery == null) {
+			teamsQuery = new TeamsQuery();
+		}
+		try
+		{
+			teamsQuery.setTeamlevel(1);
+			List<Teams> list=teamsService.findList(teamsQuery);
+			teamsList=new ArrayList<Teams>();
+			for(Teams teams:list)
+			{
+				tree+="<li><span ref=\""+teams.getTeamid()+"\" lev=\""+teams.getTeamlevel()+"\" pid="+teams.getTeamsuperior()+" id=li"+teams.getTeamid()+" spanname="+teams.getTeamname()+"><a href=\"javascript:loademp("+teams.getTeamid()+");\">"+teams.getTeamname()+(teams.getAdmin()==null?"":"("+teams.getAdmin().getAdminName()+")")+"</a></span>"+loop(teams)+"</li>";
+			}
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	public String loop(Teams teams)
+	{
+		TeamsQuery teamsQuery=new TeamsQuery();
+		teamsQuery.setTeamsuperior(teams.getTeamid());
+		List<Teams> list=teamsService.findList(teamsQuery);
+		StringBuffer sbuf=new StringBuffer();
+		if(list.size()>0)
+		{
+			sbuf.append("<ul id=\"ul"+teams.getTeamid()+"\">");
+			for(Teams c:list)
+			{
+				sbuf.append("<li><span ref=\""+c.getTeamid()+"\" lev=\""+c.getTeamlevel()+"\" id=\"li"+c.getTeamid()+"\" pid="+c.getTeamsuperior()+" spanname="+c.getTeamname()+"><a href=\"javascript:loademp("+c.getTeamid()+");\">"+c.getTeamname()+(c.getAdmin()==null?"":"("+c.getAdmin().getAdminName()+")")+"</a></span>"+loop(c)+"</li>");
+			}
+			sbuf.append("</ul>");
+		}
+		return sbuf.toString();
+	}
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#delete()
+	 */
+	@Override
+	public String delete() throws Exception {
+		
+		try {
+			teamsService.deleteByMultipleId(checkedIdList);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "删除成功";
+			
+			addActionMessage("删除成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+			
+			addActionMessage("删除失败");
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#deleteToJson()
+	 */
+	public String deleteToJson() throws Exception {
+		
+		try {
+			 
+			delete();
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "删除失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#input()
+	 */
+	@Override
+	public String input() throws Exception {
+		return INPUT;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#list()
+	 */
+	@Override
+	public String list() throws Exception {
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("teamsId");
+			page.setOrder(Page.DESC);
+		}
+		if(teamsQuery == null) {
+			teamsQuery = new TeamsQuery();
+		}
+		
+		try {
+			page = teamsService.findPage(page, teamsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return SUCCESS;
+	}
+	
+	public String listToJson() throws Exception {
+		
+		try {
+			
+			list();			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#save()
+	 */
+	@Override
+	public String save() throws Exception {
+		
+		try {
+			
+			teamsService.saveOrUpdate(entity);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+			return INPUT;
+		}
+		return RELOAD;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#saveToJson()
+	 */
+	public String saveToJson() throws Exception {
+		
+		try {
+			save();
+				
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+		}
+		return JSON;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#show()
+	 */
+	@Override
+	public String show() throws Exception {
+		
+		try {
+			entity = teamsService.getById(teamsId);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return SHOW;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.disney.dol.base.CrudActionSupport#showToJson()
+	 */
+	@Action("/system/showToTeams")
+	public String showToJson() throws Exception {
+		
+		try {
+			show();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询失败";
+		}
+		return JSON;
+	}
+
+	
+	// -------------------自定义方法
+	//-----------------删除单条blade
+	public String deleteAloneteams()throws Exception{
+	try{
+		if(checkedIdList==null){
+			//System.out.println("======进入单条teams的删除方法==============");
+			teamsService.deleteById(teamsId);	
+		}else{
+			//System.out.println("==进入删除多条");
+			for(long id:checkedIdList){
+				teamsService.deleteById(id);	
+			}
+		}
+		resultInfo[0] = "0";
+		resultInfo[1] = "删除成功";
+	} catch(ServiceException e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = e.getMessage();
+	} catch(Exception e) {
+		logger.error(e.getMessage());
+		resultInfo[0] = "-1";
+		resultInfo[1] = "删除失败！请先去掉绑定的设备再删除！";
+	}
+		return JSON;
+	}
+	
+	
+	@Action("/system/listteams")
+	public String listAll() throws Exception {
+		try{
+			teamsList = teamsService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+	
+	
+	
+	
+	@Action("/system/listToteams")
+	public String listToteams()throws Exception
+	{
+		try {
+			teamsList=teamsService.findList(teamsQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	//======================================================	
+	public void prepareSaveToAlone() throws Exception {
+		prepareModel();
+	}	
+	
+//-------------------------------------
+	public String saveToAlone() throws Exception {
+		try {
+			//System.out.println("============进入保存ids："+entity.getDeviceides());
+//			entity.setDeviceides(teamsQuery.getDeviceides());
+			Long id = teamsService.save(entity);	
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "操作成功";
+			addActionMessage("操作成功");
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "操作失败";
+			
+			addActionMessage("操作失败");
+		}
+		return JSON;
+	}
+//---------------------------
+	@Action("/system/listToteamsDevice")
+	public String listToteamsDevice()throws Exception
+	{
+		try {
+			teamsList=teamsService.findteamDeviceList(teamsQuery);
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch (Exception e) {
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+			e.printStackTrace();
+		}
+		return JSON;
+	}
+	
+	
+	@Action("/system/listAllPO")
+	public String listAllPO() throws Exception {//查询部门，添加采购申请
+		try{
+			teamsList = teamsService.findAllList();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+	
+	@Action("/system/findListTeams")
+	public String findListTeams()throws Exception//部门查询,每次查询10条
+	{
+		
+		try {
+			teamsList = teamsService.findListTeam(teamsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	
+	public String finddengluId()throws Exception//部门查询,每次查询10条===============
+	{
+		
+		try {
+			entity= teamsService.finddengluId();
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	
+	public String listloadteams() throws Exception {//质检不合格报告
+		try{
+			teamsList = teamsService.findloadteam();
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch(Exception e){
+			logger.warn("param error ", e);
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}	
+		
+		return JSON;
+	}
+	
+	public String findListTeamsNew()throws Exception//部门查询,每次查询10条
+	{
+		
+		try {
+			teamsList = teamsService.findListTeam(teamsQuery);
+			
+			resultInfo[0] = "0";
+			resultInfo[1] = "查询列表成功";
+		} catch(ServiceException e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = e.getMessage();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			
+			resultInfo[0] = "-1";
+			resultInfo[1] = "查询列表失败";
+		}
+		return JSON;
+	}
+	// -------------------自定义方法
+	/* (non-Javadoc)
+	 * @see com.opensymphony.xwork2.ModelDriven#getModel()
+	 */
+	public Teams getModel() {
+		return entity;
+	}
+
+	/**
+	 * 
+	 *
+	 * @return the lottery query
+	 */
+	public TeamsQuery getTeamsQuery() {
+		return teamsQuery;
+	}
+
+	
+	public void setTeamsQuery(TeamsQuery teamsQuery) {
+		this.teamsQuery = teamsQuery;
+	}
+
+	public void setTeamsId(java.lang.Long teamsId) {
+		this.teamsId = teamsId;
+	}
+	
+	
+	public java.lang.Long getTeamsId() {
+		return this.teamsId;
+	}
+
+	/**
+	 * 获得分页器
+	 *
+	 * @return the page
+	 */
+	public Page<Teams> getPage() {
+		return page;
+	}
+
+	/**
+	 * 设置分页器
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(Page<Teams> page) {
+		this.page = page;
+	}
+	
+	/**
+	 * 获得Json操作信息
+	 *
+	 * @return the result info
+	 */
+	public String[] getResultInfo() {
+		return resultInfo;
+	}
+
+	/**
+	 * 获得所选择的编号列表
+	 *
+	 * @return 编号列表
+	 */
+	public List<java.lang.Long> getCheckedIdList() {
+		return checkedIdList;
+	}
+
+	/**
+	 * 设置编号列表
+	 *
+	 * @param checkedIdList 编号列表
+	 */
+	public void setCheckedIdList(List<java.lang.Long> checkedIdList) {
+		this.checkedIdList = checkedIdList;
+	}
+	
+
+	public void setApplicationContext(ApplicationContext ctx)
+		throws BeansException {
+	this.ctx = ctx;
+	}
+
+	public List<Teams> getTeamsList() {
+		return teamsList;
+	}
+	public String getTree() {
+		return tree;
+	}
+	public void setTree(String tree) {
+		this.tree = tree;
+	}
+	
+	
+}

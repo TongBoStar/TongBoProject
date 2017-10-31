@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" 
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Turingtest">
+
+<resultMap id="RM.Turingtest" class="com.terrence.crm.dol.bean.Turingtest">
+	<result property="id" column="id"/>
+	<result property="modelName" column="modelName"/>
+	<result property="fanswer" column="fanswer"/>
+	<result property="fask" column="fask"/>
+	<result property="fstatus" column="fstatus"/>
+	<result property="createTime" column="createTime"/>
+	<result property="fcontent" column="fcontent"/>
+</resultMap>
+
+<!-- 用于select查询公用抽取的列 -->
+<sql id="Turingtest.columns">
+	<![CDATA[
+		t_turingtest.id ,
+		t_turingtest.modelName ,
+		t_turingtest.fanswer ,
+		t_turingtest.fask ,
+		t_turingtest.fstatus ,
+		t_turingtest.createTime ,
+		t_turingtest.fcontent
+	]]>
+</sql>
+
+<insert id="Turingtest.insert" >
+	<![CDATA[
+	INSERT INTO t_turingtest (
+		modelName,
+		fanswer,
+		fask,
+		fstatus,
+		createTime,
+		fcontent
+	) VALUES (
+		#modelName#,
+		#fanswer#,
+		#fask#,
+		#fstatus#,
+		#createTime#,
+		#fcontent#
+	)
+	]]>
+	<selectKey resultClass="java.lang.Long" type="post" keyProperty="id" >
+		SELECT  @@identity  AS  ID
+	</selectKey>
+</insert>
+
+<update id="Turingtest.update" parameterClass="com.terrence.crm.dol.bean.Turingtest"> 
+	UPDATE t_turingtest 
+	<dynamic prepend="SET">
+		<isNotEmpty prepend="," property="modelName">
+			modelName = #modelName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fanswer">
+			fanswer = #fanswer# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fask">
+			fask = #fask# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fstatus">
+			fstatus = #fstatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="createTime">
+			createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="fcontent">
+			fcontent = #fcontent# 
+		</isNotEmpty>
+	</dynamic>
+ 	WHERE id=#id# 
+</update>
+
+<sql id="Turingtest.findPage.where">
+	<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="id">
+			t_turingtest.id = #id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="modelName">
+			t_turingtest.modelName = #modelName# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fanswer">
+			t_turingtest.fanswer = #fanswer# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fask">
+			t_turingtest.fask = #fask# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fstatus">
+			t_turingtest.fstatus = #fstatus# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="createTime">
+			t_turingtest.createTime = #createTime# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="fcontent">
+			t_turingtest.fcontent = #fcontent# 
+		</isNotEmpty>
+	</dynamic>
+</sql>
+
+<sql id="Turingtest.findPage.and">
+	<isNotEmpty prepend="AND" property="id">
+		t_turingtest.id = #id# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="modelName">
+		t_turingtest.modelName = #modelName# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fanswer">
+		t_turingtest.fanswer = #fanswer# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fask">
+		t_turingtest.fask = #fask# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fstatus">
+		t_turingtest.fstatus = #fstatus# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="createTime">
+		t_turingtest.createTime = #createTime# 
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="fcontent">
+		t_turingtest.fcontent = #fcontent# 
+	</isNotEmpty>
+</sql>
+
+<select id="Turingtest.getById" resultMap="RM.Turingtest">
+	select <include refid="Turingtest.columns"/> from t_turingtest where id=#id#
+</select>
+
+<select id="Turingtest.getByProperty" resultMap="RM.Turingtest">
+	select <include refid="Turingtest.columns"/> from t_turingtest where $propertyName$=#propertyValue#
+</select>
+
+<delete id="Turingtest.delete">
+	<![CDATA[
+		DELETE FROM t_turingtest WHERE id=#id#
+	]]>
+</delete>
+<delete id="Turingtest.deleteMultiple">
+	<![CDATA[
+		DELETE FROM t_turingtest WHERE id in ($id$)
+	]]>
+</delete>
+
+<select id="Turingtest.findPage.count" resultClass="long">
+	select count(*) from t_turingtest <include refid="Turingtest.findPage.where"/>
+</select>
+
+<select id="Turingtest.findPage" resultMap="RM.Turingtest">
+	select <include refid="Turingtest.columns"/> 
+		from t_turingtest 
+	<include refid="Turingtest.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+<select id="Turingtest.findList" resultMap="RM.Turingtest">
+	SELECT <include refid="Turingtest.columns"/> FROM t_turingtest
+	<include refid="Turingtest.findPage.where"/>
+	<isNotEmpty property="sortColumns">
+		ORDER BY $sortColumns$
+	</isNotEmpty>
+</select>
+
+</sqlMap>

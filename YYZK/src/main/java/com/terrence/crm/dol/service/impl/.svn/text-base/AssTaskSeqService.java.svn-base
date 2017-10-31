@@ -1,0 +1,146 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.AssTaskSeq;
+import com.terrence.crm.dol.dao.IAssTaskSeqDao;
+import com.terrence.crm.dol.query.AssTaskSeqQuery;
+import com.terrence.crm.dol.service.IAssTaskSeqService;
+
+@Service
+@Transactional
+public class AssTaskSeqService extends BaseService implements IAssTaskSeqService {
+	protected static Logger logger = LoggerFactory.getLogger(AssTaskSeqService.class);
+	@Autowired
+	@Qualifier("assTaskSeqDao")
+	private IAssTaskSeqDao assTaskSeqDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "AssTaskSeq";
+	}
+	@Transactional(readOnly=true)
+	public AssTaskSeq getById(java.lang.Long id) throws ServiceException
+	{
+		return assTaskSeqDao.getById(id);
+	}
+	
+	public void saveOrUpdate(AssTaskSeq entity) throws ServiceException
+	{
+		assTaskSeqDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(AssTaskSeq entity) throws ServiceException
+	{
+		Long adId = assTaskSeqDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(AssTaskSeq entity) throws ServiceException
+	{
+		Integer returnValue =  assTaskSeqDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = assTaskSeqDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = assTaskSeqDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		AssTaskSeqQuery query = new AssTaskSeqQuery();
+		try {
+			return assTaskSeqDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<AssTaskSeq> findPage(Page<AssTaskSeq> page, AssTaskSeqQuery query) throws ServiceException
+	{
+		return assTaskSeqDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<AssTaskSeq> findPage(Page<AssTaskSeq> page,String statement, AssTaskSeqQuery query) throws ServiceException
+	{
+		return assTaskSeqDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssTaskSeq> findList(AssTaskSeqQuery query) throws ServiceException
+	{
+		return assTaskSeqDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<AssTaskSeq> findList(AssTaskSeqQuery query,Integer pageSize) throws ServiceException
+	{
+		return assTaskSeqDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<AssTaskSeq> findList(AssTaskSeqQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return assTaskSeqDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<AssTaskSeq> findAllList() throws ServiceException
+	{
+		return assTaskSeqDao.findAllList();
+	}
+	@Override
+	public List<AssTaskSeq> findEntity(AssTaskSeqQuery assTaskSeqQuery)
+			throws ServiceException {
+		
+		List<AssTaskSeq> alist = assTaskSeqDao.findEntity(assTaskSeqQuery);
+		return alist;
+	}
+	
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void updateSerialSum(AssTaskSeqQuery assTaskSeqQuery)
+			throws ServiceException {
+		HashMap paramMap = new HashMap(); 
+		  
+		paramMap.put("seqcode", assTaskSeqQuery.getSeqcode());      
+		  
+		paramMap.put("seqcodenew", assTaskSeqQuery.getSeqcodenew());
+		
+		paramMap.put("adminid", assTaskSeqQuery.getAdminid());
+		assTaskSeqDao.updateSerialSum(paramMap);
+	}
+	
+}

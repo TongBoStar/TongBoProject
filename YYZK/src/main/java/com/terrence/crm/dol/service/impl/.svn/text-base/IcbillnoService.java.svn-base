@@ -1,0 +1,256 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.query.IcbillnoQuery;
+import com.terrence.crm.dol.service.IIcbillnoService;
+
+@Service
+@Transactional
+public class IcbillnoService extends BaseService implements IIcbillnoService {
+	protected static Logger logger = LoggerFactory.getLogger(IcbillnoService.class);
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Icbillno";
+	}
+	@Transactional(readOnly=true)
+	public Icbillno getById(java.lang.Long id) throws ServiceException
+	{
+		return icbillnoDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Icbillno entity) throws ServiceException
+	{
+		icbillnoDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Icbillno entity) throws ServiceException
+	{
+		Long adId = icbillnoDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Icbillno entity) throws ServiceException
+	{
+		Integer returnValue =  icbillnoDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = icbillnoDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = icbillnoDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		IcbillnoQuery query = new IcbillnoQuery();
+		try {
+			return icbillnoDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Icbillno> findPage(Page<Icbillno> page, IcbillnoQuery query) throws ServiceException
+	{
+		return icbillnoDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Icbillno> findPage(Page<Icbillno> page,String statement, IcbillnoQuery query) throws ServiceException
+	{
+		return icbillnoDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icbillno> findList(IcbillnoQuery query) throws ServiceException
+	{
+		return icbillnoDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icbillno> findList(IcbillnoQuery query,Integer pageSize) throws ServiceException
+	{
+		return icbillnoDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Icbillno> findList(IcbillnoQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return icbillnoDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Icbillno> findAllList() throws ServiceException
+	{
+		return icbillnoDao.findAllList();
+	}
+	//查找单据信息,至返回返回编号
+	@Override        
+	public Icbillno findBillno(IcbillnoQuery icbillnoQuery)
+			throws ServiceException {
+		Icbillno icbold = icbillnoDao.findfcurno(icbillnoQuery);
+		Calendar a=Calendar.getInstance();
+		Integer nowyear=a.get(Calendar.YEAR);//得到年
+		  
+		if( Integer.valueOf(icbold.getFday())<nowyear ){
+			Icbillno icq = new Icbillno();
+			icq.setFbillid(icbold.getFbillid());
+			icq.setFcurno(0);
+			icq.setFday(nowyear+"");
+			icq.setFpreletter(icbold.getFpreletter());//前缀
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);//加1
+		}
+		Icbillno icb = icbillnoDao.findfcurno(icbillnoQuery);
+		if(icb.getFpreletter().equals("YX") || String.valueOf(icb.getFpreletter())=="YX"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			//icq.setFcurno(icb.getFcurno()+1);//加1
+			icq.setFcurno(icb.getFcurno()+1);//加1
+			icq.setFbillid(icb.getFbillid());//id
+			icq.setFpreletter(icb.getFpreletter());//前缀
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);//加1
+			icb.setNowfcurno(icb.getFcurno()+1);
+		}
+		//生成编号
+		String sssy = "";
+		Integer ay = icb.getFcurno()+1;//当前数
+		String sy = ay.toString();
+		String ssy = "";
+		if((icb.getFlength()-sy.length())>0){
+			for(int y = 0;y<(icb.getFlength()-sy.length());y++){
+				ssy+="0";//按位数补0
+			}
+			sssy=ssy + sy;
+		}else{
+			sssy= sy;
+		}
+		icb.setNowfbillno(sssy);
+	//======================================
+	return icb;
+	}
+	//查找单据信息
+	@Override        
+	public Icbillno findBillnoInfo(IcbillnoQuery icbillnoQuery)
+			throws ServiceException {
+		 
+		Icbillno icb = icbillnoDao.findfcurno(icbillnoQuery);
+		
+		if(icb.getFpreletter().equals("YX") || String.valueOf(icb.getFpreletter())=="YX"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			//icq.setFcurno(icb.getFcurno()+1);//加1
+			icq.setFcurno(icb.getFcurno()+1);//加1
+			icq.setFbillid(icb.getFbillid());//id
+			icq.setFpreletter(icb.getFpreletter());//前缀
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);//加1
+			icb.setNowfcurno(icb.getFcurno()+1);
+		}
+		//===================查询单据编号===================
+		 
+		 String sssy = "";
+			Integer ay = icb.getFcurno()+1;
+			String sy = ay.toString();
+			String ssy = "";
+			if((icb.getFlength()-sy.length())>0){
+				for(int y = 0;y<(icb.getFlength()-sy.length());y++){
+					ssy+="0";
+				}
+				sssy=icb.getFpreletter()+ssy + sy;
+			}else{
+				sssy= icb.getFpreletter() + sy;
+			}
+			icb.setNowfbillno(sssy);
+		//======================================
+		return icb;
+	}
+	@Override
+	public Icbillno findfcurno(IcbillnoQuery icbillnoQuery)
+			throws ServiceException {
+		 
+		Icbillno icb = icbillnoDao.findfcurno(icbillnoQuery);
+		if(icb.getFpreletter().equals("FQC") || String.valueOf(icb.getFpreletter())=="FQC"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			icq.setFcurno(icb.getFcurno()+1);
+			icq.setFbillid(icb.getFbillid());
+			icq.setFpreletter(icb.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		}
+		if(icb.getFpreletter().equals("POORD") || String.valueOf(icb.getFpreletter())=="POORD"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			icq.setFcurno(icb.getFcurno()+1);
+			icq.setFbillid(icb.getFbillid());
+			icq.setFpreletter(icb.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		}
+		if(icb.getFpreletter().equals("POREQ") || String.valueOf(icb.getFpreletter())=="POREQ"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			icq.setFcurno(icb.getFcurno()+1);
+			icq.setFbillid(icb.getFbillid());
+			icq.setFpreletter(icb.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		}
+		if(icb.getFpreletter().equals("SALE") || String.valueOf(icb.getFpreletter())=="SALE"){//每次查询完加1
+			Icbillno icq = new Icbillno();
+			icq.setFcurno(icb.getFcurno()+1);
+			icq.setFbillid(icb.getFbillid());
+			icq.setFpreletter(icb.getFpreletter());
+			icbillnoDao.update("Icbillno.update.new.fcurno.data", icq);
+		}
+		
+		return icb;
+	}
+	@Override
+	public void updatefcurno(Icbillno entity) throws ServiceException {
+		icbillnoDao.updatefcurno(entity);
+	}
+	@Override
+	public Icbillno getByFpreletter(IcbillnoQuery icbillnoQuery)
+			throws ServiceException {
+		Icbillno icbillno=new Icbillno();
+		 icbillno = icbillnoDao.getByProperty("fpreletter", icbillnoQuery.getFpreletter());
+		 
+		 Icbillno icbillnoUpdate=new Icbillno();
+		 icbillnoUpdate=icbillno;
+		 icbillnoUpdate.setFcurno(icbillnoUpdate.getFcurno()+1);
+		 icbillnoDao.update(icbillnoUpdate);
+		
+		return icbillno;
+	}
+	
+
+}

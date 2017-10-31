@@ -1,0 +1,128 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.PdExamineItem;
+import com.terrence.crm.dol.query.PdExamineItemQuery;
+import com.terrence.crm.dol.dao.IPdExamineItemDao;
+import com.terrence.crm.dol.service.IPdExamineItemService;
+
+@Service
+@Transactional
+public class PdExamineItemService extends BaseService implements IPdExamineItemService {
+	protected static Logger logger = LoggerFactory.getLogger(PdExamineItemService.class);
+	@Autowired
+	@Qualifier("pdExamineItemDao")
+	private IPdExamineItemDao pdExamineItemDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "PdExamineItem";
+	}
+	@Transactional(readOnly=true)
+	public PdExamineItem getById(java.lang.Long id) throws ServiceException
+	{
+		return pdExamineItemDao.getById(id);
+	}
+	
+	public void saveOrUpdate(PdExamineItem entity) throws ServiceException
+	{
+		pdExamineItemDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(PdExamineItem entity) throws ServiceException
+	{
+		Long adId = pdExamineItemDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(PdExamineItem entity) throws ServiceException
+	{
+		Integer returnValue =  pdExamineItemDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = pdExamineItemDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = pdExamineItemDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		PdExamineItemQuery query = new PdExamineItemQuery();
+		try {
+			return pdExamineItemDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItem> findPage(Page<PdExamineItem> page, PdExamineItemQuery query) throws ServiceException
+	{
+		return pdExamineItemDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<PdExamineItem> findPage(Page<PdExamineItem> page,String statement, PdExamineItemQuery query) throws ServiceException
+	{
+		return pdExamineItemDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItem> findList(PdExamineItemQuery query) throws ServiceException
+	{
+		return pdExamineItemDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItem> findList(PdExamineItemQuery query,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<PdExamineItem> findList(PdExamineItemQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return pdExamineItemDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<PdExamineItem> findAllList() throws ServiceException
+	{
+		return pdExamineItemDao.findAllList();
+	}
+	@Override
+	public List<PdExamineItem> findList(PdExamineItemQuery query,String statement) throws ServiceException {
+		return pdExamineItemDao.findList(statement, query);
+	}
+
+}

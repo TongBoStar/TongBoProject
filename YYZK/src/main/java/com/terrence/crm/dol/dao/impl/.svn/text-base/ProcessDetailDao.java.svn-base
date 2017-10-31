@@ -1,0 +1,25 @@
+package com.terrence.crm.dol.dao.impl;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.stereotype.Repository;
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.ProcessDetail;
+import com.terrence.crm.dol.dao.IProcessDetailDao;
+@Repository
+public class ProcessDetailDao extends BaseIbatisDao<ProcessDetail,java.lang.Long> implements IProcessDetailDao{
+	public String getIbatisSqlMapNamespace() {
+		return "ProcessDetail"; 
+	}
+	public void saveOrUpdate(ProcessDetail entity) {
+		if(entity.getId() == null) 
+		save(entity);
+		else 
+		update(entity);
+	}
+	public ProcessDetail getByProperty(String propertyName,Object propertyValue){
+		Map map=new HashMap();
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (ProcessDetail)this.getSqlMapClientTemplate().queryForObject("ProcessDetail.getByProperty", map);
+	}
+}

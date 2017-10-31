@@ -1,0 +1,158 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.HisCheck;
+import com.terrence.crm.dol.bean.HisJobCheck;
+import com.terrence.crm.dol.bean.HisPrepareEmp;
+import com.terrence.crm.dol.bean.HisReport;
+import com.terrence.crm.dol.dao.ICheckDao;
+import com.terrence.crm.dol.dao.IHisCheckDao;
+import com.terrence.crm.dol.dao.IHisJobCheckDao;
+import com.terrence.crm.dol.dao.IHisPrepareEmpDao;
+import com.terrence.crm.dol.dao.IHisReportDao;
+import com.terrence.crm.dol.dao.IJobCheckDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.query.HisReportQuery;
+import com.terrence.crm.dol.service.IHisReportService;
+
+@Service
+@Transactional
+public class HisReportService extends BaseService implements IHisReportService {
+	protected static Logger logger = LoggerFactory.getLogger(HisReportService.class);
+	@Autowired
+	@Qualifier("hisReportDao")
+	private IHisReportDao hisReportDao;
+	@Autowired
+	@Qualifier("hisCheckDao")
+	private IHisCheckDao hisCheckDao;
+	@Autowired
+	@Qualifier("hisJobCheckDao")
+	private IHisJobCheckDao hisJobCheckDao;
+	@Autowired
+	@Qualifier("hisPrepareEmpDao")
+	private IHisPrepareEmpDao hisPrepareEmpDao;
+	@Autowired
+	@Qualifier("jobCheckDao")
+	private IJobCheckDao jobCheckDao;
+	@Autowired
+	@Qualifier("checkDao")
+	private ICheckDao checkDao;
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	public String getIbatisSqlMapNamespace() {
+		return "HisReport";
+	}
+	@Transactional(readOnly=true)
+	public HisReport getById(java.lang.Long id) throws ServiceException
+	{
+		return hisReportDao.getById(id);
+	}
+	
+	public void saveOrUpdate(HisReport entity) throws ServiceException
+	{
+		hisReportDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(HisReport entity) throws ServiceException
+	{
+		Long adId = hisReportDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(HisReport entity) throws ServiceException
+	{
+		Integer returnValue =  hisReportDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = hisReportDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = hisReportDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		HisReportQuery query = new HisReportQuery();
+		try {
+			return hisReportDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<HisReport> findPage(Page<HisReport> page, HisReportQuery query) throws ServiceException
+	{
+		return hisReportDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<HisReport> findPage(Page<HisReport> page,String statement, HisReportQuery query) throws ServiceException
+	{
+		return hisReportDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisReport> findList(HisReportQuery query) throws ServiceException
+	{
+		return hisReportDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<HisReport> findList(HisReportQuery query,Integer pageSize) throws ServiceException
+	{
+		return hisReportDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<HisReport> findList(HisReportQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return hisReportDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<HisReport> findAllList() throws ServiceException
+	{
+		return hisReportDao.findAllList();
+	}
+	@Override
+	public void saveReport() throws ServiceException {
+		
+		hisReportDao.save(new HisReport(), "HisReport.insert.Report");
+		hisCheckDao.save(new HisCheck(), "Hischeck.Insert.ForCheck");
+		checkDao.deleteByMultipleId("Check.delete.LastMonth", "");
+		hisJobCheckDao.save(new HisJobCheck(),"HisJobCheck.insert.ForJobCheck");
+		jobCheckDao.deleteByMultipleId("JobCheck.delete.LastMonth", "");
+		hisPrepareEmpDao.save(new HisPrepareEmp(), "HisPrepareemp.insert.forPrepareemp");
+		prepareEmpDao.deleteByMultipleId("PrepareEmp.delete.LastMonth", "");
+	}
+
+}

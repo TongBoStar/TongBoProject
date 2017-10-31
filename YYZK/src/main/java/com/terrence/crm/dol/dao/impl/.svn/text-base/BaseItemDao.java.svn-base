@@ -1,0 +1,324 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.ItemDetailK3;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+
+
+
+@Repository
+public class BaseItemDao extends BaseIbatisDao<BaseItem,java.lang.Long> implements IBaseItemDao{
+
+	
+	public void saveOrUpdate(BaseItem entity) {
+		/*if(entity.getBaseitemid() == null) 
+			save(entity);
+		else 
+			update(entity);*/
+		if(1==entity.getOptType()) 
+			saveinfo(entity);
+		else if(2==entity.getOptType()){
+			updateinfo(entity);
+		}
+	}
+	@Override
+	public void saveinfo(BaseItem entity) throws DataAccessException{
+		this.getSqlMapClientTemplate().insert("BaseItem.insert.detail",entity);
+		
+	}
+	@Override
+	public Integer updateinfo(BaseItem entity) throws DataAccessException{
+		return  this.getSqlMapClientTemplate().update("BaseItem.update",entity);
+		
+	}
+	/*@Override
+	public void syncBeaseItem() {
+		this.getSqlMapClientTemplate().queryForObject("BaseItemSyncData");
+	}*/
+	@Override
+	public void saveItemFromERPDateToWeb() {
+		this.getSqlMapClientTemplate().insert("BaseItem.insert.getERPDateToWeb");
+	}
+	@Override
+	public Long findSyncBeaseItemNum() {
+		return (Long) this.getSqlMapClientTemplate().queryForObject("BaseItem.findSyncBeaseItemNum" );
+	}
+	/*@Override
+	public void saveItemFromk3SyncDetail(BaseItem entity) {
+		this.getSqlMapClientTemplate().insert("ItemBasic.insertfromk3syncdetail", entity);
+	}*/
+	@Override
+	public List<ItemDetailK3> findAllK3ItemDetail() {
+		return ( List<ItemDetailK3>)this.getSqlMapClientTemplate().queryForList("BaseItem.syncK3ItemDetail");
+	}
+	public String getIbatisSqlMapNamespace() {
+		
+		return "BaseItem";
+	}
+	public BaseItem getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", propertyValue.toString());
+		return (BaseItem)this.getSqlMapClientTemplate().queryForObject("BaseItem.getByProperty", map);		
+	}
+    
+	
+	
+	@Override
+	public void saveBaseItem() throws DataAccessException{
+		this.getSqlMapClientTemplate().insert("BaseItem.sync.item");
+		
+	}
+	
+	
+	
+	@Override
+	public List<BaseItem> findAllitemProcess() {
+		return ( List<BaseItem>)this.getSqlMapClientTemplate().queryForList("BaseItem.Process.findAllItemProcess");
+	}
+
+	@Override
+	public void updateItemName() {
+			this.getSqlMapClientTemplate().update("BaseItem.updateBaseItemName");
+		
+	}
+
+	
+	@Override
+	public Integer updateByIdWithK3(BaseItem entity) throws DataAccessException{
+		
+		return this.getSqlMapClientTemplate().update("BaseItem.updateMultiple", entity);
+	}
+	/**
+	 * 通过旧编码更新新编码
+	 */
+	@Override
+	public Integer updateByItemcode(BaseItem entity) {
+		
+		return this.getSqlMapClientTemplate().update("BaseItem.updateByItemcode", entity);
+	}
+	
+	/**
+	 * K3通过旧编码更新新编码
+	 */
+	/*@Override
+	public Integer updateByItemcodeK3(BaseItem entity) {
+		
+		return this.getSqlMapClientTemplate().update("BaseItem.updateByItemcode", entity);
+	}*/
+	
+	/**
+	 * 通过旧编码更新新编码
+	 */
+	@Override
+	public Integer updateItemWithChildCode(BaseItem entity) {
+		
+		return this.getSqlMapClientTemplate().update("BaseItem.itemchildcode", entity);
+	}
+	
+	@Override
+	public Integer updateById(BaseItem entity) {
+		
+		return this.getSqlMapClientTemplate().update("BaseItem.update.updateById", entity);
+	}
+
+	@Override
+	public BaseItem getByIdBaseItem(Long baseItemId) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.baseitem",baseItemId);
+	}
+
+	@Override
+	public void saveANDupdate(BaseItem entity) {
+		if(entity.getBaseitemid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+
+	@Override
+	public void updateBaseItemById(BaseItem entity) {
+		this.getSqlMapClientTemplate().update("BaseItem.update.updateBaseItemById", entity);
+		
+	}
+
+	@Override
+	public BaseItem findBaseItemList(Long baseItemId) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.baseitem.List",baseItemId);
+	}
+
+	@Override
+	public void updateBaseItemBangById(BaseItem entity) {
+		this.getSqlMapClientTemplate().update("BaseItem.update.BaseItemBangById", entity);
+		
+	}
+	
+	@Override
+	public void saveItemFromk3SyncDetail(BaseItem entity) {
+		this.getSqlMapClientTemplate().insert("ItemBasic.insertfromk3syncdetail", entity);
+	}
+	@Override
+	public void saveSolution(BaseItem entity) {
+		this.getSqlMapClientTemplate().update("BaseItem.save.Solution", entity);
+	}
+
+	@Override
+	public BaseItem getSolutionById(Long baseItemId) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.getSolutionById", baseItemId);
+	}
+	@Override
+	public BaseItem getByEntityVer(String statement, BaseItemQuery baseItemQuery) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.getByEntityVer", baseItemQuery);
+	}
+	
+
+	@Override
+	public List<BaseItem> finditemforPorequest(BaseItemQuery baseItemQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findItem.porequest", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> finditemforTakeStock(BaseItemQuery baseItemQuery) {
+		//return this.getSqlMapClientTemplate().queryForList("BaseItem.findItem.takestock", baseItemQuery);
+		//return this.getSqlMapClientTemplate().queryForList("BaseItem.findList.listTakeStockItems", baseItemQuery);
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findList.listTakeStockBatchItems", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findListv(BaseItemQuery baseItemQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findListv", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findItemList(BaseItemQuery baseItemQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findItemList", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findListByIds(BaseItem  baseItem ) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.getByIds", baseItem );
+	}
+	@Override
+	public BaseItem getBaseByColumn(String columnName, Object columnValue) {
+		Map map=new HashMap();		
+		map.put("columnName", columnName);
+		map.put("columnValue", columnValue);
+		return (BaseItem)this.getSqlMapClientTemplate().queryForObject("BaseItem.getBaseByColumn", map);
+	}
+
+	@Override
+	public void updateFtax(BaseItem baseItem) {//更新订单价格和税率
+		this.getSqlMapClientTemplate().update("BaseItem.update.Ftax.in.poorderentry",baseItem);
+	}
+
+	@Override
+	public BaseItem findbitem(BaseItem baseitem) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.bitem", baseitem);
+	}
+
+	@Override
+	public BaseItem finditemBase(BaseItem baseItem) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.itemBase.find", baseItem);
+	}
+	
+	/*@Override
+	public Long findSyncBeaseItemNum() {
+		return (Long) this.getSqlMapClientTemplate().queryForObject("BaseItem.findSyncBeaseItemNum" );
+	}*/
+	
+	@Override
+	public Long findItemIsinventory(BaseItemQuery baseItemQuery) {
+		return (Long) this.getSqlMapClientTemplate().queryForObject("BaseItem.iteminventorynum",baseItemQuery );
+	}
+	@Override
+	public Long findk3ItemIsinventory(BaseItemQuery baseItemQuery) {
+		return (Long) this.getSqlMapClientTemplate().queryForObject("BaseItem.k3iteminventorynum",baseItemQuery );
+	}
+	
+	@Override
+	public void syncBeaseItem() {
+		this.getSqlMapClientTemplate().queryForObject("BaseItemSyncData");
+	}
+	
+	@Override
+	public void syncBeaseItem2() {
+		this.getSqlMapClientTemplate().queryForObject("BaseItemSyncData2");
+	}
+
+	@Override
+	public Long getFinspctionlevelCount(String string, BaseItem entity) {
+		return (Long) this.getSqlMapClientTemplate().queryForObject(string, entity);
+	}
+
+	@Override
+	public BaseItem findbaseguide(BaseItemQuery baseItemQuery) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.data.for.guideid.all", baseItemQuery);
+	}
+
+	@Override
+	public BaseItem findInKey(BaseItemQuery baseItemQuery) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.findInKey.data", baseItemQuery);
+	}
+
+	@Override
+	public BaseItem getByIdEntity(BaseItem bitem) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.getentity.for.baseid", bitem);
+	}
+
+	@Override
+	public BaseItem findbs(BaseItem itembs) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.find.itembase.data.base", itembs);
+	}
+
+	@Override
+	public BaseItem findbaseEntity(BaseItem bm) {
+		return (BaseItem) this.getSqlMapClientTemplate().queryForObject("BaseItem.select.data.factoryReport", bm);
+	}
+	@Override
+	public List<BaseItem> findEntityBase(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.select.entityList.date", bQuery);
+	}
+	@Override
+	public List<BaseItem> findByItemcode(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findByItemcode", bQuery);
+	}
+	@Override
+	public List<BaseItem> getPlanParam(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.getPlanParam.Assembly", bQuery);
+	}
+	@Override
+	public List<BaseItem> getBaseItemCallslip(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.getBaseItem.Callslip", bQuery);
+	}
+	@Override
+	public List<BaseItem> findBaseItemPorequest(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.getBaseItem.Porequest", bQuery);
+	}
+	@Override
+	public List<BaseItem> findBaseItemPoorder(BaseItemQuery bQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.findItem.Poorder", bQuery);
+	}
+	@Override
+	public List<BaseItem> listItemInfo(BaseItemQuery baseItemQuery) {
+		return (List<BaseItem>)this.getSqlMapClientTemplate().queryForList("BaseItem.findListInfo", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findBaseItemSeoutstock(BaseItemQuery baseItemQuery) {
+		return this.getSqlMapClientTemplate().queryForList("BaseItem.getBaseItem.Seoutstock", baseItemQuery);
+	}
+	@Override
+	public BaseItem findBaseItemStoreRoom(BaseItemQuery baseItemQuery) {
+		return (BaseItem)this.getSqlMapClientTemplate().queryForObject("BaseItem.findItem.StoreRoom", baseItemQuery);
+	}
+	@Override
+	public List<BaseItem> findDifferentItems() {
+		return (List<BaseItem>)this.getSqlMapClientTemplate().queryForList("BaseItem.getdifferentItems");
+	}
+}

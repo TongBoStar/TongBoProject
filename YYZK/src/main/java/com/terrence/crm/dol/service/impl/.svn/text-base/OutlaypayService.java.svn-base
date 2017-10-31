@@ -1,0 +1,141 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.Outlaypay;
+import com.terrence.crm.dol.query.OutlaypayQuery;
+import com.terrence.crm.dol.dao.IOutlaypayDao;
+import com.terrence.crm.dol.service.IOutlaypayService;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+
+@Service
+@Transactional
+public class OutlaypayService extends BaseService implements IOutlaypayService {
+	protected static Logger logger = LoggerFactory.getLogger(OutlaypayService.class);
+	@Autowired
+	@Qualifier("outlaypayDao")
+	private IOutlaypayDao outlaypayDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "Outlaypay";
+	}
+	@Transactional(readOnly=true)
+	public Outlaypay getById(java.lang.Long id) throws ServiceException
+	{
+		return outlaypayDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Outlaypay entity) throws ServiceException
+	{
+		outlaypayDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(Outlaypay entity) throws ServiceException
+	{
+		Long adId = outlaypayDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(Outlaypay entity) throws ServiceException
+	{
+		Integer returnValue =  outlaypayDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = outlaypayDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = outlaypayDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		OutlaypayQuery query = new OutlaypayQuery();
+		try {
+			return outlaypayDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Outlaypay> findPage(Page<Outlaypay> page, OutlaypayQuery query) throws ServiceException
+	{
+		return outlaypayDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<Outlaypay> findPage(Page<Outlaypay> page,String statement, OutlaypayQuery query) throws ServiceException
+	{
+		return outlaypayDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Outlaypay> findList(OutlaypayQuery query) throws ServiceException
+	{
+		return outlaypayDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Outlaypay> findList(OutlaypayQuery query,Integer pageSize) throws ServiceException
+	{
+		return outlaypayDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<Outlaypay> findList(OutlaypayQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return outlaypayDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<Outlaypay> findAllList() throws ServiceException
+	{
+		return outlaypayDao.findAllList();
+	}
+	@Override
+	public void saveNewData(Outlaypay entity) throws ServiceException {
+		
+		//SpringSecurityUtils.getCurrentUserId()
+		//DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss")
+		entity.setPaydate(DateUtils.GetDate2(DateUtils.GetDateTime(), "yyyy-MM-dd HH:mm:ss"));//支付日期
+		//entity.setLister(SpringSecurityUtils.getCurrentUserId());//制表人
+		entity.setFyear(DateUtils.GetDateTime().toString().substring(0,4));//年
+		outlaypayDao.save(entity);
+	}
+	@Override
+	public List<Outlaypay> findOutlaypayData(OutlaypayQuery outlaypayQuery)
+			throws ServiceException {
+		return outlaypayDao.findOutlaypayData(outlaypayQuery);
+	}
+
+}

@@ -1,0 +1,124 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.CodeSeq;
+import com.terrence.crm.dol.query.CodeSeqQuery;
+import com.terrence.crm.dol.dao.ICodeSeqDao;
+import com.terrence.crm.dol.service.ICodeSeqService;
+
+@Service
+@Transactional
+public class CodeSeqService extends BaseService implements ICodeSeqService {
+	protected static Logger logger = LoggerFactory.getLogger(CodeSeqService.class);
+	@Autowired
+	@Qualifier("codeSeqDao")
+	private ICodeSeqDao codeSeqDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "CodeSeq";
+	}
+	@Transactional(readOnly=true)
+	public CodeSeq getById(java.lang.Long id) throws ServiceException
+	{
+		return codeSeqDao.getById(id);
+	}
+	
+	public void saveOrUpdate(CodeSeq entity) throws ServiceException
+	{
+		codeSeqDao.saveOrUpdate(entity);
+	}
+	
+	public java.lang.Long save(CodeSeq entity) throws ServiceException
+	{
+		Long adId = codeSeqDao.save(entity);
+		
+		return adId;
+	}
+	
+	public Integer update(CodeSeq entity) throws ServiceException
+	{
+		Integer returnValue =  codeSeqDao.update(entity);
+		
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = codeSeqDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = codeSeqDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		CodeSeqQuery query = new CodeSeqQuery();
+		try {
+			return codeSeqDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<CodeSeq> findPage(Page<CodeSeq> page, CodeSeqQuery query) throws ServiceException
+	{
+		return codeSeqDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public Page<CodeSeq> findPage(Page<CodeSeq> page,String statement, CodeSeqQuery query) throws ServiceException
+	{
+		return codeSeqDao.findPage(page,statement, query);
+	}
+	@Transactional(readOnly=true)
+	public List<CodeSeq> findList(CodeSeqQuery query) throws ServiceException
+	{
+		return codeSeqDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<CodeSeq> findList(CodeSeqQuery query,Integer pageSize) throws ServiceException
+	{
+		return codeSeqDao.findList(query,pageSize);
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CodeSeq> findList(CodeSeqQuery query,String statement,Integer pageSize) throws ServiceException
+	{
+		return codeSeqDao.findList(query,statement,pageSize);
+	}
+	@Transactional(readOnly=true)
+	public List<CodeSeq> findAllList() throws ServiceException
+	{
+		return codeSeqDao.findAllList();
+	}
+
+}

@@ -1,0 +1,55 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.WebAccount;
+import com.terrence.crm.dol.dao.IWebAccountDao;
+import com.terrence.crm.dol.query.WebAccountQuery;
+import com.terrence.crm.dol.service.IWebAccountService;
+
+@Service
+@Transactional
+public class WebAccountService extends BaseService implements IWebAccountService {
+	protected static Logger logger = LoggerFactory.getLogger(WebAccountService.class);
+	@Autowired
+	@Qualifier("webAccountDao")
+	private IWebAccountDao webAccountDao;
+	
+	public String getIbatisSqlMapNamespace() {
+		return "WebAccount";
+	}
+	
+	@Transactional(readOnly=true)
+	public List<WebAccount> findAllList() throws ServiceException
+	{
+		return webAccountDao.findAllList();
+	}
+	@Transactional(readOnly=true)
+	public List<WebAccount> findAllListWithSortColumns(WebAccountQuery WebAccountQuery) throws ServiceException
+	{
+		return webAccountDao.findAllListWithSortColumns(WebAccountQuery);
+	}
+	/**
+	 * 
+	 */
+	@Transactional(readOnly=true)
+	public List<WebAccount> findAllAccountList(WebAccountQuery WebAccountQuery) throws ServiceException
+	{
+		return webAccountDao.findAllAccountList(WebAccountQuery);
+	}
+
+	@Override
+	public void deleteAndSaveAll() throws Exception{
+		webAccountDao.deleteAll("WebAccount.deleteAll");
+		webAccountDao.saveAll("WebAccount.insertAll");
+	}
+}

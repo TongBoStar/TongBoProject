@@ -1,0 +1,2061 @@
+package com.terrence.crm.dol.service.impl;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.terrence.crm.dol.base.BaseQuery;
+import com.terrence.crm.dol.base.BaseService;
+import com.terrence.crm.dol.base.core.Page;
+import com.terrence.crm.dol.base.exception.ServiceException;
+import com.terrence.crm.dol.bean.BaseItem;
+import com.terrence.crm.dol.bean.DeviceTask;
+import com.terrence.crm.dol.bean.DeviceWork;
+import com.terrence.crm.dol.bean.DispatchWork;
+import com.terrence.crm.dol.bean.EmployeeTask;
+import com.terrence.crm.dol.bean.Icbillno;
+import com.terrence.crm.dol.bean.Icmo;
+import com.terrence.crm.dol.bean.IcmoWorkplan;
+import com.terrence.crm.dol.bean.Inventory;
+import com.terrence.crm.dol.bean.InventoryBatch;
+import com.terrence.crm.dol.bean.ItemProcedure;
+import com.terrence.crm.dol.bean.ItemProcess;
+import com.terrence.crm.dol.bean.ItemVer;
+import com.terrence.crm.dol.bean.MachineMatch;
+import com.terrence.crm.dol.bean.MachineMatchEntity;
+import com.terrence.crm.dol.bean.OrderBom;
+import com.terrence.crm.dol.bean.PrepareEmp;
+import com.terrence.crm.dol.bean.Procedure;
+import com.terrence.crm.dol.bean.ProcessTaskBj;
+import com.terrence.crm.dol.bean.ProdPlanDetail;
+import com.terrence.crm.dol.bean.Putstorageentity;
+import com.terrence.crm.dol.bean.WorkPlan;
+import com.terrence.crm.dol.bean.WorkSeq;
+import com.terrence.crm.dol.contasnt.ItemProcessStatus;
+import com.terrence.crm.dol.contasnt.TeamTaskStatus;
+import com.terrence.crm.dol.contasnt.TerrcnceConstants;
+import com.terrence.crm.dol.dao.IBaseItemDao;
+import com.terrence.crm.dol.dao.IDepartmentDao;
+import com.terrence.crm.dol.dao.IDeviceTaskDao;
+import com.terrence.crm.dol.dao.IDeviceWorkDao;
+import com.terrence.crm.dol.dao.IDispatchWorkDao;
+import com.terrence.crm.dol.dao.IEmployeeTaskDao;
+import com.terrence.crm.dol.dao.IIcbillnoDao;
+import com.terrence.crm.dol.dao.IIcmoDao;
+import com.terrence.crm.dol.dao.IIcmoWorkplanDao;
+import com.terrence.crm.dol.dao.IInventoryBatchDao;
+import com.terrence.crm.dol.dao.IInventoryDao;
+import com.terrence.crm.dol.dao.IItemProcedureDao;
+import com.terrence.crm.dol.dao.IItemProcessDao;
+import com.terrence.crm.dol.dao.IItemVerDao;
+import com.terrence.crm.dol.dao.IMachineMatchDao;
+import com.terrence.crm.dol.dao.IMachineMatchEntityDao;
+import com.terrence.crm.dol.dao.IOrderBomDao;
+import com.terrence.crm.dol.dao.IPrepareEmpDao;
+import com.terrence.crm.dol.dao.IProcedureDao;
+import com.terrence.crm.dol.dao.IProcessTaskBjDao;
+import com.terrence.crm.dol.dao.IProdPlanDetailDao;
+import com.terrence.crm.dol.dao.IPutstorageentityDao;
+import com.terrence.crm.dol.dao.ITeamDao;
+import com.terrence.crm.dol.dao.ITeamsDao;
+import com.terrence.crm.dol.dao.IWorkPlanDao;
+import com.terrence.crm.dol.dao.IWorkSeqDao;
+import com.terrence.crm.dol.dao.impl.DeviceTaskDao;
+import com.terrence.crm.dol.query.BaseItemQuery;
+import com.terrence.crm.dol.query.DeviceTaskQuery;
+import com.terrence.crm.dol.query.DeviceWorkQuery;
+import com.terrence.crm.dol.query.EmployeeTaskQuery;
+import com.terrence.crm.dol.query.IcmoQuery;
+import com.terrence.crm.dol.query.ItemProcedureQuery;
+import com.terrence.crm.dol.query.ItemProcessQuery;
+import com.terrence.crm.dol.query.ItemVerQuery;
+import com.terrence.crm.dol.query.MachineMatchEntityQuery;
+import com.terrence.crm.dol.query.OrderBomQuery;
+import com.terrence.crm.dol.query.ProdPlanDetailQuery;
+import com.terrence.crm.dol.query.WorkPlanQuery;
+import com.terrence.crm.dol.query.WorkSeqQuery;
+import com.terrence.crm.dol.service.IIcmoService;
+import com.terrence.crm.dol.utils.DateConvertUtils;
+import com.terrence.crm.dol.utils.DateUtils;
+import com.terrence.crm.dol.utils.SpringSecurityUtils;
+import com.terrence.k3.dol.service.impl.K3ServiceProxy;
+import com.terrence.k3.dol.util.TREReturn;
+
+@Service
+@Transactional
+public class IcmoService extends BaseService implements IIcmoService {
+	protected static Logger logger = LoggerFactory.getLogger(IcmoService.class);
+	@Autowired
+	@Qualifier("icmoDao")
+	private IIcmoDao icmoDao;
+	@Autowired
+	@Qualifier("dispatchWorkDao")
+	private IDispatchWorkDao dispatchWorkDao;
+	@Autowired
+	@Qualifier("itemProcessDao")
+	private IItemProcessDao itemProcessDao;
+	@Autowired
+	@Qualifier("employeeTaskDao")
+	private IEmployeeTaskDao employeeTaskDao;
+	@Autowired
+	@Qualifier("baseItemDao")
+	private IBaseItemDao baseItemDao;
+	@Autowired
+	@Qualifier("itemProcedureDao")
+	private IItemProcedureDao itemProcedureDao;
+	@Autowired
+	@Qualifier("workSeqDao")
+	private IWorkSeqDao workSeqDao;
+	@Autowired
+	@Qualifier("procedureDao")
+	private IProcedureDao procedureDao;
+	@Autowired
+	@Qualifier("teamsDao")
+	private ITeamsDao teamsDao;
+	@Autowired
+	@Qualifier("departmentDao")
+	private IDepartmentDao departmentDao;
+	@Autowired
+	@Qualifier("workPlanDao")
+	private IWorkPlanDao workPlanDao;
+	@Autowired
+	@Qualifier("icmoWorkplanDao")
+	private IIcmoWorkplanDao icmoWorkplanDao;
+	@Autowired
+	@Qualifier("prodPlanDetailDao")
+	private IProdPlanDetailDao prodPlanDetailDao;
+	
+	@Autowired
+	@Qualifier("orderBomDao")
+	private IOrderBomDao orderBomDao;
+	@Autowired
+	@Qualifier("inventoryDao")
+	private IInventoryDao inventoryDao;
+	@Autowired
+	@Qualifier("processTaskBjDao")
+	private IProcessTaskBjDao processTaskBjDao;
+	
+	@Autowired
+	@Qualifier("prepareEmpDao")
+	private IPrepareEmpDao prepareEmpDao;
+	
+	@Autowired
+	@Qualifier("deviceWorkDao")
+	private IDeviceWorkDao deviceWorkDao;
+	@Autowired
+	@Qualifier("machineMatchDao")
+	private IMachineMatchDao machineMatchDao;
+	@Autowired
+	@Qualifier("machineMatchEntityDao")
+	private IMachineMatchEntityDao machineMatchEntityDao;
+	@Autowired
+	@Qualifier("inventoryBatchDao")
+	private IInventoryBatchDao inventoryBatchDao;
+	@Autowired
+	@Qualifier("itemVerDao")
+	private IItemVerDao itemVerDao;
+	@Autowired
+	@Qualifier("icbillnoDao")
+	private IIcbillnoDao icbillnoDao;
+	@Autowired
+	@Qualifier("deviceTaskDao")
+	private IDeviceTaskDao deviceTaskDao;
+	@Autowired
+	@Qualifier("putstorageentityDao")
+	private IPutstorageentityDao putstorageentityDao;
+	
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "Icmo";
+	}
+	@Transactional(readOnly=true)
+	public Icmo getById(java.lang.Long id) throws ServiceException
+	{
+		return icmoDao.getById(id);
+	}
+	
+	public void saveOrUpdate(Icmo entity) throws ServiceException
+	{
+		SimpleDateFormat sdft=new SimpleDateFormat("HH:mm:ss");
+		SimpleDateFormat sdfd=new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat sdfdt=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		
+		try {
+			entity.setPlanfinishdate(sdfdt.parse(sdfd.format(entity.getPlanfinishdate())+" "+sdft.format(new Date())));
+			icmoDao.saveOrUpdate(entity);
+			if(entity.getIcmoid()!=null)
+			{
+				DispatchWork dwork=new DispatchWork();
+				dwork.setWorkid(entity.getIcmoid());
+				dwork.setProcessnum(entity.getFqty());
+				dispatchWorkDao.updateDispatchWork(dwork);
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public java.lang.Long save(Icmo entity) throws ServiceException
+	{
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		//entity.setFormatno(baseitem.getFormatno());
+		entity.setFitemid(Long.valueOf(baseitem.getFitemid()));//=======================
+		Date data=new Date();
+		entity.setStatus(0);
+		entity.setDispathstatu(0);
+		entity.setTasktype(1);
+		entity.setPerformstatus(1);
+//		entity.setPerformdate(data);
+		entity.setCreatedate(data);
+		entity.setPreparestatus(0);
+		
+		Long adId = icmoDao.save(entity);
+		//物料工艺若未制作,或者待审核,则添加任务到processtask
+		
+		if(null==baseitem.getWfstatus()||
+			baseitem.getWfstatus().intValue()==ItemProcessStatus.WAITCHECK.getIndex()||
+			baseitem.getWfstatus().intValue()==ItemProcessStatus.NOTMAKE.getIndex()	){
+			ProcessTaskBj processTaskBj =null;
+			//processTaskBj = processTaskBjDao.getByProperty("itemcode",baseitem.getItemcode());
+
+			
+			processTaskBj =new ProcessTaskBj();
+			processTaskBj.setItemcode(baseitem.getItemcode());
+			processTaskBj.setAmount(0D);
+			processTaskBj.setCreatedate(DateUtils.GetDateTime());//string
+
+			processTaskBj.setPlanenddate(entity.getPlanfinishdate());//Date
+			processTaskBj.setExplain(" ");
+			processTaskBj.setWaitnote("车间任务单");
+			processTaskBj.setOri(ProcessTaskBj.FROM_MACH);
+			processTaskBj.setIcmoid(adId);
+			/*if(processTaskBj==null)
+			{
+				processTaskBj =new ProcessTaskBj();
+				processTaskBj.setItemcode(baseitem.getItemcode());
+				processTaskBj.setAmount(0D);
+				processTaskBj.setCreatedate(sdf.format(cdate));//string
+
+				processTaskBj.setPlanenddate(entity.getPlanfinishdate());//Date
+				processTaskBj.setExplain(" ");
+				processTaskBj.setOri(1);
+				processTaskBj.setIcmoid(adId);
+			}
+			else
+			{
+				processTaskBj.setCreatedate(sdf.format(cdate));
+				processTaskBj.setPlanenddate(entity.getPlanfinishdate());
+				processTaskBj.setExplain(" ");
+				processTaskBj.setOri(1);
+				processTaskBj.setIcmoid(adId);
+			}*/
+			
+			
+			processTaskBjDao.saveOrUpdate(processTaskBj);
+		}
+		
+		/*
+		 * itemcode ,
+        	amount ,
+        	planenddate ,
+        	createdate ,
+        	explain 
+		 */
+		
+		
+		
+		//添加任务单时添加默认工序
+		
+		//saveWorkSeqDispatch(adId,entity);
+		/**去除自动添加班组任务**/
+		/*ItemProcessQuery ipquery=new ItemProcessQuery();
+		ipquery.setItemcode(entity.getItemcode());
+		ipquery.setSortColumns(" itemprocessid asc ");
+		List<ItemProcess> list=itemProcessDao.findList(ipquery);
+		Long preorder=0l;
+		DispatchWork dwork=null;
+		for(ItemProcess itemprocess:list)
+		{
+			dwork=new DispatchWork();
+			dwork.setWorkid(adId);//
+			dwork.setItemcode(entity.getItemcode());//
+			dwork.setItemname(entity.getItemname());//
+			dwork.setItemprocessid(itemprocess.getItemprocessid());//
+			dwork.setStatus(0);//
+			dwork.setProcessname(itemprocess.getProcessname());//??--原工序名称,新
+			dwork.setProcessnum(entity.getFqty());//??原加工数量--
+			dwork.setTeamid(itemprocess.getTeamid());//
+			dwork.setTeamname(itemprocess.getTeamname());//
+			dwork.setReadymoney(itemprocess.getReservefund());//原itemprocess准备金--
+			dwork.setReadytime(itemprocess.getPreparemins());//
+			dwork.setProcesstime(itemprocess.getProcessmins());//原itemprocess加工时长-
+			dwork.setPiecesalary(itemprocess.getWage());//原itemprocess计件工资-
+			dwork.setTools(itemprocess.getToolsname());//
+			dwork.setBlades(itemprocess.getBladename());//
+			dwork.setContent(itemprocess.getKeypoint());//现在无备注--
+			dwork.setAcceptednum(0);
+			dwork.setProgramname(itemprocess.getProgramname());//程序名称?--空
+			dwork.setOrderid(itemprocess.getOrderid());//??排序编号?--空
+			dwork.setProcessid(itemprocess.getProcessid());//原工序id--
+			dwork.setWsstatus(0);//
+			dwork.setPreorder(preorder);//??取什么?//班组任务实际id上序
+			dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			dispatchWorkDao.save(dwork);
+			preorder=dwork.getId();
+		}*/
+		return adId;
+	}
+	
+
+	public Integer update(Icmo entity) throws ServiceException
+	{
+		Integer returnValue =  icmoDao.update(entity);
+		
+		EmployeeTaskQuery employeeTaskQuery=new EmployeeTaskQuery();
+		employeeTaskQuery.setWorkid(entity.getIcmoid());
+		List<EmployeeTask> eplist =new ArrayList<EmployeeTask>();
+		eplist= employeeTaskDao.findList(employeeTaskQuery);
+		for(EmployeeTask ept:eplist){
+			ept.setStatus(2);
+			employeeTaskDao.update(ept);
+		}
+//		employeeTask.setWorkid(entity.getIcmoid());
+//		employeeTaskDao.updateByworkid(employeeTask);//个人全部完成
+	
+		return returnValue;
+	}
+	
+	public Integer deleteById(java.lang.Long id) throws ServiceException
+	{
+		Integer returnValue = icmoDao.deleteById(id);		
+		return returnValue;
+	}
+	
+	public Integer deleteByMultipleId(List<java.lang.Long> idList) throws ServiceException
+	{
+		String delIds = StringUtils.join(idList, ",");
+		Integer returnValue = icmoDao.deleteByMultipleId(delIds);
+		
+		return returnValue;
+	}
+	
+	public boolean isUnique(String uniquePropertyNames, Object newValue, Object oldValue) throws ServiceException
+	{
+		IcmoQuery query = new IcmoQuery();
+		try {
+			return icmoDao.isUnique(query, uniquePropertyNames, newValue, oldValue);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServiceException(e.getMessage());
+		}
+	}
+	@Transactional(readOnly=true)
+	public Page<Icmo> findPage(Page<Icmo> page, IcmoQuery query) throws ServiceException
+	{
+		return icmoDao.findPage(page, query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icmo> findList(IcmoQuery query) throws ServiceException
+	{
+		return icmoDao.findList(query);
+	}
+	@Transactional(readOnly=true)
+	public List<Icmo> findAllList() throws ServiceException
+	{
+		return icmoDao.findAllList();
+	}
+	@Override
+	public Icmo getByProperty(String propertyName, Object propertyValue)
+			throws ServiceException {
+		
+		return icmoDao.getByProperty(propertyName, propertyValue);
+	}
+	@Override
+	public List<Icmo> findList(String statement, IcmoQuery query)
+			throws ServiceException {
+		
+		return icmoDao.findList(statement, query);
+	}
+	
+	@Override
+	public int findCounts() throws ServiceException {
+		int counts=icmoDao.getAllCounts();
+		
+		//-----返回最后一条icmoid
+		return counts;
+	}
+	/*@Override
+	public List<Icmo> findNotExistsWork() throws ServiceException {
+		
+		List<Icmo>list= icmoDao.findNotExistsWork();*//***查找班组任务表中，不存在的K3任务**//*
+		ItemProcessQuery ipQuery=new ItemProcessQuery();
+		List<ItemProcess> listitemprocess=new ArrayList<ItemProcess>();
+		for(Icmo icmo:list)
+		{
+			ipQuery.setItemcode(icmo.getItemcode());
+			ipQuery.setSortColumns("itemprocessid asc");
+			listitemprocess=itemProcessDao.findList(ipQuery);
+			Long preorder=0l;
+			for(ItemProcess itemprocess:listitemprocess)
+			{
+				DispatchWork dw=new DispatchWork();
+				dw.setItemcode(itemprocess.getItemcode());
+				dw.setItemname(itemprocess.getItemname());
+				dw.setItemprocessid(itemprocess.getItemprocessid());
+				dw.setWorkid(icmo.getIcmoid());
+				dw.setTeamid(itemprocess.getTeamid());
+				dw.setTeamname(itemprocess.getTeamname());
+				dw.setProcessnum(icmo.getFqty());
+				dw.setStatus(0);
+				dw.setAcceptednum(0);
+				dw.setProcessid(itemprocess.getProcessid());
+				dw.setProcessname(itemprocess.getProcessname());
+				dw.setCreatetime(icmo.getCreatedate());
+				dw.setReadymoney(itemprocess.getReservefund());
+				dw.setReadytime(itemprocess.getPreparemins());
+				dw.setPreorder(preorder);
+				dw.setProcesstime(itemprocess.getProcessmins());
+				dw.setPiecesalary(itemprocess.getWage());
+				preorder=dispatchWorkDao.createDispatchWork(dw);
+			}
+		}
+		return null;
+	}*/
+	@Override
+	public Integer deleteAlone(Long id) throws ServiceException {
+
+		Icmo checkicmo = icmoDao.getById(id);
+		checkicmo.getFbillno();
+		WorkPlan workPlan = workPlanDao.getByProperty("fbillno", checkicmo.getFbillno());
+		
+		MachineMatch match = machineMatchDao.getByProperty("workplanid", workPlan.getWorkplanid()+"");
+		if(match.getMatchstatus()==1){//配料为完成状态,不可删除
+			throw new ServiceException("配料为完成状态,不可删除!(若要删除请联系库房修改配料状态后再删除)"); 
+		}
+
+		
+		//---------------------------------
+		List<EmployeeTask> list =new ArrayList<EmployeeTask>();
+		EmployeeTaskQuery equery=new EmployeeTaskQuery();
+		equery.setWorkid(id);
+			list=employeeTaskDao.findList(equery);
+		if(list.size()==0){//删除之前判断是否分派任务---
+			//icmoDao.deleteById(id);
+			Icmo ic = icmoDao.getById(id);
+			ic.setIsdel(-1);
+			icmoDao.update(ic);
+			dispatchWorkDao.deleteByWorkid(id.longValue());		
+			workSeqDao.deleteByMultipleId("WorkSeq.deleteByicmoid",id+"");//删除workseq
+			return 1;
+		}else{		//--已分派--检查是否已开工
+			for(EmployeeTask ee :list){
+				if(ee.getStatus()!=TeamTaskStatus.UNWORK.getIndex()){//未开工
+					
+					return -1;
+				}
+			}
+			for(EmployeeTask ee :list){
+				prepareEmpDao.delteByEmptask(ee.getEmployeetaskid()+"");
+				employeeTaskDao.deleteById(ee.getEmployeetaskid());//删除所有未开工的个人任务
+			}
+			dispatchWorkDao.deleteByWorkid(id.longValue());
+			workSeqDao.deleteByMultipleId("WorkSeq.deleteByicmoid",id+"");//删除workseq
+			Icmo ic = icmoDao.getById(id);
+			ic.setIsdel(-1);
+			icmoDao.update(ic);
+		return 1;	
+		}
+	}
+	@Override
+	@Transactional(readOnly=false,propagation = Propagation.SUPPORTS)
+	public void saveK3Wrok() throws ServiceException {
+		icmoDao.saveK3Wrok();
+		icmoDao.saveK3004Work();
+	}
+	@Override
+	public Page<Icmo> findPage(Page<Icmo> page, String statement,
+			IcmoQuery query) throws ServiceException {
+		return icmoDao.findPage(page, statement, query);
+	}
+
+	
+	/**添加t_work_seq , t_dispatch_work **/
+	public void saveWorkSeqDispatch(Long icmoid,Icmo entity) {
+//		itemProcedureDao
+		List<ItemProcedure> itemProcedurelist=new ArrayList<ItemProcedure>();
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(baseitem.getBaseitemid());
+
+		itemProcedurelist = itemProcedureDao.findList(itemProcedureQuery);
+		if(itemProcedurelist.size()!=0){//此物料下有工序
+			WorkSeq workSeq=new WorkSeq();
+			workSeq.setIcmoid(icmoid);
+			workSeq.setItemcode(entity.getItemcode());
+			workSeq.setQualified(0D);
+			//workSeq.setProcedurerid(procedurerid)
+			List<ItemProcedure> ipdlist=new ArrayList<ItemProcedure>();
+			changelist(-1L,itemProcedurelist,ipdlist);//工序按上下级排序
+			
+			DispatchWork dwork=new DispatchWork();
+			long workSeqid=0;
+			int len=ipdlist.size();
+			//for(int i=0;i<len;i++){
+			int i=0;
+			for(ItemProcedure itpd:ipdlist){	
+				workSeq.setItemprocedureid(itpd.getItemprocedureid());
+				if(i==0){
+					workSeq.setPreorder(0L);
+				}else{
+					workSeq.setPreorder(workSeqid);
+				}
+				workSeq.setProcedurerid(itpd.getProcedureid());
+				
+				/**t_work_seq添加end**/
+				/**t_dispatch_work添加begin**/
+				
+				ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+				ItemProcess itemProcess=new ItemProcess();
+				itemProcessQuery.setItemprocedureid(itpd.getItemprocedureid());
+				itemProcessQuery.setIsdefault(1);//获取默认工作中心
+				if(itemProcessDao.findList(itemProcessQuery).size()>0){//存在默认的工作中心
+					itemProcess=itemProcessDao.findList(itemProcessQuery).get(0);//默认的工作中心
+				
+				dwork=new DispatchWork();
+				dwork.setWorkid(icmoid);//icmoid
+				dwork.setItemcode(entity.getItemcode());//
+				dwork.setItemname(entity.getItemname());//
+				dwork.setItemprocessid(itemProcess.getItemprocessid());//
+				dwork.setStatus(0);//
+				
+			//	procedureDao.getById(ipdlist.get(i).getProcedureid()).getProcedurename();
+
+				dwork.setProcessid(procedureDao.getById(itpd.getProcedureid()).getProcedurerid());//原工序id--
+				dwork.setProcessname(procedureDao.getById(itpd.getProcedureid()).getProcedurename());//??--原工序名称,新
+				dwork.setProcessnum(entity.getFqty());//??原加工数量--
+				dwork.setTeamid(itemProcess.getTeamid());//
+				dwork.setTeamname(teamsDao.getById(itemProcess.getTeamid()).getTeamname());//
+				
+				dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+				dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+				dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+				dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+				
+				dwork.setTools("");//???-----------------刀具名暂空
+				dwork.setBlades("");//???---------------刀片名暂空
+				dwork.setContent("");//现在无备注--
+				dwork.setAcceptednum(0);
+				dwork.setProgramname("");//程序名称?--空
+				dwork.setOrderid(-1);//??排序编号?--空
+				dwork.setWsstatus(0);//
+				if(i==0){
+					dwork.setPreorder(-1L);//??取什么?//班组任务实际id上序
+				}else{
+					dwork.setPreorder(workSeqid);//??取什么?//班组任务实际id上序
+				}
+				dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+
+				workSeqid=workSeqDao.save(workSeq);
+
+				dwork.setWorkseqid(workSeqid);
+				dispatchWorkDao.save(dwork);
+				
+				/**t_dispatch_work添加End**/
+				
+				}
+				i++;
+			}
+			
+			
+		}
+		
+		/*
+		workseqid	workseqid	
+		任务单id	icmoid	
+		物料工序id	itemprocedureid	
+		上序id	preorder	
+		质检合格数	qualified	
+		物料编码	itemcode	
+		
+		*/
+		/*
+		for(ItemProcess itemprocess:list)
+		{
+			dwork=new DispatchWork();
+			dwork.setWorkid(adId);//icmoid
+			dwork.setItemcode(entity.getItemcode());//
+			dwork.setItemname(entity.getItemname());//
+			dwork.setItemprocessid(itemprocess.getItemprocessid());//
+			dwork.setStatus(0);//
+			dwork.setProcessname(itemprocess.getProcessname());//??--原工序名称,新
+			dwork.setProcessnum(entity.getFqty());//??原加工数量--
+			dwork.setTeamid(itemprocess.getTeamid());//
+			dwork.setTeamname(itemprocess.getTeamname());//
+			dwork.setReadymoney(itemprocess.getReservefund());//原itemprocess准备金--
+			dwork.setReadytime(itemprocess.getPreparemins());//
+			dwork.setProcesstime(itemprocess.getProcessmins());//原itemprocess加工时长-
+			dwork.setPiecesalary(itemprocess.getWage());//原itemprocess计件工资-
+			dwork.setTools(itemprocess.getToolsname());//
+			dwork.setBlades(itemprocess.getBladename());//
+			dwork.setContent(itemprocess.getKeypoint());//现在无备注--
+			dwork.setAcceptednum(0);
+			dwork.setProgramname(itemprocess.getProgramname());//程序名称?--空
+			dwork.setOrderid(itemprocess.getOrderid());//??排序编号?--空
+			dwork.setProcessid(itemprocess.getProcessid());//原工序id--
+			dwork.setWsstatus(0);//
+			dwork.setPreorder(preorder);//??取什么?//班组任务实际id上序
+			dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+			dispatchWorkDao.save(dwork);
+			preorder=dwork.getId();
+		}*/		
+		
+		
+		
+	}
+	
+	private void changelist(Long pid,List<ItemProcedure> itemProcedurelist,List<ItemProcedure> ipdlist) {
+			for(ItemProcedure itemProcedure:itemProcedurelist){
+				if(itemProcedure.getParentid().longValue()==pid.longValue()){
+					ipdlist.add(itemProcedure);
+					changelist(itemProcedure.getItemprocedureid(),itemProcedurelist,ipdlist);
+				}
+			}
+	}
+	@Override
+	public void saveMakeIcmo(Icmo entity) throws ServiceException{
+				
+//		Long[] alldetailid = entity.getAllneedid();
+//		Double[] allneeds = entity.getAllneeds();
+//		long alllength=alldetailid.length;
+//		for(long i=0;i<alllength;i++){
+//			
+//			
+//			
+//		}	
+//		
+		
+	}
+	@Override
+	public void saveWorkPlan(Icmo entity) throws ServiceException{
+					
+		Long[] workplanid =entity.getCheckedworkplanids();
+
+		long workplanlength=workplanid.length;
+		String code="";
+		
+		Map<String,Long> map=new HashMap<String, Long>();
+		
+		for(long wpid:workplanid){//
+			WorkPlan workPlan=workPlanDao.getById(wpid);
+			 code= workPlan.getItemcode();
+			 workPlan.setWorkplanid(wpid);
+			 workPlan.setSchedustate(1);//0未排产,1已排产
+			 workPlanDao.update(workPlan);
+			 
+			 
+			 if(null==map.get(code)){
+				 BaseItem baseitem = baseItemDao.getByProperty("itemcode", code);
+				//没有code相同
+				 entity.setFbillno((icmoDao.getAllCounts()+1)+"");
+				 entity.setItemcode(code);
+				 //baseItemDao.getByProperty("itemcode", code)
+				 entity.setItemname(baseitem.getItemname());
+				 entity.setPriority(4);//优先级
+				 entity.setIsdel(0);//是否删除
+				 entity.setFqty(workPlanDao.getById(wpid).getPlannum());
+				 entity.setFitemid(Long.valueOf(baseitem.getFitemid()));
+				 entity.setStatus(0);
+				 entity.setDispathstatu(0);
+				 entity.setTasktype(1);
+				 entity.setPerformstatus(1);
+				 entity.setCreatedate(new Date());
+				 entity.setPreparestatus(0);
+				 entity.setWorknature(14088);
+//				 <option value="14087">订单</option>
+//	         	<option value="14088">备货</option>
+//	         	<option value="14089">试制</option>
+				 Long icid = icmoDao.save(entity);
+				 map.put(code, icid);
+				 
+				 IcmoWorkplan icworkplan=new IcmoWorkplan();
+				 icworkplan.setIcmoid(icid);
+				 icworkplan.setWorkplanid(wpid);
+				 icmoWorkplanDao.save(icworkplan);
+				
+			 }else{//有code相同
+				 Icmo ic = icmoDao.getById(map.get(code));
+				 ic.setFqty(ic.getFqty().doubleValue()+workPlanDao.getById(wpid).getPlannum());
+				 
+				 icmoDao.update(ic);
+				 IcmoWorkplan icworkplan=new IcmoWorkplan();
+				 icworkplan.setIcmoid(ic.getIcmoid());
+				 icworkplan.setWorkplanid(wpid);
+				 icmoWorkplanDao.save(icworkplan);
+			 }
+			 ProdPlanDetail ppd=prodPlanDetailDao.getById(workPlan.getPlandetailid());
+			findBom(workPlan.getPlanid(),workPlan.getItemcode(),workPlan.getPlannum(),ppd.getBeforenum(),entity.getPlancommitdate(),entity.getPlanfinishdate(),3);
+			
+		}
+	}
+	
+	/**
+	 * 
+	 * @param planid
+	 * @param itemcode
+	 * @param plannum
+	 * @param bfnum
+	 * @param macdate
+	 * @param plandate
+	 * @param property 区分零部件外购，原材料外购(3：代表第一次调用，外购物料标记为1，为零部件外购，2:代表自制件调用,我购标记为3)
+	 */
+	public void findBom(Long planid,String itemcode,Double plannum,Double bfnum,Date macdate,Date plandate,int property)
+	{
+		try {
+			Inventory inventory=inventoryDao.getByProperty("itemcode", itemcode);
+			Double fqty=0d;
+			if(inventory!=null)
+			{
+				if(inventory.getFqty()!=null)
+				{
+					fqty+=inventory.getFqty();
+				}
+				if(inventory.getFqty2()!=null)
+				{
+					fqty+=inventory.getFqty2();
+				}
+				
+			}
+			if((fqty-plannum)<0)
+			{
+				OrderBomQuery query=new OrderBomQuery();
+				query.setItemcode(itemcode);
+				List<OrderBom> list=orderBomDao.findList(query);
+				for(OrderBom orderBom:list)
+				{
+					Double preplannum=0d;
+					ProdPlanDetail planDetail=null;
+					ProdPlanDetailQuery ppquery=new ProdPlanDetailQuery();
+					ppquery.setPlanid(planid);
+					ppquery.setItemcode(orderBom.getParentcode());
+					List<ProdPlanDetail> detaillist=prodPlanDetailDao.findList(ppquery);
+					if(detaillist!=null&&detaillist.size()>0)
+					{
+						planDetail=detaillist.get(0);
+						preplannum=planDetail.getBeforenum();
+					}
+					if(planDetail==null)
+					{
+						planDetail=new ProdPlanDetail();
+						planDetail.setPlannum(plannum*orderBom.getParentqty());
+						ProdPlanDetail pd=prodPlanDetailDao.getProdPlanDetail("ProdPlanDetail.Amount", ppquery);
+						Double amount=0d;
+						if(pd.getInventory().getFqty()+pd.getInventory().getFqty2()+pd.getBaseitem().getMakingnums()-planDetail.getPlannum()-pd.getBaseitem().getExistdemand()>pd.getBaseitem().getSecinv())
+						{
+							amount=0d;
+						}
+						else
+						{
+							if((pd.getBaseitem().getYoutput()/pd.getCycle().getRatio())>pd.getBaseitem().getSecinv()+planDetail.getPlannum()+pd.getBaseitem().getExistdemand()-pd.getInventory().getFqty()-pd.getInventory().getFqty2()-pd.getBaseitem().getMakingnums())
+							{
+								amount=pd.getBaseitem().getYoutput()/(pd.getCycle().getRatio()==0?1:pd.getCycle().getRatio());
+							}
+							else
+							{
+								amount=pd.getBaseitem().getSecinv()+planDetail.getPlannum()+pd.getBaseitem().getExistdemand()-pd.getInventory().getFqty()-pd.getInventory().getFqty2()-pd.getBaseitem().getMakingnums();
+							}
+						}
+						planDetail.setAmount(amount);
+					}
+					else
+					{
+						planDetail.setPlannum(planDetail.getPlannum()+((plannum-bfnum)*orderBom.getParentqty()));
+						
+					}
+					planDetail.setItemcode(orderBom.getParentcode());
+					planDetail.setMacenddate(macdate);
+					planDetail.setPlanenddate(plandate);
+					planDetail.setPlanid(planid);
+					if(property==3&&orderBom.getItemproperty().intValue()==1)
+					{
+						planDetail.setProperty(1);
+					}
+					else if(property==2&&orderBom.getItemproperty().intValue()==1)
+					{
+						planDetail.setProperty(3);
+					}
+					else
+					{
+						planDetail.setProperty(orderBom.getItemproperty());
+					}
+					planDetail.setBeforenum(planDetail.getPlannum());
+					prodPlanDetailDao.saveOrUpdate(planDetail);
+					findBom(planid,orderBom.getParentcode(),planDetail.getPlannum(),preplannum,macdate,plandate,2);
+				}
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	@Override
+	public void savePlistDetail(Icmo entity) throws ServiceException{
+		
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+
+		MachineMatch machineMatch = machineMatchDao.getByProperty("workplanid", entity.getWorkplanid()+"");
+		List<MachineMatchEntity> mmentitylist=new ArrayList<MachineMatchEntity>();
+		MachineMatchEntityQuery machineMatchEntityQ=new MachineMatchEntityQuery();
+		machineMatchEntityQ.setFmatchid(machineMatch.getFmatchid());
+		
+		mmentitylist=machineMatchEntityDao.findList(machineMatchEntityQ);
+		
+		for(MachineMatchEntity mentity:mmentitylist){
+			if(mentity!=null){
+				if(mentity.getBatchid()!=null){
+					InventoryBatch inbatch = inventoryBatchDao.getById(mentity.getBatchid());
+					if(inbatch.getDbno()!=null){
+						entity.setFxmark(inbatch.getDbno());	
+					}
+					
+				}
+			}
+		}
+
+/*		mmentity= machineMatchEntityDao.getByProperty("fmatchid",machineMatch.getFmatchid()+"");
+		if(mmentity!=null){
+			if(mmentity.getBatchid()!=null){
+				InventoryBatch inbatch = inventoryBatchDao.getById(mmentity.getBatchid());
+				entity.setFxmark(inbatch.getDbno());
+			}
+		}
+*/		
+		
+		
+		//entity.setFormatno(baseitem.getFormatno());
+		//entity.setFbillno(Icmo.THEHEAD+(findCounts()+1));
+		entity.setFbillno(workPlanDao.getById(entity.getWorkplanid()).getFbillno());
+		entity.setItemname(baseitem.getItemname());
+		entity.setFitemid(Long.valueOf(baseitem.getFitemid()));//=======================
+		Date data=new Date();
+		entity.setStatus(0);
+		entity.setDispathstatu(1);//派工状态
+		entity.setTasktype(1);
+		entity.setPerformstatus(1);
+//		entity.setPerformdate(data);
+		entity.setCreatedate(data);
+		entity.setPreparestatus(0);
+		entity.setPriority(4);
+		entity.setWorknature(14088);//14087 订单	,14088 备货,	14089 试制
+		entity.setIsdel(0);//-1:已删除,0:未删除
+		Long adId = icmoDao.save(entity);
+		machineMatch.setIcmoid(adId);
+		
+		//saveMachineMatch(adId,entity);//配料单改为由未排产计划中确认时生成2013-12-02
+		saveWorkSeqDispatchEmploy(adId,entity);
+		
+		//修改未排产计划的状态为已排产
+		WorkPlan wplan = workPlanDao.getById(entity.getWorkplanid());//1:已排产,0:未排产
+		wplan.setSchedustate(TerrcnceConstants.MACH_DISPATCH_STATE_YES);
+		workPlanDao.update(wplan);
+	}
+	
+	/**
+	 * 添加车间任务,workseq,班组任务,个人任务
+	 */
+	public void saveWorkSeqDispatchEmploy(Long icmoid,Icmo entity) throws ServiceException{
+
+//		itemProcedureDao
+		List<ItemProcedure> itemProcedurelist=new ArrayList<ItemProcedure>();
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(baseitem.getBaseitemid());
+
+		itemProcedurelist = itemProcedureDao.findList(itemProcedureQuery);
+		if(itemProcedurelist.size()!=0){//此物料下有工序
+			WorkSeq workSeq=new WorkSeq();
+			workSeq.setIcmoid(icmoid);
+			workSeq.setItemcode(entity.getItemcode());
+			workSeq.setQualified(0D);
+			//workSeq.setProcedurerid(procedurerid)
+			List<ItemProcedure> ipdlist=new ArrayList<ItemProcedure>();
+			changelist(-1L,itemProcedurelist,ipdlist);//工序按上下级排序
+			
+			DispatchWork dwork=new DispatchWork();
+			long workSeqid=0;
+			int len=ipdlist.size();
+			//for(int i=0;i<len;i++){
+			int f=0;
+			for(ItemProcedure itpd:ipdlist){	
+				workSeq.setItemprocedureid(itpd.getItemprocedureid());
+				if(f==0){
+					workSeq.setPreorder(0L);
+				}else{
+					workSeq.setPreorder(workSeqid);
+				}
+				workSeq.setProcedurerid(itpd.getProcedureid());
+				workSeqid=workSeqDao.save(workSeq);
+				f++;
+			}		
+				/**t_work_seq添加end**/
+				/**t_dispatch_work添加begin**/
+			Long[] itemprocedureids = entity.getItemprocedureid();
+						
+			int i=0;
+			long checkitempid=0L;
+			long did=0;
+			for(long itempid:itemprocedureids){	
+				if(i==0){
+					checkitempid=itempid;
+				}
+				
+				ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+				ItemProcess itemProcess=new ItemProcess();
+				itemProcessQuery.setItemprocedureid(itempid);
+				itemProcessQuery.setProcessid(entity.getProcessid()[i]);//选中的工作中心
+
+				itemProcess=itemProcessDao.findList(itemProcessQuery).get(0);//
+				
+				dwork=new DispatchWork();
+				dwork.setWorkid(icmoid);//icmoid
+				dwork.setItemcode(entity.getItemcode());//
+				dwork.setItemname(entity.getItemname());//
+				dwork.setItemprocessid(itemProcess.getItemprocessid());//
+				dwork.setStatus(0);//
+				
+			//	procedureDao.getById(ipdlist.get(i).getProcedureid()).getProcedurename();
+				//Procedure ppd = procedureDao.getById(itemProcedureDao.getById(itempid).getProcedureid());
+//				ItemProcedureQuery iquery=new ItemProcedureQuery();
+//				iquery.setItemprocedureid(itempid);
+				Procedure ppd = procedureDao.getById(itemProcedureDao.getById(itempid).getProcedureid());
+				
+				dwork.setProcessid(ppd.getProcedurerid());//原工序id--
+				dwork.setProcessname(ppd.getProcedurename());//??--原工序名称,新
+				//dwork.setProcessnum(entity.getEmpfqty()[i].doubleValue());//??原加工数量--
+				dwork.setProcessnum(entity.getFqty());//??取总数量!!!!!
+				dwork.setTeamid(itemProcess.getTeamid());//
+				dwork.setTeamname(teamsDao.getById(itemProcess.getTeamid()).getTeamname());//
+		
+				dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+				dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+				dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+				dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+				
+				dwork.setTools("");//???-----------------刀具名暂空
+				dwork.setBlades("");//???---------------刀片名暂空
+				dwork.setContent("");//现在无备注--
+				dwork.setAcceptednum(0);
+				dwork.setProgramname("");//程序名称?--空
+				dwork.setOrderid(-1);//??排序编号?--空
+				
+				dwork.setWsstatus(1);//1:已派工，其它:未派工
+				dwork.setEmpstatus(1);//0:未派,1:已派
+				WorkSeqQuery workSeqQuery=new WorkSeqQuery();
+				workSeqQuery.setIcmoid(icmoid);
+				workSeqQuery.setItemprocedureid(checkitempid);
+				WorkSeq	wprkseqs=workSeqDao.findList(workSeqQuery).get(0);
+				
+			if(itemProcedureDao.getById(itempid).getSeqno().intValue()==1){//一序
+					dwork.setPreorder(0L);//??取什么?第一序为0
+				}else{
+					dwork.setPreorder(wprkseqs.getWorkseqid());//??取什么?//班组任务实际id上序
+				}
+				dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+				dwork.setCenterid(entity.getProcessid()[i]);
+			//	workSeqid=workSeqDao.save(workSeq);
+				WorkSeqQuery workSeqQueryReal=new WorkSeqQuery();
+				workSeqQueryReal.setIcmoid(icmoid);
+				workSeqQueryReal.setItemprocedureid(itempid);
+				WorkSeq	wprkseqsReal=workSeqDao.findList(workSeqQueryReal).get(0);	
+				
+				dwork.setWorkseqid(wprkseqsReal.getWorkseqid());
+				dwork.setPlanstarttime(DateUtils.GetDate2(entity.getPlanstartdate()[i], "yyyy-MM-dd HH:mm:ss"));
+				dwork.setPlanendtime(DateUtils.GetDate2(entity.getPlanenddate()[i], "yyyy-MM-dd HH:mm:ss"));
+				
+				if(i==0){//第一序
+					did=dispatchWorkDao.saveDispatchAuto(dwork);
+				}
+				if(i!=0&&checkitempid!=itempid){//非第一序,且非同序添加
+					did=dispatchWorkDao.saveDispatchAuto(dwork);
+					checkitempid=itempid;
+				}
+				
+				saveEmployeePrepare(did,dwork,itemProcess,entity,i);
+				/**t_dispatch_work添加End**/
+			//	}
+				i++;
+			}
+		}
+	}
+	
+	/**
+	 * 排产时自动添加个人任务和准备金的表 的调用
+	 * @param did dispatchid
+	 * @param dwork DispatchWork
+	 * @param itemProcess ItemProcess
+	 */
+	private void saveEmployeePrepare(long did, DispatchWork dwork,
+			ItemProcess itemProcess,Icmo entity,int numbers) {
+		
+		EmployeeTask employeeTask=new EmployeeTask();
+		
+			employeeTask.setWorkid(dwork.getWorkid()); 
+			employeeTask.setItemcode(dwork.getItemcode());
+			employeeTask.setItemname(dwork.getItemname());
+			employeeTask.setTeamid(dwork.getTeamid());
+			employeeTask.setCreatetime(new Date()); 
+			employeeTask.setProcessid(dwork.getProcessid());//工序
+			employeeTask.setFqty(entity.getEmpfqty()[numbers]);
+			employeeTask.setStatus(0);
+			employeeTask.setAcceptnum(0);
+			employeeTask.setPlanstartdate(DateUtils.GetDate2(entity.getPlanstartdate()[numbers], "yyy-MM-dd HH:mm:ss"));
+			employeeTask.setPlanenddate(DateUtils.GetDate2(entity.getPlanenddate()[numbers], "yyy-MM-dd HH:mm:ss"));
+			employeeTask.setEmpid(entity.getEmpid()[numbers]);
+			employeeTask.setDeviceid(entity.getDeviceid()[numbers]);
+			employeeTask.setProcessmins(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());
+			employeeTask.setClasstype(0);//班别
+			employeeTask.setDispatchid(did);
+			employeeTask.setItemprocessid(itemProcess.getItemprocessid());
+			employeeTask.setCenterid(dwork.getCenterid());
+			
+			Long eid = employeeTaskDao.save(employeeTask, "EmployeeTask.insertIncludeStartDate");
+			
+			saveDeviceWork(eid,employeeTask);
+			
+//			System.out.println("entity.getPeoples()"+entity.getPeoples().length);
+//			System.out.println("number"+numbers);
+			
+			if(null!=entity.getPeoples()[numbers]){//负责人--负责人为空则不添加首件金额
+				PrepareEmp preapareemp=new PrepareEmp();
+				preapareemp.setEmployeetaskid(eid);
+				preapareemp.setMoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//准备金
+				preapareemp.setPreparemins(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//首检准备时长
+				preapareemp.setEmpid(employeeTask.getEmpid());
+				preapareemp.setProcessid(employeeTask.getProcessid());//原来的工序id  !!!
+				preapareemp.setItemcode(employeeTask.getItemcode());
+				preapareemp.setItemname(employeeTask.getItemname());
+				preapareemp.setTeamid(employeeTask.getTeamid());
+				preapareemp.setItemprocessid(itemProcess.getItemprocessid());
+				prepareEmpDao.save(preapareemp);
+			}
+			
+	}
+
+	@Override
+	public Icmo getByIcmoId(Long icmoId) throws ServiceException {
+		
+		return icmoDao.getById("Icmo.getByIcmoId", icmoId);
+	}
+	@Override
+	public void saveIcmoDetail(Icmo entity) throws ServiceException {
+		Long adId =entity.getIcmoid();
+		entity.setDispathstatu(1);
+		icmoDao.update(entity);
+		Icmo icm=new Icmo();
+		icm=icmoDao.getById(adId);
+		
+		entity.setFbillno(icm.getFbillno());
+		entity.setItemname(icm.getItemname());
+		entity.setFitemid(icm.getFitemid());//=======================
+		
+		entity.setStatus(icm.getStatus());
+		entity.setDispathstatu(1);//派工状态
+		entity.setTasktype(icm.getTasktype());
+		entity.setPerformstatus(icm.getPerformstatus());
+		entity.setCreatedate(icm.getCreatedate());
+		entity.setPreparestatus(icm.getPreparestatus());
+		entity.setPriority(icm.getPriority());
+		entity.setWorknature(icm.getWorknature());//14087 订单	,14088 备货,	14089 试制
+		entity.setIsdel(icm.getIsdel());
+		
+		saveWorkSeqDispatchEmploy(adId,entity);
+	}
+	@Override
+	public Integer updatePriority(Icmo entity) throws ServiceException {
+			Integer returnValue =  icmoDao.update(entity);
+		return null;
+	}
+
+	
+	private void saveDeviceWork(Long eid, EmployeeTask employeeTask) {
+		Date starDdate = employeeTask.getPlanstartdate();
+		Date endDate=employeeTask.getPlanenddate();
+		DeviceWork deviceWork=new DeviceWork();
+		Long runtimes=0L;
+		if(eid.longValue()==5007){
+			runtimes=0L;
+		}
+		deviceWork.setDeviceid(employeeTask.getDeviceid());
+		deviceWork.setEmployeetaskid(eid);
+		
+		String starDdateString=DateConvertUtils.format(starDdate, "yyyy-MM-dd");
+		String endDdateString=DateConvertUtils.format(endDate, "yyyy-MM-dd");
+		if(starDdateString.equals(endDdateString)){//同一天
+			int hours=0;
+			int minutes=0;
+			if(starDdate.getHours()<=12&&endDate.getHours()>12){//开始上午,结束下午
+				hours=endDate.getHours()-starDdate.getHours()-1;//排除中午一小时
+				minutes=endDate.getMinutes()-starDdate.getMinutes();
+				runtimes=(long)(hours*60+minutes);
+			}else{//开始结束都是上午||都是下午
+				hours=endDate.getHours()-starDdate.getHours();
+				minutes=endDate.getMinutes()-starDdate.getMinutes();
+				runtimes=(long)(hours*60+minutes);
+			}
+			deviceWork.setWorkdate(starDdateString);
+			deviceWork.setRuntime(runtimes);
+			deviceWorkDao.save(deviceWork);
+		}else{//开始结束不是同一天------
+			
+			Date date=new Date();
+			Date datestart=new Date();
+			datestart=starDdate;
+			 Calendar   calendar   =   new   GregorianCalendar(); 
+		     
+			int i=0;
+			while(!(starDdateString.equals(endDdateString))){
+				calendar.setTime(datestart); 
+				if(i==0){
+					deviceWork.setRuntime(startRunTime(starDdate));
+				}else{
+					deviceWork.setRuntime(480L);//一整天的工作时间(分钟)	
+				}
+				deviceWork.setWorkdate(starDdateString);
+				deviceWorkDao.save(deviceWork);
+	             calendar.add(calendar.DATE,1);//把日期往后增加一天
+     		    if((calendar.get(Calendar.DAY_OF_WEEK)-1)==0){//周末加一天----
+					calendar.add(calendar.DATE,1);	
+				}
+	     		   date=calendar.getTime();
+	   		     datestart=date;     		     
+			     starDdateString =DateConvertUtils.format(date, "yyyy-MM-dd");	
+				i++;
+			}
+			deviceWork.setRuntime(endRunTime(endDate));
+			deviceWork.setWorkdate(endDdateString);
+			deviceWorkDao.save(deviceWork);
+			
+		}
+		
+	}
+	private Long endRunTime(Date endDate) {
+		Long runtimes=0L;
+		int hours=0;
+		int minutes=0;
+		
+		if(endDate.getHours()>12){//
+			hours=endDate.getHours()-8-1;//排除中午一小时
+			minutes=endDate.getMinutes();//
+			runtimes=(long)(hours*60+minutes)-30;
+		}else{//开始结束都是下午
+			hours=endDate.getHours()-8;
+			minutes=endDate.getMinutes();
+			runtimes=(long)(hours*60+minutes)-30;
+		}
+		
+		return runtimes;
+	}
+	private Long startRunTime(Date starDdate) {
+		Long runtimes=0L;
+		int hours=0;
+		int minutes=0;
+		
+		if(starDdate.getHours()<=12){//开始上午
+			hours=17-starDdate.getHours()-1;//排除中午一小时
+			minutes=starDdate.getMinutes();
+			runtimes=(long)(hours*60-minutes+30);
+		}else{//开始结束都是下午
+			hours=17-starDdate.getHours();
+			minutes=starDdate.getMinutes();
+			runtimes=(long)(hours*60-minutes+30);
+		}
+		
+		return runtimes;
+	}
+	@Override
+	public void updateAllDevice() throws ServiceException {
+		//deviceWorkDao.deleteAll();
+		List<EmployeeTask> eplist=new ArrayList<EmployeeTask>(); 
+		eplist = employeeTaskDao.findAllList();
+		for(EmployeeTask eptask:eplist){
+			if(null!=eptask.getPlanstartdate()){
+					saveDeviceWork(eptask.getEmployeetaskid(),eptask);	
+			}	
+		}
+		
+	}
+	@Override
+	public void saveWorkplan(Icmo entity) throws ServiceException {
+
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		WorkPlan workPlan=new WorkPlan(); 
+		workPlan.setItemcode(entity.getItemcode());
+		workPlan.setPlannum(entity.getFqty());
+		workPlan.setCreatedate(DateConvertUtils.format(new Date(), "yyyy-MM-dd"));
+		workPlan.setSchedustate(0);
+		workPlan.setBuystate(0);
+		workPlan.setPlanenddate(entity.getPlanfinishdateString());
+		workPlan.setPlanstartdate(entity.getPlancommitdateString());
+		
+		Icbillno icb = icbillnoDao.getById(222222L);
+		workPlan.setFbillno(icb.getFpreletter()+icb.getFcurno());
+	//	workPlan.setFbillgroup(icb.getFpreletter()+icb.getFcurno());
+		workPlan.setFxmark(entity.getFxmark());
+		Long adId = workPlanDao.save(workPlan, "WorkPlan.insert.from.icmo");
+		icb.setFcurno(icb.getFcurno().intValue()+1);
+		icbillnoDao.update(icb);
+	/*itemcode
+	 * plannum
+	 * createdate
+	 * schedustate--0
+	 * buystate--0
+	 * planenddate
+	 * 	
+	 */
+//		Long adId = icmoDao.save(entity);
+		//物料工艺若未制作,或者待审核,则添加任务到processtask
+		
+		ItemVerQuery itemVerQuery=new ItemVerQuery();
+		itemVerQuery.setBaseitemid(baseitem.getBaseitemid());
+		itemVerQuery.setIsdefault(ItemVer.DEFAULTVERSION);
+		
+		List<ItemVer> itemVerlist=new ArrayList<ItemVer>();
+		itemVerlist = itemVerDao.findList(itemVerQuery);
+		int isad=0;
+		if(itemVerlist.size()>0){//有默认版本
+				if(null==itemVerlist.get(0).getWfstatus()||
+						itemVerlist.get(0).getWfstatus().intValue()==ItemProcessStatus.WAITCHECK.getIndex()||
+						itemVerlist.get(0).getWfstatus().intValue()==ItemProcessStatus.NOTMAKE.getIndex()){
+					isad=1;
+				}
+		}else{//无默认版本--无工艺
+			isad=1;
+		}
+		if(isad==1){
+			ProcessTaskBj processTaskBj =null;
+			processTaskBj =new ProcessTaskBj();
+			processTaskBj.setItemcode(baseitem.getItemcode());
+			processTaskBj.setAmount(0D);
+			processTaskBj.setCreatedate(DateUtils.GetDateTime());//string
+			processTaskBj.setPlanenddate(entity.getPlanfinishdate());//Date
+			processTaskBj.setExplain(" ");
+			processTaskBj.setWaitnote("未排产任务单");
+			processTaskBj.setOri(ProcessTaskBj.FROM_MACH);
+			processTaskBj.setIcmoid(adId);
+			
+			processTaskBjDao.saveOrUpdate(processTaskBj);
+		}
+		
+	}
+
+	
+	
+	
+	
+	
+	/**
+	 * 排产时添加-配料任务单,任务单详细,并锁库.---配料任务单保存时生成工序流转卡,
+	 * @param adId icmoid
+	 * @param entity icmobean
+	 */
+	private void saveMachineMatch(Long adId, Icmo entity) {
+		//machineMatchDao
+		//machineMatchEntityDao
+		MachineMatch machineMatch=new MachineMatch();
+		machineMatch.setIcmoid(adId);
+		machineMatch.setItemcode(entity.getItemcode());
+		machineMatch.setItemname(entity.getItemname());
+		machineMatch.setItemmode(entity.getFormatno());
+		machineMatch.setFqty(entity.getFqty());
+		machineMatch.setUsestatus(0);
+		Long machineMatchid = machineMatchDao.save(machineMatch);//添加机加配料任务单
+		//--配料任务单添加end---------------------
+		
+		MachineMatchEntity machineMatchEntity=null;
+		String[] strlist=null;
+		strlist=entity.getCheckboxbatchno();
+		if(null==strlist){
+			return ;
+		}
+		for(String str:strlist){//code;name;帐套;批次;单位用量;id
+			String[] matchEntity =str.split(";");
+			machineMatchEntity=new MachineMatchEntity();
+			machineMatchEntity.setFmatchid(machineMatchid);
+			machineMatchEntity.setPlanfqty(entity.getFqty());
+			
+			machineMatchEntity.setItemcode(matchEntity[0]);
+			machineMatchEntity.setItemname(matchEntity[1]);
+			machineMatchEntity.setFqty(Double.valueOf(matchEntity[4]));//单位用量
+			
+			if(!matchEntity[3].equals("无")){//有批次的物料 else(无批次--则无帐套,无单位用量)
+				machineMatchEntity.setPlandbno(Integer.valueOf(matchEntity[2]));
+				machineMatchEntity.setPlanbatchno(matchEntity[3]);
+				//锁库数量---inventoryBatchDao
+				InventoryBatch inventoryBatch=new InventoryBatch();
+				inventoryBatch.setBatchid(Long.valueOf(matchEntity[5]));
+				Double fqtylock=null;
+				fqtylock=inventoryBatchDao.getById(Long.valueOf(matchEntity[5])).getFqtylock();
+				if(null==fqtylock){
+					inventoryBatch.setFqtylock(entity.getFqty()*Double.valueOf(matchEntity[4]));//计划数量*单位用量=锁库数量	
+				}else{
+					inventoryBatch.setFqtylock(fqtylock+entity.getFqty()*Double.valueOf(matchEntity[4]));
+				}
+				inventoryBatchDao.update(inventoryBatch);
+			}
+			
+			BaseItemQuery baseItemquery=new BaseItemQuery();
+			List<BaseItem> blist=null;
+			baseItemquery.setItemcode(matchEntity[0]);
+			blist = baseItemDao.findList(baseItemquery);
+			if(blist.size()>0){
+				machineMatchEntity.setItemmode(blist.get(0).getFormatno());//规格型号	
+			}
+			machineMatchEntityDao.save(machineMatchEntity);
+			
+		}
+		
+		
+		
+		
+	}
+	@Override
+	public void updateOverstatus(IcmoQuery icmoQuery) throws ServiceException {
+		
+		/**
+		 * 判断更新物料表的在制品量
+		 */
+		updateBaseData(icmoQuery);
+		
+		Integer overstatus = icmoQuery.getOverstatus();//已结案:3,未结案:1
+		Long overempid = SpringSecurityUtils.getCurrentUserId();
+		String jdate = DateUtils.GetDateTime();
+		Date overdate = DateUtils.GetDate2(jdate, "yyyy-MM-dd HH:mm:ss");
+		
+		
+		//--反结案时间判断---------------
+		if(overstatus.intValue()==1){//反结案
+			Icmo icf =null;
+			icf = icmoDao.getById("Icmo.getbyid.getoverdate",icmoQuery.getIcmoid());
+			if(icf!=null&&icf.getOverdate()!=null){
+				String strdate=DateConvertUtils.format(icf.getOverdate(), "yyyy-MM-dd").substring(0, 7);  
+				String nowdate=DateUtils.GetDate().substring(0, 7);
+				System.out.println("结案日期:"+strdate+"======当前日期:"+nowdate);
+				if(!strdate.equals(nowdate)){//时间不在同一个月,不可反结案
+					throw new ServiceException("反结案失败!不可跨期反结案!");
+				}
+			}
+		}
+		//-------------------
+		Icmo icmo=new Icmo();
+		icmo.setIcmoid(icmoQuery.getIcmoid());
+		icmo.setOverstatus(overstatus);
+		icmo.setOverempid(overempid);
+		icmo.setOverdate(overdate);
+		icmoDao.update(icmo);
+		
+		Icmo icmofbillno = icmoDao.getById(icmoQuery.getIcmoid());
+		
+		JSONObject jsobj=new JSONObject();
+		jsobj.put("fbillno", icmofbillno.getFbillno());
+		jsobj.put("overstatus", overstatus);//
+		jsobj.put("overempid", overempid);
+		jsobj.put("overempname", SpringSecurityUtils.getCurrentRealName());
+		jsobj.put("overdate", jdate);
+		
+		//---根据标记结案--------------
+		
+		IcmoQuery iquery=new IcmoQuery();
+		iquery.setFbillno(icmofbillno.getFbillno());
+		Icmo icentity =new Icmo(); 
+		icentity =icmoDao.getByEntity("Icmo.geticmono", iquery);
+		
+		//System.out.println("========="+icmoQuery.getIcmono());
+		int isbreak=0;
+		int isallover=0;
+		if(icentity.getIsold()==1){//旧单据
+			throw new ServiceException("旧单据不可进行结案与反结案操作!");	
+		}else{
+			if(icentity.getIcmono()!=null&&!icentity.getIcmono().equals("")){//如果标记不为空
+				//是否为拆分单据---
+				IcmoQuery isbreakquery=new IcmoQuery();
+				isbreakquery.setFbillno(icmofbillno.getFbillno());
+				isbreakquery.setIcmono(icentity.getIcmono());
+				List<Icmo> isbreaklist =new ArrayList<Icmo>();
+				
+				isbreaklist=icmoDao.findList("Icmo.findIsBreakicmo", isbreakquery);
+				
+				for(Icmo isbreakicmo:isbreaklist){
+					isbreak=1;
+					
+					if(isbreakicmo.getOverstatus()!=3&&isbreakicmo.getFbillno()!=icmofbillno.getFbillno()){//有其他相同标记但未结案单据
+						isallover=1;
+					}
+				}
+				jsobj.put("fbillno", icentity.getIcmono());	
+			}
+		}
+		
+		//--处理K5--------------------------------------------
+		if(isbreak==1){//标记拆分单据
+				if(overstatus.intValue()==1){//反结案
+					Icmo icm = icmoDao.getById("Icmo.getById.fxmark", icmoQuery.getIcmoid());
+					if(null!=icm.getFxmark()&&icm.getFxmark().intValue()!=4){
+						//--处理K5--------------------------------------------
+						K3ServiceProxy k3service=new K3ServiceProxy(); 
+						TREReturn	terreturn =k3service.updateOverstatus(jsobj);
+						if( terreturn.getnCode() == -1){//k5操作失败
+							throw new ServiceException(terreturn.getStrText());
+						}	
+					}
+					
+				}else{
+					if(isallover==0){
+						Icmo icm = icmoDao.getById("Icmo.getById.fxmark", icmoQuery.getIcmoid());
+						if(null!=icm.getFxmark()&&icm.getFxmark().intValue()!=4){
+							//--处理K5--------------------------------------------
+							K3ServiceProxy k3service=new K3ServiceProxy(); 
+							TREReturn	terreturn =k3service.updateOverstatus(jsobj);
+							if( terreturn.getnCode() == -1){//k5操作失败
+								throw new ServiceException(terreturn.getStrText());
+							}	
+						}	
+					}
+				}
+		}else{//标记无拆分单据
+
+			Icmo icm = icmoDao.getById("Icmo.getById.fxmark", icmoQuery.getIcmoid());
+			if(null!=icm.getFxmark()&&icm.getFxmark().intValue()!=4){
+				//--处理K5--------------------------------------------
+				K3ServiceProxy k3service=new K3ServiceProxy(); 
+				TREReturn	terreturn =k3service.updateOverstatus(jsobj);
+				if( terreturn.getnCode() == -1){//k5操作失败
+					throw new ServiceException(terreturn.getStrText());
+				}	
+			}
+			
+		}	
+		
+	}
+	/**
+	 * 更新物料表的在制品量
+	 * @param icmoQuery
+	 */
+	private void updateBaseData(IcmoQuery icmoQuery) {
+		Integer overstatus = icmoQuery.getOverstatus();//已结案:3,未结案:1
+		if(overstatus==3){
+			Icmo icmo = icmoDao.findEntity(icmoQuery);
+			if(icmo != null){
+				Putstorageentity putentity = new Putstorageentity();
+				putentity.setPoorderno(icmo.getFbillno());
+				Putstorageentity entity = putstorageentityDao.findFqtyEntity(putentity);
+				if(entity != null){
+					Double fqtysum = icmo.getFqty().doubleValue() - entity.getFqty().doubleValue();
+					if(fqtysum>0){
+						List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(icmo.getItemcode());
+						baseitemList = baseItemDao.findEntityBase(bQuery);
+						if(baseitemList.size()>0){
+							if(icmo.getFxmark()==3){
+								Double fqtys = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums())-fqtysum;
+								BaseItem bitem = new BaseItem();
+								bitem.setItemcode(icmo.getItemcode());
+								bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+								bitem.setMakingnums(fqtys<0?0D:fqtys);
+								baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+							}else{
+								Double fqtys = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4())-fqtysum;
+								BaseItem bitem = new BaseItem();
+								bitem.setItemcode(icmo.getItemcode());
+								bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+								bitem.setMakingnums4(fqtys<0?0D:fqtys);
+								baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+							}
+						}
+					}
+				}
+			}
+		}else{
+			Icmo icmo = icmoDao.findEntity(icmoQuery);
+			if(icmo != null){
+				Putstorageentity putentity = new Putstorageentity();
+				putentity.setPoorderno(icmo.getFbillno());
+				Putstorageentity entity = putstorageentityDao.findFqtyEntity(putentity);
+				if(entity != null){
+					Double fqtysum = icmo.getFqty().doubleValue() - entity.getFqty().doubleValue();
+					if(fqtysum>0){
+						List<BaseItem> baseitemList = new ArrayList<BaseItem>();
+						BaseItemQuery bQuery=new BaseItemQuery();
+						bQuery.setItemcode(icmo.getItemcode());
+						baseitemList = baseItemDao.findEntityBase(bQuery);
+						if(baseitemList.size()>0){
+							if(icmo.getFxmark()==3){
+								Double fqtys = (baseitemList.get(0).getMakingnums()==null?0D:baseitemList.get(0).getMakingnums())+fqtysum;
+								BaseItem bitem = new BaseItem();
+								bitem.setItemcode(icmo.getItemcode());
+								bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+								bitem.setMakingnums(fqtys<0?0D:fqtys);
+								baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+							}else{
+								Double fqtys = (baseitemList.get(0).getMakingnums4()==null?0D:baseitemList.get(0).getMakingnums4())+fqtysum;
+								BaseItem bitem = new BaseItem();
+								bitem.setItemcode(icmo.getItemcode());
+								bitem.setBaseitemid(baseitemList.get(0).getBaseitemid());
+								bitem.setMakingnums4(fqtys<0?0D:fqtys);
+								baseItemDao.update("BaseItem.update.makingnums.data.select4", bitem);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	
+	//新的排产派工---------------2014-11
+	@Override
+	public String savenewPlistDetail(Icmo entity) throws ServiceException {
+		
+		Icmo ic =null;
+		ic = icmoDao.getByProperty("fbillno",workPlanDao.getById(entity.getWorkplanid()).getFbillno());
+		
+		
+			
+			BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+			MachineMatch machineMatch = machineMatchDao.getByProperty("workplanid", entity.getWorkplanid()+"");
+			List<MachineMatchEntity> mmentitylist=new ArrayList<MachineMatchEntity>();
+			MachineMatchEntityQuery machineMatchEntityQ=new MachineMatchEntityQuery();
+			machineMatchEntityQ.setFmatchid(machineMatch.getFmatchid());
+			
+			mmentitylist=machineMatchEntityDao.findList(machineMatchEntityQ);
+			
+			for(MachineMatchEntity mentity:mmentitylist){
+				if(mentity!=null){
+					if(mentity.getBatchid()!=null){
+						InventoryBatch inbatch = inventoryBatchDao.getById(mentity.getBatchid());
+						if(inbatch.getDbno()!=null){
+							entity.setFxmark(inbatch.getDbno());	
+						}
+					}
+				}
+			}
+			WorkPlan wwplan = workPlanDao.getById(entity.getWorkplanid());
+			
+			entity.setFbillno(wwplan.getFbillno());
+			entity.setItemname(baseitem.getItemname());
+			if(baseitem.getFitemid()!=null){
+				entity.setFitemid(Long.valueOf(baseitem.getFitemid()));//=======================	
+			}
+			Date data=new Date();
+			entity.setStatus(0);
+			entity.setDispathstatu(1);//派工状态
+			entity.setTasktype(1);
+			entity.setPerformstatus(1);
+//			entity.setPerformdate(data);
+			entity.setCreatedate(data);
+			entity.setPreparestatus(0);
+			entity.setPriority(4);
+			entity.setWorknature(14088);//14087 订单	,14088 备货,	14089 试制
+			entity.setIsdel(0);//-1:已删除,0:未删除
+			entity.setPlancommitdate(wwplan.getPlanstartdate()==null?null:DateUtils.GetDate2(wwplan.getPlanstartdate(), "yyyy-MM-dd HH:mm:ss"));
+			//entity.setIspover();//是否派工完成
+			entity.setFbillgroup(wwplan.getFbillgroup());
+			
+			Long adId =0l;
+			if(null==ic){//任务单不存在，添加任务单
+				adId = icmoDao.save(entity);
+				//车间任务单保存END-----		
+				saveNewWorkSeqDispatchEmploy(adId,entity);//新版，添加车间任务,workseq,班组任务
+				//修改未排产计划的状态为已排产
+				WorkPlan wplan = workPlanDao.getById(entity.getWorkplanid());//1:已排产,0:未排产
+				wplan.setSchedustate(TerrcnceConstants.MACH_DISPATCH_STATE_YES);
+				workPlanDao.update(wplan);
+			}
+			
+			
+			double retufqty=0;
+			//----------------------------------------
+			String dateString=entity.getFtaskdate();//2014-11-02
+				String[] datelist = dateString.split("-");
+				DeviceTaskQuery deviceTaskQuery=new DeviceTaskQuery();
+				deviceTaskQuery.setFyear(datelist[0]);
+				deviceTaskQuery.setFmonth(datelist[1]);
+				deviceTaskQuery.setFday(datelist[2]);
+				//deviceTaskQuery.setCreatedate(new Date());
+				deviceTaskQuery.setFclass(entity.getFclass());
+				deviceTaskQuery.setDeviceid(entity.getFdeviceid());
+			//	deviceTaskQuery.setFqty(icmo.getFfqty());
+				deviceTaskQuery.setItemcode(entity.getItemcode());
+				deviceTaskQuery.setFbillno(entity.getFfbillno());
+				deviceTaskQuery.setProcessid(entity.getFprocessid());
+				deviceTaskQuery.setProcedureid(entity.getFprocedureid());
+				List<DeviceTask> dtlist=new ArrayList<DeviceTask>();
+				dtlist= deviceTaskDao.findList("DeviceTask.findByQuery", deviceTaskQuery);
+				double returnfqty=0;
+				if(dtlist.size()>0){
+					EmployeeTaskQuery equery=new EmployeeTaskQuery();
+					EmployeeTask emp=new EmployeeTask();
+					//deviceTaskDao.deleteById(dtlist.get(0).getDevtaskid());
+					equery.setDevtaskid(dtlist.get(0).getDevtaskid());
+					emp = employeeTaskDao.getByEntity("EmployeeTask.getreqtakefqty", equery);
+					
+						if(null!=emp&&emp.getFqty()>0&&entity.getFfqty()<emp.getFqty()){//修改数小于已领取的数量
+							throw new ServiceException("修改数不能小于已领取的数量！");
+						}
+					
+					
+				}	
+			//----------------------------------------
+				
+				
+			if(entity.getFfqty()==0){
+				retufqty=deleteDevicetask(entity);
+			}else{
+				if(null==ic){
+					retufqty=saveDevicetask(entity,adId);	
+				}else{
+					retufqty=saveDevicetask(entity,ic.getIcmoid());
+				}
+				
+				
+			}
+			
+			
+			//-----查询设备状态----
+			String dString=entity.getFtaskdate();//2014-11-02
+			String[] dlist = dString.split("-");
+			DeviceTaskQuery dtaskQ=new DeviceTaskQuery();
+			dtaskQ.setFyear(datelist[0]);
+			dtaskQ.setFmonth(datelist[1]);
+			dtaskQ.setFday(datelist[2]);
+			dtaskQ.setFclass(entity.getFclass());
+			dtaskQ.setDeviceid(entity.getFdeviceid());
+			
+			DeviceTask dstatus =new DeviceTask();
+			 dstatus = deviceTaskDao.getByEntity("DeviceTask.getdstatus.Bydeviceid", dtaskQ);
+			 int returnstatus=1;
+			if(dstatus==null){
+				returnstatus=1;
+			}else{
+				returnstatus=dstatus.getDstatus();
+			}
+			
+			
+			return retufqty+";"+returnstatus;
+	}
+	
+	/**
+	 * 新版，添加车间任务,workseq,班组任务
+	 */
+	public void saveNewWorkSeqDispatchEmploy(Long icmoid,Icmo entity) throws ServiceException{
+
+//		itemProcedureDao
+		List<ItemProcedure> itemProcedurelist=new ArrayList<ItemProcedure>();
+		BaseItem baseitem = baseItemDao.getByProperty("itemcode", entity.getItemcode());
+		ItemProcedureQuery itemProcedureQuery=new ItemProcedureQuery();
+		itemProcedureQuery.setItemid(baseitem.getBaseitemid());
+		itemProcedureQuery.setFverid(entity.getFverid());//新添加
+		
+		itemProcedurelist = itemProcedureDao.findList(itemProcedureQuery);
+		if(itemProcedurelist.size()!=0){//此物料下有工序
+			WorkSeq workSeq=new WorkSeq();
+			workSeq.setIcmoid(icmoid);
+			workSeq.setItemcode(entity.getItemcode());
+			workSeq.setQualified(0D);
+			//workSeq.setProcedurerid(procedurerid)
+			List<ItemProcedure> ipdlist=new ArrayList<ItemProcedure>();
+			changelist(-1L,itemProcedurelist,ipdlist);//工序按上下级排序
+			
+			DispatchWork dwork=new DispatchWork();
+			long workSeqid=0;
+			int len=ipdlist.size();
+			//for(int i=0;i<len;i++){
+			int f=0;
+			for(ItemProcedure itpd:ipdlist){	
+				workSeq.setItemprocedureid(itpd.getItemprocedureid());
+				if(f==0){
+					workSeq.setPreorder(0L);
+				}else{
+					workSeq.setPreorder(workSeqid);
+				}
+				workSeq.setProcedurerid(itpd.getProcedureid());
+				workSeqid=workSeqDao.save(workSeq);
+				f++;
+			}		
+				/**t_work_seq添加end**/
+				/**t_dispatch_work添加begin**/
+			Long[] itemprocedureids = entity.getItemprocedureid();
+						
+			int i=0;
+			long checkitempid=0L;
+			long did=0;
+			for(long itempid:itemprocedureids){	
+				if(i==0){
+					checkitempid=itempid;
+				}
+				
+				ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+				ItemProcess itemProcess=new ItemProcess();
+				itemProcessQuery.setItemprocedureid(itempid);
+				itemProcessQuery.setProcessid(entity.getProcessid()[i]);//选中的工作中心
+
+				itemProcess=itemProcessDao.findList(itemProcessQuery).get(0);//
+				
+				dwork=new DispatchWork();
+				dwork.setWorkid(icmoid);//icmoid
+				dwork.setItemcode(entity.getItemcode());//
+				dwork.setItemname(entity.getItemname());//
+				dwork.setItemprocessid(itemProcess.getItemprocessid());//
+				dwork.setStatus(0);//
+				
+			//	procedureDao.getById(ipdlist.get(i).getProcedureid()).getProcedurename();
+				//Procedure ppd = procedureDao.getById(itemProcedureDao.getById(itempid).getProcedureid());
+//				ItemProcedureQuery iquery=new ItemProcedureQuery();
+//				iquery.setItemprocedureid(itempid);
+				Procedure ppd = procedureDao.getById(itemProcedureDao.getById(itempid).getProcedureid());
+				
+				dwork.setProcessid(ppd.getProcedurerid());//原工序id--
+				dwork.setProcessname(ppd.getProcedurename());//??--原工序名称,新
+				//dwork.setProcessnum(entity.getEmpfqty()[i].doubleValue());//??原加工数量--
+				dwork.setProcessnum(entity.getFqty());//??取总数量!!!!!
+				dwork.setTeamid(itemProcess.getTeamid());//
+				dwork.setTeamname(teamsDao.getById(itemProcess.getTeamid()).getTeamname());//
+		
+				dwork.setReadymoney(itemProcess.getReservefund()==null?0:itemProcess.getReservefund());//原itemprocess准备金--
+				dwork.setReadytime(itemProcess.getPreparemins()==null?0:itemProcess.getPreparemins());//
+				dwork.setProcesstime(itemProcess.getProcessmins()==null?0:itemProcess.getProcessmins());//原itemprocess加工时长-
+				dwork.setPiecesalary(itemProcess.getWage()==null?0:itemProcess.getWage());//原itemprocess计件工资-
+				
+				dwork.setTools("");//???-----------------刀具名暂空
+				dwork.setBlades("");//???---------------刀片名暂空
+				dwork.setContent("");//现在无备注--
+				dwork.setAcceptednum(0);
+				dwork.setProgramname("");//程序名称?--空
+				dwork.setOrderid(-1);//??排序编号?--空
+				
+				dwork.setWsstatus(1);//1:已派工，其它:未派工
+				dwork.setEmpstatus(1);//0:未派,1:已派
+				WorkSeqQuery workSeqQuery=new WorkSeqQuery();
+				workSeqQuery.setIcmoid(icmoid);
+				workSeqQuery.setItemprocedureid(checkitempid);
+				WorkSeq	wprkseqs=workSeqDao.findList(workSeqQuery).get(0);
+				
+			    if(itemProcedureDao.getById(itempid).getSeqno().intValue()==1){//一序
+					dwork.setPreorder(0L);//??取什么?第一序为0
+				}else{
+					dwork.setPreorder(wprkseqs.getWorkseqid());//??取什么?//班组任务实际id上序
+				}
+				dwork.setCreatetime(DateConvertUtils.getCurrentDateTime());
+				dwork.setCenterid(entity.getProcessid()[i]);
+			//	workSeqid=workSeqDao.save(workSeq);
+				WorkSeqQuery workSeqQueryReal=new WorkSeqQuery();
+				workSeqQueryReal.setIcmoid(icmoid);
+				workSeqQueryReal.setItemprocedureid(itempid);
+				WorkSeq	wprkseqsReal=workSeqDao.findList(workSeqQueryReal).get(0);	
+				
+				dwork.setWorkseqid(wprkseqsReal.getWorkseqid());
+		/*		dwork.setPlanstarttime(DateUtils.GetDate2(entity.getPlanstartdate()[i], "yyyy-MM-dd HH:mm:ss"));
+				dwork.setPlanendtime(DateUtils.GetDate2(entity.getPlanenddate()[i], "yyyy-MM-dd HH:mm:ss"));
+		*/		
+				dwork.setPlanstarttime(DateUtils.GetDate2("2014-11-02 09:09:10", "yyyy-MM-dd HH:mm:ss"));
+				dwork.setPlanendtime(DateUtils.GetDate2("2014-11-02 09:09:10", "yyyy-MM-dd HH:mm:ss"));
+		
+				
+				if(i==0){//第一序
+					did=dispatchWorkDao.saveDispatchAuto(dwork);
+				}
+				if(i!=0&&checkitempid!=itempid){//非第一序,且非同序添加
+					did=dispatchWorkDao.saveDispatchAuto(dwork);
+					checkitempid=itempid;
+				}
+				/**t_dispatch_work添加End**/
+				
+			//	saveEmployeePrepare(did,dwork,itemProcess,entity,i); //添加个人任务和准备金
+				
+			//	}
+				i++;
+			}
+		}
+	
+		
+	}
+	
+	
+//添加t_device_task
+	
+	public double saveDevicetask(Icmo icmo,Long icmoid)throws ServiceException{
+		String dateString=icmo.getFtaskdate();//2014-11-02
+		String[] datelist = dateString.split("-");
+		
+		DeviceTask dtask=new DeviceTask();
+			dtask.setFyear(datelist[0]);
+			dtask.setFmonth(datelist[1]);
+			dtask.setFday(datelist[2]);
+			dtask.setCreatedate(new Date());
+			dtask.setFclass(icmo.getFclass());
+			dtask.setDeviceid(icmo.getFdeviceid());
+			dtask.setFqty(icmo.getFfqty());
+			dtask.setItemcode(icmo.getItemcode());
+			dtask.setFbillno(icmo.getFfbillno());
+			dtask.setProcessid(icmo.getFprocessid());
+			dtask.setProcedureid(icmo.getFprocedureid());
+			dtask.setItemprocedureid(icmo.getFitemprocedureid());
+			Long nowemp = SpringSecurityUtils.getCurrentUserId();
+			dtask.setEmpid(nowemp);
+			
+			//返回数量
+		DeviceTaskQuery deviceTaskQuery=new DeviceTaskQuery();
+			deviceTaskQuery.setFyear(datelist[0]);
+			deviceTaskQuery.setFmonth(datelist[1]);
+			deviceTaskQuery.setFday(datelist[2]);
+			//deviceTaskQuery.setCreatedate(new Date());
+			deviceTaskQuery.setFclass(icmo.getFclass());
+			deviceTaskQuery.setDeviceid(icmo.getFdeviceid());
+		//	deviceTaskQuery.setFqty(icmo.getFfqty());
+			deviceTaskQuery.setItemcode(icmo.getItemcode());
+			deviceTaskQuery.setFbillno(icmo.getFfbillno());
+			deviceTaskQuery.setProcessid(icmo.getFprocessid());
+			deviceTaskQuery.setProcedureid(icmo.getFprocedureid());
+			deviceTaskQuery.setItemprocedureid(icmo.getFitemprocedureid());
+			
+			List<DeviceTask> dtlist=new ArrayList<DeviceTask>();
+			dtlist= deviceTaskDao.findList("DeviceTask.findByQuery", deviceTaskQuery);
+			
+			double returnfqty=0;
+			if(dtlist.size()>0){
+				if(dtlist.get(0).getEmpid().longValue()==nowemp.longValue()){//非本人不可修改派工数量
+					dtask.setDevtaskid(dtlist.get(0).getDevtaskid());
+					deviceTaskDao.update(dtask);//
+					dtask.setHandfqty(dtask.getFqty()-dtlist.get(0).getFqty());
+					
+					updateDeviceWork(dtask,icmoid,2,0);//修改设备工时
+					returnfqty=dtask.getFqty()-dtlist.get(0).getFqty();
+				}else{
+					throw new ServiceException("非本人不可修改派工数量！！");
+				}
+			}else{
+				deviceTaskDao.save(dtask);//
+
+				//判断是否添加首件调试时间---------------------
+
+				DeviceWorkQuery dwquery=new DeviceWorkQuery();
+				dwquery.setFbillno(deviceTaskQuery.getFbillno());
+				dwquery.setItemprocedureid(deviceTaskQuery.getItemprocedureid());
+				DeviceWork dwork=new DeviceWork();
+				
+				
+				dwork = deviceWorkDao.getByEntity("DeviceWork.getbyfbill.Itemprocedureid", dwquery);
+				if(dwork.getRuntime()!=null){//存在首检调试时间
+					updateDeviceWork(dtask,icmoid,1,0);//添加设备工时	
+				}else{//不存在首件调试时间----------拆分的单据也只有一次调试时间,sql中已判断
+					updateDeviceWork(dtask,icmoid,1,1);//添加设备工时
+				}
+				
+				returnfqty=dtask.getFqty();//返回
+			}
+			
+			return returnfqty;//返回数量前台相加
+			
+	}
+	
+	
+//删除t_device_task
+	public double deleteDevicetask(Icmo icmo)throws ServiceException{
+		String dateString=icmo.getFtaskdate();//2014-11-02
+		String[] datelist = dateString.split("-");
+
+		DeviceTaskQuery deviceTaskQuery=new DeviceTaskQuery();
+			deviceTaskQuery.setFyear(datelist[0]);
+			deviceTaskQuery.setFmonth(datelist[1]);
+			deviceTaskQuery.setFday(datelist[2]);
+			//deviceTaskQuery.setCreatedate(new Date());
+			deviceTaskQuery.setFclass(icmo.getFclass());
+			deviceTaskQuery.setDeviceid(icmo.getFdeviceid());
+		//	deviceTaskQuery.setFqty(icmo.getFfqty());
+			deviceTaskQuery.setItemcode(icmo.getItemcode());
+			deviceTaskQuery.setFbillno(icmo.getFfbillno());
+			deviceTaskQuery.setProcessid(icmo.getFprocessid());
+			deviceTaskQuery.setProcedureid(icmo.getFprocedureid());
+		
+			List<DeviceTask> dtlist=new ArrayList<DeviceTask>();
+			dtlist= deviceTaskDao.findList("DeviceTask.findByQuery", deviceTaskQuery);
+				
+			double returnfqty=0;
+			if(dtlist.size()>0){
+				deviceTaskDao.deleteById(dtlist.get(0).getDevtaskid());
+				updateDeviceWork(dtlist.get(0),null,3,0);
+				
+				returnfqty=0-dtlist.get(0).getFqty();
+			}else{
+				returnfqty=0;//返回
+			}
+			return returnfqty;//返回数量前台相加
+	}
+
+
+	@Override
+	public List<Icmo> findListFbillno(IcmoQuery icmoQuery)
+			throws ServiceException {
+
+		int fbillnofqty = icmoQuery.getFqty().intValue();
+		List<Icmo> icmlist=new ArrayList<Icmo>();
+		if(fbillnofqty>0){
+			Icbillno icb = icbillnoDao.getById(222222L);
+			String fbhead = icb.getFpreletter();//获取拆分单据号
+			Integer number = icb.getFcurno();
+			icb.setFcurno(icb.getFcurno().intValue()+fbillnofqty);
+			icbillnoDao.update(icb);
+			for(int i=0;i<fbillnofqty;i++){
+				Icmo icm=new Icmo();
+				icm.setFbillno(fbhead+number);
+				icmlist.add(icm);
+				number++;
+			}
+		}
+		return icmlist;
+	}
+
+	public List<Icmo> findlistIcmo(IcmoQuery icmoQuery) throws ServiceException {
+		return icmoDao.findlistIcmo(icmoQuery);
+	}
+	
+
+	/**
+	 * 
+	 * @param dtask
+	 * @param icmoid
+	 * @param type 1添加  2修改  3删除
+	 * @param isfirst 1需添加调试时间，0不需添加
+	 * @throws ServiceException
+	 */
+	public void updateDeviceWork(DeviceTask dtask,Long icmoid,Integer type,Integer isfirst)throws ServiceException {//type:1添加  2修改  3删除
+		//dtask
+		
+
+		Long itemprocedureid = dtask.getItemprocedureid();
+		ItemProcessQuery itemProcessQuery=new ItemProcessQuery();
+		itemProcessQuery.setItemprocedureid(itemprocedureid);
+		
+		ItemProcess itemProcess = itemProcessDao.getByEntity("ItemProcess.getBy.itemprocedureid", itemProcessQuery);
+//		preparemins //准备时间
+//		processmins //加工时间
+		
+		
+		DeviceWork deviceWork=new DeviceWork();
+		
+		deviceWork.setWorkdate(dtask.getFyear()+"-"+dtask.getFmonth()+"-"+dtask.getFday());
+		deviceWork.setDeviceid(dtask.getDeviceid());
+		deviceWork.setFbillno(dtask.getFbillno());
+		deviceWork.setClasstypeid(dtask.getFclass());
+		deviceWork.setProcedurerid(dtask.getProcedureid());
+		deviceWork.setIcmoid(icmoid);
+		deviceWork.setItemprocedureid(dtask.getItemprocedureid());
+		
+		if(type==1){//添加
+			if(isfirst.intValue()==1){//添加调试时间
+				Double allmins = dtask.getFqty()*(itemProcess.getProcessmins())+itemProcess.getPreparemins();
+				deviceWork.setRuntime(allmins.longValue());	
+			}else{//不添加调试时间
+				Double allmins = dtask.getFqty()*(itemProcess.getProcessmins());
+				deviceWork.setRuntime(allmins.longValue());
+			}
+			deviceWorkDao.save(deviceWork);
+
+		}else if(type==2){//修改
+			Double allmins = dtask.getHandfqty()*(itemProcess.getProcessmins());
+			
+		//	Double allmins = dtask.getFqty()*(itemProcess.getProcessmins())+itemProcess.getPreparemins();
+			deviceWork.setRuntime(allmins.longValue());
+			
+//			DeviceWorkQuery deviceWorkQuery=new DeviceWorkQuery();
+//			deviceWorkQuery.setWorkdate(dtask.getFyear()+"-"+dtask.getFmonth()+"-"+dtask.getFday());
+//			deviceWorkQuery.setDeviceid(dtask.getDeviceid());
+//			deviceWorkQuery.setFbillno(dtask.getFbillno());
+//			deviceWorkQuery.setClasstypeid(dtask.getFclass());
+//			deviceWorkQuery.setProcedurerid(dtask.getProcedureid());
+//			deviceWorkQuery.setIcmoid(icmoid);
+//			deviceWorkQuery.setItemprocedureid(dtask.getItemprocedureid());
+
+			DeviceWork dwork=new DeviceWork();
+			dwork.setWorkdate(dtask.getFyear()+"-"+dtask.getFmonth()+"-"+dtask.getFday());
+			dwork.setDeviceid(dtask.getDeviceid());
+			dwork.setFbillno(dtask.getFbillno());
+			dwork.setClasstypeid(dtask.getFclass());
+			dwork.setProcedurerid(dtask.getProcedureid());
+			dwork.setIcmoid(icmoid);
+			dwork.setItemprocedureid(dtask.getItemprocedureid());
+			dwork.setRuntime(allmins.longValue());
+			deviceWorkDao.update("DeviceWork.update.runtime", dwork);
+//			deviceWorkDao.deleteByWhere("DeviceWork.DeleteByquery", deviceWorkQuery);
+//			deviceWorkDao.save(deviceWork);
+			
+		}else if(type==3){//删除
+			     
+			DeviceWorkQuery deviceWorkQuery=new DeviceWorkQuery();
+			deviceWorkQuery.setWorkdate(dtask.getFyear()+"-"+dtask.getFmonth()+"-"+dtask.getFday());
+			deviceWorkQuery.setDeviceid(dtask.getDeviceid());
+			deviceWorkQuery.setFbillno(dtask.getFbillno());
+			deviceWorkQuery.setClasstypeid(dtask.getFclass());
+			deviceWorkQuery.setProcedurerid(dtask.getProcedureid());
+			//deviceWorkQuery.setIcmoid(icmoid);
+			deviceWorkQuery.setItemprocedureid(dtask.getItemprocedureid());
+			deviceWorkDao.deleteByWhere("DeviceWork.DeleteByquery", deviceWorkQuery);
+		}
+		
+	}
+	@Override
+	public void updateispover(Icmo entity) throws ServiceException {
+
+		icmoDao.update("Icmo.updtae.updateispover", entity);
+	}
+	@Override
+	public void updateIcmono(Icmo entity) throws ServiceException {
+		
+		if(entity.getIcmono()==null||entity.getIcmono().equals("")){
+			entity.setIsold(1);//1旧单据
+		}else{
+			entity.setIsold(0);//
+		}
+		icmoDao.update("Icmo.updateIcmono", entity);
+	}   
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

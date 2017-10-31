@@ -1,0 +1,39 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.dao.IAdminDao;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WorkStep;
+import com.terrence.crm.dol.dao.IWorkStepDao;
+
+@Repository
+public class WorkStepDao extends BaseIbatisDao<WorkStep,java.lang.Long> implements IWorkStepDao{
+
+		
+	public void saveOrUpdate(WorkStep entity) {
+		if(entity.getStepid() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WorkStep";
+	}
+	public WorkStep getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WorkStep)this.getSqlMapClientTemplate().queryForObject("WorkStep.getByProperty", map);		
+	}
+
+}

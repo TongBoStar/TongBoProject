@@ -1,0 +1,37 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.WebItemMaterial;
+import com.terrence.crm.dol.dao.IWebItemMaterialDao;
+
+@Repository
+public class WebItemMaterialDao extends BaseIbatisDao<WebItemMaterial,java.lang.Long> implements IWebItemMaterialDao{
+
+		
+	public void saveOrUpdate(WebItemMaterial entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "WebItemMaterial";
+	}
+	public WebItemMaterial getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (WebItemMaterial)this.getSqlMapClientTemplate().queryForObject("WebItemMaterial.getByProperty", map);		
+	}
+
+}

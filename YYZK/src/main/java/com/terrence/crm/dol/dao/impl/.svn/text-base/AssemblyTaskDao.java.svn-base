@@ -1,0 +1,63 @@
+package com.terrence.crm.dol.dao.impl;
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.terrence.crm.dol.base.BaseIbatisDao;
+import com.terrence.crm.dol.bean.AssemblyTask;
+import com.terrence.crm.dol.dao.IAssemblyTaskDao;
+import com.terrence.crm.dol.query.AssemblyTaskQuery;
+
+@Repository
+public class AssemblyTaskDao extends BaseIbatisDao<AssemblyTask,java.lang.Long> implements IAssemblyTaskDao{
+
+		
+	public void saveOrUpdate(AssemblyTask entity) {
+		if(entity.getId() == null) 
+			save(entity);
+		else 
+			update(entity);
+	}
+	
+	public String getIbatisSqlMapNamespace() {
+		
+		return "AssemblyTask";
+	}
+	public AssemblyTask getByProperty(String propertyName, Object propertyValue) {
+		Map map=new HashMap();		
+		map.put("propertyName", propertyName);
+		map.put("propertyValue", (String)propertyValue);
+		return (AssemblyTask)this.getSqlMapClientTemplate().queryForObject("AssemblyTask.getByProperty", map);		
+	}
+
+	@Override
+	public AssemblyTask findAssemblyTask(AssemblyTaskQuery assemblyTaskQuery) {
+		return (AssemblyTask) this.getSqlMapClientTemplate().queryForObject("AssemblyTask.find.findATask",assemblyTaskQuery);
+	}
+
+	@Override
+	public AssemblyTask findTask(AssemblyTaskQuery assemblyTask) {
+		return (AssemblyTask) this.getSqlMapClientTemplate().queryForObject("AssemblyTask.find.for.fbillno",assemblyTask);
+	}
+
+	@Override
+	public AssemblyTask findAssemblyTaskNew(AssemblyTaskQuery assemblyTaskQuery) {
+		return (AssemblyTask) this.getSqlMapClientTemplate().queryForObject("AssemblyTask.findATask.data.new",assemblyTaskQuery);
+	}
+
+	@Override
+	public AssemblyTask findOrderData(AssemblyTaskQuery assemblyTaskQuery) {
+		return (AssemblyTask) this.getSqlMapClientTemplate().queryForObject("Assemblytask.find.orderData.select", assemblyTaskQuery);
+	}
+
+	@Override
+	public AssemblyTask findEntity(AssemblyTaskQuery atq) {
+		return (AssemblyTask) this.getSqlMapClientTemplate().queryForObject("AssemblyTask.find.entity.dingdanhao", atq);
+	}
+
+}
