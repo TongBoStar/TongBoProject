@@ -16,7 +16,7 @@ public class YiYunDemoActivity extends Activity {
 	private final static String TAG = "YiYunDemoActivity";
 	private Button startvoice; 
 	private Button lvdeng;
-	private int lv = 0;
+	private int lv = 0; 
 	@Override  
 	public void onCreate(Bundle savedInstanceState) {
 	   super.onCreate(savedInstanceState);  
